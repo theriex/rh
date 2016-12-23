@@ -1,0 +1,17 @@
+html {
+  min-height: 100%; margin:0; padding:0;
+}
+
+body {
+  margin:0px;
+  color:#111111;
+  height: 100%;
+  font-family: "Open Sans", "Helvetica", sans-serif;
+  font-size:large;
+}
+
+A:link {text-decoration:none; color:#004052; }
+A:visited {text-decoration:none; color:#004052; }
+A:active {text-decoration:none; color:#004052; }
+A:hover {text-decoration:underline; color:#00989a; }
+
