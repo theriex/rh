@@ -15,3 +15,12 @@ A:visited {text-decoration:none; color:#004052; }
 A:active {text-decoration:none; color:#004052; }
 A:hover {text-decoration:underline; color:#00989a; }
 
+#rhouterdiv { padding:5px; }
+
+/* -------------------- */
+/* tabular */
+.trowdiv { padding-bottom:10px; }
+.trowdatediv { display:table-cell; min-width:80px; padding-right:10px; 
+  text-align:right; }
+.trowdescdiv { display:table-cell; font-size:medium; }
+.tcspan { font-size:medium; font-style:italic; }
