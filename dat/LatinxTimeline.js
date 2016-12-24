@@ -1,8 +1,6 @@
-/*global app */
-/*jslint browser, white, fudge */
+/*jslint white, fudge */
 
-app.timelines.push(
-  {timeline: "Latino/as", prefix: "L",
+LatinxTimeline = {name: "Latino/as", ident: "Latinx", code: "L",
    credit: "Compiled by: Karen L. Suyemoto, Ph.D. – UMass (Boston) Psychology and Asian American Studies. Updated 2005/2006 by Claudia Fox Tree and Elli Stern for EMI Empowering Multicultural Initiatives. Updated 2014 by Emily Davis, for K. Suyemoto.",
    resources: [
        "The Hispanic-American Almanac: A reference work on Hispanics in the United States. Nicolas Kanellos, ed. Gale Research: Detroit, 1993",
@@ -382,4 +380,7 @@ app.timelines.push(
     {date: "2013",
      desc: "Hispanic’s are the largest minority group in the U. S. and is among the fastest growing population. The population was 53 million, which made up 17% of the U. S. Population."},
     {date: "2014-11-19",
-     desc: "Obama made action on Immigration Reform. This contained three different sub-parts that included more accessible resources for immigrants, the president will make the citizenship process easier and faster for graduates, high skilled immigrants, and entrepreneurs and finally, to deal with the documentation of immigrants who already live in the country. Obama received negative feedback from the Republican party about giving aid to undocumented immigrants."}]});
+     desc: "Obama made action on Immigration Reform. This contained three different sub-parts that included more accessible resources for immigrants, the president will make the citizenship process easier and faster for graduates, high skilled immigrants, and entrepreneurs and finally, to deal with the documentation of immigrants who already live in the country. Obama received negative feedback from the Republican party about giving aid to undocumented immigrants."}]};
+
+module.exports = LatinxTimeline;
+

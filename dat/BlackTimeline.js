@@ -1,8 +1,6 @@
-/*global app */
-/*jslint browser, white, fudge */
+/*jslint white, fudge */
 
-app.timelines.push(
-  {timeline: "Asian American", prefix: "B",
+BlackTimeline = {name: "African American", ident: "Black", code: "B",
    credit: "Compiled by: Karen L. Suyemoto, Ph.D. – UMass (Boston) Psychology and Asian American Studies. Updated 2005/2006 by Claudia Fox Tree and Elli Stern for EMI Empowering Multicultural Initiatives. Updated 2014 by Emily Davis, for K. Suyemoto.",
    resources: [
        "The African American Almanac, 7th edition L. Mpho Mabunda, ed. Gale Research: Detroit, 1997",
@@ -578,4 +576,6 @@ app.timelines.push(
     {date: "2015",
      desc: "Further investigation in Ferguson, Missouri’s crimes over the past two years show that black people were being targeted for various crimes. 85% of traffic stops, 90% of tickets issued, and 93% of arrests were of African American citizens. Even in jaywalking incidents, African Americans made up 90% of the violation populations."},
     {date: "2015",
-     desc: "According to a 2015 report titled “Black Girls Matter: Pushed Out, Overpoliced and Underprotected” analyzed data pulled from New York City and Boston school districts. It found that 12% of black girls were subjected to suspension compared to 2% of white girls. 90% of all female students that experienced expulsion were black."}]});
+     desc: "According to a 2015 report titled “Black Girls Matter: Pushed Out, Overpoliced and Underprotected” analyzed data pulled from New York City and Boston school districts. It found that 12% of black girls were subjected to suspension compared to 2% of white girls. 90% of all female students that experienced expulsion were black."}]};
+
+module.exports = BlackTimeline;

@@ -1,8 +1,6 @@
-/*global app */
-/*jslint browser, white, fudge */
+/*jslint white, fudge */
 
-app.timelines.push(
-  {timeline: "Multiracial", prefix: "R",
+MultiTimeline = {name: "Multiracial", ident: "Multi", code: "R",
    credit: "Compiled by: Karen L. Suyemoto, Ph.D. – UMass (Boston) Psychology and Asian American Studies. Updated 2005/2006 by Claudia Fox Tree and Elli Stern for EMI Empowering Multicultural Initiatives. Updated 2014 by Emily Davis, for K. Suyemoto.",
    resources: [
        "Children of Conflict. Fernando Henriques. NY: E.P. Dutton & Co, Inc., 1975 (CC)",
@@ -275,4 +273,6 @@ app.timelines.push(
     {date: "2015",
      desc: "A new law sponsored by City Councilmember Margaret Chin would allow New Yorkers to identify as more than one race, and check more than one box on citywide documents."},
     {date: "2015",
-     desc: "Pew Research Center reports that 55% of multiracial adults report having experienced racial slurs or jokes."}]});
+     desc: "Pew Research Center reports that 55% of multiracial adults report having experienced racial slurs or jokes."}]};
+
+module.exports = MultiTimeline;

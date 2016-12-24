@@ -1,9 +1,7 @@
-/*global app */
-/*jslint browser, white, fudge */
+/*jslint white, fudge */
 
-app.timelines.push(
-  {timeline: "Asian American", prefix: "A",
-   credit: "Compiled by: Karen L. Suyemoto, Ph.D. – UMass (Boston) Psychology and Asian American Studies. Updated 2005/2006 by Claudia Fox Page 1 Tree and Elli Stern for EMI Empowering Multicultural Initiatives. Updated 2014 by Emily Davis, for K. Suyemoto.",
+AsAmTimeline = {name: "Asian American", ident: "AsAm", code: "A",
+   credit: "Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psychology and Asian American Studies. Updated 2005/2006 by Claudia Fox Tree and Elli Stern for EMI Empowering Multicultural Initiatives. Updated 2014 by Emily Davis, for K. Suyemoto.",
    resources: [
        "The Asian American Almanac: A reference work on Asians in the United States. Susan Gall, ed.; Gale Research: Detroit, 1995",
        "Strangers from a Different Shore: A History of Asian Americans. Ronald Takaki. Little Brown and Company, 1998",
@@ -482,5 +480,6 @@ app.timelines.push(
      {date: "2015",
       desc: "The First Asian American sitcom in 20 years debuted. “Fresh off the Boat” premiered February 4, 2015 on ABC. The series is based off of Eddie Huang’s life growing up, which is a chef and food personality. The show received mixed reviews, but, Huang felt that the pain he endured was washed over with lies and cheap comedy."},
      {date: "2015",
-      desc: "Jeb Bush, Republican candidate for President “defends” his use of the offensive term “anchor baby” by saying that he had not meant to refer to or offend “Hispanics” and that \"anchor babies\" were \"frankly more related to Asian people.\""}]});
+      desc: "Jeb Bush, Republican candidate for President “defends” his use of the offensive term “anchor baby” by saying that he had not meant to refer to or offend “Hispanics” and that \"anchor babies\" were \"frankly more related to Asian people.\""}]};
 
+module.exports = AsAmTimeline;

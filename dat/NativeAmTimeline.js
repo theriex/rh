@@ -1,8 +1,6 @@
-/*global app */
-/*jslint browser, white, fudge */
+/*jslint white, fudge */
 
-app.timelines.push(
-  {timeline: "Native American", prefix: "N",
+NativeAmTimeline = {name: "Native American", ident: "Native", code: "N",
    credit: "Compiled by: Karen L. Suyemoto, Ph.D. – UMass (Boston) Psychology and Asian American Studies. Updated 2005/2006 by Claudia Fox Tree and Elli Stern for EMI Empowering Multicultural Initiatives. Updated 2014 by Emily Davis, for K. Suyemoto.",
    resources: [
        "The Native American Almanac: A Portrait of Native America Today. Arlene Hirschfelder & Martha Kreipe de Montano. Prentice Hall: New York, 1993",
@@ -403,4 +401,7 @@ entries: [
     {date: "2015",
      desc: "Faculty at Amherst College, in Amherst Massachusetts, vote to remove Lord Jeffrey Amherst as the schools “mascot.” Lord Jeffrey was an 18th century military commander who encouraged the distribution of smallpox infected blankets as a means of biological warfare."},
     {date: "2016-04-2016-12",
-     desc: "Water protectors and their allies at Standing Rock Reservation in the Dakotas gather to prevent the Dakota Access Pipeline, an oil pipeline threatening water sources and ignoring land treaties.  Water protectors encamp on the site, lead prayers and gatherings, and stand in the face of pepper spray, teargas, rubber bullets, trained dogs, percussion grenades, sonic attacks, and water cannon in sub freezing temperatures.  Activists are arrested, stripped, and kept in dog kennels with numbers written on their arms. The charges, treatment, and consequences for Native activists are witnessed to be more severe than those who are not Native. Video footage of shootings by reporters on the scene contradict official police statements. Native led resistance fosters support from a variety of sources.  Resistance eventually leads to the Army Corps of Engineers to call for a full environmental impact statement."}]});
+     desc: "Water protectors and their allies at Standing Rock Reservation in the Dakotas gather to prevent the Dakota Access Pipeline, an oil pipeline threatening water sources and ignoring land treaties.  Water protectors encamp on the site, lead prayers and gatherings, and stand in the face of pepper spray, teargas, rubber bullets, trained dogs, percussion grenades, sonic attacks, and water cannon in sub freezing temperatures.  Activists are arrested, stripped, and kept in dog kennels with numbers written on their arms. The charges, treatment, and consequences for Native activists are witnessed to be more severe than those who are not Native. Video footage of shootings by reporters on the scene contradict official police statements. Native led resistance fosters support from a variety of sources.  Resistance eventually leads to the Army Corps of Engineers to call for a full environmental impact statement."}]};
+
+module.exports = NativeAmTimeline;
+
