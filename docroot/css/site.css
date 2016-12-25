@@ -23,4 +23,7 @@ A:hover {text-decoration:underline; color:#00989a; }
 .trowdatediv { display:table-cell; min-width:80px; padding-right:10px; 
   text-align:right; }
 .trowdescdiv { display:table-cell; font-size:medium; }
-.tcspan { font-size:medium; font-style:italic; }
+.tcspan { font-size:small; font-style:italic; }
+.tdspan { font-size:small; }
+.tdspanyo { font-size:large; }
+.bcespan { font-size:x-small; font-style:italic; font-weight:bold; }
