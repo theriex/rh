@@ -18,6 +18,13 @@ A:hover {text-decoration:underline; color:#00989a; }
 #rhouterdiv { padding:5px; }
 
 /* -------------------- */
+/* linear */
+
+.area { fill:steelblue; clip-path: url(../#clip); }
+.zoom { cursor:move; fill:none; pointer-events:all; }
+
+
+/* -------------------- */
 /* tabular */
 .trowdiv { padding-bottom:10px; }
 .trowdatediv { display:table-cell; min-width:80px; padding-right:10px; 

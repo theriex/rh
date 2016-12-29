@@ -52,21 +52,21 @@ var app = {},  //Global container for application level funcs and values
 
     //D3 has very good support for dates, but that level of precision
     //is more than the data specifies.  Using a fractional year
-    //rounded to two decimal places and multiplied by 100 so we are
-    //working with integer values.  The y coordinate is just the point
-    //count within the year.
+    //rounded to two decimal places instead.  The y coordinate is the
+    //one-based point count within the year.
     function makeCoordinates (pt, ctx) {
         var y, m, d;
         y = pt.start.year;
         m = pt.start.month || 0;
         d = pt.start.day || 0;
-        pt.x = Math.round((y + m/12 + d/365) * 100);
+        pt.tc = Math.round((y + m/12 + d/365) * 100) / 100;
         if(ctx.yr === pt.start.year) {
-            ctx.dy += 1; }  //next y coordinate value within year
+            ctx.dy += 1;   //next y coordinate value within year
+            ctx.maxy = Math.max(ctx.maxy, ctx.dy); }
         else {
             ctx.yr = pt.start.year;  //reset year context
-            ctx.dy = 1; }            //fist y coordinate value within year
-        pt.y = ctx.dy;
+            ctx.dy = 1; }            //first y coordinate value within year
+        pt.oc = ctx.dy;
     }
 
 
@@ -77,32 +77,42 @@ var app = {},  //Global container for application level funcs and values
     //the identifier is the y coordinate.
     function makePointIdent (pt, ny) {
         var ident = String(ny - pt.start.year + 1);  //zero is an ugly id
-        if(pt.y > 1) {
+        if(pt.oc > 1) {
             ident += "|" + pt.y; }
         pt.id = ident;
     }
 
 
     function prepData () {
-        var ctx = {yr: 0, dy: 0}, ny = new Date().getFullYear();
+        var ctx = {yr: 0, dy: 0, maxy: 0}, ny = new Date().getFullYear();
         jt.out(app.dispdivid, "Preparing data...");
         app.data.pts.forEach(function (pt) {
             parseDate(pt);
             makeCoordinates(pt, ctx);
             makePointIdent(pt, ny); });
+        app.data.maxy = ctx.maxy;
+        //Each data point has the following fields:
+        //  date: Colloquial text for display date or date range
+        //  text: Event description text
+        //  start: {year: number, month?, day?}
+        //  end?: {year: number, month?, day?}
+        //  tc: time coordinate number (start year + percentage) * 100
+        //  oc: offset coordinate number (one-based start year event count val)
+        //  id: text years ago + sep + offset
     }
 
 
     app.init2 = function () {
         app.amdtimer.load.end = new Date();
         prepData();
-        app.tabular.display();
+        app.linear.display();
+        //app.tabular.display();
     };
 
 
     app.init = function () {
         var href = window.location.href,
-            modules = ["js/data", "js/tabular"];
+            modules = ["js/data", "js/linear", "js/tabular"];
         jtminjsDecorateWithUtilities(jt);
         jt.out(app.dispdivid, "Loading app modules...");
         app.amdtimer = {};
