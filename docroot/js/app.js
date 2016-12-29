@@ -62,7 +62,9 @@ var app = {},  //Global container for application level funcs and values
         pt.tc = Math.round((y + m/12 + d/365) * 100) / 100;
         if(ctx.yr === pt.start.year) {
             ctx.dy += 1;   //next y coordinate value within year
-            ctx.maxy = Math.max(ctx.maxy, ctx.dy); }
+            if(ctx.dy > ctx.maxy) {
+                //alert("Increasing maxy to " + ctx.dy + " year: " + ctx.yr);
+                ctx.maxy = ctx.dy; } }
         else {
             ctx.yr = pt.start.year;  //reset year context
             ctx.dy = 1; }            //first y coordinate value within year

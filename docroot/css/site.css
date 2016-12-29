@@ -20,7 +20,7 @@ A:hover {text-decoration:underline; color:#00989a; }
 /* -------------------- */
 /* linear */
 
-.area { fill:steelblue; clip-path: url(../#clip); }
+circle { clip-path: url(../#clip); }
 .zoom { cursor:move; fill:none; pointer-events:all; }
 
 
