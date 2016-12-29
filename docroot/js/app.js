@@ -72,6 +72,32 @@ var app = {},  //Global container for application level funcs and values
     }
 
 
+    function centerPointGroup(pts) {
+        var ybump = 5;
+        if(!pts) {
+            return; }
+        if(pts.length >= 4) {
+            console.log("centerPointGroup " + pts[0].start.year); }
+        pts.forEach(function (pt) {
+            var mx = app.data.maxy,
+                mid = Math.round(mx / 2),
+                off = mid - Math.round(pts.length / 2);
+            pt.oc = (mx + 1) - pt.oc;   //invert so first point in series is top
+            pt.oc -= off;  //cluster points around center line
+        });
+    }
+
+
+    function centerYCoordinates (pt, ctx) {
+        if(ctx.yr === pt.start.year) {
+            ctx.grp.push(pt); }
+        else {
+            centerPointGroup(ctx.grp);
+            ctx.yr = pt.start.year;
+            ctx.grp = [pt]; }
+    }
+
+
     //The base of the point identifier is the number of years ago.
     //That keeps more modern history less cluttered looking because
     //the point identifiers are more concise, and it provides a quick
@@ -93,6 +119,13 @@ var app = {},  //Global container for application level funcs and values
             makeCoordinates(pt, ctx);
             makePointIdent(pt, ny); });
         app.data.maxy = ctx.maxy;
+        ctx = {yr: 0, grp: null};
+        app.data.pts.forEach(function (pt) {
+            centerYCoordinates(pt, ctx); });
+        ctx = {ybump: 5};  //bump all the points up to make bottom space
+        app.data.pts.forEach(function (pt) {
+            pt.oc += ctx.ybump; });
+        app.data.maxy += ctx.ybump;
         //Each data point has the following fields:
         //  date: Colloquial text for display date or date range
         //  text: Event description text

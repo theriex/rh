@@ -57,8 +57,9 @@ app.linear = (function () {
 
 
     function bindDataAndDrawChart () {
-        tl.x.domain([tl.pts[0].tc, tl.pts[tl.pts.length - 1].tc]);
-        tl.y.domain([0, app.data.maxy]);
+        tl.x.domain([tl.pts[0].tc - 20,  //avoid half dots at edges
+                     tl.pts[tl.pts.length - 1].tc + 1]);
+        tl.y.domain([0, app.data.maxy + 2]);  //avoid half dots at top
         tl.x2.domain(tl.x.domain());
         tl.y2.domain(tl.y.domain());
         tl.focus.selectAll("circle")
@@ -77,6 +78,7 @@ app.linear = (function () {
         tl.context.selectAll("circle")
             .data(tl.pts)
             .enter().append("circle")
+            .attr("class", "contextCircle")
             .attr("r", 3)
             .attr("cx", function(d) { return tl.x2(d.tc); })
             .attr("cy", function(d) { return tl.y2(d.oc); });
