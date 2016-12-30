@@ -44,11 +44,20 @@ app.linear = (function () {
     }
 
 
+    function adjustTickTextVisibility () {
+        d3.selectAll(".tick text")
+            .attr("fill", tl.zscale === 1 ? "none" : "#000");
+    }
+
+
     function zoomed () {
         var tran;
         if(d3.event.sourceEvent && d3.event.sourceEvent.type === "brush") {
             return; } // ignore zoom-by-brush
         tran = d3.event.transform;
+        tl.zscale = tran.k;
+        //console.log("k: " + tran.k + ", x: " + tran.x + ", y: " + tran.y);
+        adjustTickTextVisibility();
         tl.x.domain(tran.rescaleX(tl.x2).domain());
         redraw();
         tl.context.select(".brush").call(
@@ -97,12 +106,13 @@ app.linear = (function () {
             .attr("transform", "translate(" + tl.margin.left + "," + 
                                               tl.margin.top + ")")
             .call(tl.zoom);
+        adjustTickTextVisibility();
     }
 
 
     function display () {
         var outdiv = jt.byId(app.dispdivid);
-        tl = {offset: { x:10, y:10 }, pts: app.data.pts};
+        tl = {offset: { x:10, y:10 }, pts: app.data.pts, zscale: 1};
         setChartWidthAndHeight();
         outdiv.style.width = String(tl.chart.w) + "px"; //show bg if big screen
         outdiv.innerHTML = jt.tac2html(
@@ -126,9 +136,9 @@ app.linear = (function () {
         tl.x2 = d3.scalePow().exponent(10).range([0, tl.width]);
         tl.y = d3.scaleLinear().range([tl.height, 0]);
         tl.y2 = d3.scaleLinear().range([tl.height2, 0]);
-        tl.xAxis = d3.axisBottom(tl.x);
+        tl.xAxis = d3.axisBottom(tl.x).tickFormat(d3.format("d"));
         tl.xAxis2 = d3.axisBottom(tl.x2);
-        tl.yAxis = d3.axisLeft(tl.y);
+        tl.yAxis = d3.axisLeft(tl.y).tickFormat(function (d) { return ""; });
         tl.brush = d3.brushX()
             .extent([[0, 0], [tl.width, tl.height2]])
             .on("brush end", brushed);
