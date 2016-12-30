@@ -122,10 +122,10 @@ var app = {},  //Global container for application level funcs and values
         ctx = {yr: 0, grp: null};
         app.data.pts.forEach(function (pt) {
             centerYCoordinates(pt, ctx); });
-        ctx = {ybump: 5};  //bump all the points up to make bottom space
+        app.data.ybump = 5;  //bump all the points up to make bottom space
         app.data.pts.forEach(function (pt) {
-            pt.oc += ctx.ybump; });
-        app.data.maxy += ctx.ybump;
+            pt.oc += app.data.ybump; });
+        app.data.maxy += app.data.ybump;
         //Each data point has the following fields:
         //  date: Colloquial text for display date or date range
         //  text: Event description text

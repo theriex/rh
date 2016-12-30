@@ -7,19 +7,19 @@ app.linear = (function () {
     var tl; //timeline data object
 
     //aim for a nice 3-2 aspect ratio scaling to the screen width
-    // function setChartWidthAndHeight () {
-    //     var over, minw = 320;  //full width of a standard phone
-    //     tl.width = window.innerWidth - tl.offset.x;
-    //     tl.height = Math.round((tl.width * 2) / 3);
-    //     over = tl.height - window.innerHeight;
-    //     if(over > 0) {  //blew the available height, squish vertically
-    //         tl.width -= Math.round((over * 3) / 2);
-    //         tl.height = Math.round((tl.width * 2) / 3); }
-    //     if(tl.width < minw) {  //underflowed minimum phone width, re-expand
-    //         tl.width = minw;
-    //         tl.height = Math.round((tl.width * 2) / 3); }
-    //     jt.byId(app.displaydiv).style.width = String(tl.width) + "px";
-    // }
+    function setChartWidthAndHeight () {
+        var over, minw = 320;  //full width of a standard phone
+        tl.chart = {w: 0, h: 0};
+        tl.chart.w = window.innerWidth - tl.offset.x;
+        tl.chart.h = Math.round((tl.chart.w * 2) / 3);
+        over = tl.chart.h - window.innerHeight;
+        if(over > 0) {  //blew the available height, squish vertically
+            tl.chart.w -= Math.round((over * 3) / 2);
+            tl.chart.h = Math.round((tl.chart.w * 2) / 3); }
+        if(tl.chart.w < minw) {  //underflowed minimum phone width, re-expand
+            tl.chart.w = minw;
+            tl.chart.h = Math.round((tl.chart.w * 2) / 3); }
+    }
 
 
     function redraw () {
@@ -82,10 +82,10 @@ app.linear = (function () {
             .attr("r", 3)
             .attr("cx", function(d) { return tl.x2(d.tc); })
             .attr("cy", function(d) { return tl.y2(d.oc); });
-        tl.context.append("g")
-            .attr("class", "axis axis--x")
-            .attr("transform", "translate(0," + tl.height2 + ")")
-            .call(tl.xAxis2);
+        // tl.context.append("g")
+        //     .attr("class", "axis axis--x")
+        //     .attr("transform", "translate(0," + tl.height2 + ")")
+        //     .call(tl.xAxis2);
         tl.context.append("g")
             .attr("class", "brush")
             .call(tl.brush)
@@ -93,25 +93,35 @@ app.linear = (function () {
         tl.svg.append("rect")
             .attr("class", "zoom")
             .attr("width", tl.width)
-            .attr("height", tl.height)
-            .attr("transform", "translate(" + tl.margin.left + "," + tl.margin.top + ")")
+            .attr("height", tl.scaleheight)
+            .attr("transform", "translate(" + tl.margin.left + "," + 
+                                              tl.margin.top + ")")
             .call(tl.zoom);
     }
 
 
     function display () {
         var outdiv = jt.byId(app.dispdivid);
+        tl = {offset: { x:10, y:10 }, pts: app.data.pts};
+        setChartWidthAndHeight();
+        outdiv.style.width = String(tl.chart.w) + "px"; //show bg if big screen
         outdiv.innerHTML = jt.tac2html(
             ["div", {id: "lcontdiv"},
-             ["svg", {width: 960, height: 500}]]);
-        tl = {offset: { x:30, y:20 }, pts: app.data.pts};
-        //setChartWidthAndHeight();
+             ["svg", {width: tl.chart.w, height: tl.chart.h}]]);
         tl.svg = d3.select("svg");
-        tl.margin = {top: 20, right: 20, bottom: 110, left: 40};
-        tl.margin2 = {top: 430, right: 20, bottom: 30, left: 40};
-        tl.width = +tl.svg.attr("width") - tl.margin.left - tl.margin.right;
-        tl.height = +tl.svg.attr("height") - tl.margin.top - tl.margin.bottom;
-        tl.height2 = +tl.svg.attr("height") - tl.margin2.top - tl.margin2.bottom;
+        tl.margin = {top: 20, right: 20, bottom: 60, left: 30};
+        tl.margin.hpad = tl.margin.top + tl.margin.bottom;
+        tl.margin.wpad = tl.margin.left + tl.margin.right;
+        tl.height = tl.chart.h - tl.margin.hpad;
+        tl.vth = Math.round((tl.chart.h - tl.margin.hpad) / app.data.maxy);
+        tl.height2 = (app.data.ybump - 1) * tl.vth;
+        tl.margin2 = {top: (tl.height - tl.height2) + Math.round(0.9 * tl.vth),
+                      right: tl.margin.right,
+                      bottom: tl.margin.bottom,
+                      left: tl.margin.left};
+        tl.width = tl.chart.w - tl.margin.wpad;
+        tl.scaleheight = tl.height - tl.height2;
+
         tl.x = d3.scalePow().exponent(10).range([0, tl.width]);
         tl.x2 = d3.scalePow().exponent(10).range([0, tl.width]);
         tl.y = d3.scaleLinear().range([tl.height, 0]);
@@ -124,20 +134,22 @@ app.linear = (function () {
             .on("brush end", brushed);
         tl.zoom = d3.zoom()
             .scaleExtent([1, Infinity])
-            .translateExtent([[0, 0], [tl.width, tl.height]])
-            .extent([[0, 0], [tl.width, tl.height]])
+            .translateExtent([[0, 0], [tl.width, tl.scaleheight]])
+            .extent([[0, 0], [tl.width, tl.scaleheight]])
             .on("zoom", zoomed);
         tl.svg.append("defs").append("clipPath")
             .attr("id", "clip")
             .append("rect")
             .attr("width", tl.width)
-            .attr("height", tl.height);
+            .attr("height", tl.scaleheight);
         tl.focus = tl.svg.append("g")
             .attr("class", "focus")
-            .attr("transform", "translate(" + tl.margin.left + "," + tl.margin.top + ")");
+            .attr("transform", "translate(" + tl.margin.left + "," + 
+                                              tl.margin.top + ")");
         tl.context = tl.svg.append("g")
             .attr("class", "context")
-            .attr("transform", "translate(" + tl.margin2.left + "," + tl.margin2.top + ")");
+            .attr("transform", "translate(" + tl.margin2.left + "," + 
+                                              tl.margin2.top + ")");
         bindDataAndDrawChart();
     }
 

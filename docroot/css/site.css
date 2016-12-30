@@ -21,7 +21,7 @@ A:hover {text-decoration:underline; color:#00989a; }
 /* linear */
 
 circle { clip-path: url(../#clip); }
-.zoom { cursor:move; fill:none; pointer-events:all; }
+.zoom { fill:none; pointer-events:all; }
 .contextCircle { fill:#ccc; }
 
 
