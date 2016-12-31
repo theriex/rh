@@ -39,7 +39,7 @@ app.linear = (function () {
         redraw();
         tl.svg.select(".zoom").call(
             tl.zoom.transform, 
-            d3.zoomIdentity.scale(tl.width / (sel[1] - sel[0]))
+            d3.zoomIdentity.scale(tl.width2 / (sel[1] - sel[0]))
                 .translate(-sel[0], 0));
     }
 
@@ -61,7 +61,31 @@ app.linear = (function () {
         tl.x.domain(tran.rescaleX(tl.x2).domain());
         redraw();
         tl.context.select(".brush").call(
-            tl.brush.move, tl.x.range().map(tran.invertX, tran));
+            tl.brush.move, tl.x2.range().map(tran.invertX, tran));
+    }
+
+
+    function addFocusDecorativeElements () {
+        var label = {pad: 10, fs: Math.round(0.4 * tl.height2),
+                     y: tl.margin2.top + Math.round(0.64 * tl.height2)};
+        label.start = tl.pts[0].start.year;
+        if(label.start < 0) {
+            label.start = String(label.start * -1) + " BCE"; }
+        label.end = tl.pts[tl.pts.length - 1].start.year;
+        tl.deco = tl.svg.append("g");
+        tl.deco.append("text")
+            .attr("class", "contextLabel")
+            .attr("x", tl.margin2.left + label.pad)
+            .attr("y", label.y)
+            .attr("font-size", label.fs)
+            .text(label.start);
+        tl.deco.append("text")
+            .attr("class", "contextLabel")
+            .attr("text-anchor", "end")
+            .attr("x", tl.margin2.left + tl.width2 - label.pad)
+            .attr("y", label.y)
+            .attr("font-size", label.fs)
+            .text(label.end);
     }
 
 
@@ -91,14 +115,10 @@ app.linear = (function () {
             .attr("r", 3)
             .attr("cx", function(d) { return tl.x2(d.tc); })
             .attr("cy", function(d) { return tl.y2(d.oc); });
-        // tl.context.append("g")
-        //     .attr("class", "axis axis--x")
-        //     .attr("transform", "translate(0," + tl.height2 + ")")
-        //     .call(tl.xAxis2);
         tl.context.append("g")
             .attr("class", "brush")
             .call(tl.brush)
-            .call(tl.brush.move, tl.x.range());
+            .call(tl.brush.move, tl.x2.range());
         tl.svg.append("rect")
             .attr("class", "zoom")
             .attr("width", tl.width)
@@ -106,14 +126,13 @@ app.linear = (function () {
             .attr("transform", "translate(" + tl.margin.left + "," + 
                                               tl.margin.top + ")")
             .call(tl.zoom);
+        addFocusDecorativeElements();
         adjustTickTextVisibility();
     }
 
 
-    function display () {
+    function initDisplayVariableValues () {
         var outdiv = jt.byId(app.dispdivid);
-        tl = {offset: { x:10, y:10 }, pts: app.data.pts, zscale: 1};
-        setChartWidthAndHeight();
         outdiv.style.width = String(tl.chart.w) + "px"; //show bg if big screen
         outdiv.innerHTML = jt.tac2html(
             ["div", {id: "lcontdiv"},
@@ -122,25 +141,32 @@ app.linear = (function () {
         tl.margin = {top: 20, right: 20, bottom: 60, left: 30};
         tl.margin.hpad = tl.margin.top + tl.margin.bottom;
         tl.margin.wpad = tl.margin.left + tl.margin.right;
-        tl.height = tl.chart.h - tl.margin.hpad;
-        tl.vth = Math.round((tl.chart.h - tl.margin.hpad) / app.data.maxy);
-        tl.height2 = (app.data.ybump - 1) * tl.vth;
-        tl.margin2 = {top: (tl.height - tl.height2) + Math.round(0.9 * tl.vth),
-                      right: tl.margin.right,
+        tl.margin.ttlh = tl.chart.h - tl.margin.hpad;
+        tl.height = Math.round(0.9 * tl.margin.ttlh);
+        tl.height2 = Math.round(0.08 * tl.margin.ttlh);
+        tl.margin2 = {top: tl.margin.ttlh - tl.height2 + tl.margin.top + 10,
+                      right: tl.margin.right + 10,
                       bottom: tl.margin.bottom,
-                      left: tl.margin.left};
+                      left: tl.margin.left + 10};
         tl.width = tl.chart.w - tl.margin.wpad;
-        tl.scaleheight = tl.height - tl.height2;
+        tl.width2 = tl.chart.w - (tl.margin2.left + tl.margin2.right);
+        tl.scaleheight = tl.height;
+    }
 
+
+    function display () {
+        tl = {offset: { x:10, y:10 }, pts: app.data.pts, zscale: 1};
+        setChartWidthAndHeight();
+        initDisplayVariableValues();
         tl.x = d3.scalePow().exponent(10).range([0, tl.width]);
-        tl.x2 = d3.scalePow().exponent(10).range([0, tl.width]);
+        tl.x2 = d3.scalePow().exponent(10).range([0, tl.width2]);
         tl.y = d3.scaleLinear().range([tl.height, 0]);
         tl.y2 = d3.scaleLinear().range([tl.height2, 0]);
         tl.xAxis = d3.axisBottom(tl.x).tickFormat(d3.format("d"));
         tl.xAxis2 = d3.axisBottom(tl.x2);
         tl.yAxis = d3.axisLeft(tl.y).tickFormat(function (d) { return ""; });
         tl.brush = d3.brushX()
-            .extent([[0, 0], [tl.width, tl.height2]])
+            .extent([[0, 0], [tl.width2, tl.height2]])
             .on("brush end", brushed);
         tl.zoom = d3.zoom()
             .scaleExtent([1, Infinity])

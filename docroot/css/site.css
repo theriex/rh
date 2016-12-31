@@ -24,6 +24,7 @@ circle { clip-path: url(../#clip); }
 .zoom { fill:none; pointer-events:all; }
 .contextCircle { fill:#ccc; }
 .tick line { visibility:hidden; }
+.contextLabel { font-weight:bold; }
 
 
 /* -------------------- */

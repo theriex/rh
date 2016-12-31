@@ -73,7 +73,6 @@ var app = {},  //Global container for application level funcs and values
 
 
     function centerPointGroup(pts) {
-        var ybump = 5;
         if(!pts) {
             return; }
         if(pts.length >= 4) {
@@ -122,10 +121,6 @@ var app = {},  //Global container for application level funcs and values
         ctx = {yr: 0, grp: null};
         app.data.pts.forEach(function (pt) {
             centerYCoordinates(pt, ctx); });
-        app.data.ybump = 5;  //bump all the points up to make bottom space
-        app.data.pts.forEach(function (pt) {
-            pt.oc += app.data.ybump; });
-        app.data.maxy += app.data.ybump;
         //Each data point has the following fields:
         //  date: Colloquial text for display date or date range
         //  text: Event description text
