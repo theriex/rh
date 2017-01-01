@@ -25,6 +25,8 @@ circle { clip-path: url(../#clip); }
 .contextCircle { fill:#ccc; }
 .tick line { visibility:hidden; }
 .contextLabel { font-weight:bold; }
+.contextArrowhead { stroke:#999; fill:#ccc; }
+.contextMidline { stroke:#999; }
 
 
 /* -------------------- */

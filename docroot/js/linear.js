@@ -67,7 +67,11 @@ app.linear = (function () {
 
     function addFocusDecorativeElements () {
         var label = {pad: 10, fs: Math.round(0.4 * tl.height2),
-                     y: tl.margin2.top + Math.round(0.64 * tl.height2)};
+                     y: tl.margin2.top + Math.round(0.64 * tl.height2)},
+            rightx = tl.margin2.left + tl.width2,
+            tri = {midy: tl.margin2.top + Math.round(0.5 * tl.height2),
+                   ttly: tl.margin2.top + tl.height2,
+                   rightmost: tl.margin.left + tl.width};
         label.start = tl.pts[0].start.year;
         if(label.start < 0) {
             label.start = String(label.start * -1) + " BCE"; }
@@ -82,10 +86,27 @@ app.linear = (function () {
         tl.deco.append("text")
             .attr("class", "contextLabel")
             .attr("text-anchor", "end")
-            .attr("x", tl.margin2.left + tl.width2 - label.pad)
+            .attr("x",  rightx - label.pad)
             .attr("y", label.y)
             .attr("font-size", label.fs)
             .text(label.end);
+        tl.deco.append("path")
+            .attr("d", "M " + tl.margin.left + " " + tri.midy +
+                      " L " + tl.margin2.left + " " + tl.margin2.top +
+                      " L " + tl.margin2.left + " " + tri.ttly +
+                      " Z")
+            .attr("class", "contextArrowhead");
+        tl.deco.append("path")
+            .attr("d", "M " + tri.rightmost + " " + tri.midy +
+                      " L " + rightx + " " + tl.margin2.top +
+                      " L " + rightx + " " + tri.ttly +
+                      " Z")
+            .attr("class", "contextArrowhead");
+        tl.deco.append("path")
+            .attr("d", "M " + tl.margin2.left + " " + tri.midy +
+                      " L " + rightx + " " + tri.midy +
+                      " Z")
+            .attr("class", "contextMidline");
     }
 
 
