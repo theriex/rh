@@ -24,6 +24,10 @@ app.linear = (function () {
 
     function redraw () {
         tl.focus.select(".axis--x").call(tl.xAxis);
+        tl.focus.selectAll(".connline")
+            .attr("d", function (d) { 
+                return "M " + tl.x(d.tc) + " " + tl.y(d.oc) +
+                      " L " + tl.x(d.tc) + " " + tl.y(0); });
         tl.focus.selectAll("circle")
             .attr("cx", function(d) { return tl.x(d.tc); })
             .attr("cy", function(d) { return tl.y(d.oc); });
@@ -116,6 +120,13 @@ app.linear = (function () {
         tl.y.domain([0, app.data.maxy + 2]);  //avoid half dots at top
         tl.x2.domain(tl.x.domain());
         tl.y2.domain(tl.y.domain());
+        tl.focus.selectAll(".connline")
+            .data(tl.pts)
+            .enter().append("path")
+            .attr("d", function (d) { 
+                return "M " + tl.x(d.tc) + " " + tl.y(d.oc) +
+                      " L " + tl.x(d.tc) + " " + tl.y(0); })
+            .attr("class", "connline");
         tl.focus.selectAll("circle")
             .data(tl.pts)
             .enter().append("circle")

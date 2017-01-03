@@ -27,6 +27,7 @@ circle { clip-path: url(../#clip); }
 .contextLabel { font-weight:bold; }
 .contextArrowhead { stroke:#999; fill:#ccc; }
 .contextMidline { stroke:#999; }
+.connline { stroke:#999; fill:#ccc; }
 
 
 /* -------------------- */
