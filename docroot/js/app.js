@@ -105,7 +105,7 @@ var app = {},  //Global container for application level funcs and values
     function makePointIdent (pt, ny) {
         var ident = String(ny - pt.start.year + 1);  //zero is an ugly id
         if(pt.oc > 1) {
-            ident += "|" + pt.y; }
+            ident += "|" + pt.oc; }
         pt.id = ident;
     }
 

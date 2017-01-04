@@ -21,13 +21,16 @@ A:hover {text-decoration:underline; color:#00989a; }
 /* linear */
 
 circle { clip-path: url(../#clip); }
+.focusCircle { fill:#000; }
+.focusCircle:hover { fill:#f00; }
+#mouseoverLabel { fill:#f00; font-weight:bold; }
 .zoom { fill:none; pointer-events:all; }
-.contextCircle { fill:#ccc; }
 .tick line { visibility:hidden; }
+.contextCircle { fill:#ccc; }
 .contextLabel { font-weight:bold; }
 .contextArrowhead { stroke:#999; fill:#ccc; }
 .contextMidline { stroke:#999; }
-.connline { stroke:#999; fill:#ccc; }
+
 
 
 /* -------------------- */

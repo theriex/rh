@@ -24,10 +24,6 @@ app.linear = (function () {
 
     function redraw () {
         tl.focus.select(".axis--x").call(tl.xAxis);
-        tl.focus.selectAll(".connline")
-            .attr("d", function (d) { 
-                return "M " + tl.x(d.tc) + " " + tl.y(d.oc) +
-                      " L " + tl.x(d.tc) + " " + tl.y(0); });
         tl.focus.selectAll("circle")
             .attr("cx", function(d) { return tl.x(d.tc); })
             .attr("cy", function(d) { return tl.y(d.oc); });
@@ -114,32 +110,30 @@ app.linear = (function () {
     }
 
 
+    function overCircle (d, over) {
+        if(over) {
+            tl.focus.select("#mouseoverLabel")
+                .attr("x", tl.x(d.tc))
+                .attr("y", tl.y(d.oc + 1))
+                .text(d.id); }
+        else {
+            tl.focus.select("#mouseoverLabel")
+                .attr("x", 0)
+                .attr("y", 0)
+                .text(""); }
+    }
+
+
     function bindDataAndDrawChart () {
         tl.x.domain([tl.pts[0].tc - 20,  //avoid half dots at edges
                      tl.pts[tl.pts.length - 1].tc + 1]);
         tl.y.domain([0, app.data.maxy + 2]);  //avoid half dots at top
         tl.x2.domain(tl.x.domain());
         tl.y2.domain(tl.y.domain());
-        tl.focus.selectAll(".connline")
-            .data(tl.pts)
-            .enter().append("path")
-            .attr("d", function (d) { 
-                return "M " + tl.x(d.tc) + " " + tl.y(d.oc) +
-                      " L " + tl.x(d.tc) + " " + tl.y(0); })
-            .attr("class", "connline");
-        tl.focus.selectAll("circle")
-            .data(tl.pts)
-            .enter().append("circle")
-            .attr("r", 5)
-            .attr("cx", function(d) { return tl.x(d.tc); })
-            .attr("cy", function(d) { return tl.y(d.oc); });
         tl.focus.append("g")
             .attr("class", "axis axis--x")
             .attr("transform", "translate(0," + tl.height + ")")
             .call(tl.xAxis);
-        tl.focus.append("g")
-            .attr("class", "axis axis--y")
-            .call(tl.yAxis);
         tl.context.selectAll("circle")
             .data(tl.pts)
             .enter().append("circle")
@@ -151,13 +145,24 @@ app.linear = (function () {
             .attr("class", "brush")
             .call(tl.brush)
             .call(tl.brush.move, tl.x2.range());
-        tl.svg.append("rect")
-            .attr("class", "zoom")
-            .attr("width", tl.width)
-            .attr("height", tl.scaleheight)
-            .attr("transform", "translate(" + tl.margin.left + "," + 
-                                              tl.margin.top + ")")
-            .call(tl.zoom);
+        tl.focus.append("g")
+            .attr("class", "axis axis--y")
+            .call(tl.yAxis);
+        tl.focus.selectAll("circle")
+            .data(tl.pts)
+            .enter().append("circle")
+            .attr("r", 5)
+            .attr("cx", function(d) { return tl.x(d.tc); })
+            .attr("cy", function(d) { return tl.y(d.oc); })
+            .attr("class", "focusCircle")
+            .on("mouseover", function(d) { overCircle(d, true); })
+            .on("mouseout", function(d) { overCircle(d, false); });
+        tl.focus.append("text")
+            .attr("id", "mouseoverLabel")
+            .attr("text-anchor", "middle")
+            .attr("x", 0)
+            .attr("y", 0)
+            .text("");
         addFocusDecorativeElements();
         adjustTickTextVisibility();
     }
@@ -210,6 +215,13 @@ app.linear = (function () {
             .append("rect")
             .attr("width", tl.width)
             .attr("height", tl.scaleheight);
+        tl.svg.append("rect")
+            .attr("class", "zoom")
+            .attr("width", tl.width)
+            .attr("height", tl.scaleheight)
+            .attr("transform", "translate(" + tl.margin.left + "," + 
+                                              tl.margin.top + ")")
+            .call(tl.zoom);
         tl.focus = tl.svg.append("g")
             .attr("class", "focus")
             .attr("transform", "translate(" + tl.margin.left + "," + 
