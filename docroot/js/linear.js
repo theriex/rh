@@ -39,6 +39,7 @@ app.linear = (function () {
         sel = d3.event.selection || tl.x2.range();
         tl.x.domain(sel.map(tl.x2.invert, tl.x2));
         redraw();
+        //console.log("brushed sel[0]: " + sel[0] + ", sel[1]: " + sel[1]);
         tl.svg.select(".zoom").call(
             tl.zoom.transform, 
             d3.zoomIdentity.scale(tl.width2 / (sel[1] - sel[0]))
@@ -140,28 +141,54 @@ app.linear = (function () {
     }
 
 
-    function clickCircle (d) {
+    function openInfoDialog (d) {
         var dim = {x: tl.margin.left + Math.round(0.04 * tl.width),
                    y: tl.margin.top + tl.y(d.oc),
                    w: Math.round(0.9 * tl.width)};
         dim.h = Math.round(0.9 * tl.height) - dim.y;
         if(tl.width < 500) {  //use full space
-            dim.x = tl.margin.left + Math.round(0.02 * tl.width),
+            dim.x = tl.margin.left + Math.round(0.02 * tl.width);
             dim.y = tl.margin.top + Math.round(0.04 * tl.height);
             dim.h = Math.round(0.8 * tl.height); }
         d3.select("#itemdispdiv")
             .style("left", dim.x + "px")
             .style("top", dim.y + "px")
-            .style("max-width", dim.w + "px")
-        jt.out("itemdispdiv", d.date + "<br/>" + d.text);
+            .style("max-width", dim.w + "px");
+        jt.out("itemdispdiv", jt.tac2html(
+            [["div", {cla: "dlgdatediv"}, d.date],
+             ["div", {cla: "dlgxdiv"},
+              ["a", {href: "#close", onclick: jt.fs("app.linear.closeDlg()")},
+               "X"]],
+             ["div", {cla: "dlgtextdiv"}, d.text]]));
         d3.select("#itemdispdiv")
             .style("visibility", "visible")
             .style("max-height", "4px")
             .transition().duration(250)
             .style("max-height", dim.h + "px");
+    }
+
+
+    function markPointVisited (d) {
         d.fill = "#f00";
         tl.focus.select("#" + d.id)
             .style("fill", d.fill);
+    }
+
+
+    function zoomToPoint (d) {
+        var sel = [tl.x2(d.tc) - Math.round(tl.width2 / 8),
+                   tl.x2(d.tc) + Math.round(tl.width2 / 8)];
+        tl.svg.select(".zoom").transition().duration(2000).call(
+            tl.zoom.transform,
+            d3.zoomIdentity.scale(tl.width2 / (sel[1] - sel[0]))
+                .translate(-sel[0], 0));
+    }
+
+
+    function clickCircle (d) {
+        zoomToPoint(d);
+        markPointVisited(d);
+        openInfoDialog(d);
     }
 
 
@@ -241,7 +268,7 @@ app.linear = (function () {
         tl.y2 = d3.scaleLinear().range([tl.height2, 0]);
         tl.xAxis = d3.axisBottom(tl.x).tickFormat(d3.format("d"));
         tl.xAxis2 = d3.axisBottom(tl.x2);
-        tl.yAxis = d3.axisLeft(tl.y).tickFormat(function (d) { return ""; });
+        tl.yAxis = d3.axisLeft(tl.y).tickFormat(function () { return ""; });
         tl.brush = d3.brushX()
             .extent([[0, 0], [tl.width2, tl.height2]])
             .on("brush end", brushed);
@@ -275,6 +302,8 @@ app.linear = (function () {
 
 
     return {
-        display: function () { display(); }
+        display: function () { display(); },
+        closeDlg: function () { d3.select("#itemdispdiv")
+                                .style("visibility", "hidden"); }
     };
 }());

@@ -27,7 +27,10 @@ circle { clip-path: url(../#clip); }
   visibility:hidden; background:#e0cb07; overflow:scroll;
   padding:10px; border-radius:10px; border: 2px solid #666666; 
   box-shadow:5px 5px 3px #2f2b00; }
-  
+.dlgdatediv { float:left; }
+.dlgxdiv { float:right; font-size:xx-small; font-weight:bold; 
+  margin:-3px -3px 0px 0px; }
+.dlgtextdiv { clear:both; }
 .zoom { fill:none; pointer-events:all; }
 .tick line { visibility:hidden; }
 .contextCircle { fill:#ccc; }
