@@ -6,19 +6,21 @@ app.linear = (function () {
 
     var tl; //timeline data object
 
-    //aim for a nice 3-2 aspect ratio scaling to the screen width
     function setChartWidthAndHeight () {
-        var over, minw = 320;  //full width of a standard phone
+        var over, minw = 320,      //full width of a standard phone
+            rat = {w: 3, h: 2};    //default to nice 3:2 aspect ratio
+        if(window.innerWidth < 600) {
+            rat = {w: 2, h: 3}; }  //switch to long and tall (phone)
         tl.chart = {w: 0, h: 0};
         tl.chart.w = window.innerWidth - tl.offset.x;
-        tl.chart.h = Math.round((tl.chart.w * 2) / 3);
+        tl.chart.h = Math.round((tl.chart.w * rat.h) / rat.w);
         over = tl.chart.h - window.innerHeight;
         if(over > 0) {  //blew the available height, squish vertically
-            tl.chart.w -= Math.round((over * 3) / 2);
-            tl.chart.h = Math.round((tl.chart.w * 2) / 3); }
+            tl.chart.w -= Math.round((over * rat.w) / rat.h);
+            tl.chart.h = Math.round((tl.chart.w * rat.h) / rat.w); }
         if(tl.chart.w < minw) {  //underflowed minimum phone width, re-expand
             tl.chart.w = minw;
-            tl.chart.h = Math.round((tl.chart.w * 2) / 3); }
+            tl.chart.h = Math.round((tl.chart.w * rat.h) / rat.w); }
     }
 
 
@@ -143,6 +145,10 @@ app.linear = (function () {
                    y: tl.margin.top + tl.y(d.oc),
                    w: Math.round(0.9 * tl.width)};
         dim.h = Math.round(0.9 * tl.height) - dim.y;
+        if(tl.width < 500) {  //use full space
+            dim.x = tl.margin.left + Math.round(0.02 * tl.width),
+            dim.y = tl.margin.top + Math.round(0.04 * tl.height);
+            dim.h = Math.round(0.8 * tl.height); }
         d3.select("#itemdispdiv")
             .style("left", dim.x + "px")
             .style("top", dim.y + "px")
