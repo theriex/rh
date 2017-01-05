@@ -75,8 +75,8 @@ var app = {},  //Global container for application level funcs and values
     function centerPointGroup(pts) {
         if(!pts) {
             return; }
-        if(pts.length >= 4) {
-            console.log("centerPointGroup " + pts[0].start.year); }
+        // if(pts.length >= 4) {
+        //     console.log("centerPointGroup " + pts[0].start.year); }
         pts.forEach(function (pt) {
             var mx = app.data.maxy,
                 mid = Math.round(mx / 2),
@@ -97,15 +97,15 @@ var app = {},  //Global container for application level funcs and values
     }
 
 
-    //The base of the point identifier is the number of years ago.
-    //That keeps more modern history less cluttered looking because
-    //the point identifiers are more concise, and it provides a quick
-    //indication of how long ago something was.  The second part of
-    //the identifier is the y coordinate.
+    //The core of the point identifier is the number of years ago the
+    //event occurred.  That keeps more modern history entries more
+    //concise and generally reduces clutter.  D3 has problems with
+    //numeric ids, so a letter prefix is required.  Multiple entries
+    //within the same year are distinguished by their y coordinate.
     function makePointIdent (pt, ny) {
-        var ident = String(ny - pt.start.year + 1);  //zero is an ugly id
+        var ident = "y" + (ny - pt.start.year);
         if(pt.oc > 1) {
-            ident += "|" + pt.oc; }
+            ident += "_" + pt.oc; }
         pt.id = ident;
     }
 

@@ -65,7 +65,17 @@ app.linear = (function () {
     }
 
 
-    function addFocusDecorativeElements () {
+    function addFocusInteractiveElements () {
+        tl.focus.append("text")
+            .attr("id", "mouseoverLabel")
+            .attr("text-anchor", "middle")
+            .attr("x", 0)
+            .attr("y", 0)
+            .text("");
+    }
+
+
+    function addContextDecorativeElements () {
         var label = {pad: 10, fs: Math.round(0.4 * tl.height2),
                      y: tl.margin2.top + Math.round(0.64 * tl.height2)},
             rightx = tl.margin2.left + tl.width2,
@@ -112,15 +122,40 @@ app.linear = (function () {
 
     function overCircle (d, over) {
         if(over) {
+            tl.focus.select("#" + d.id)
+                .style("fill", "#f00");
             tl.focus.select("#mouseoverLabel")
                 .attr("x", tl.x(d.tc))
                 .attr("y", tl.y(d.oc + 1))
                 .text(d.id); }
         else {
+            tl.focus.select("#" + d.id)
+                .style("fill", (d.fill || "#000"));
             tl.focus.select("#mouseoverLabel")
                 .attr("x", 0)
                 .attr("y", 0)
                 .text(""); }
+    }
+
+
+    function clickCircle (d) {
+        var dim = {x: tl.margin.left + Math.round(0.04 * tl.width),
+                   y: tl.margin.top + tl.y(d.oc),
+                   w: Math.round(0.9 * tl.width)};
+        dim.h = Math.round(0.9 * tl.height) - dim.y;
+        d3.select("#itemdispdiv")
+            .style("left", dim.x + "px")
+            .style("top", dim.y + "px")
+            .style("max-width", dim.w + "px")
+        jt.out("itemdispdiv", d.date + "<br/>" + d.text);
+        d3.select("#itemdispdiv")
+            .style("visibility", "visible")
+            .style("max-height", "4px")
+            .transition().duration(250)
+            .style("max-height", dim.h + "px");
+        d.fill = "#f00";
+        tl.focus.select("#" + d.id)
+            .style("fill", d.fill);
     }
 
 
@@ -154,16 +189,14 @@ app.linear = (function () {
             .attr("r", 5)
             .attr("cx", function(d) { return tl.x(d.tc); })
             .attr("cy", function(d) { return tl.y(d.oc); })
+            .attr("id", function(d) { return d.id; })
+            .attr("fill", "#000")
             .attr("class", "focusCircle")
             .on("mouseover", function(d) { overCircle(d, true); })
-            .on("mouseout", function(d) { overCircle(d, false); });
-        tl.focus.append("text")
-            .attr("id", "mouseoverLabel")
-            .attr("text-anchor", "middle")
-            .attr("x", 0)
-            .attr("y", 0)
-            .text("");
-        addFocusDecorativeElements();
+            .on("mouseout", function(d) { overCircle(d, false); })
+            .on("click", function(d) { clickCircle(d); });
+        addFocusInteractiveElements();
+        addContextDecorativeElements();
         adjustTickTextVisibility();
     }
 
@@ -172,10 +205,11 @@ app.linear = (function () {
         var outdiv = jt.byId(app.dispdivid);
         outdiv.style.width = String(tl.chart.w) + "px"; //show bg if big screen
         outdiv.innerHTML = jt.tac2html(
-            ["div", {id: "lcontdiv"},
-             ["svg", {width: tl.chart.w, height: tl.chart.h}]]);
+            [["div", {id: "lcontdiv"},
+              ["svg", {width: tl.chart.w, height: tl.chart.h}]],
+             ["div", {id: "itemdispdiv"}, "hello"]]);
         tl.svg = d3.select("svg");
-        tl.margin = {top: 20, right: 20, bottom: 60, left: 30};
+        tl.margin = {top: 20, right: 10, bottom: 60, left: 10};
         tl.margin.hpad = tl.margin.top + tl.margin.bottom;
         tl.margin.wpad = tl.margin.left + tl.margin.right;
         tl.margin.ttlh = tl.chart.h - tl.margin.hpad;
