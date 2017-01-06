@@ -141,30 +141,98 @@ app.linear = (function () {
     }
 
 
-    function openInfoDialog (d) {
-        var dim = {x: tl.margin.left + Math.round(0.04 * tl.width),
-                   y: tl.margin.top + tl.y(d.oc),
+    function isValidPresPoint (pt) {
+        if(pt.fill) {  //already visited, don't present again
+            return false; }
+        //additional checking for display level, specific timeline etc.
+        return true;
+    }
+
+
+    function displayDialog (d, html) {
+        var dim, elem;
+        if(tl.width < 500) {  //use full space on small devices
+            dim = {x: tl.margin.left + Math.round(0.02 * tl.width),
+                   y: tl.margin.top + Math.round(0.04 * tl.height),
+                   w: Math.round(0.9 * tl.width),
+                   h: Math.round(0.8 * tl.height)}; }
+        else { //larger display tracks the point height for visual interest
+            dim = {tracked: true,
+                   x: tl.margin.left + Math.round(0.04 * tl.width),
+                   y: tl.margin.top + Math.round(0.04 * tl.height),
                    w: Math.round(0.9 * tl.width)};
-        dim.h = Math.round(0.9 * tl.height) - dim.y;
-        if(tl.width < 500) {  //use full space
-            dim.x = tl.margin.left + Math.round(0.02 * tl.width);
-            dim.y = tl.margin.top + Math.round(0.04 * tl.height);
-            dim.h = Math.round(0.8 * tl.height); }
+            if(d) {
+                dim.y = tl.margin.top + tl.y(d.oc); }
+            dim.h = Math.round(0.9 * tl.height) - dim.y; }
         d3.select("#itemdispdiv")
             .style("left", dim.x + "px")
             .style("top", dim.y + "px")
-            .style("max-width", dim.w + "px");
-        jt.out("itemdispdiv", jt.tac2html(
-            [["div", {cla: "dlgdatediv"}, d.date],
-             ["div", {cla: "dlgxdiv"},
-              ["a", {href: "#close", onclick: jt.fs("app.linear.closeDlg()")},
-               "X"]],
-             ["div", {cla: "dlgtextdiv"}, d.text]]));
+            .style("max-width", dim.w + "px")
+            .style("max-height", dim.h + "px");
+        jt.out("itemdispdiv", html);
+        if(dim.tracked) {
+            elem = jt.byId("itemdispdiv");
+            if(elem.scrollHeight > elem.offsetHeight) {  //overflowed
+                dim.y = tl.margin.top + Math.round(0.04 * tl.height);
+                dim.h = Math.round(0.8 * tl.height);
+                d3.select("#itemdispdiv")
+                    .style("top", dim.y + "px")
+                    .style("max-height", dim.h + "px"); } }
         d3.select("#itemdispdiv")
             .style("visibility", "visible")
             .style("max-height", "4px")
             .transition().duration(250)
             .style("max-height", dim.h + "px");
+    }
+
+
+    function initDisplaySeries () {
+        var ser = [], slen = 10, idx;
+        while(ser.length < slen) {
+            idx = Math.floor(Math.random() * tl.pts.length);
+            while(ser.indexOf(idx) >= 0 || !isValidPresPoint(tl.pts[idx])) {
+                idx += 1; }
+            ser.push(idx); }
+        ser.sort(function (a, b) { return b - a; });
+        tl.series = ser;
+    }
+
+
+    function initSeriesAndStart () {
+        var html;
+        initDisplaySeries();
+        html = [["div", {cla: "dlgxdiv"},
+                 ["a", {href: "#close", 
+                        onclick: jt.fs("app.linear.closeDlg()")},
+                  "X"]],
+                ["div", {cla: "dlgtextdiv"},
+                 ["div", {cla: "introdlgdiv"},
+                  [["div", {cla: "titlediv"},
+                    "Race <br/>History <br/>Navigable </br>Timeline"],
+                   ["div", {cla: "startdiv",
+                            onclick: jt.fs("app.linear.next()")},
+                    ["div", {cla: "startcontdiv"},
+                     "Start"]]]]]];
+        displayDialog(null, jt.tac2html(html));
+    }
+
+
+    function openInfoDialog (d) {
+        var html;
+        html = [["div", {cla: "dlgdatediv"}, d.date],
+                ["div", {cla: "dlgxdiv"},
+                 ["a", {href: "#close", 
+                        onclick: jt.fs("app.linear.closeDlg()")},
+                  "X"]],
+                ["div", {cla: "dlgtextdiv"}, d.text],
+                ["div", {cla: "buttondiv"},
+                 ["button", {type: "button", id: "nextbutton",
+                             onclick: jt.fs("app.linear.next()")},
+                  "Next"]]];
+        displayDialog(d, jt.tac2html(html));
+        //setting focus the first time does not work for whatever
+        //reason, but it helps for subsequent dialog displays.
+        setTimeout(function () { jt.byId("nextbutton").focus(); }, 100);
     }
 
 
@@ -258,10 +326,7 @@ app.linear = (function () {
     }
 
 
-    function display () {
-        tl = {offset: { x:10, y:10 }, pts: app.data.pts, zscale: 1};
-        setChartWidthAndHeight();
-        initDisplayVariableValues();
+    function initMainDisplayElements () {
         tl.x = d3.scalePow().exponent(10).range([0, tl.width]);
         tl.x2 = d3.scalePow().exponent(10).range([0, tl.width2]);
         tl.y = d3.scaleLinear().range([tl.height, 0]);
@@ -297,13 +362,38 @@ app.linear = (function () {
             .attr("class", "context")
             .attr("transform", "translate(" + tl.margin2.left + "," + 
                                               tl.margin2.top + ")");
+    }
+
+
+    function display () {
+        tl = {offset: { x:10, y:10 }, pts: app.data.pts, zscale: 1};
+        setChartWidthAndHeight();
+        initDisplayVariableValues();
+        initMainDisplayElements();
         bindDataAndDrawChart();
+        initSeriesAndStart();
+    }
+
+
+    function closeDialog () {
+        d3.select("#itemdispdiv")
+            .style("visibility", "hidden");
+    }
+
+
+    function next () {
+        var idx;
+        closeDialog();
+        if(!tl.series || !tl.series.length) {
+            initDisplaySeries(); }
+        idx = tl.series.pop();
+        clickCircle(tl.pts[idx]);
     }
 
 
     return {
         display: function () { display(); },
-        closeDlg: function () { d3.select("#itemdispdiv")
-                                .style("visibility", "hidden"); }
+        closeDlg: function () { closeDialog(); },
+        next: function () { next(); }
     };
 }());
