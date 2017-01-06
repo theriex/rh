@@ -123,6 +123,13 @@ app.linear = (function () {
     }
 
 
+    function fillColorForPoint (pt) {
+        if(pt.visited) {
+            return "#f00"; }
+        return "#000";
+    }
+
+
     function overCircle (d, over) {
         if(over) {
             tl.focus.select("#" + d.id)
@@ -133,7 +140,7 @@ app.linear = (function () {
                 .text(d.id); }
         else {
             tl.focus.select("#" + d.id)
-                .style("fill", (d.fill || "#000"));
+                .style("fill", fillColorForPoint(d));
             tl.focus.select("#mouseoverLabel")
                 .attr("x", 0)
                 .attr("y", 0)
@@ -142,7 +149,7 @@ app.linear = (function () {
 
 
     function isValidPresPoint (pt) {
-        if(pt.fill) {  //already visited, don't present again
+        if(pt.visited) {  //already visited, don't present again
             return false; }
         //additional checking for display level, specific timeline etc.
         return true;
@@ -208,7 +215,11 @@ app.linear = (function () {
                 ["div", {cla: "dlgtextdiv"},
                  ["div", {cla: "introdlgdiv"},
                   [["div", {cla: "titlediv"},
-                    "Race <br/>History <br/>Navigable </br>Timeline"],
+                    "American<br/>" + 
+                    "Race<br/>" + 
+                    "History<br/>" + 
+                    "Navigable</br>" + 
+                    "Timeline<br/>"],
                    ["div", {cla: "startdiv",
                             onclick: jt.fs("app.linear.next()")},
                     ["div", {cla: "startcontdiv"},
@@ -237,9 +248,11 @@ app.linear = (function () {
 
 
     function markPointVisited (d) {
-        d.fill = "#f00";
+        d.visited = (new Date()).toISOString();
         tl.focus.select("#" + d.id)
-            .style("fill", d.fill);
+            .style("fill", fillColorForPoint(d));
+        tl.pendingSaves = tl.pendingSaves || [];
+        tl.pendingSaves.push(d);
     }
 
 
@@ -291,7 +304,7 @@ app.linear = (function () {
             .attr("cx", function(d) { return tl.x(d.tc); })
             .attr("cy", function(d) { return tl.y(d.oc); })
             .attr("id", function(d) { return d.id; })
-            .attr("fill", "#000")
+            .attr("fill", function(d) { return fillColorForPoint(d); })
             .attr("class", "focusCircle")
             .on("mouseover", function(d) { overCircle(d, true); })
             .on("mouseout", function(d) { overCircle(d, false); })
@@ -381,13 +394,43 @@ app.linear = (function () {
     }
 
 
+    function showSaveConfirmationDialog () {
+        var html, subj, body, vps = "";
+        subj = "Race History restore link";
+        body = "Click this link to restore your browser state:\n" +
+            "http://localhost:8080";
+        tl.pts.forEach(function (pt) {
+            if(pt.visited) {
+                vps += "&" + pt.id + "=" + jt.enc(pt.visited); } });
+        body += "?" + vps.slice(1);
+        html = [["div", {cla: "dlgxdiv"},
+                 ["a", {href: "#close", 
+                        onclick: jt.fs("app.linear.closeDlg()")},
+                  "X"]],
+                ["div", {cla: "dlgtextdiv"},
+                 [["div", {id: "dlgsavetitlediv"}, "Progress saved."],
+                  ["div", {id: "dlgsavelinkdiv"},
+                   ["a", {href: "mailto:?subject=" + jt.dquotenc(subj) + 
+                                    "&body=" + jt.dquotenc(body)},
+                    "Mail a Restore Link"]]]],
+                ["div", {cla: "buttondiv"},
+                 ["button", {type: "button", id: "nextbutton",
+                             onclick: jt.fs("app.linear.next()")},
+                  "Continue"]]];
+        displayDialog(null, jt.tac2html(html));
+    }
+
+
     function next () {
         var idx;
         closeDialog();
         if(!tl.series || !tl.series.length) {
-            initDisplaySeries(); }
-        idx = tl.series.pop();
-        clickCircle(tl.pts[idx]);
+            app.saveState();
+            initDisplaySeries();
+            showSaveConfirmationDialog(); }
+        else {
+            idx = tl.series.pop();
+            clickCircle(tl.pts[idx]); }
     }
 
 

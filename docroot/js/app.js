@@ -1,8 +1,11 @@
+/*jslint browser, multivar, white, fudge */
+/*global window jtminjsDecorateWithUtilities */
+
 var app = {},  //Global container for application level funcs and values
     jt = {};   //Global access to general utility methods
 
 (function () {
-    "use strict"
+    "use strict";
 
     app.dispdivid = "rhcontentdiv";
 
@@ -110,6 +113,24 @@ var app = {},  //Global container for application level funcs and values
     }
 
 
+    function loadSavedState () {
+        var visited;
+        visited = jt.parseParams();
+        app.data.pts.forEach(function (pt) {
+            pt.visited = jt.toru(visited[pt.id]); });
+        //local storage is probably more recent, so it takes precedence
+        visited = window.localStorage.getItem("visited");
+        if(visited) {
+            try {
+                visited = JSON.parse(visited);
+                app.data.pts.forEach(function (pt) {
+                    pt.visited = jt.toru(visited[pt.id]) || pt.visited; });
+            } catch(exception) {
+                jt.err("loadSavedState failed: " + exception);
+            } }
+    }
+
+
     function prepData () {
         var ctx = {yr: 0, dy: 0, maxy: 0}, ny = new Date().getFullYear();
         jt.out(app.dispdivid, "Preparing data...");
@@ -121,6 +142,7 @@ var app = {},  //Global container for application level funcs and values
         ctx = {yr: 0, grp: null};
         app.data.pts.forEach(function (pt) {
             centerYCoordinates(pt, ctx); });
+        loadSavedState();
         //Each data point has the following fields:
         //  date: Colloquial text for display date or date range
         //  text: Event description text
@@ -129,7 +151,18 @@ var app = {},  //Global container for application level funcs and values
         //  tc: time coordinate number (start year + percentage) * 100
         //  oc: offset coordinate number (one-based start year event count val)
         //  id: text years ago + sep + offset
+        //  visited?: ISO date when last displayed
     }
+
+
+    app.saveState = function () {
+        var visited = {};
+        app.data.pts.forEach(function (pt) {
+            if(pt.visited) {
+                visited[pt.id] = pt.visited; } });
+        visited = JSON.stringify(visited);
+        window.localStorage.setItem("visited", visited);
+    };
 
 
     app.init2 = function () {
