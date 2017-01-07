@@ -124,8 +124,19 @@ app.linear = (function () {
 
 
     function fillColorForPoint (pt) {
+        var oldest, now;
+        if(!tl.heat) {
+            oldest = jt.ISOString2Time(app.oldestVisit);
+            now = jt.ISOString2Time();
+            tl.heat = d3.scaleTime()
+                .domain([oldest, now])
+                .range([d3.rgb("#0000FF"), d3.rgb("#FF0000")])
+                .interpolate(d3.interpolateHcl);
+            // console.log("oldest: " + oldest + ": " + tl.heat(oldest));
+            // console.log("   now: " + now + ": " + tl.heat(now));
+            }
         if(pt.visited) {
-            return "#f00"; }
+            return tl.heat(jt.ISOString2Time(pt.visited)); }
         return "#000";
     }
 
@@ -257,8 +268,11 @@ app.linear = (function () {
 
 
     function zoomToPoint (d) {
-        var sel = [tl.x2(d.tc) - Math.round(tl.width2 / 8),
-                   tl.x2(d.tc) + Math.round(tl.width2 / 8)];
+        var sel;
+        sel = [tl.x2(d.tc) - Math.round(tl.width2 / 8),
+               tl.x2(d.tc) + Math.round(tl.width2 / 8)];
+        sel[0] = Math.max(sel[0], 0);
+        sel[1] = Math.min(sel[1], tl.width2);
         tl.svg.select(".zoom").transition().duration(2000).call(
             tl.zoom.transform,
             d3.zoomIdentity.scale(tl.width2 / (sel[1] - sel[0]))

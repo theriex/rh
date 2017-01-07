@@ -128,6 +128,10 @@ var app = {},  //Global container for application level funcs and values
             } catch(exception) {
                 jt.err("loadSavedState failed: " + exception);
             } }
+        app.oldestVisit = (new Date()).toISOString();
+        app.data.pts.forEach(function (pt) {
+            if(pt.visited && pt.visited < app.oldestVisit) {
+                app.oldestVisit = pt.visited; } });
     }
 
 
