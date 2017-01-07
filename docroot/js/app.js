@@ -156,6 +156,14 @@ var app = {},  //Global container for application level funcs and values
         //  oc: offset coordinate number (one-based start year event count val)
         //  id: text years ago + sep + offset
         //  visited?: ISO date when last displayed
+        console.log("Timeline codes and names");
+        app.data.timelines.forEach(function (tl) {
+            console.log("  " + tl.code + ": " + tl.name); });
+        //an sv datum will have sv field set to the code.  It will
+        //also have a yvalue or other addional data.
+        console.log("Supplemental Visualizations");
+        app.data.suppvis.forEach(function (sv) {
+            console.log("  " + sv.code + ": " + sv.name); });
     }
 
 
