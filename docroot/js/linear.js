@@ -205,7 +205,11 @@ app.linear = (function () {
 
 
     function initDisplaySeries () {
-        var ser = [], slen = 10, idx;
+        //A series of 10 definitely feels like too much before a save.
+        //8 has a good rhythm, but it is one more than what people
+        //typically remember and it feels a bit heavy. Going with 6 to
+        //maximize the feeling of progress from the save dialogs.
+        var ser = [], slen = 8, idx;
         while(ser.length < slen) {
             idx = Math.floor(Math.random() * tl.pts.length);
             while(ser.indexOf(idx) >= 0 || !isValidPresPoint(tl.pts[idx])) {

@@ -34,7 +34,7 @@ circle { clip-path: url(../#clip); }
   box-shadow:5px 5px 3px #2f2b00; }
 .dlgdatediv { float:left; background:#fce934; padding:4px 4px 0px 4px;
   margin:0px 0px 3px -4px; border-radius:4px; }
-.dlgxdiv { float:right; font-size:xx-small; font-weight:bold; 
+.dlgxdiv { float:right; font-size:x-small; font-weight:bold; 
   margin:-3px -3px 0px 0px; }
 .dlgtextdiv { clear:both; margin-top:5px; background:#ebd400; 
   padding:4px 4px 0px 4px; }
