@@ -15,5 +15,7 @@ app.cite = {
     N16: ["http://www.smithsonianmag.com/people-places/what-became-of-the-taino-73824867"],
     L6: ["http://www.smithsonianmag.com/people-places/what-became-of-the-taino-73824867"],
     B6: ["http://library.brown.edu/haitihistory/1sr.html"],
-
+    N40: ["http://treatiesportal.unl.edu/earlytreaties/",
+          "http://avalon.law.yale.edu/subject_menus/ntreaty.asp"],
+    B34: ["Zinn, pg. 29"],
 };
