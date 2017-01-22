@@ -18,4 +18,6 @@ app.cite = {
     N40: ["http://treatiesportal.unl.edu/earlytreaties/",
           "http://avalon.law.yale.edu/subject_menus/ntreaty.asp"],
     B34: ["Zinn, pg. 29"],
+    A57: ["http://chnm.gmu.edu/courses/ncc375/rp/index.html",
+          "http://scholarship.law.berkeley.edu/cgi/viewcontent.cgi?article=1164&context=aalj"],
 };
