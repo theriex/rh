@@ -23,4 +23,9 @@ app.cite = {
     L33: ["https://zinnedproject.org/materials/ludlow-massacre/",
           "https://en.wikipedia.org/wiki/Ludlow_Massacre"],
     A75: ["http://scholarship.law.berkeley.edu/cgi/viewcontent.cgi?article=1164&context=aalj"],
+    A79: ["Hare-Hawes-Cutting Act sec 8(a)(1)"],
+    L43: ["http://digitalcommons.ilr.cornell.edu/cgi/viewcontent.cgi?article=1561&context=articles",
+          "https://en.wikipedia.org/wiki/Cannery_and_Agricultural_Workers%27_Industrial_Union",
+          "https://www.jstor.org/stable/25157372?seq=1#page_scan_tab_contents",
+          "https://www.kcet.org/history-society/bittersweet-fruit-el-montes-berry-strike-of-1933"],
 };
