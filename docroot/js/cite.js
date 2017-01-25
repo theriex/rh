@@ -20,4 +20,7 @@ app.cite = {
     B34: ["Zinn, pg. 29"],
     A57: ["http://chnm.gmu.edu/courses/ncc375/rp/index.html",
           "http://scholarship.law.berkeley.edu/cgi/viewcontent.cgi?article=1164&context=aalj"],
+    L33: ["https://zinnedproject.org/materials/ludlow-massacre/",
+          "https://en.wikipedia.org/wiki/Ludlow_Massacre"],
+    A75: ["http://scholarship.law.berkeley.edu/cgi/viewcontent.cgi?article=1164&context=aalj"],
 };
