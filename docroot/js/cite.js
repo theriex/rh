@@ -28,4 +28,6 @@ app.cite = {
           "https://en.wikipedia.org/wiki/Cannery_and_Agricultural_Workers%27_Industrial_Union",
           "https://www.jstor.org/stable/25157372?seq=1#page_scan_tab_contents",
           "https://www.kcet.org/history-society/bittersweet-fruit-el-montes-berry-strike-of-1933"],
+    N106: ["Disciplined Hearts, Theresa DeLeane O'Nel. LA: University of California Press, 1996"],
+    A101: ["Infamy by Richard Reeves"],
 };
