@@ -30,4 +30,7 @@ app.cite = {
           "https://www.kcet.org/history-society/bittersweet-fruit-el-montes-berry-strike-of-1933"],
     N106: ["Disciplined Hearts, Theresa DeLeane O'Nel. LA: University of California Press, 1996"],
     A101: ["Infamy by Richard Reeves"],
+    M10: ["Haiek, 2010, p. 48",
+          "http://www.bostonhistorycollaborative.com/BostonFamilyHistory/ancestors/syrian-lebanese/syr_1950.html",
+          "http://www.zihniozdil.info/wp-content/uploads/2014/04/Arab-American-Identity.pdf"],
 };
