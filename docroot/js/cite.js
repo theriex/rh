@@ -34,4 +34,6 @@ app.cite = {
           "http://www.bostonhistorycollaborative.com/BostonFamilyHistory/ancestors/syrian-lebanese/syr_1950.html",
           "http://www.zihniozdil.info/wp-content/uploads/2014/04/Arab-American-Identity.pdf"],
     N125: ["https://academic.evergreen.edu/g/grossmaz/bha.html"],
+    L81: ["http://www.dallasnews.com/news/news/2013/07/21/40-years-after-santos-rodriguezs-murder-scars-remain-for-family-neighbors-and-dallas",
+          "http://www.npr.org/sections/codeswitch/2013/07/24/205121429/How-The-Death-Of-A-12-Year-Old-Changed-The-City-Of-Dallas"],
 };
