@@ -36,4 +36,8 @@ app.cite = {
     N125: ["https://academic.evergreen.edu/g/grossmaz/bha.html"],
     L81: ["http://www.dallasnews.com/news/news/2013/07/21/40-years-after-santos-rodriguezs-murder-scars-remain-for-family-neighbors-and-dallas",
           "http://www.npr.org/sections/codeswitch/2013/07/24/205121429/How-The-Death-Of-A-12-Year-Old-Changed-The-City-Of-Dallas"],
+    B184: ["http://biotech.law.lsu.edu/cphl/history/reports/tuskegee/report1.pdf"],
+    A136: ["The Good Immigrants: How the Yellow Peril Became the Model Minority
+By Madeline Y. Hsu"],
+    R97: ["http://www.presidency.ucsb.edu/ws/index.php?pid=41904"],
 };
