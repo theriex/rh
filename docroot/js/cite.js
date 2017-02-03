@@ -40,4 +40,10 @@ app.cite = {
     A136: ["The Good Immigrants: How the Yellow Peril Became the Model Minority
 By Madeline Y. Hsu"],
     R97: ["http://www.presidency.ucsb.edu/ws/index.php?pid=41904"],
+    M22: ["http://articles.chicagotribune.com/1985-11-30/news/8503220803_1_alex-odeh-ray-alfred-arab-group",
+          "http://www.nytimes.com/1985/12/03/us/arab-americans-seek-protection.html"],
+    M24: ["http://www.nytimes.com/1986/12/10/nyregion/about-new-york-insult-piles-upon-calumny-an-arab-objects.html",
+          "http://articles.chicagotribune.com/1987-07-12/news/8702200711_1_arabs-fear-sami-odeh-american-arab-anti-discrimination-committee/2",
+          "http://articles.latimes.com/1986-12-03/news/mn-511_1_arabs"],
+
 };
