@@ -45,5 +45,6 @@ By Madeline Y. Hsu"],
     M24: ["http://www.nytimes.com/1986/12/10/nyregion/about-new-york-insult-piles-upon-calumny-an-arab-objects.html",
           "http://articles.chicagotribune.com/1987-07-12/news/8702200711_1_arabs-fear-sami-odeh-american-arab-anti-discrimination-committee/2",
           "http://articles.latimes.com/1986-12-03/news/mn-511_1_arabs"],
-
+    L109: ["http://articles.latimes.com/1994-11-10/news/mn-61016_1_democratic-party"],
+    A171: ["https://www.plainsite.org/dockets/2sem2s43c/superior-court-of-california-county-of-los-angeles/hua-bai-v-bob-wondries-associates-inc/"]
 };
