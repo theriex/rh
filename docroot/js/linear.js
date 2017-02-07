@@ -443,7 +443,7 @@ app.linear = (function () {
         var idx;
         closeDialog();
         if(!tl.series || !tl.series.length) {
-            app.saveState();
+            app.db.saveState();
             initDisplaySeries();
             showSaveConfirmationDialog(); }
         else {
