@@ -13,7 +13,7 @@ var app = {},  //Global container for application level funcs and values
     app.init2 = function () {
         app.amdtimer.load.end = new Date();
         app.db.prepData();
-        //define levels
+        app.lev.init();
         app.linear.display();
         //app.tabular.display();
     };
@@ -23,6 +23,7 @@ var app = {},  //Global container for application level funcs and values
         var href = window.location.href,
             modules = ["js/data",     //all the points for display
                        "js/db",       //data access and state
+                       "js/lev",      //traversal levels
                        "js/linear",   //linear timeline display
                        "js/tabular"   //text display
                       ];

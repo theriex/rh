@@ -74,7 +74,7 @@ app.db = (function () {
         if(!pts) {
             return; }
         // if(pts.length >= 4) {
-        //     console.log("centerPointGroup " + pts[0].start.year); }
+        //     jt.log("centerPointGroup " + pts[0].start.year); }
         pts.forEach(function (pt) {
             var mx = app.data.maxy,
                 mid = Math.round(mx / 2),
@@ -133,18 +133,14 @@ app.db = (function () {
 
 
     function describeData () {
-        console.log("Timeline codes and names");
+        jt.log("Timeline codes and names");
         app.data.timelines.forEach(function (tl) {
-            tl.pttl = 0;
-            app.data.pts.forEach(function (pt) {
-                if(pt.code.indexOf(tl.code) >= 0) {
-                    tl.pttl += 1; } });
-            console.log("  " + tl.code + ": " + tl.name + 
-                        " (" + tl.ident + ") " + tl.pttl); });
+            jt.log("  " + tl.code + ": " + tl.name + 
+                        " (" + tl.ident + ")"); });
         //an sv datum will have an sv field set to the sv code.
-        // console.log("Supplemental Visualizations");
+        // jt.log("Supplemental Visualizations");
         // app.data.suppvis.forEach(function (sv) {
-        //     console.log("  " + sv.code + ": " + sv.name); });
+        //     jt.log("  " + sv.code + ": " + sv.name); });
     }
 
 
@@ -178,7 +174,7 @@ app.db = (function () {
         app.data.pts.forEach(function (pt) {
             centerYCoordinates(pt, ctx); });
         loadSavedState();
-        describeData();
+        //describeData();
     }
 
 
