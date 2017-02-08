@@ -37,7 +37,7 @@ circle { clip-path: url(../#clip); }
 .dlgxdiv { float:right; font-size:x-small; font-weight:bold; 
   margin:-3px -3px 0px 0px; }
 .dlgtextdiv { clear:both; margin-top:5px; background:#ebd400; 
-  padding:4px 4px 0px 4px; }
+  padding:4px 4px 0px 4px; overflow:scroll; }
 .zoom { fill:none; pointer-events:all; }
 .tick line { visibility:hidden; }
 .contextCircle { fill:#ccc; }

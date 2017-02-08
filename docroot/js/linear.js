@@ -185,6 +185,8 @@ app.linear = (function () {
             if(elem.scrollHeight > elem.offsetHeight) {  //overflowed
                 dim.y = tl.margin.top + Math.round(0.04 * tl.height);
                 dim.h = Math.round(0.8 * tl.height);
+                d3.select(".dlgtextdiv")
+                    .style("max-height", Math.round(0.8 * dim.h) + "px");
                 d3.select("#itemdispdiv")
                     .style("top", dim.y + "px")
                     .style("max-height", dim.h + "px"); } }
