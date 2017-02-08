@@ -159,14 +159,6 @@ app.linear = (function () {
     }
 
 
-    function isValidPresPoint (pt) {
-        if(pt.visited) {  //already visited, don't present again
-            return false; }
-        //additional checking for display level, specific timeline etc.
-        return true;
-    }
-
-
     function displayDialog (d, html) {
         var dim, elem;
         if(tl.width < 500) {  //use full space on small devices
@@ -204,25 +196,9 @@ app.linear = (function () {
     }
 
 
-    function initDisplaySeries () {
-        //A series of 10 definitely feels like too much before a save.
-        //8 has a good rhythm, but it is one more than what people
-        //typically remember and it feels a bit heavy. Going with 6 to
-        //maximize the feeling of progress from the save dialogs.
-        var ser = [], slen = 8, idx;
-        while(ser.length < slen) {
-            idx = Math.floor(Math.random() * tl.pts.length);
-            while(ser.indexOf(idx) >= 0 || !isValidPresPoint(tl.pts[idx])) {
-                idx += 1; }
-            ser.push(idx); }
-        ser.sort(function (a, b) { return b - a; });
-        tl.series = ser;
-    }
-
-
     function initSeriesAndStart () {
         var html;
-        initDisplaySeries();
+        tl.series = app.lev.getNextPoints();
         html = [["div", {cla: "dlgxdiv"},
                  ["a", {href: "#close", 
                         onclick: jt.fs("app.linear.closeDlg()")},
@@ -440,15 +416,15 @@ app.linear = (function () {
 
 
     function next () {
-        var idx;
+        var pt;
         closeDialog();
         if(!tl.series || !tl.series.length) {
             app.db.saveState();
-            initDisplaySeries();
+            tl.series = app.lev.getNextPoints();
             showSaveConfirmationDialog(); }
         else {
-            idx = tl.series.pop();
-            clickCircle(tl.pts[idx]); }
+            pt = tl.series.pop();
+            clickCircle(pt); }
     }
 
 

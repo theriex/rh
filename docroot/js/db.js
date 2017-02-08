@@ -165,6 +165,8 @@ app.db = (function () {
                 throw "Missing cid " + pt.date + " " + pt.text; }
             if(cs[pt.cid]) {
                 throw "Duplicate cid: " + pt.cid; }
+            if(pt.code.indexOf("U") >= 0 && pt.code.indexOf("D") >= 0) {
+                throw "Either 'U' or 'D' (no save on intro) cid: " + pt.cid; }
             cs[pt.cid] = pt;
             parseDate(pt);
             makeCoordinates(pt, ctx);

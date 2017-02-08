@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge */
+/*jslint browser, multivar, white, fudge, for */
 /*global app, window, jt, d3 */
 
 app.lev = (function () {
@@ -73,11 +73,80 @@ app.lev = (function () {
     function init () {
         initStructures();
         distributePoints();
-        logLevels();
+        //logLevels();
+    }
+
+
+    //If no points have been displayed yet, return several not
+    //generally known points across all timelines.  This is just an
+    //intro to draw people in with kind of a trivial persuit feel and
+    //hopefully evoke that learning could be fun(ish).  After the
+    //first intro, all timelines that have points not yet visited are
+    //eligible.
+    function getEligibleTimelines () {
+        var tls = [], elig = [];
+        app.data.timelines.forEach(function (tl) {
+            if(!ps.visited) {
+                if(tl.code === "U") {
+                    tls.push(tl); } }
+            else { //not intro pass
+                if(tl.code !== "U" && tl.code !== "D") {
+                    tls.push(tl); } } });
+        tls.forEach(function (tl) {
+            tl.visited = 0;
+            tl.pts = []; });
+        app.data.pts.forEach(function (pt) {
+            tls.forEach(function (tl) {
+                if(!pt.sv && pt.code.indexOf(tl.code) >= 0) {
+                    if(pt.visited) {
+                        tl.visited += 1; }
+                    else {
+                        tl.pts.push(pt); } } }); });
+        tls.forEach(function (tl) {
+            if(tl.pts.length) {
+                tl.pcntcomp = tl.visited / tl.pts.length;
+                elig.push(tl); } });
+        return elig;
+    }
+
+
+    //The next timeline to use as a point source is selected priority
+    //round robin based on the least percentage complete.  That way no
+    //timeline starves and they all get exhausted at a similar rate.
+    function selectNextTimeline (tls) {
+        tls.sort(function (a, b) { return a.pcntcomp - b.pcntcomp; });
+        return tls[0];
+    }
+
+
+    function selectRandom (pts, ttl) {
+        var sel = [], idx;
+        while(pts.length && sel.length <= ttl) {
+            idx = Math.floor(Math.random() * pts.length);
+            sel.push(pts[idx]);
+            pts.splice(idx, 1); }
+        return sel;
+    }
+
+
+    //Return an array of points that have not been visited yet.  For
+    //presentation consistency, the returned points are all from the
+    //same timeline.  The number of points returned is a based on how
+    //many points people can remember at a time, that way it feels
+    //like a comprehensible chunk.
+    function getNextPoints () {
+        var tls, tl, pts, slen = 6;
+        tls = getEligibleTimelines();
+        tl = selectNextTimeline(tls);
+        pts = selectRandom(tl.pts, slen);
+        //newest first so you can pop points off the array in chrono order
+        pts.sort(function (a, b) { return b.tc - a.tc; });
+        return pts;
     }
 
 
     return {
-        init: function () { init(); }
+        init: function () { init(); },
+        getNextPoints: function () { return getNextPoints(); }
     };
 }());
