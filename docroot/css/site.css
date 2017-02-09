@@ -58,7 +58,10 @@ circle { clip-path: url(../#clip); }
 #dlgsavelinkdiv { font-weight:bold; padding:20px; }
 
 #navdiv { position:absolute; left:0px; top:0px; }
-.levdisprect { stroke:#999; fill:#00ff4c; }
+.levnumbackrect { stroke:#999; fill:#b7b7ff; }
+.levelnumber { }
+.progbarback   { stroke:#999; fill:#ccc; }
+.progbarfilled { stroke:#999; fill:#00ff4c; }
 
 /* -------------------- */
 /* tabular */

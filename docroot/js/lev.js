@@ -14,10 +14,10 @@ app.lev = (function () {
         app.data.timelines.forEach(function (tl) {
             tl.pttl = 0;
             timelines[tl.code] = tl; });
-        app.data.suppvis.forEach(function (sv) {
+        app.data.suppvis.forEach(function (sv, idx) {
             sv.pts = [];
             suppvs[sv.code] = sv;
-            levels.push({pa: 0, pv: 0, sv: sv}); });
+            levels.push({levnum: idx + 1, pa: 0, pv: 0, sv: sv}); });
         app.data.pts.forEach(function (pt) {
             var i, code;
             if(pt.sv) {
@@ -178,9 +178,11 @@ app.lev = (function () {
     }
 
 
-    function levelPercentComplete () {
+    function progInfo () {
         var currlev = getCurrentLevel();
-        return currlev.pv / currlev.pttl;
+        return {level: currlev.levnum,
+                levpcnt: currlev.pv / currlev.pttl,
+                mainpcnt: ps.visited / (ps.avail + ps.visited)};
     }
 
 
@@ -188,7 +190,6 @@ app.lev = (function () {
         init: function () { init(); },
         getNextPoints: function () { return getNextPoints(); },
         updateVisited: function (pts) { return updateVisited(pts); },
-        mainpcnt: function () { return ps.visited / (ps.avail + ps.visited); },
-        levpcnt: function () { return  levelPercentComplete(); }
+        progInfo: function () { return progInfo(); }
     };
 }());

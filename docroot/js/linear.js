@@ -327,7 +327,7 @@ app.linear = (function () {
             [["div", {id: "lcontdiv"},
               ["svg", {id: "svgmain", width: tl.chart.w, height: tl.chart.h}]],
              ["div", {id: "navdiv"},
-              ["svg", {id: "svgnav", width: tl.chart.w, height: 20}]],
+              ["svg", {id: "svgnav", width: tl.chart.w, height: 30}]],
              ["div", {id: "itemdispdiv"}, "hello"]]);
         tl.progsvg = d3.select("#svgnav");
         tl.svg = d3.select("#svgmain");
@@ -430,22 +430,50 @@ app.linear = (function () {
 
 
     function updateLevelDisplay () {
+        var proginfo = app.lev.progInfo(),
+            ti = {fs: 18,   //font size for level number
+                  p: {t: 1, r: 2, b: 1, l: 2},  //padding top right bottom left
+                  m: {t: 3, r: 2, b: 0, l: 3}}, //margin  top right bottom left
+            tc = {x: ti.m.l + ti.p.l,
+                  y: ti.m.t + ti.p.t + ti.fs,
+                  h: ti.p.t + ti.fs + ti.p.b,
+                  w: ti.p.l + ti.fs + ti.p.r},
+            rc = {x: tc.x + tc.w + ti.m.r,
+                  y: Math.floor(tc.h / 2),
+                  h: Math.floor(tc.h / 4),
+                  w: tl.width - (tc.x + tc.w)};
         if(!tl.prog) {
             tl.prog = tl.progsvg.append("g");
             tl.prog.append("rect")
-                .attr("height", 5)
-                .attr("id", "progmain")
-                .attr("class", "levdisprect")
-                .attr("transform", "translate(" + tl.margin.left + ",0)");
+                .attr("class", "levnumbackrect")
+                .attr("ry", 5)
+                .attr("x", tc.x - ti.p.l)
+                .attr("y", ti.m.t)
+                .attr("height", tc.h)
+                .attr("width", tc.w);
+            tl.prog.append("text")
+                .attr("class", "levelnumber")
+                .attr("text-anchor", "middle")  //variable width font
+                .attr("x", ti.m.l + Math.round(tc.w / 2))
+                .attr("y", tc.y - ti.p.t)
+                .attr("dy", "-.1em")   //fudge text baseline
+                .attr("font-size", ti.fs)
+                .text(String(proginfo.level));
             tl.prog.append("rect")
-                .attr("height", 5)
-                .attr("id", "proglev")
-                .attr("class", "levdisprect")
-                .attr("transform", "translate(" + tl.margin.left + ",10)"); }
-        d3.select("#progmain")
-            .attr("width", Math.round(app.lev.mainpcnt() * tl.width));
-        d3.select("#proglev")
-            .attr("width", Math.round(app.lev.levpcnt() * tl.width));
+                .attr("class", "progbarback")
+                .attr("x", rc.x)
+                .attr("y", rc.y)
+                .attr("height", rc.h)
+                .attr("width", rc.w);
+            tl.prog.append("rect")
+                .attr("class", "progbarfilled")
+                .attr("id", "progdisprect")
+                .attr("x", rc.x)
+                .attr("y", rc.y)
+                .attr("height", rc.h)
+                .attr("width", 0); }
+        d3.select("#progdisprect")
+            .attr("width", Math.round(proginfo.levpcnt * rc.w));
     }
 
 
