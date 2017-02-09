@@ -99,7 +99,7 @@ app.linear = (function () {
         tl.deco.append("text")
             .attr("class", "contextLabel")
             .attr("text-anchor", "end")
-            .attr("x",  rightx - label.pad)
+            .attr("x", rightx - label.pad)
             .attr("y", label.y)
             .attr("font-size", label.fs)
             .text(label.end);
@@ -198,9 +198,18 @@ app.linear = (function () {
     }
 
 
+    function getPointsForDisplay () {
+        if(tl.fetchpoints) {
+            app.lev.updateVisited(tl.fetchpoints); }
+        tl.fetchpoints = app.lev.getNextPoints();
+        tl.series = tl.fetchpoints.slice();  //working copy to chew up
+    }
+
+
     function initSeriesAndStart () {
         var html;
-        tl.series = app.lev.getNextPoints();
+        getPointsForDisplay();
+        updateLevelDisplay();
         html = [["div", {cla: "dlgxdiv"},
                  ["a", {href: "#close", 
                         onclick: jt.fs("app.linear.closeDlg()")},
@@ -316,9 +325,12 @@ app.linear = (function () {
         outdiv.style.width = String(tl.chart.w) + "px"; //show bg if big screen
         outdiv.innerHTML = jt.tac2html(
             [["div", {id: "lcontdiv"},
-              ["svg", {width: tl.chart.w, height: tl.chart.h}]],
+              ["svg", {id: "svgmain", width: tl.chart.w, height: tl.chart.h}]],
+             ["div", {id: "navdiv"},
+              ["svg", {id: "svgnav", width: tl.chart.w, height: 20}]],
              ["div", {id: "itemdispdiv"}, "hello"]]);
-        tl.svg = d3.select("svg");
+        tl.progsvg = d3.select("#svgnav");
+        tl.svg = d3.select("#svgmain");
         tl.margin = {top: 20, right: 10, bottom: 60, left: 10};
         tl.margin.hpad = tl.margin.top + tl.margin.bottom;
         tl.margin.wpad = tl.margin.left + tl.margin.right;
@@ -417,12 +429,33 @@ app.linear = (function () {
     }
 
 
+    function updateLevelDisplay () {
+        if(!tl.prog) {
+            tl.prog = tl.progsvg.append("g");
+            tl.prog.append("rect")
+                .attr("height", 5)
+                .attr("id", "progmain")
+                .attr("class", "levdisprect")
+                .attr("transform", "translate(" + tl.margin.left + ",0)");
+            tl.prog.append("rect")
+                .attr("height", 5)
+                .attr("id", "proglev")
+                .attr("class", "levdisprect")
+                .attr("transform", "translate(" + tl.margin.left + ",10)"); }
+        d3.select("#progmain")
+            .attr("width", Math.round(app.lev.mainpcnt() * tl.width));
+        d3.select("#proglev")
+            .attr("width", Math.round(app.lev.levpcnt() * tl.width));
+    }
+
+
     function next () {
         var pt;
         closeDialog();
         if(!tl.series || !tl.series.length) {
             app.db.saveState();
-            tl.series = app.lev.getNextPoints();
+            getPointsForDisplay();
+            updateLevelDisplay();
             showSaveConfirmationDialog(); }
         else {
             pt = tl.series.pop();

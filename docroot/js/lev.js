@@ -129,24 +129,66 @@ app.lev = (function () {
     }
 
 
+    function getCurrentLevel () {
+        var currlev = null;
+        levels.forEach(function (lev) {
+            if(!currlev) {
+                if(lev.pa) {
+                    currlev = lev; }
+                else if(!lev.sv.visited) {
+                    currlev = lev; } } });
+        return currlev;
+    }
+
+
     //Return an array of points that have not been visited yet.  For
     //presentation consistency, the returned points are all from the
     //same timeline.  The number of points returned is a based on how
     //many points people can remember at a time, that way it feels
     //like a comprehensible chunk.
     function getNextPoints () {
-        var tls, tl, pts, slen = 6;
-        tls = getEligibleTimelines();
-        tl = selectNextTimeline(tls);
-        pts = selectRandom(tl.pts, slen);
-        //newest first so you can pop points off the array in chrono order
-        pts.sort(function (a, b) { return b.tc - a.tc; });
-        return pts;
+        var currlev, tls, tl, pts, slen = 6;
+        currlev = getCurrentLevel();
+        if(!currlev) {     //no more points to display, done.
+            return []; }
+        if(currlev.pa) {   //have regular points to choose from
+            slen = Math.min(slen, currlev.pa);
+            tls = getEligibleTimelines();
+            tl = selectNextTimeline(tls);
+            pts = selectRandom(tl.pts, slen);
+            //newest first so you can pop points off the array in chrono order
+            pts.sort(function (a, b) { return b.tc - a.tc; });
+            return pts; }
+        return currlev.sv.pts;  //only the final supp vis left
+    }
+
+
+    function updateVisited (pts) {
+        var currlev = getCurrentLevel();
+        if(pts) {
+            if(!pts[0].sv) {  //regular progress update
+                currlev.pa -= pts.length;
+                currlev.pv += pts.length;
+                ps.avail -= pts.length;
+                ps.visited += pts.length; }
+            else {
+                //the supplemental visualization takes care of marking
+                //all of its covered points as visited 
+                currlev.sv.visited = true; } }
+    }
+
+
+    function levelPercentComplete () {
+        var currlev = getCurrentLevel();
+        return currlev.pv / currlev.pttl;
     }
 
 
     return {
         init: function () { init(); },
-        getNextPoints: function () { return getNextPoints(); }
+        getNextPoints: function () { return getNextPoints(); },
+        updateVisited: function (pts) { return updateVisited(pts); },
+        mainpcnt: function () { return ps.visited / (ps.avail + ps.visited); },
+        levpcnt: function () { return  levelPercentComplete(); }
     };
 }());

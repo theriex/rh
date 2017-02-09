@@ -121,7 +121,10 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
      intro: "Population composition from U.S. Census numbers according to the categories available at the time. Also immigration composition numbers."},
     {code:"cz",
      name: "Citizenship",
-     intro: "What year citizenship was explicitely disallowed or possible for particular groups"}],
+     intro: "What year citizenship was explicitely disallowed or possible for particular groups"},
+    {code:"fi",
+     name:"Finale",
+     intro: "Congratulations! You've read every point, and probably become more knowledgeable. Now to apply it :-)  Feel free to use this for quick reference and search for starting points you want to know more about."}],
   pts:[
     { code:"NL", cid:"N1",
       date:"1200 BCE",

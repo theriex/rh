@@ -57,6 +57,9 @@ circle { clip-path: url(../#clip); }
 #dlgsavetitlediv { text-align:center; }
 #dlgsavelinkdiv { font-weight:bold; padding:20px; }
 
+#navdiv { position:absolute; left:0px; top:0px; }
+.levdisprect { stroke:#999; fill:#00ff4c; }
+
 /* -------------------- */
 /* tabular */
 .trowdiv { padding-bottom:10px; }
