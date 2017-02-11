@@ -106,7 +106,14 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
       ident:"Date",
       code:"D",
       over:"Milestone or pivotal facts and events where the date is especially important to recall." } ],
+
   suppvis:[
+    {code:"in", pc: "U", select:"random", passes: 3,
+     //The first level is a short round of lesser known points in an
+     //attempt to pique curiosity and engagement.  The visualization
+     //is just a welcome message for completing the first round.
+     name: "Introduction",
+     intro: "Welcome! For the next levels, points will be selected chronologically within each theme. There are 7 levels. Good luck!"},
     {code:"sl",
      name: "Slavery",
      intro: "Regions, territories, and/or states where slavery is allowed."},
@@ -125,7 +132,11 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
     {code:"fi",
      name:"Finale",
      intro: "Congratulations! You've read every point, and probably become more knowledgeable. Now to apply it :-)  Feel free to use this for quick reference and search for starting points you want to know more about."}],
+
   pts:[
+    { code:"", cid:"X1", sv:"in",
+      date:"1200 BCE",
+      text:"This is just a marker data point to trigger the intro vis." },
     { code:"NL", cid:"N1",
       date:"1200 BCE",
       text:"Olmec civilization arises in Central America sometime between 1200 BCE and 1000 BCE. They are the earliest civilization in Central America, and possibly the earliest civilization in the Americas. The Olmec originally lived in the Gulf Coast region of southern Mexico, but soon expanded into Guatemala." },
@@ -2710,7 +2721,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
       text:"The Department of Justice asks more than two hundred colleges to provide information on their Middle Eastern students." },
     { code:"MU", cid:"M51",
       date:"2002",
-      text:"Tony Shalhoub, a Lebanese American, is the leading character named Adrian Monk in the TV show “Monk”. Shalboub also plays roles in Men in Black and Men in Black II. The series makes him a star and earns him four straight Emmy Award nominations between 2003 and 2006, for Outstanding Lead Actor in a Comedy Series which he wins in 2003, 2005 and 2006." },
+      text:"Tony Shalhoub, a Lebanese American, is the leading character named Adrian Monk in the TV show “Monk”. Shalhoub also plays roles in Men in Black and Men in Black II. The series makes him a star and earns him four straight Emmy Award nominations between 2003 and 2006, for Outstanding Lead Actor in a Comedy Series which he wins in 2003, 2005 and 2006." },
     { code:"A", cid:"A171",
       date:"2002-12-09",
       text:"Chinese customers of Wondries Toyota bring a lawsuit against the dealership. Customers dealt with Wondries’ Chinese-speaking sales staff and signed contracts with terms that differed significantly from what they had negotiated, including exorbitant interest rates, excessive hidden charges, and signing lease contracts which they believed to be purchase contracts and vice versa. The lawsuit results in a new law in California which requires translation of particular contracts in Spanish, Chinese, Korean, Tagalog, and Vietnamese." },

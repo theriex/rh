@@ -274,7 +274,10 @@ app.linear = (function () {
     function clickCircle (d) {
         zoomToPoint(d);
         markPointVisited(d);
-        openInfoDialog(d);
+        if(d.sv) {
+            jt.err("Supplemental visualization not implemented yet."); }
+        else {
+            openInfoDialog(d); }
     }
 
 

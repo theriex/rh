@@ -7,7 +7,8 @@ app.lev = (function () {
     //Each level ends with a supplemental visualization.  A level is
     //complete when its points are all visited and the sv is visited.
     var levels = [], timelines = {}, suppvs = {},
-        ps = {avail: 0, visited: 0};
+        ps = {avail: 0, visited: 0},
+        pointsPerSave = 6;
 
 
     function initStructures () {
@@ -35,28 +36,39 @@ app.lev = (function () {
     }
 
 
+    function pointsForLevel (cc, lev, pttl) {
+        lev.pttl = pttl;
+        if(cc.dv) {
+            if(cc.dv >= lev.pttl) {  //all points level are visited
+                lev.pv = lev.pttl;
+                cc.dv -= lev.pttl; }
+            else {                   //some points visited but not all
+                lev.pv = cc.dv;
+                cc.dv = 0; } }
+        if(lev.pv < lev.pttl) { //not all points were visited
+            lev.pa = lev.pttl - lev.pv;
+            cc.da -= lev.pa; }
+    }
+
+
     function distributePoints () {
-        var tl, tp, lb, lr, da, dv;
-        tl = levels.length;         //total number of levels
-        tp = ps.avail + ps.visited; //total points to distribute
-        lb = Math.floor(tp / tl);   //base number of points per level
-        lr = tp % tl;               //leftover points for last level
-        da = ps.avail;              //available points left to distribute
-        dv = ps.visited;            //visited points left to distribute
+        var cc = {la: 0,            //levels available for distribution
+                  da: ps.avail,     //available points left to distribute
+                  dv: ps.visited};  //visited points left to distribute
+        levels.forEach(function (lev) {
+            if(lev.sv.passes) {
+                pointsForLevel(cc, lev, lev.sv.passes * pointsPerSave); }
+            else {
+                cc.la += 1; } });
+        cc.tp = cc.da + cc.dv;              //total points to distribute
+        cc.lb = Math.floor(cc.tp / cc.la);  //points per level (base)
+        cc.lr = cc.tp % cc.la;              //points per level (remainder)
         levels.forEach(function (lev, idx) {
-            lev.pttl = lb;
-            if(idx === levels.length - 1) {
-                lev.pttl += lr; }   //add leftover points to last level
-            if(dv) {
-                if(dv >= lev.pttl) {
-                    lev.pv = lev.pttl;
-                    dv -= lev.pttl; }
-                else {
-                    lev.pv = dv;
-                    dv = 0; } }
-            if(lev.pv < lev.pttl) {
-                lev.pa = lev.pttl - lev.pv;
-                da -= lev.pa; } });
+            if(!lev.sv.passes) {
+                lev.pttl = cc.lb;
+                if(idx === levels.length - 1) {
+                    lev.pttl += cc.lr; }    //add leftover points to last level
+                pointsForLevel(cc, lev, lev.pttl); } });
     }
 
 
@@ -73,59 +85,7 @@ app.lev = (function () {
     function init () {
         initStructures();
         distributePoints();
-        //logLevels();
-    }
-
-
-    //If no points have been displayed yet, return several not
-    //generally known points across all timelines.  This is just an
-    //intro to draw people in with kind of a trivial persuit feel and
-    //hopefully evoke that learning could be fun(ish).  After the
-    //first intro, all timelines that have points not yet visited are
-    //eligible.
-    function getEligibleTimelines () {
-        var tls = [], elig = [];
-        app.data.timelines.forEach(function (tl) {
-            if(!ps.visited) {
-                if(tl.code === "U") {
-                    tls.push(tl); } }
-            else { //not intro pass
-                if(tl.code !== "U" && tl.code !== "D") {
-                    tls.push(tl); } } });
-        tls.forEach(function (tl) {
-            tl.visited = 0;
-            tl.pts = []; });
-        app.data.pts.forEach(function (pt) {
-            tls.forEach(function (tl) {
-                if(!pt.sv && pt.code.indexOf(tl.code) >= 0) {
-                    if(pt.visited) {
-                        tl.visited += 1; }
-                    else {
-                        tl.pts.push(pt); } } }); });
-        tls.forEach(function (tl) {
-            if(tl.pts.length) {
-                tl.pcntcomp = tl.visited / tl.pts.length;
-                elig.push(tl); } });
-        return elig;
-    }
-
-
-    //The next timeline to use as a point source is selected priority
-    //round robin based on the least percentage complete.  That way no
-    //timeline starves and they all get exhausted at a similar rate.
-    function selectNextTimeline (tls) {
-        tls.sort(function (a, b) { return a.pcntcomp - b.pcntcomp; });
-        return tls[0];
-    }
-
-
-    function selectRandom (pts, ttl) {
-        var sel = [], idx;
-        while(pts.length && sel.length <= ttl) {
-            idx = Math.floor(Math.random() * pts.length);
-            sel.push(pts[idx]);
-            pts.splice(idx, 1); }
-        return sel;
+        logLevels();
     }
 
 
@@ -141,23 +101,81 @@ app.lev = (function () {
     }
 
 
+    function distributeAvailPointsByTL () {
+        var ttlavail = 0;
+        app.data.timelines.forEach(function (tl) {
+            tl.visited = 0;
+            tl.pts = []; });
+        app.data.pts.forEach(function (pt) {
+            if(!pt.sv && !pt.visited) {
+                ttlavail += 1; }
+            app.data.timelines.forEach(function (tl) {
+                if(!pt.sv && pt.code.indexOf(tl.code) >= 0) {
+                    if(pt.visited) {
+                        tl.visited += 1; }
+                    else {
+                        tl.pts.push(pt); } } }); });
+        app.data.timelines.forEach(function (tl) {
+            tl.pcntcomp = 1;
+            if(tl.pts.length) {
+                tl.pcntcomp = tl.visited / tl.pts.length; } });
+        return ttlavail;
+    }
+
+
+    //Given there are points available for display, and given that the
+    //available points for display have been distributed across the
+    //timelines already with percentage complete already calculated,
+    //choose the next timeline to select points from.
+    function selectNextTimeline (code) {
+        var tls = [];
+        //if there is a preferred timeline specified by code, and there
+        //are points available in that timeline, return it.
+        if(code && timelines[code].pts.length) {
+            return timelines[code]; }
+        //Select from real timelines that still have points available
+        //for display.
+        app.data.timelines.forEach(function (tl) {
+            if(tl.code !== "U" && tl.code !== "D" && tl.pts.length) {
+                tls.push(tl); } });
+        //Choose the next timeline to use as a point source based on
+        //whichever has the least percentage complete.  That way no
+        //timeline starves and they all get exhausted evenly.
+        tls.sort(function (a, b) { return a.pcntcomp - b.pcntcomp; });
+        return tls[0];
+    }
+
+
+    function selectPoints (pts, method) {
+        var sel = [], idx;
+        while(pts.length && sel.length < pointsPerSave) {
+            if(method === "random") {
+                idx = Math.floor(Math.random() * pts.length); }
+            else {  //sequential
+                idx = 0; }
+            sel.push(pts[idx]);
+            pts.splice(idx, 1); }
+        //sort in reverse order so points pop off in chrono order
+        sel.sort(function (a, b) { return b.tc - a.tc; });
+        return sel;
+    }
+
+
     //Return an array of points that have not been visited yet.  For
     //presentation consistency, the returned points are all from the
-    //same timeline.  The number of points returned is a based on how
-    //many points people can remember at a time, that way it feels
-    //like a comprehensible chunk.
+    //same timeline.  The number of points returned might be less than
+    //pointsPerSave if the level is nearly finished or if the chosen
+    //timeline is nearly finished.
     function getNextPoints () {
-        var currlev, tls, tl, pts, slen = 6;
+        var currlev, tl, pts;
         currlev = getCurrentLevel();
         if(!currlev) {     //no more points to display, done.
             return []; }
-        if(currlev.pa) {   //have regular points to choose from
-            slen = Math.min(slen, currlev.pa);
-            tls = getEligibleTimelines();
-            tl = selectNextTimeline(tls);
-            pts = selectRandom(tl.pts, slen);
-            //newest first so you can pop points off the array in chrono order
-            pts.sort(function (a, b) { return b.tc - a.tc; });
+        currlev.pa = Math.min(currlev.pa, distributeAvailPointsByTL());
+        if(currlev.pa) {
+            tl = selectNextTimeline(currlev.sv.pc);
+            pts = selectPoints(tl.pts, currlev.sv.select);
+            jt.log("Selected " + pts.length + " points from " + tl.ident);
             return pts; }
         return currlev.sv.pts;  //only the final supp vis left
     }
