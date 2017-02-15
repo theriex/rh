@@ -37,7 +37,8 @@ circle { clip-path: url(../#clip); }
 .dlgxdiv { float:right; font-size:x-small; font-weight:bold; 
   margin:-3px -3px 0px 0px; }
 .dlgtextdiv { clear:both; margin-top:5px; background:#ebd400; 
-  padding:4px 4px 0px 4px; overflow:scroll; }
+  padding:4px 4px 4px 4px; overflow:scroll; 
+  font-family: "Palatino Linotype", "Palatino", serif; }
 .zoom { fill:none; pointer-events:all; }
 .tick line { visibility:hidden; }
 .contextCircle { fill:#ccc; }
@@ -47,7 +48,9 @@ circle { clip-path: url(../#clip); }
 
 .introdlgdiv { display:flex; padding:0px 10px 0px 0px; }
 .titlediv { font-size:x-large; font-weight:bold; padding:10px 20px 10px 10px; 
-  line-height:150%; }
+  line-height:150%; 
+  font-family: "Open Sans", "Helvetica", sans-serif;
+}
 .startdiv { margin:auto; padding:40px; cursor:pointer;
   background:#07e048; width:40px; height:40px; border-radius:50%; 
   border: 2px solid #666666; box-shadow:3px 3px 1px #2f2b00; }

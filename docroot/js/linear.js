@@ -126,8 +126,8 @@ app.linear = (function () {
     function fillColorForPoint (pt) {
         var oldest, now;
         if(!tl.heat) {
-            oldest = jt.ISOString2Time(app.oldestVisit);
-            now = jt.ISOString2Time();
+            oldest = jt.isoString2Time(app.oldestVisit);
+            now = jt.isoString2Time();
             tl.heat = d3.scaleTime()
                 .domain([oldest, now])
                 .range([d3.rgb("#0000FF"), d3.rgb("#FF0000")])
@@ -136,7 +136,7 @@ app.linear = (function () {
             // console.log("   now: " + now + ": " + tl.heat(now));
             }
         if(pt.visited) {
-            return tl.heat(jt.ISOString2Time(pt.visited)); }
+            return tl.heat(jt.isoString2Time(pt.visited)); }
         return "#000";
     }
 
@@ -159,93 +159,11 @@ app.linear = (function () {
     }
 
 
-    function displayDialog (d, html) {
-        var dim, elem;
-        if(tl.width < 500) {  //use full space on small devices
-            dim = {x: tl.margin.left + Math.round(0.02 * tl.width),
-                   y: tl.margin.top + Math.round(0.04 * tl.height),
-                   w: Math.round(0.9 * tl.width),
-                   h: Math.round(0.8 * tl.height)}; }
-        else { //larger display tracks the point height for visual interest
-            dim = {tracked: true,
-                   x: tl.margin.left + Math.round(0.04 * tl.width),
-                   y: tl.margin.top + Math.round(0.04 * tl.height),
-                   w: Math.round(0.9 * tl.width)};
-            if(d) {
-                dim.y = tl.margin.top + tl.y(d.oc); }
-            dim.h = Math.round(0.9 * tl.height) - dim.y; }
-        d3.select("#itemdispdiv")
-            .style("left", dim.x + "px")
-            .style("top", dim.y + "px")
-            .style("max-width", dim.w + "px")
-            .style("max-height", dim.h + "px");
-        jt.out("itemdispdiv", html);
-        if(dim.tracked) {
-            elem = jt.byId("itemdispdiv");
-            if(elem.scrollHeight > elem.offsetHeight) {  //overflowed
-                dim.y = tl.margin.top + Math.round(0.04 * tl.height);
-                dim.h = Math.round(0.8 * tl.height);
-                d3.select(".dlgtextdiv")
-                    .style("max-height", Math.round(0.8 * dim.h) + "px");
-                d3.select("#itemdispdiv")
-                    .style("top", dim.y + "px")
-                    .style("max-height", dim.h + "px"); } }
-        d3.select("#itemdispdiv")
-            .style("visibility", "visible")
-            .style("max-height", "4px")
-            .transition().duration(250)
-            .style("max-height", dim.h + "px");
-    }
-
-
     function getPointsForDisplay () {
         if(tl.fetchpoints) {
             app.lev.updateVisited(tl.fetchpoints); }
         tl.fetchpoints = app.lev.getNextPoints();
         tl.series = tl.fetchpoints.slice();  //working copy to chew up
-    }
-
-
-    function initSeriesAndStart () {
-        var html;
-        getPointsForDisplay();
-        updateLevelDisplay();
-        html = [["div", {cla: "dlgxdiv"},
-                 ["a", {href: "#close", 
-                        onclick: jt.fs("app.linear.closeDlg()")},
-                  "X"]],
-                ["div", {cla: "dlgtextdiv"},
-                 ["div", {cla: "introdlgdiv"},
-                  [["div", {cla: "titlediv"},
-                    "American<br/>" + 
-                    "Race<br/>" + 
-                    "History<br/>" + 
-                    "Navigable</br>" + 
-                    "Timeline<br/>"],
-                   ["div", {cla: "startdiv",
-                            onclick: jt.fs("app.linear.next()")},
-                    ["div", {cla: "startcontdiv"},
-                     "Start"]]]]]];
-        displayDialog(null, jt.tac2html(html));
-    }
-
-
-    function openInfoDialog (d) {
-        var html;
-        html = [["div", {cla: "dlgdatediv"}, d.date],
-                ["div", {cla: "dlgxdiv"},
-                 ["a", {href: "#close", 
-                        onclick: jt.fs("app.linear.closeDlg()")},
-                  "X"]],
-                ["div", {cla: "dlgtextdiv"}, d.text],
-                ["div", {cla: "buttondiv"},
-                 ["button", {type: "button", id: "nextbutton",
-                             onclick: jt.fs("app.linear.next()")},
-                  "Next"]]];
-        displayDialog(d, jt.tac2html(html));
-        //setting focus the first time does not work for whatever
-        //reason, but it helps for subsequent dialog displays.
-        setTimeout(function () { jt.byId("nextbutton").focus(); }, 100);
     }
 
 
@@ -277,7 +195,7 @@ app.linear = (function () {
         if(d.sv) {
             jt.err("Supplemental visualization not implemented yet."); }
         else {
-            openInfoDialog(d); }
+            app.dlg.info(d, jt.fs("app.linear.next()")); }
     }
 
 
@@ -389,49 +307,6 @@ app.linear = (function () {
     }
 
 
-    function display () {
-        tl = {offset: { x:10, y:10 }, pts: app.data.pts, zscale: 1};
-        setChartWidthAndHeight();
-        initDisplayVariableValues();
-        initMainDisplayElements();
-        bindDataAndDrawChart();
-        initSeriesAndStart();
-    }
-
-
-    function closeDialog () {
-        d3.select("#itemdispdiv")
-            .style("visibility", "hidden");
-    }
-
-
-    function showSaveConfirmationDialog () {
-        var html, subj, body, vps = "";
-        subj = "Race History restore link";
-        body = "Click this link to restore your browser state:\n" +
-            "http://localhost:8080";
-        tl.pts.forEach(function (pt) {
-            if(pt.visited) {
-                vps += "&" + pt.id + "=" + jt.enc(pt.visited); } });
-        body += "?" + vps.slice(1);
-        html = [["div", {cla: "dlgxdiv"},
-                 ["a", {href: "#close", 
-                        onclick: jt.fs("app.linear.closeDlg()")},
-                  "X"]],
-                ["div", {cla: "dlgtextdiv"},
-                 [["div", {id: "dlgsavetitlediv"}, "Progress saved."],
-                  ["div", {id: "dlgsavelinkdiv"},
-                   ["a", {href: "mailto:?subject=" + jt.dquotenc(subj) + 
-                                    "&body=" + jt.dquotenc(body)},
-                    "Mail a Restore Link"]]]],
-                ["div", {cla: "buttondiv"},
-                 ["button", {type: "button", id: "nextbutton",
-                             onclick: jt.fs("app.linear.next()")},
-                  "Continue"]]];
-        displayDialog(null, jt.tac2html(html));
-    }
-
-
     function updateLevelDisplay () {
         var proginfo = app.lev.progInfo(),
             ti = {fs: 18,   //font size for level number
@@ -480,23 +355,47 @@ app.linear = (function () {
     }
 
 
+    function initSeriesAndStart () {
+        getPointsForDisplay();
+        updateLevelDisplay();
+        app.dlg.init(tl);
+        app.dlg.start(jt.fs("app.linear.next()"));
+    }
+
+
+    function display () {
+        tl = {offset: { x:10, y:10 }, pts: app.data.pts, zscale: 1};
+        setChartWidthAndHeight();
+        initDisplayVariableValues();
+        initMainDisplayElements();
+        bindDataAndDrawChart();
+        initSeriesAndStart();
+    }
+
+
     function next () {
         var pt;
-        closeDialog();
+        app.dlg.close();
         if(!tl.series || !tl.series.length) {
             app.db.saveState();
             getPointsForDisplay();
             updateLevelDisplay();
-            showSaveConfirmationDialog(); }
+            app.dlg.save(jt.fs("app.linear.nextPass()")); }
         else {
             pt = tl.series.pop();
             clickCircle(pt); }
     }
 
 
+    function nextPass () {
+        app.dlg.nextColorTheme();
+        next();
+    }
+
+
     return {
         display: function () { display(); },
-        closeDlg: function () { closeDialog(); },
-        next: function () { next(); }
+        next: function () { next(); },
+        nextPass: function () { nextPass(); }
     };
 }());
