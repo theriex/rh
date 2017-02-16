@@ -26,7 +26,8 @@ var app = {},  //Global container for application level funcs and values
                        "js/lev",      //traversal levels
                        "js/dlg",      //dialog interaction
                        "js/linear",   //linear timeline display
-                       "js/tabular"   //text timeline display
+                       "js/tabular",  //text timeline display
+                       "js/sv/intro"
                       ];
         jtminjsDecorateWithUtilities(jt);
         jt.out(app.dispdivid, "Loading app modules...");

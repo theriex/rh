@@ -125,15 +125,20 @@ app.dlg = (function () {
                   "X"]],
                 ["div", {cla: "dlgtextdiv"},
                  [["div", {id: "dlgsavetitlediv"}, "Progress saved."],
-                  ["div", {id: "dlgsavelinkdiv"},
-                   ["a", {href: "mailto:?subject=" + jt.dquotenc(subj) + 
-                                    "&body=" + jt.dquotenc(body)},
-                    "Mail a Restore Link"]]]],
+                  ["div", {id: "dlgsavelinkdiv"}, "building restore link..."]]],
                 ["div", {cla: "buttondiv"},
                  ["button", {type: "button", id: "nextbutton",
                              onclick: nextfstr},
                   "Continue"]]];
         displayDialog(null, jt.tac2html(html));
+        //The mail href can sometimes take a long time to render leading
+        //to the dialog looking like it has crashed.  So dump out the 
+        //contents in a separate step.
+        setTimeout(function () {
+            jt.out("dlgsavelinkdiv", jt.tac2html(
+                ["a", {href: "mailto:?subject=" + jt.dquotenc(subj) + 
+                                    "&body=" + jt.dquotenc(body)},
+                 "Mail a Restore Link"])); }, 100);
     }
 
 

@@ -193,7 +193,11 @@ app.linear = (function () {
         zoomToPoint(d);
         markPointVisited(d);
         if(d.sv) {
-            jt.err("Supplemental visualization not implemented yet."); }
+            d.svo = app.lev.suppVisByCode(d.sv);
+            if(!app[d.svo.module]) {
+                return jt.err("Supplemental visualization module \"" + 
+                              d.svo.module + "\" not found"); }
+            app[d.svo.module].display(d.svo, tl, app.linear.next); }
         else {
             app.dlg.info(d, jt.fs("app.linear.next()")); }
     }
@@ -249,6 +253,7 @@ app.linear = (function () {
               ["svg", {id: "svgmain", width: tl.chart.w, height: tl.chart.h}]],
              ["div", {id: "navdiv"},
               ["svg", {id: "svgnav", width: tl.chart.w, height: 30}]],
+             ["div", {id: "suppvisdiv"}],
              ["div", {id: "itemdispdiv"}, "hello"]]);
         tl.progsvg = d3.select("#svgnav");
         tl.svg = d3.select("#svgmain");
@@ -321,15 +326,16 @@ app.linear = (function () {
                   h: Math.floor(tc.h / 4),
                   w: tl.width - (tc.x + tc.w)};
         if(!tl.prog) {
-            tl.prog = tl.progsvg.append("g");
-            tl.prog.append("rect")
+            tl.prog = {};
+            tl.prog.g = tl.progsvg.append("g");
+            tl.prog.levrect = tl.prog.g.append("rect")
                 .attr("class", "levnumbackrect")
                 .attr("ry", 5)
                 .attr("x", tc.x - ti.p.l)
                 .attr("y", ti.m.t)
                 .attr("height", tc.h)
                 .attr("width", tc.w);
-            tl.prog.append("text")
+            tl.prog.levnum = tl.prog.g.append("text")
                 .attr("class", "levelnumber")
                 .attr("text-anchor", "middle")  //variable width font
                 .attr("x", ti.m.l + Math.round(tc.w / 2))
@@ -337,21 +343,21 @@ app.linear = (function () {
                 .attr("dy", "-.1em")   //fudge text baseline
                 .attr("font-size", ti.fs)
                 .text(String(proginfo.level));
-            tl.prog.append("rect")
+            tl.prog.prback = tl.prog.g.append("rect")
                 .attr("class", "progbarback")
                 .attr("x", rc.x)
                 .attr("y", rc.y)
                 .attr("height", rc.h)
                 .attr("width", rc.w);
-            tl.prog.append("rect")
+            tl.prog.prfill = tl.prog.g.append("rect")
                 .attr("class", "progbarfilled")
                 .attr("id", "progdisprect")
                 .attr("x", rc.x)
                 .attr("y", rc.y)
                 .attr("height", rc.h)
                 .attr("width", 0); }
-        d3.select("#progdisprect")
-            .attr("width", Math.round(proginfo.levpcnt * rc.w));
+        tl.prog.prfill.attr("width", Math.round(proginfo.levpcnt * rc.w));
+        tl.prog.levnum.text(String(proginfo.level));
     }
 
 
@@ -359,6 +365,7 @@ app.linear = (function () {
         getPointsForDisplay();
         updateLevelDisplay();
         app.dlg.init(tl);
+        //clickCircle(app.lev.suppVisByCode("in").pts[0]);
         app.dlg.start(jt.fs("app.linear.next()"));
     }
 

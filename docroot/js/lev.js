@@ -198,7 +198,7 @@ app.lev = (function () {
 
     function progInfo () {
         var currlev = getCurrentLevel();
-        return {level: currlev.levnum,
+        return {level: currlev.levnum, numlevels: levels.length, 
                 levpcnt: currlev.pv / currlev.pttl,
                 mainpcnt: ps.visited / (ps.avail + ps.visited)};
     }
@@ -208,6 +208,7 @@ app.lev = (function () {
         init: function () { init(); },
         getNextPoints: function () { return getNextPoints(); },
         updateVisited: function (pts) { return updateVisited(pts); },
-        progInfo: function () { return progInfo(); }
+        progInfo: function () { return progInfo(); },
+        suppVisByCode: function (code) { return suppvs[code]; }
     };
 }());

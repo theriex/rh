@@ -28,6 +28,9 @@ button { border: 2px solid #666666; border-radius:5px; cursor:pointer;
 circle { clip-path: url(../#clip); }
 .focusCircle { }
 #mouseoverLabel { fill:#f00; font-weight:bold; }
+#suppvisdiv { position:absolute; left:80px; top:80px; 
+  visibility:hidden; background:#e0cb07; overflow:scroll;
+  padding:10px; border-radius:5px; border: 2px solid #666666; }
 #itemdispdiv { position:absolute; left:80px; top:80px; 
   visibility:hidden; background:#e0cb07; overflow:scroll;
   padding:10px; border-radius:10px; border: 2px solid #666666; 
@@ -61,10 +64,16 @@ circle { clip-path: url(../#clip); }
 #dlgsavelinkdiv { font-weight:bold; padding:20px; }
 
 #navdiv { position:absolute; left:0px; top:0px; }
-.levnumbackrect { stroke:#999; fill:#b7b7ff; }
+.levnumbackrect { stroke:#999; fill:#f8e6a0; }
 .levelnumber { }
 .progbarback   { stroke:#999; fill:#ccc; }
 .progbarfilled { stroke:#999; fill:#00ff4c; }
+
+.sbOuterRect { stroke:#999; cursor:pointer; }
+.sbInnerRect { stroke:#999; cursor:pointer; }
+.sbShadowRect { }
+.sbClickRect { stroke:none; fill:none; cursor:pointer; }
+.svintext { font-weight:bold; cursor:pointer; }
 
 /* -------------------- */
 /* tabular */
