@@ -114,14 +114,14 @@ app.db = (function () {
         var visited;
         visited = jt.parseParams();
         app.data.pts.forEach(function (pt) {
-            pt.visited = jt.toru(visited[pt.id]); });
+            pt.visited = jt.toru(visited[pt.cid]); });
         //local storage is probably more recent, so it takes precedence
         visited = window.localStorage.getItem("visited");
         if(visited) {
             try {
                 visited = JSON.parse(visited);
                 app.data.pts.forEach(function (pt) {
-                    pt.visited = jt.toru(visited[pt.id]) || pt.visited; });
+                    pt.visited = jt.toru(visited[pt.cid]) || pt.visited; });
             } catch(exception) {
                 jt.err("loadSavedState failed: " + exception);
             } }
@@ -184,7 +184,7 @@ app.db = (function () {
         var visited = {};
         app.data.pts.forEach(function (pt) {
             if(pt.visited) {
-                visited[pt.id] = pt.visited; } });
+                visited[pt.cid] = pt.visited; } });
         visited = JSON.stringify(visited);
         window.localStorage.setItem("visited", visited);
     }

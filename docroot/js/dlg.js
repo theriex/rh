@@ -117,7 +117,7 @@ app.dlg = (function () {
             "http://localhost:8080";
         tl.pts.forEach(function (pt) {
             if(pt.visited) {
-                vps += "&" + pt.id + "=" + jt.enc(pt.visited); } });
+                vps += "&" + pt.cid + "=" + jt.enc(pt.visited); } });
         body += "?" + vps.slice(1);
         html = [["div", {cla: "dlgxdiv"},
                  ["a", {href: "#close", 
