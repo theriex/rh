@@ -125,8 +125,8 @@ app.lev = (function () {
 
     //Given there are points available for display, and given that the
     //available points for display have been distributed across the
-    //timelines already with percentage complete already calculated,
-    //choose the next timeline to select points from.
+    //timelines already with percentage complete calculated, choose the next
+    //timeline to select points from.
     function selectNextTimeline (code) {
         var tls = [];
         //if there is a preferred timeline specified by code, and there
@@ -138,10 +138,12 @@ app.lev = (function () {
         app.data.timelines.forEach(function (tl) {
             if(tl.code !== "U" && tl.code !== "D" && tl.pts.length) {
                 tls.push(tl); } });
-        //Choose the next timeline to use as a point source based on
-        //whichever has the least percentage complete.  That way no
-        //timeline starves and they all get exhausted evenly.
-        tls.sort(function (a, b) { return a.pcntcomp - b.pcntcomp; });
+        //Choose by oldest unvisited timeline point to avoid leaping around
+        //in time. If same, go with whichever timeline has more points left.
+        tls.sort(function (a, b) {
+            if(a.pts[0].tc < b.pts[0].tc) { return -1; }
+            if(a.pts[0].tc > b.pts[0].tc) { return 1; }
+            return a.pcntcomp - b.pcntcomp; });
         return tls[0];
     }
 
@@ -172,11 +174,13 @@ app.lev = (function () {
         if(!currlev) {     //no more points to display, done.
             return []; }
         currlev.pa = Math.min(currlev.pa, distributeAvailPointsByTL());
-        if(currlev.pa) {
+        if(currlev.pa > 0) {
             tl = selectNextTimeline(currlev.sv.pc);
             pts = selectPoints(tl.pts, currlev.sv.select);
-            jt.log("Selected " + pts.length + " points from " + tl.ident);
+            jt.log("Selected " + pts.length + " points from " + tl.ident + 
+                   " out of " + currlev.pa + " left available");
             return pts; }
+        jt.log("Selected supp vis points for " + currlev.sv.name);
         return currlev.sv.pts;  //only the final supp vis left
     }
 

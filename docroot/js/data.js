@@ -271,7 +271,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
       text:"Anthony Johnson, a Black man, imports 5 servants and qualifies to receive a 200-acre land grant along the Puwgoteague River in VA. Others soon join Johnson and attempt to launch an independent African community. At its height, the settlement has 12 African homesteads with sizable holdings." },
     { code:"NLD", cid:"N25",
       date:"1661",
-      text:"Spanish authorities raid Pueblo kivas (sacred ceremonial chambers) and destroy hundreds of sacred Kachina masks and other sacred objects in an effort to destroy Native American “religion.”" },
+      text:"Spanish authorities raid Pueblo kivas (sacred ceremonial chambers) and destroy hundreds of Kachina masks and other sacred objects in an effort to destroy Native American “religion.”" },
     { code:"RU", cid:"R3", sv:"mg",
       date:"1662",
       text:"Virginia is the first colony to establish anti-miscegenation laws stating “sexual intercourse between a White and a Black was twice as evil as fornication between two White adults.” Punishment could include public whipping." },
