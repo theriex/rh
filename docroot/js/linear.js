@@ -251,6 +251,7 @@ app.linear = (function () {
         outdiv.innerHTML = jt.tac2html(
             [["div", {id: "lcontdiv"},
               ["svg", {id: "svgmain", width: tl.chart.w, height: tl.chart.h}]],
+             ["div", {id: "leftcoldiv", style:"top:28px;width:15px;"}],
              ["div", {id: "navdiv"},
               ["svg", {id: "svgnav", width: tl.chart.w, height: 30}]],
              ["div", {id: "suppvisdiv"}],
@@ -294,6 +295,9 @@ app.linear = (function () {
             .append("rect")
             .attr("width", tl.width)
             .attr("height", tl.scaleheight);
+        //set the covering left col div fallback if clipPath fails on FF
+        d3.select("#leftcoldiv")
+            .style("height", (tl.height - 10) + "px");
         tl.svg.append("rect")
             .attr("class", "zoom")
             .attr("width", tl.width)

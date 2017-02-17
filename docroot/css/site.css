@@ -63,6 +63,7 @@ circle { clip-path: url(../#clip); }
 #dlgsavetitlediv { text-align:center; }
 #dlgsavelinkdiv { font-weight:bold; padding:20px; }
 
+#leftcoldiv { position:absolute; left:0px; top:0px; background:#fff; }
 #navdiv { position:absolute; left:0px; top:0px; }
 .levnumbackrect { stroke:#999; fill:#f8e6a0; }
 .levelnumber { }
