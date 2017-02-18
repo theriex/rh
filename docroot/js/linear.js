@@ -249,9 +249,11 @@ app.linear = (function () {
         var outdiv = jt.byId(app.dispdivid);
         outdiv.style.width = String(tl.chart.w) + "px"; //show bg if big screen
         outdiv.innerHTML = jt.tac2html(
-            [["div", {id: "lcontdiv"},
+            [["div", {id:"abgdiv", style:"left:10px;top:20px;width:" + 
+                      (tl.chart.w - 20) + "px;"}],
+             ["div", {id: "lcontdiv"},
               ["svg", {id: "svgmain", width: tl.chart.w, height: tl.chart.h}]],
-             ["div", {id: "leftcoldiv", style:"top:28px;width:15px;"}],
+             ["div", {id: "leftcoldiv", style:"top:25px;width:10px;"}],
              ["div", {id: "navdiv"},
               ["svg", {id: "svgnav", width: tl.chart.w, height: 30}]],
              ["div", {id: "suppvisdiv"}],
@@ -297,7 +299,9 @@ app.linear = (function () {
             .attr("height", tl.scaleheight);
         //set the covering left col div fallback if clipPath fails on FF
         d3.select("#leftcoldiv")
-            .style("height", (tl.height - 10) + "px");
+            .style("height", (tl.height - 8) + "px");
+        d3.select("#abgdiv")
+            .style("height", tl.height + "px");
         tl.svg.append("rect")
             .attr("class", "zoom")
             .attr("width", tl.width)
@@ -379,6 +383,7 @@ app.linear = (function () {
         setChartWidthAndHeight();
         initDisplayVariableValues();
         initMainDisplayElements();
+        app.picbg.init("abgdiv");
         bindDataAndDrawChart();
         initSeriesAndStart();
     }

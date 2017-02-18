@@ -25,6 +25,7 @@ var app = {},  //Global container for application level funcs and values
                        "js/db",       //data access and state
                        "js/lev",      //traversal levels
                        "js/dlg",      //dialog interaction
+                       "js/picbg",    //background pictures
                        "js/linear",   //linear timeline display
                        "js/tabular",  //text timeline display
                        "js/sv/intro"
