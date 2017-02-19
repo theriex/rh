@@ -80,7 +80,7 @@ circle { clip-path: url(../#clip); }
 .svintext { font-weight:bold; cursor:pointer; }
 
 #abgdiv { position:absolute; left:0px; top:0px; line-height:0px; 
-  background:#fff; }
+  background:#fffae5; }
 .bgpicdiv { display:inline-block; overflow:hidden; text-align:center; }
 .bgpicimg { opacity:0.6; }
 

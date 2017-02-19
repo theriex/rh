@@ -239,6 +239,8 @@ app.linear = (function () {
             .on("mouseover", function(d) { overCircle(d, true); })
             .on("mouseout", function(d) { overCircle(d, false); })
             .on("click", function(d) { clickCircle(d); });
+        d3.select(".zoom").on("click", function () {
+            app.picbg.click(d3.mouse(this)); });
         addFocusInteractiveElements();
         addContextDecorativeElements();
         adjustTickTextVisibility();
@@ -412,6 +414,7 @@ app.linear = (function () {
     return {
         display: function () { display(); },
         next: function () { next(); },
-        nextPass: function () { nextPass(); }
+        nextPass: function () { nextPass(); },
+        clickCircle: function (pt) { clickCircle(pt); }
     };
 }());

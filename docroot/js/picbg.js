@@ -6,7 +6,8 @@ app.picbg = (function () {
 
     var divid = "",
         picpts = null,
-        picgrid = {x: 10, y: 6};
+        picgrid = {x: 10, y: 6},  //may be inverted on init
+        dd = null;  //display div dimensions object
 
 
     function initPicPoints () {
@@ -22,7 +23,7 @@ app.picbg = (function () {
 
 
     function initialize (picdivid) {
-        var div, dd, sd, cs, i, j, picidx, picsrc, html = [];
+        var div, sd, cs, i, j, picidx, picsrc, html = [];
         divid = picdivid;
         div = jt.byId(divid);
         dd = {w: div.offsetWidth, h: div.offsetHeight}
@@ -54,7 +55,17 @@ app.picbg = (function () {
     }
 
 
+    function handleMouseClick (mx, my) {
+        var pb, pt;
+        pb = {x: Math.floor(picgrid.x * (mx / dd.w)),
+              y: Math.floor(picgrid.y * (my / dd.h))}
+        pt = picpts[(pb.y * picgrid.x) + pb.x];
+        app.linear.clickCircle(pt);
+    }
+
+
     return {
-        init: function (divid) { initialize(divid); }
+        init: function (divid) { initialize(divid); },
+        click: function (mxy) { handleMouseClick(mxy[0], mxy[1]); }
     };
 }());
