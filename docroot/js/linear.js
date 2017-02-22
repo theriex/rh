@@ -159,14 +159,6 @@ app.linear = (function () {
     }
 
 
-    function getPointsForDisplay () {
-        if(tl.fetchpoints) {
-            app.lev.updateVisited(tl.fetchpoints); }
-        tl.fetchpoints = app.lev.getNextPoints();
-        tl.series = tl.fetchpoints.slice();  //working copy to chew up
-    }
-
-
     function markPointVisited (d) {
         d.visited = (new Date()).toISOString();
         tl.focus.select("#" + d.id)
@@ -197,9 +189,9 @@ app.linear = (function () {
             if(!app[d.svo.module]) {
                 return jt.err("Supplemental visualization module \"" + 
                               d.svo.module + "\" not found"); }
-            app[d.svo.module].display(d.svo, tl, app.linear.next); }
+            app[d.svo.module].display(d.svo, tl, app.mode.next); }
         else {
-            app.dlg.info(d, jt.fs("app.linear.next()")); }
+            app.dlg.info(d, jt.fs("app.mode.next()")); }
     }
 
 
@@ -256,11 +248,9 @@ app.linear = (function () {
              ["div", {id: "lcontdiv"},
               ["svg", {id: "svgmain", width: tl.chart.w, height: tl.chart.h}]],
              ["div", {id: "leftcoldiv", style:"top:25px;width:10px;"}],
-             ["div", {id: "navdiv"},
-              ["svg", {id: "svgnav", width: tl.chart.w, height: 30}]],
+             ["div", {id: "navdiv"}],
              ["div", {id: "suppvisdiv"}],
              ["div", {id: "itemdispdiv"}, "hello"]]);
-        tl.progsvg = d3.select("#svgnav");
         tl.svg = d3.select("#svgmain");
         tl.margin = {top: 20, right: 10, bottom: 60, left: 10};
         tl.margin.hpad = tl.margin.top + tl.margin.bottom;
@@ -322,64 +312,6 @@ app.linear = (function () {
     }
 
 
-    function updateLevelDisplay () {
-        var proginfo = app.lev.progInfo(),
-            ti = {fs: 18,   //font size for level number
-                  p: {t: 1, r: 2, b: 1, l: 2},  //padding top right bottom left
-                  m: {t: 3, r: 2, b: 0, l: 3}}, //margin  top right bottom left
-            tc = {x: ti.m.l + ti.p.l,
-                  y: ti.m.t + ti.p.t + ti.fs,
-                  h: ti.p.t + ti.fs + ti.p.b,
-                  w: ti.p.l + ti.fs + ti.p.r},
-            rc = {x: tc.x + tc.w + ti.m.r,
-                  y: Math.floor(tc.h / 2),
-                  h: Math.floor(tc.h / 4),
-                  w: tl.width - (tc.x + tc.w)};
-        if(!tl.prog) {
-            tl.prog = {};
-            tl.prog.g = tl.progsvg.append("g");
-            tl.prog.levrect = tl.prog.g.append("rect")
-                .attr("class", "levnumbackrect")
-                .attr("ry", 5)
-                .attr("x", tc.x - ti.p.l)
-                .attr("y", ti.m.t)
-                .attr("height", tc.h)
-                .attr("width", tc.w);
-            tl.prog.levnum = tl.prog.g.append("text")
-                .attr("class", "levelnumber")
-                .attr("text-anchor", "middle")  //variable width font
-                .attr("x", ti.m.l + Math.round(tc.w / 2))
-                .attr("y", tc.y - ti.p.t)
-                .attr("dy", "-.1em")   //fudge text baseline
-                .attr("font-size", ti.fs)
-                .text(String(proginfo.level));
-            tl.prog.prback = tl.prog.g.append("rect")
-                .attr("class", "progbarback")
-                .attr("x", rc.x)
-                .attr("y", rc.y)
-                .attr("height", rc.h)
-                .attr("width", rc.w);
-            tl.prog.prfill = tl.prog.g.append("rect")
-                .attr("class", "progbarfilled")
-                .attr("id", "progdisprect")
-                .attr("x", rc.x)
-                .attr("y", rc.y)
-                .attr("height", rc.h)
-                .attr("width", 0); }
-        tl.prog.prfill.attr("width", Math.round(proginfo.levpcnt * rc.w));
-        tl.prog.levnum.text(String(proginfo.level));
-    }
-
-
-    function initSeriesAndStart () {
-        getPointsForDisplay();
-        updateLevelDisplay();
-        app.dlg.init(tl);
-        //clickCircle(app.lev.suppVisByCode("in").pts[0]);
-        app.dlg.start(jt.fs("app.linear.next()"));
-    }
-
-
     function display () {
         tl = {offset: { x:10, y:10 }, pts: app.data.pts, zscale: 1};
         setChartWidthAndHeight();
@@ -387,34 +319,12 @@ app.linear = (function () {
         initMainDisplayElements();
         app.picbg.init("abgdiv");
         bindDataAndDrawChart();
-        initSeriesAndStart();
-    }
-
-
-    function next () {
-        var pt;
-        app.dlg.close();
-        if(!tl.series || !tl.series.length) {
-            app.db.saveState();
-            getPointsForDisplay();
-            updateLevelDisplay();
-            app.dlg.save(jt.fs("app.linear.nextPass()")); }
-        else {
-            pt = tl.series.pop();
-            clickCircle(pt); }
-    }
-
-
-    function nextPass () {
-        app.dlg.nextColorTheme();
-        next();
+        app.mode.start("navdiv", tl);
     }
 
 
     return {
         display: function () { display(); },
-        next: function () { next(); },
-        nextPass: function () { nextPass(); },
         clickCircle: function (pt) { clickCircle(pt); }
     };
 }());

@@ -28,6 +28,7 @@ var app = {},  //Global container for application level funcs and values
                        "js/picbg",    //background pictures
                        "js/linear",   //linear timeline display
                        "js/tabular",  //text timeline display
+                       "js/mode",     //interactive or reference
                        "js/sv/intro"
                       ];
         jtminjsDecorateWithUtilities(jt);

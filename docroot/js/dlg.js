@@ -145,6 +145,7 @@ app.dlg = (function () {
     function closeDialog () {
         d3.select("#itemdispdiv")
             .style("visibility", "hidden");
+        app.mode.chmode("reference");
     }
 
 

@@ -84,6 +84,8 @@ circle { clip-path: url(../#clip); }
 .bgpicdiv { display:inline-block; overflow:hidden; text-align:center; }
 .bgpicimg { opacity:0.6; }
 
+#refdiv { text-align:right; padding:2px 10px 0px 10px; }
+
 /* -------------------- */
 /* tabular */
 .trowdiv { padding-bottom:10px; }
