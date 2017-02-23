@@ -159,7 +159,7 @@ app.db = (function () {
         var ctx = {yr: 0, dy: 0, maxy: 0},
             cs = {},
             ny = new Date().getFullYear();
-        jt.out(app.dispdivid, "Preparing data...");
+        jt.out("rhcontentdiv", "Preparing data...");
         app.data.pts.forEach(function (pt) {
             if(!pt.cid) {
                 throw "Missing cid " + pt.date + " " + pt.text; }

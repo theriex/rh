@@ -240,17 +240,18 @@ app.linear = (function () {
 
 
     function initDisplayVariableValues () {
-        var outdiv = jt.byId(app.dispdivid);
+        var outdiv = jt.byId("rhcontentdiv");
         outdiv.style.width = String(tl.chart.w) + "px"; //show bg if big screen
         outdiv.innerHTML = jt.tac2html(
             [["div", {id:"abgdiv", style:"left:10px;top:20px;width:" + 
                       (tl.chart.w - 20) + "px;"}],
-             ["div", {id: "lcontdiv"},
-              ["svg", {id: "svgmain", width: tl.chart.w, height: tl.chart.h}]],
-             ["div", {id: "leftcoldiv", style:"top:25px;width:10px;"}],
-             ["div", {id: "navdiv"}],
-             ["div", {id: "suppvisdiv"}],
-             ["div", {id: "itemdispdiv"}, "hello"]]);
+             ["div", {id:"tcontdiv", style:"display:none;"}],
+             ["div", {id:"lcontdiv"},
+              ["svg", {id:"svgmain", width:tl.chart.w, height:tl.chart.h}]],
+             ["div", {id:"leftcoldiv", style:"top:25px;width:10px;"}],
+             ["div", {id:"navdiv"}],
+             ["div", {id:"suppvisdiv"}],
+             ["div", {id:"itemdispdiv"}, "hello"]]);
         tl.svg = d3.select("#svgmain");
         tl.margin = {top: 20, right: 10, bottom: 60, left: 10};
         tl.margin.hpad = tl.margin.top + tl.margin.bottom;

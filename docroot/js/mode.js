@@ -26,9 +26,12 @@ app.mode = (function () {
         if(!ms.progsvg) {
             html = [["div", {id:"refdiv", style:"width:" + ms.w + "px;" +
                                                 "height:" + ms.h + "px;"},
-                     ["a", {href:"#interactive",
-                            onclick:jt.fs("app.mode.chmode('interactive')")},
-                      ["img", {src:"img/info.png"}]]],
+                     [["a", {href:"#interactive",
+                             onclick:jt.fs("app.mode.chmode('interactive')")},
+                       ["img", {id:"interactimg", src:"img/info.png"}]],
+                      ["a", {id:"disptoggle", href:"#textmode",
+                             onclick:jt.fs("app.mode.togdisp()")},
+                       ["img", {id:"disptoggleimg", src:"img/disptext.png"}]]]],
                     ["div", {id:"levdiv"},
                      ["svg", {id:"svgnav", width:ms.w, height:ms.h}]]];
             jt.out(ms.divid, jt.tac2html(html));
@@ -99,6 +102,8 @@ app.mode = (function () {
         ms.tl = tl;
         ms.w = tl.width;
         ms.h = 30;
+        jt.byId("tcontdiv").style.top = String(ms.h) + "px";
+        ms.disp = "linear";  //other option is "text"
         verifyDisplayElements();
         getPointsForDisplay();
         updateLevelDisplay();
@@ -144,10 +149,30 @@ app.mode = (function () {
     }
 
 
+    function toggleDisplay () {
+        if(ms.disp === "linear") {
+            jt.byId("disptoggle").href = "#linearmode";
+            jt.byId("disptoggleimg").src = "img/displinear.png";
+            jt.byId("abgdiv").style.display = "none";
+            jt.byId("lcontdiv").style.display = "none";
+            jt.byId("tcontdiv").style.display = "block";
+            ms.disp = "text";
+            app.tabular.display(); }  //rebuild contents each time
+        else {
+            jt.byId("disptoggle").href = "#textmode";
+            jt.byId("disptoggleimg").src = "img/disptext.png";
+            jt.byId("abgdiv").style.display = "block";
+            jt.byId("lcontdiv").style.display = "block";
+            jt.byId("tcontdiv").style.display = "none";
+            ms.disp = "linear"; }
+    }
+
+
     return {
         start: function (divid, tl) { start(divid, tl); },
         next: function () { next(); },
         nextPass: function () { nextPass(); },
-        chmode: function (mode) { changeMode(mode); }
+        chmode: function (mode) { changeMode(mode); },
+        togdisp: function () { toggleDisplay(); }
     };
 }());

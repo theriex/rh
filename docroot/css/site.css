@@ -16,6 +16,8 @@ A:visited {text-decoration:none; color:#004052; }
 A:active {text-decoration:none; color:#004052; }
 A:hover {text-decoration:underline; color:#00989a; }
 
+img { border:0px; vertical-align:middle; }
+
 .buttondiv { text-align:center; padding:5px 0px 5px 0px; }
 button { border: 2px solid #666666; border-radius:5px; cursor:pointer;
   background:#c9b609; box-shadow:1px 1px 1px #2f2b00;
@@ -66,7 +68,7 @@ circle { clip-path: url(../#clip); }
 #dlgsavelinkdiv { font-weight:bold; padding:20px; }
 
 #leftcoldiv { position:absolute; left:0px; top:0px; background:#e7e1e2; }
-#lcontdiv { position:absolute; left:0px; top:0px; }
+#lcontdiv, #tcontdiv { position:absolute; left:0px; top:0px; }
 #navdiv { position:absolute; left:0px; top:-5px; }
 .levnumbackrect { stroke:#999; fill:#f8e6a0; }
 .levelnumber { }
@@ -84,7 +86,10 @@ circle { clip-path: url(../#clip); }
 .bgpicdiv { display:inline-block; overflow:hidden; text-align:center; }
 .bgpicimg { opacity:0.6; }
 
-#refdiv { text-align:right; padding:2px 10px 0px 10px; }
+#refdiv { padding:2px 10px 0px 10px; }
+#interactimg, #disptoggleimg { width:18px; height:18px;
+  margin:2px 5px 2px 5px; }
+#disptoggleimg { margin:0px 5px 2px 5px; }
 
 /* -------------------- */
 /* tabular */

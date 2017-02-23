@@ -7,9 +7,6 @@ var app = {},  //Global container for application level funcs and values
 (function () {
     "use strict";
 
-    app.dispdivid = "rhcontentdiv";  //main display div
-
-
     app.init2 = function () {
         app.amdtimer.load.end = new Date();
         app.db.prepData();
@@ -32,7 +29,7 @@ var app = {},  //Global container for application level funcs and values
                        "js/sv/intro"
                       ];
         jtminjsDecorateWithUtilities(jt);
-        jt.out(app.dispdivid, "Loading app modules...");
+        jt.out("rhcontentdiv", "Loading app modules...");
         app.amdtimer = {};
         app.amdtimer.load = { start: new Date() };
         jt.loadAppModules(app, modules, href, app.init2, "?cbp=161223");

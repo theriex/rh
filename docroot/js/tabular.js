@@ -1,4 +1,5 @@
 /*jslint browser, multivar, white, fudge */
+/*global app, window, jt, d3 */
 
 app.tabular = (function () {
     "use strict";
@@ -28,8 +29,8 @@ app.tabular = (function () {
 
 
     function display () {
-        var outdiv = jt.byId(app.dispdivid);
-        outdiv.innerHTML = jt.tac2html(["div", {id: "tcontdiv"}]);
+        var outdiv = jt.byId("tcontdiv");
+        outdiv.innerHTML = "";  //rebuild each time in case filtered
         app.data.pts.forEach(function (pt) {
             var linediv = document.createElement("div");
             linediv.innerHTML = jt.tac2html(
