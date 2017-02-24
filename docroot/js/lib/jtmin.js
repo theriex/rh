@@ -1059,6 +1059,10 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
 
     uo.loadAppModules = function (app, modulenames, path, callback, parastr) {
         var i, url, modname, js;
+        if (path.indexOf("#") > 0) {
+            path = path.slice(0, path.indexOf("#")); }
+        if (path.indexOf("?") > 0) {
+            path = path.slice(0, path.indexOf("?")); }
         if (path.lastIndexOf(".") > path.lastIndexOf("/")) {
             path = path.slice(0, path.lastIndexOf("/"));
         }

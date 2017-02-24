@@ -60,7 +60,7 @@ app.picbg = (function () {
         pb = {x: Math.floor(picgrid.x * (mx / dd.w)),
               y: Math.floor(picgrid.y * (my / dd.h))}
         pt = picpts[(pb.y * picgrid.x) + pb.x];
-        app.linear.clickCircle(pt);
+        app.mode.interject(pt);
     }
 
 

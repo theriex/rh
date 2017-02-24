@@ -154,6 +154,14 @@ app.mode = (function () {
     }
 
 
+    function interject (pt) {
+        if(ms.currpt) {
+            series.push(ms.currpt);
+            ms.currpt = null; }  //don't stack up multiple interjects
+        app.linear.clickCircle(pt);
+    }
+
+
     function updateSearchDisplay () {
         var updf;
         if(srchst.status === "processing") {
@@ -232,6 +240,7 @@ app.mode = (function () {
         chmode: function (mode) { changeMode(mode); },
         togdisp: function () { toggleDisplay(); },
         updatesrch: function () { updateSearchDisplay(); },
-        ptmatch: function (pt) { return isMatchingPoint(pt); }
+        ptmatch: function (pt) { return isMatchingPoint(pt); },
+        interject: function (pt) { interject(pt); }
     };
 }());
