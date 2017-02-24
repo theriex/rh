@@ -8,7 +8,12 @@ app.mode = (function () {
         fetchpoints = null,
         series = null,
         ms = {},  //mode state detail variables
-        srchst = {tlcodes:[], qstr:"", status:""};
+        srchst = null;
+
+
+    function clearSearchState () {
+        srchst = {tlcode:"", qstr:"", status:""};
+    }
 
 
     function showModeElements (chmode) {
@@ -23,8 +28,15 @@ app.mode = (function () {
 
 
     function verifyDisplayElements () {
-        var html;
+        var tlopts, html, srchfstr;
+        srchfstr = jt.fs("app.mode.updatesrch()");
+        tlopts = [["option", {value:""}, "All"]];
+        app.data.timelines.forEach(function (tl) {
+            if(tl.code !== "U" && tl.code !== "D") {
+                tlopts.push(["option", {value:tl.code}, 
+                             tl.ident + " (" + tl.name + ")"]); } });
         if(!ms.progsvg) {
+            clearSearchState();  //init
             html = [["div", {id:"refdiv", style:"width:" + ms.w + "px;" +
                                                 "height:" + ms.h + "px;"},
                      [["a", {href:"#interactive",
@@ -33,14 +45,15 @@ app.mode = (function () {
                       ["a", {id:"disptoggle", href:"#textmode",
                              onclick:jt.fs("app.mode.togdisp()")},
                        ["img", {id:"disptoggleimg", src:"img/disptext.png"}]],
-                      ["input", {type:"text", id:"srchin", size:30,
+                      ["input", {type:"text", id:"srchin", size:25,
                                  placeholder:"Search for...",
-                                 value:srchst.qstr,
-                                 oninput:jt.fs("app.mode.updatesrch()")}]]],
+                                 value:srchst.qstr, oninput:srchfstr}],
+                      ["select", {id:"tlsel", onchange:srchfstr}, tlopts]]],
                     ["div", {id:"levdiv"},
                      ["svg", {id:"svgnav", width:ms.w, height:ms.h}]]];
             jt.out(ms.divid, jt.tac2html(html));
             ms.progsvg = d3.select("#svgnav"); }
+        jt.byId("tlsel").style.width = "64px";
         showModeElements();
     }
 
@@ -148,6 +161,9 @@ app.mode = (function () {
             return; }
         srchst.status = "processing";
         srchst.qstr = jt.byId("srchin").value;
+        if(srchst.qstr) {
+            srchst.qstr = srchst.qstr.toLowerCase(); }
+        srchst.tlcode = jt.byId("tlsel").value;
         if(ms.disp === "text") {
             updf = app.tabular.search; }
         else {
@@ -158,6 +174,18 @@ app.mode = (function () {
             if(srchst.pending) {
                 srchst.pending = false;
                 updateSearchDisplay(); } }, 400);
+    }
+
+
+    function isMatchingPoint (pt) {
+        if(srchst) {
+            if(srchst.qstr) {
+                if(pt.text.toLowerCase().indexOf(srchst.qstr) < 0) {
+                    return false; } }
+            if(srchst.tlcode) {
+                if(pt.code.indexOf(srchst.tlcode) < 0) {
+                    return false; } } }
+        return true;
     }
 
 
@@ -186,7 +214,7 @@ app.mode = (function () {
         if(mode === "interactive") {
             if(ms.disp === "text") {
                 toggleDisplay(); }
-            srchst = {tlcodes:[], qstr:"", status:""};  //clear any searching
+            clearSearchState();
             if(ms.currpt) {  //return to the point being shown before
                 app.linear.clickCircle(ms.currpt); }
             else if(series && series.length) {  //closed start or save dlg
@@ -194,14 +222,6 @@ app.mode = (function () {
                 app.linear.clickCircle(ms.currpt); }
             else {  //no points left for display, show final supp vis again
                 app.linear.clickCircle(app.lev.suppVisByCode("fi").pts[0]); } }
-    }
-
-
-    function isMatchingPoint (pt) {
-        if(srchst.qstr) {
-            if(pt.text.toLowerCase().indexOf(srchst.qstr.toLowerCase()) < 0) {
-                return false; } }
-        return true;
     }
 
 
