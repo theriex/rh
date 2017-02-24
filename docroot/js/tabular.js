@@ -28,12 +28,24 @@ app.tabular = (function () {
     }
 
 
+    function cleanTDValue (text) {
+        text = text.replace(/\t/g, " ");
+        text = text.replace(/\n/g, " ");
+        return text;
+    }
+
+
     function display (srchst) {
-        var outdiv = jt.byId("tcontdiv");
-        outdiv.innerHTML = "";  //rebuild each time in case filtered
+        var outdiv, dlh, html;
+        outdiv = jt.byId("tcontdiv");
+        outdiv.innerHTML = jt.tac2html(
+            ["div", {id:"downloadlinkdiv"},
+             ["span", {cla:"procspan"}, "Processing..."]]);
+        dlh = "Date\tText\n";
         app.data.pts.forEach(function (pt) {
             var linediv;
             if(!srchst || app.mode.ptmatch(pt)) {
+                dlh += pt.date + "\t" + cleanTDValue(pt.text) + "\n";
                 linediv = document.createElement("div");
                 linediv.innerHTML = jt.tac2html(
                     ["div", {cla: "trowdiv"},
@@ -44,6 +56,12 @@ app.tabular = (function () {
                         ["span", {cla: "tcspan"}, " (" + pt.code + ") "]]],
                       ["div", {cla: "trowdescdiv"}, pt.text]]]);
                 outdiv.appendChild(linediv); } });
+        dlh = "data:text/plain;charset=utf-8," + encodeURIComponent(dlh);
+        jt.out("downloadlinkdiv", jt.tac2html(
+            ["a", {href:dlh, id:"downloadlink", download:"ARHiNT.tsv",
+                   title:"Download the displayed points"},
+             [["img", {src:"img/download.png", cla:"downloadlinkimg"}],
+              "Download"]]));
     }
 
 

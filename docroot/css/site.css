@@ -101,3 +101,6 @@ circle { clip-path: url(../#clip); }
 .tdspan { font-size:small; }
 .tdspanyo { font-size:large; }
 .bcespan { font-size:x-small; font-style:italic; font-weight:bold; }
+
+#downloadlinkdiv { padding:0px 10px 5px 62px; font-size:small; }
+.downloadlinkimg { margin:0px 2px; }
