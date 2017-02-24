@@ -7,7 +7,8 @@ app.mode = (function () {
     var mode = "interactive",  //linear only. "reference" is linear or text
         fetchpoints = null,
         series = null,
-        ms = {};  //mode state detail variables
+        ms = {},  //mode state detail variables
+        srchst = {tlcodes:[], qstr:"", status:""};
 
 
     function showModeElements (chmode) {
@@ -31,7 +32,11 @@ app.mode = (function () {
                        ["img", {id:"interactimg", src:"img/info.png"}]],
                       ["a", {id:"disptoggle", href:"#textmode",
                              onclick:jt.fs("app.mode.togdisp()")},
-                       ["img", {id:"disptoggleimg", src:"img/disptext.png"}]]]],
+                       ["img", {id:"disptoggleimg", src:"img/disptext.png"}]],
+                      ["input", {type:"text", id:"srchin", size:30,
+                                 placeholder:"Search for...",
+                                 value:srchst.qstr,
+                                 oninput:jt.fs("app.mode.updatesrch()")}]]],
                     ["div", {id:"levdiv"},
                      ["svg", {id:"svgnav", width:ms.w, height:ms.h}]]];
             jt.out(ms.divid, jt.tac2html(html));
@@ -136,16 +141,23 @@ app.mode = (function () {
     }
 
 
-    function changeMode (chmode) {
-        showModeElements(chmode);
-        if(mode === "interactive") {
-            if(ms.currpt) {  //return to the point being shown before
-                app.linear.clickCircle(ms.currpt); }
-            else if(series && series.length) {  //closed start or save dlg
-                ms.currpt = series.pop();
-                app.linear.clickCircle(ms.currpt); }
-            else {  //no points left for display, show final supp vis again
-                app.linear.clickCircle(app.lev.suppVisByCode("fi").pts[0]); } }
+    function updateSearchDisplay () {
+        var updf;
+        if(srchst.status === "processing") {
+            srchst.pending = true;
+            return; }
+        srchst.status = "processing";
+        srchst.qstr = jt.byId("srchin").value;
+        if(ms.disp === "text") {
+            updf = app.tabular.search; }
+        else {
+            updf = app.linear.search; }
+        setTimeout(function () {  //async update to stay responsive
+            updf(srchst);
+            srchst.status = "";
+            if(srchst.pending) {
+                srchst.pending = false;
+                updateSearchDisplay(); } }, 400);
     }
 
 
@@ -165,6 +177,31 @@ app.mode = (function () {
             jt.byId("lcontdiv").style.display = "block";
             jt.byId("tcontdiv").style.display = "none";
             ms.disp = "linear"; }
+        updateSearchDisplay();
+    }
+
+
+    function changeMode (chmode) {
+        showModeElements(chmode);
+        if(mode === "interactive") {
+            if(ms.disp === "text") {
+                toggleDisplay(); }
+            srchst = {tlcodes:[], qstr:"", status:""};  //clear any searching
+            if(ms.currpt) {  //return to the point being shown before
+                app.linear.clickCircle(ms.currpt); }
+            else if(series && series.length) {  //closed start or save dlg
+                ms.currpt = series.pop();
+                app.linear.clickCircle(ms.currpt); }
+            else {  //no points left for display, show final supp vis again
+                app.linear.clickCircle(app.lev.suppVisByCode("fi").pts[0]); } }
+    }
+
+
+    function isMatchingPoint (pt) {
+        if(srchst.qstr) {
+            if(pt.text.toLowerCase().indexOf(srchst.qstr.toLowerCase()) < 0) {
+                return false; } }
+        return true;
     }
 
 
@@ -173,6 +210,8 @@ app.mode = (function () {
         next: function () { next(); },
         nextPass: function () { nextPass(); },
         chmode: function (mode) { changeMode(mode); },
-        togdisp: function () { toggleDisplay(); }
+        togdisp: function () { toggleDisplay(); },
+        updatesrch: function () { updateSearchDisplay(); },
+        ptmatch: function (pt) { return isMatchingPoint(pt); }
     };
 }());

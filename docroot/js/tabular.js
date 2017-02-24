@@ -28,23 +28,27 @@ app.tabular = (function () {
     }
 
 
-    function display () {
+    function display (srchst) {
         var outdiv = jt.byId("tcontdiv");
         outdiv.innerHTML = "";  //rebuild each time in case filtered
         app.data.pts.forEach(function (pt) {
-            var linediv = document.createElement("div");
-            linediv.innerHTML = jt.tac2html(
-                ["div", {cla: "trowdiv"},
-                 [["div", {cla: "trowdatediv"},
-                   [dateSpan(pt.start),
-                    ["br"],
-                    dateSpan(pt.end, "-"),
-                    ["span", {cla: "tcspan"}, " (" + pt.code + ") "]]],
-                  ["div", {cla: "trowdescdiv"}, pt.text]]]);
-            outdiv.appendChild(linediv); });
+            var linediv;
+            if(!srchst || app.mode.ptmatch(pt)) {
+                linediv = document.createElement("div");
+                linediv.innerHTML = jt.tac2html(
+                    ["div", {cla: "trowdiv"},
+                     [["div", {cla: "trowdatediv"},
+                       [dateSpan(pt.start),
+                        ["br"],
+                        dateSpan(pt.end, "-"),
+                        ["span", {cla: "tcspan"}, " (" + pt.code + ") "]]],
+                      ["div", {cla: "trowdescdiv"}, pt.text]]]);
+                outdiv.appendChild(linediv); } });
     }
 
+
     return {
-        display: function () { display(); }
+        display: function () { display(); },
+        search: function (srchst) { display(srchst); }
     };
 }());

@@ -135,6 +135,8 @@ app.linear = (function () {
             // console.log("oldest: " + oldest + ": " + tl.heat(oldest));
             // console.log("   now: " + now + ": " + tl.heat(now));
             }
+        if(!app.mode.ptmatch(pt)) {
+            return "#ccc"; }
         if(pt.visited) {
             return tl.heat(jt.isoString2Time(pt.visited)); }
         return "#000";
@@ -324,8 +326,15 @@ app.linear = (function () {
     }
 
 
+    function search () {
+        tl.focus.selectAll("circle")
+            .attr("fill", function(d) { return fillColorForPoint(d); });
+    }
+
+
     return {
         display: function () { display(); },
-        clickCircle: function (pt) { clickCircle(pt); }
+        clickCircle: function (pt) { clickCircle(pt); },
+        search: function () { search(); }
     };
 }());

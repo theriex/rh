@@ -136,7 +136,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
   pts:[
     { code:"", cid:"X1", sv:"in",
       date:"1200 BCE",
-      text:"This is just a marker data point to trigger the intro vis." },
+      text:"[Introduction visualization]" },
     { code:"NL", cid:"N1",
       date:"1200 BCE",
       text:"Olmec civilization arises in Central America sometime between 1200 BCE and 1000 BCE. They are the earliest civilization in Central America, and possibly the earliest civilization in the Americas. The Olmec originally live in the Gulf Coast region of southern Mexico, but soon expand into Guatemala." },
