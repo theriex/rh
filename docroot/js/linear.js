@@ -244,6 +244,7 @@ app.linear = (function () {
     function initDisplayVariableValues () {
         var outdiv = jt.byId("rhcontentdiv");
         outdiv.style.width = String(tl.chart.w) + "px"; //show bg if big screen
+        outdiv.style.height = String(tl.chart.h) + "px";
         outdiv.innerHTML = jt.tac2html(
             [["div", {id:"abgdiv", style:"left:10px;top:20px;width:" + 
                       (tl.chart.w - 20) + "px;"}],

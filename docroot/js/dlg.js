@@ -25,8 +25,20 @@ app.dlg = (function () {
         var ct = lnfs[lnfidx];
         d3.select("#itemdispdiv").style("background", ct.dlgbg);
         d3.select(".dlgtextdiv").style("background", ct.textbg);
-        d3.select(".dlgdatediv").style("background", ct.datebg);
+        d3.select("#dlgdatediv").style("background", ct.datebg);
         d3.select("button").style("background", ct.buttonbg);
+    }
+
+
+    function adjustContentHeight (dim) {
+        var cd = {x:dim.x, y:dim.y, w:dim.w, h:dim.h},
+            elids = ["dlgdatediv", "dlgxdiv", "dlgbuttondiv"];
+        elids.forEach(function (id) {
+            var elem = jt.byId(id);
+            if(elem) {
+                cd.h -= elem.offsetHeight; } });
+        d3.select("#dlgcontentdiv")
+            .style("max-height", cd.h + "px");
     }
 
 
@@ -51,13 +63,13 @@ app.dlg = (function () {
             .style("max-width", dim.w + "px")
             .style("max-height", dim.h + "px");
         jt.out("itemdispdiv", html);
+        adjustContentHeight(dim);
         if(dim.tracked) {
             elem = jt.byId("itemdispdiv");
             if(elem.scrollHeight > elem.offsetHeight) {  //overflowed
                 dim.y = tl.margin.top + Math.round(0.04 * tl.height);
                 dim.h = Math.round(0.8 * tl.height);
-                d3.select(".dlgtextdiv")
-                    .style("max-height", Math.round(0.8 * dim.h) + "px");
+                adjustContentHeight(dim);
                 d3.select("#itemdispdiv")
                     .style("top", dim.y + "px")
                     .style("max-height", dim.h + "px"); } }
@@ -72,7 +84,7 @@ app.dlg = (function () {
 
     function showStartDialog (clickfstr) {
         var html;
-        html = [["div", {cla: "dlgxdiv"},
+        html = [["div", {id: "dlgxdiv"},
                  ["a", {href: "#close", 
                         onclick: jt.fs("app.dlg.close()")},
                   "X"]],
@@ -91,17 +103,43 @@ app.dlg = (function () {
     }
 
 
+    function infoPicHTML (d) {
+        var html = "", name = "", i, ch;
+        if(d.pic) {
+            for(i = 0; i < d.pic.length - 4; i += 1) {
+                ch = d.pic.charAt(i);
+                if(ch === "-") {
+                    name += "-"; }
+                else if(ch === ch.toUpperCase()) {
+                    name += " " + ch.toUpperCase(); }
+                else {
+                    name += ch; } }
+            name = name.replace(/De Bakey/g, "DeBakey");
+            name = name.split(" ");
+            name.forEach(function (na, idx) {
+                if(na.length === 1) {
+                    name[idx] = na + "."; } });
+            name = name.join(" ");
+            html = jt.tac2html(
+                [["img", {cla:"infopic", src:"img/datapics/" + d.pic}],
+                 ["div", {cla:"picnamediv"}, name]]); }
+        return html;
+    }
+
+
     function showInfoDialog (d, nextfstr) {
         var html;
-        html = [["div", {cla: "dlgdatediv"}, d.date],
-                ["div", {cla: "dlgxdiv"},
-                 ["a", {href: "#close", 
-                        onclick: jt.fs("app.dlg.close()")},
+        html = [["div", {id:"dlgdatediv"}, d.date],
+                ["div", {id:"dlgxdiv"},
+                 ["a", {href:"#close", 
+                        onclick:jt.fs("app.dlg.close()")},
                   "X"]],
-                ["div", {cla: "dlgtextdiv"}, d.text],
-                ["div", {cla: "buttondiv"},
-                 ["button", {type: "button", id: "nextbutton",
-                             onclick: nextfstr},
+                ["div", {id:"dlgcontentdiv"},
+                 [["div", {cla:"dlgpicdiv"}, infoPicHTML(d)],
+                  ["div", {cla:"dlgtextdiv"}, d.text]]],
+                ["div", {id:"dlgbuttondiv"},
+                 ["button", {type:"button", id:"nextbutton",
+                             onclick:nextfstr},
                   "Next"]]];
         displayDialog(d, jt.tac2html(html));
         //setting focus the first time does not work for whatever
@@ -119,14 +157,14 @@ app.dlg = (function () {
             if(pt.visited) {
                 vps += "&" + pt.cid + "=" + jt.enc(pt.visited); } });
         body += "?" + vps.slice(1);
-        html = [["div", {cla: "dlgxdiv"},
+        html = [["div", {id: "dlgxdiv"},
                  ["a", {href: "#close", 
                         onclick: jt.fs("app.dlg.close()")},
                   "X"]],
                 ["div", {cla: "dlgtextdiv"},
                  [["div", {id: "dlgsavetitlediv"}, "Progress saved."],
                   ["div", {id: "dlgsavelinkdiv"}, "building restore link..."]]],
-                ["div", {cla: "buttondiv"},
+                ["div", {id: "dlgbuttondiv"},
                  ["button", {type: "button", id: "nextbutton",
                              onclick: nextfstr},
                   "Continue"]]];

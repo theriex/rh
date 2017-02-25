@@ -62,6 +62,11 @@ app.mode = (function () {
         if(fetchpoints) {
             app.lev.updateVisited(fetchpoints); }
         fetchpoints = app.lev.getNextPoints();
+        var testcids = ["M72", "M8", "B99", "N86"];
+        fetchpoints = [];
+        app.data.pts.forEach(function (pt) {
+            if(testcids.indexOf(pt.cid) >= 0) {
+                fetchpoints.push(pt); } });
         series = fetchpoints.slice();  //working copy to chew up
     }
 
