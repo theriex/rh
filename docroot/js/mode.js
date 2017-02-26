@@ -66,11 +66,11 @@ app.mode = (function () {
             app.lev.updateVisited(fetchpoints); }
         fetchpoints = app.lev.getNextPoints();
         //TEST: Uncomment to choose specific points for testing
-        var testcids = ["A107", "M72", "M8", "B99", "N86"];
-        fetchpoints = [];
-        app.data.pts.forEach(function (pt) {
-            if(testcids.indexOf(pt.cid) >= 0) {
-                fetchpoints.push(pt); } });
+        // var testcids = ["A107", "M72", "M8", "B99", "N86"];
+        // fetchpoints = [];
+        // app.data.pts.forEach(function (pt) {
+        //     if(testcids.indexOf(pt.cid) >= 0) {
+        //         fetchpoints.push(pt); } });
         series = fetchpoints.slice();  //working copy to chew up
     }
 
