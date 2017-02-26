@@ -39,7 +39,10 @@ app.mode = (function () {
             clearSearchState();  //init
             html = [["div", {id:"refdiv", style:"width:" + ms.w + "px;" +
                                                 "height:" + ms.h + "px;"},
-                     [["a", {href:"#interactive",
+                     [["div", {id:"aboutdiv"},
+                       ["a", {href:"#about", onclick:jt.fs("app.mode.about()")},
+                        "?"]],
+                      ["a", {href:"#interactive",
                              onclick:jt.fs("app.mode.chmode('interactive')")},
                        ["img", {id:"interactimg", src:"img/info.png"}]],
                       ["a", {id:"disptoggle", href:"#textmode",
@@ -62,11 +65,12 @@ app.mode = (function () {
         if(fetchpoints) {
             app.lev.updateVisited(fetchpoints); }
         fetchpoints = app.lev.getNextPoints();
-        var testcids = ["M72", "M8", "B99", "N86"];
-        fetchpoints = [];
-        app.data.pts.forEach(function (pt) {
-            if(testcids.indexOf(pt.cid) >= 0) {
-                fetchpoints.push(pt); } });
+        //TEST: Uncomment to choose specific points for testing.
+        // var testcids = ["M72", "M8", "B99", "N86"];
+        // fetchpoints = [];
+        // app.data.pts.forEach(function (pt) {
+        //     if(testcids.indexOf(pt.cid) >= 0) {
+        //         fetchpoints.push(pt); } });
         series = fetchpoints.slice();  //working copy to chew up
     }
 
@@ -246,6 +250,7 @@ app.mode = (function () {
         togdisp: function () { toggleDisplay(); },
         updatesrch: function () { updateSearchDisplay(); },
         ptmatch: function (pt) { return isMatchingPoint(pt); },
-        interject: function (pt) { interject(pt); }
+        interject: function (pt) { interject(pt); },
+        about: function () { app.about.display(); }
     };
 }());

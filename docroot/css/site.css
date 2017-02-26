@@ -41,7 +41,7 @@ circle { clip-path: url(../#clip); }
   box-shadow:5px 5px 3px #2f2b00; }
 #dlgdatediv { float:left; background:#fce934; padding:4px 4px 0px 4px;
   margin:0px 0px 3px -4px; border-radius:4px; }
-#dlgxdiv { float:right; font-size:x-small; font-weight:bold; 
+#dlgxdiv, #aboutxdiv { float:right; font-size:x-small; font-weight:bold; 
   margin:-3px -3px 0px 0px; }
 #dlgcontentdiv { clear:both; overflow:scroll; }
 .dlgpicdiv { margin-top:5px; float:right }
@@ -95,6 +95,7 @@ circle { clip-path: url(../#clip); }
 #interactimg, #disptoggleimg { width:18px; height:18px;
   margin:2px 5px 2px 5px; }
 #disptoggleimg { margin:0px 5px 2px 5px; }
+#aboutdiv { float:right; font-size:medium; margin:3px 3px 0px 0px; }
 
 /* -------------------- */
 /* tabular */
@@ -109,3 +110,4 @@ circle { clip-path: url(../#clip); }
 
 #downloadlinkdiv { padding:0px 10px 5px 62px; font-size:small; }
 .downloadlinkimg { margin:0px 2px; }
+
