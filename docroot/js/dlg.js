@@ -65,8 +65,8 @@ app.dlg = (function () {
         jt.out("itemdispdiv", html);
         adjustContentHeight(dim);
         if(dim.tracked) {
-            elem = jt.byId("itemdispdiv");
-            if(elem.scrollHeight > elem.offsetHeight) {  //overflowed
+            elem = jt.byId("dlgcontentdiv");
+            if(elem && elem.scrollHeight > elem.offsetHeight) {  //overflowed
                 dim.y = tl.margin.top + Math.round(0.04 * tl.height);
                 dim.h = Math.round(0.8 * tl.height);
                 adjustContentHeight(dim);
@@ -86,7 +86,7 @@ app.dlg = (function () {
         var html;
         html = [["div", {id: "dlgxdiv"},
                  ["a", {href: "#close", 
-                        onclick: jt.fs("app.dlg.close()")},
+                        onclick: jt.fs("app.dlg.close('reference')")},
                   "X"]],
                 ["div", {cla: "dlgtextdiv"},
                  ["div", {cla: "introdlgdiv"},
@@ -132,7 +132,7 @@ app.dlg = (function () {
         html = [["div", {id:"dlgdatediv"}, d.date],
                 ["div", {id:"dlgxdiv"},
                  ["a", {href:"#close", 
-                        onclick:jt.fs("app.dlg.close()")},
+                        onclick:jt.fs("app.dlg.close('reference')")},
                   "X"]],
                 ["div", {id:"dlgcontentdiv"},
                  [["div", {cla:"dlgpicdiv"}, infoPicHTML(d)],
@@ -159,7 +159,7 @@ app.dlg = (function () {
         body += "?" + vps.slice(1);
         html = [["div", {id: "dlgxdiv"},
                  ["a", {href: "#close", 
-                        onclick: jt.fs("app.dlg.close()")},
+                        onclick: jt.fs("app.dlg.close('reference')")},
                   "X"]],
                 ["div", {cla: "dlgtextdiv"},
                  [["div", {id: "dlgsavetitlediv"}, "Progress saved."],
@@ -180,10 +180,11 @@ app.dlg = (function () {
     }
 
 
-    function closeDialog () {
+    function closeDialog (mode) {
         d3.select("#itemdispdiv")
             .style("visibility", "hidden");
-        app.mode.chmode("reference");
+        if(mode) {
+            app.mode.chmode(mode); }
     }
 
 
@@ -191,7 +192,7 @@ app.dlg = (function () {
         init: function (timeline) { tl = timeline; },
         start: function (clickfstr) { showStartDialog(clickfstr); },
         info: function (d, nextfstr) { showInfoDialog(d, nextfstr); },
-        close: function () { closeDialog(); },
+        close: function (mode) { closeDialog(mode); },
         save: function (nextfstr) { showSaveConfirmationDialog(nextfstr); },
         nextColorTheme: function () { nextColorTheme(); }
     };

@@ -1450,7 +1450,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
       text:"Approximately 20% of the Puerto Ricans living in the U.S. return to the island." },
     { code:"AU", cid:"A78",
       date:"1931",
-      text:"Films based on Charlie Chan – the inscrutable Chinese detective who spoke in Confucian proverbs - become popular. Fox Film Corporation casts Swedish actor Warner Oland as Chan." },
+      text:"Films based on Charlie Chan – the inscrutable Chinese detective who speaks in Confucian proverbs - become popular. Fox Film Corporation casts Swedish actor Warner Oland as Chan." },
     { code:"AR", cid:"R77", 
       date:"1931",
       text:"The Cable Act is amended, allowing U.S. women to retain the citizenship after marriage to aliens ineligible for citizenship through the naturalization process. The Cable Act is finally repealed in 1936." },
