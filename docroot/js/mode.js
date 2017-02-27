@@ -66,7 +66,8 @@ app.mode = (function () {
             app.lev.updateVisited(fetchpoints); }
         fetchpoints = app.lev.getNextPoints();
         //TEST: Uncomment to choose specific points for testing
-        // var testcids = ["A107", "M72", "M8", "B99", "N86"];
+        // var testcids = ["B264"];
+        // ms.skipstart = true;
         // fetchpoints = [];
         // app.data.pts.forEach(function (pt) {
         //     if(testcids.indexOf(pt.cid) >= 0) {
@@ -138,19 +139,25 @@ app.mode = (function () {
         //app.linear.clickCircle(app.lev.suppVisByCode("in").pts[0]);
         if(series && series.length) {
             showModeElements("interactive");
-            app.dlg.start(jt.fs("app.mode.next()")); }
+            if(ms.skipstart) {
+                app.mode.next(); }
+            else {
+                app.dlg.start(jt.fs("app.mode.next()")); } }
         else {
             showModeElements("reference"); }
     }
 
 
-    function next () {
+    function next (quiet) {
         app.dlg.close();
         if(!series || !series.length) {
             app.db.saveState();
             getPointsForDisplay();
             updateLevelDisplay();
-            app.dlg.save(jt.fs("app.mode.nextPass()")); }
+            if(quiet) {
+                app.mode.nextPass(); }
+            else {
+                app.dlg.save(jt.fs("app.mode.nextPass()")); } }
         else {
             ms.currpt = series.pop();
             app.linear.clickCircle(ms.currpt); }
@@ -246,6 +253,7 @@ app.mode = (function () {
         start: function (divid, tl) { start(divid, tl); },
         next: function () { next(); },
         nextPass: function () { nextPass(); },
+        nextQuiet: function () { next(true); },
         chmode: function (mode) { changeMode(mode); },
         togdisp: function () { toggleDisplay(); },
         updatesrch: function () { updateSearchDisplay(); },

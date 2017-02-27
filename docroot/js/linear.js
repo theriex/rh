@@ -191,7 +191,7 @@ app.linear = (function () {
             if(!app[d.svo.module]) {
                 return jt.err("Supplemental visualization module \"" + 
                               d.svo.module + "\" not found"); }
-            app[d.svo.module].display(d.svo, tl, app.mode.next); }
+            app[d.svo.module].display(d.svo, tl, app.mode.nextQuiet); }
         else {
             app.dlg.info(d, jt.fs("app.mode.next()")); }
     }

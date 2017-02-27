@@ -27,7 +27,8 @@ var app = {},  //Global container for application level funcs and values
                        "js/tabular",  //text timeline display
                        "js/mode",     //interactive or reference
                        "js/sv/about",
-                       "js/sv/intro"
+                       "js/sv/intro",
+                       "js/sv/slavery"
                       ];
         jtminjsDecorateWithUtilities(jt);
         jt.out("rhcontentdiv", "Loading app modules...");
