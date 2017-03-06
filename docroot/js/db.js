@@ -4,6 +4,8 @@
 app.db = (function () {
     "use strict";
 
+    var maxcids = {};
+
     //See the project readme for allowable date form specfications.
     function parseDate (pt) {
         var date, mres;
@@ -136,11 +138,18 @@ app.db = (function () {
         jt.log("Timeline codes and names");
         app.data.timelines.forEach(function (tl) {
             jt.log("  " + tl.code + ": " + tl.name + 
-                        " (" + tl.ident + ")"); });
+                        " (" + tl.ident + ") maxcid: " + maxcids[tl.code]); });
         //an sv datum will have an sv field set to the sv code.
         // jt.log("Supplemental Visualizations");
         // app.data.suppvis.forEach(function (sv) {
         //     jt.log("  " + sv.code + ": " + sv.name); });
+    }
+
+
+    function noteCitationIdMax (pt) {
+        var code = pt.cid.charAt(0),
+            count = +(pt.cid.slice(1));
+        maxcids[code] = Math.max((maxcids[code] || 0), count);
     }
 
 
@@ -167,6 +176,7 @@ app.db = (function () {
                 throw "Duplicate cid: " + pt.cid; }
             if(pt.code.indexOf("U") >= 0 && pt.code.indexOf("D") >= 0) {
                 throw "Either 'U' or 'D' (no save on intro) cid: " + pt.cid; }
+            noteCitationIdMax(pt);
             cs[pt.cid] = pt;
             parseDate(pt);
             makeCoordinates(pt, ctx);
@@ -176,7 +186,7 @@ app.db = (function () {
         app.data.pts.forEach(function (pt) {
             centerYCoordinates(pt, ctx); });
         loadSavedState();
-        //describeData();
+        describeData();
     }
 
 
