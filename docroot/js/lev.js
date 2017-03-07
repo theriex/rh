@@ -93,7 +93,7 @@ app.lev = (function () {
         var currlev = null;
         levels.forEach(function (lev) {
             if(!currlev) {
-                if(lev.pa) {
+                if(lev.pa > 0) {
                     currlev = lev; }
                 else if(!lev.sv.visited) {
                     currlev = lev; } } });
@@ -148,9 +148,9 @@ app.lev = (function () {
     }
 
 
-    function selectPoints (pts, method) {
+    function selectPoints (pts, method, maxsel) {
         var sel = [], idx;
-        while(pts.length && sel.length < pointsPerSave) {
+        while(pts.length && sel.length < maxsel) {
             if(method === "random") {
                 idx = Math.floor(Math.random() * pts.length); }
             else {  //sequential
@@ -176,7 +176,8 @@ app.lev = (function () {
         currlev.pa = Math.min(currlev.pa, distributeAvailPointsByTL());
         if(currlev.pa > 0) {
             tl = selectNextTimeline(currlev.sv.pc);
-            pts = selectPoints(tl.pts, currlev.sv.select);
+            pts = selectPoints(tl.pts, currlev.sv.select,
+                               Math.min(currlev.pa, pointsPerSave));
             jt.log("Selected " + pts.length + " points from " + tl.ident + 
                    " out of " + currlev.pa + " left available");
             return pts; }

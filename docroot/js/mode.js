@@ -66,12 +66,12 @@ app.mode = (function () {
             app.lev.updateVisited(fetchpoints); }
         fetchpoints = app.lev.getNextPoints();
         //TEST: Uncomment to choose specific points for testing
-        var testcids = ["B264"];
-        ms.skipstart = true;
-        fetchpoints = [];
-        app.data.pts.forEach(function (pt) {
-            if(testcids.indexOf(pt.cid) >= 0) {
-                fetchpoints.push(pt); } });
+        // var testcids = ["B264"];
+        // ms.skipstart = true;
+        // fetchpoints = [];
+        // app.data.pts.forEach(function (pt) {
+        //     if(testcids.indexOf(pt.cid) >= 0) {
+        //         fetchpoints.push(pt); } });
         series = fetchpoints.slice();  //working copy to chew up
     }
 
@@ -150,7 +150,7 @@ app.mode = (function () {
 
     function next (quiet) {
         app.dlg.close();
-        if(!series || !series.length) {
+        if(!series || !series.length || quiet) {
             app.db.saveState();
             getPointsForDisplay();
             updateLevelDisplay();
