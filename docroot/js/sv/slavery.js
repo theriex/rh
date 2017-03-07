@@ -121,7 +121,7 @@ app.slavery = (function () {
 
 
     function initDisplayElements () {
-        var kh = 50;
+        var kh = 50, mid;
         chart.ms = {w:tl.width2, h:Math.min((tl.height - kh), tl.width2)};
         jt.out("suppvisdiv", jt.tac2html(
             [["div", {id:"keydiv", style:"width:280px;margin:auto;"},
@@ -270,14 +270,19 @@ app.slavery = (function () {
             .attr("width", 3)
             .attr("height", ks.h)
             .style("fill", neut);
+        mid = {x: Math.round(tl.width2 / 2) + tl.margin.left,
+               y: Math.round(tl.height / 2) + tl.margin.top}
         d3.select("#suppvisdiv")
-            .style("left", tl.margin.left + "px")
-            .style("top", tl.margin.top + "px")
-            .style("width", tl.width2 + "px")
+            .style("left", mid.x - 15 + "px")
+            .style("top", mid.y - 15 + "px")
+            .style("width", 30 + "px")
             .style("height", 30 + "px")
             .style("background", chart.colors.bg)
             .style("visibility", "visible")
             .transition().duration(2000)
+            .style("left", tl.margin.left + "px")
+            .style("top", tl.margin.top + "px")
+            .style("width", tl.width2 + "px")
             .style("height", tl.height + "px");
     }
 
