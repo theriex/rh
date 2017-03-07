@@ -14,7 +14,9 @@ app.slavery = (function () {
         chart = {colors: {bg: "#fff5ce", bbg: "#fdd53a", bb: "#7d6a22"}},
         exited = false,
         ks = {w:170, h:20},  //time guide key display svg data values
+        ani = {wmin:1.0, ww:0.25, nudge:0.1, tes:[]},
         neut = "#d3d3d3",  //neutral fill color
+        slav = "#c37f87",
         sps = [{state:"AK", start:0, end:0,
                 notes:"Slavery and forced labor of indigenous people by others, including the U.S. government, but everything after the Alaska purchase in 1867 should have been illegal."},
                {state:"HI", start:0, end:0,
@@ -95,8 +97,8 @@ app.slavery = (function () {
                 notes:"Swedes and Dutch imported African slaves to the region beginning in 1639. Slavery continues under English in 1664. A gradual abolition act (first in the nation) is passed in 1780. No records of any remaining slaves after 1847."},
                {state:"RI", start:1652, end:1850,
                 notes:"Black slaves were in Rhode Island by 1652. Gradual emancipation in 1784. Slave trading continued even after the Abolition Society attempts to secure enforcement of previous legislation in 1789. Violations continue until at least 1796. Census reports 5 slaves in 1840. By the 1850 census there are zero reported."},
-               {state:"SC", start:1670, end:1865,
-                notes:"The first British settlers arrive in 1670 with slaves. Slavery ends when the 13th amendment is ratified."},
+               {state:"SC", start:1526, end:1865,
+                notes:"After the first slave rebellion and failed settlement by the Spanish in 1526, The first British settlers arrive in 1670 with slaves. Slavery ends when the 13th amendment is ratified."},
                {state:"SD", start:1804, end:1820,
                 notes:"York, an enslaved African held by William Clark traveled and worked with him in 1804 and in 1806. The Missouri Commpromise prohibited slavery in 1820. South Dakota becomes a state in 1889."},
                {state:"TN", start:1766, end:1865,
@@ -125,15 +127,23 @@ app.slavery = (function () {
         jt.out("suppvisdiv", jt.tac2html(
             [["div", {id:"keydiv", style:"width:280px;margin:auto;"},
               [["div", {id:"kldiv", style:"display:inline-block;width:30px;"},
-                "<"],
+                ["img", {cla:"playarrow", src:"img/triangleLeft.png",
+                         onclick:jt.fs("app.slavery.skip(-1)")}]],
                ["div", {id:"kcdiv", style:"display:inline-block;" + 
                                           "width:" + ks.w + "px;"},
                 ["svg", {id:"keysvg", width:ks.w, height:ks.h}]],
                ["div", {id:"krdiv", style:"display:inline-block;width:80px;"},
-                "> ok"],
-               ["div", {id:"kydiv", style:"margin:0 80px 0px 30px;" + 
-                                          "text-align:center;"},
-                "year"]]],
+                [["img", {cla:"playarrow", src:"img/triangleRight.png",
+                          onclick:jt.fs("app.slavery.skip(1)")}],
+                 ["div", {id:"findiv"}]]],
+               ["div", {id:"kydiv", style:"margin:0px 80px 0px 30px;" + 
+                                          "text-align:center;" +
+                                          "font-weight:bold;" +
+                                          "min-height:26px;"},
+                ""]]],  //"year"
+             ["div", {id:"kytdiv", style:"position:absolute;" + 
+                                         "left:30px;top:120px;" +
+                                         "margin-right:30px;"}],
              ["svg", {id:"svgin", width:chart.ms.w, height:chart.ms.h,
                       viewBox:"0 0 959 593", preserveAspectRatio:"none"},
               ["g", {id:"outlines"},
@@ -236,7 +246,61 @@ app.slavery = (function () {
     }
 
 
-    function displayContent () {
+    function initAnimationSequence () {
+        var byy = {};
+        sps.forEach(function (sp) {
+            if(sp.start) {
+                byy[sp.start] = {text:""};
+                //technically it's the year after the end when it's over but
+                //blink the state off on the year to reinforce the value.
+                byy[sp.end] = {text:""}; } });
+        sv.pts.forEach(function (pt) {
+            byy[pt.start.year] = {text:pt.text, cid:pt.cid}; });
+        Object.keys(byy).forEach(function (year) {
+            ani.tes.push({year:year, text:byy[year].text, 
+                          cid:byy[year].cid}); });
+        ani.tes.sort(function (a, b) {
+            return a.year - b.year; });
+        ani.idx = 0;
+    }
+
+
+    function displayFinish () {
+        //show replay button
+    }
+
+
+    function displayNext () {
+        var wc = 1, te;
+        ani.idx = Math.max(ani.idx, 0);
+        if(ani.idx >= ani.tes.length) {
+            return displayFinish(); }
+        te = ani.tes[ani.idx];
+        if(te.text) {
+            wc += te.text.split(" ").length; }
+        jt.out("kydiv", te.year);
+        d3.select("#kydiv")
+            .style("font-size", "10px")
+            .transition().duration(500)
+            .style("font-size", "24px");
+        jt.out("kytdiv", te.text || "");
+        sps.forEach(function (sp) {  //mark states on map
+            //technically there is still slavery during the end year, but
+            //doing all the endings year + 1 just makes it harder to follow
+            //the date when it happened.
+            if(te.year >= sp.start && te.year < sp.end) {
+                d3.select("#" + sp.state)
+                    .transition().duration(600)
+                    .style("fill", slav); }
+            else {
+                d3.select("#" + sp.state)
+                    .transition().duration(600)
+                    .style("fill", neut); } });
+        if(te.cid) {
+            jt.byId("kb" + te.cid).style.fill = slav; }
+        ani.idx += 1;
+        ani.timeout = setTimeout(displayNext, 
+                                 Math.max(ani.wmin, wc * ani.ww) * 1000);
     }
 
 
@@ -245,12 +309,28 @@ app.slavery = (function () {
         tl = timeline;
         endf = endfunc;
         initDisplayElements();
-        setTimeout(displayContent, 2000);
+        initAnimationSequence();
+        setTimeout(displayNext, 2000);
+    }
+
+
+    function skip (incr) {
+        var te;
+        ani.ww = ani.ww + (-1 * incr * ani.nudge);
+        clearTimeout(ani.timeout);
+        if(incr < 0) {
+            ani.idx -= 1;  //return to display index that was just done
+            te = ani.tes[ani.idx];
+            if(te.cid) {
+                jt.byId("kb" + te.cid).style.fill = neut; }
+            ani.idx -= 1; } //return to prior display index
+        displayNext();
     }
 
 
     return {
         display: function (sv, tl, endf) { display(sv, tl, endf); },
+        skip: function (incr) { skip(incr); }
     };
 }());
 

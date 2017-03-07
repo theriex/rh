@@ -859,9 +859,11 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
     { code:"R", cid:"R49", sv:"mg",
       date:"1866",
       text:"New Mexico legalizes interracial marriage." },
-    { code:"B", cid:"B279", sv:"sl",
-      date:"1866-06-14",
-      text:"The last treaty of a new round of treaties ending slavery in Indian Territory is signed by the Creek." },
+    //This is anticlimactic in the map visualization, so not ending with it
+    //even if it is technically the last legal action.
+    //{ code:"B", cid:"B279", sv:"sl",
+    //  date:"1866-06-14",
+    //  text:"The last treaty of a new round of treaties ending slavery in Indian Territory is signed by the Creek." },
     { code:"BD", cid:"B76",
       date:"1867-03-02",
       text:"Reconstruction begins. Congress passes the first of four Reconstruction Acts calling for the enfranchisement of former slaves in the South. Black men across the South obtain the right to vote. Hate groups form to violently suppress Blacks." },
