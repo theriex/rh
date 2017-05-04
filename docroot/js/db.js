@@ -137,8 +137,9 @@ app.db = (function () {
     function describeData () {
         jt.log("Timeline codes and names");
         app.data.timelines.forEach(function (tl) {
-            jt.log("  " + tl.code + ": " + tl.name + 
-                        " (" + tl.ident + ") maxcid: " + maxcids[tl.code]); });
+            if("UD".indexOf(tl.code) < 0) {
+                jt.log("  " + tl.code + ": " + tl.name + 
+                       " (" + tl.ident + ") maxcid: " + maxcids[tl.code]); } });
         //an sv datum will have an sv field set to the sv code.
         // jt.log("Supplemental Visualizations");
         // app.data.suppvis.forEach(function (sv) {

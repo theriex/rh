@@ -110,7 +110,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
       code:"D",
       over:"Milestone or pivotal facts and events where the date is especially important to recall." } ],
 
-  suppvis:[
+  suppvis:[  //related data points have the code value as an sv field.
     {code:"in", pc: "U", select:"random", passes: 3,
      //The first level is a short round of lesser known points in an
      //attempt to pique curiosity and engagement.  The visualization
@@ -2343,7 +2343,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
       text:"The U.S. Senate votes 69-27 to support redress for Japanese Americans, creating the Civil Liberties Act of 1988. President Reagan signs the Act giving each surviving internee a tax-free compensatory payment of $20,000 and a letter of apology. At the time there are approximately 60,000 surviving persons." },
     { code:"A", cid:"A149",
       date:"1988",
-      text:"The Amerasian Homecoming Act addresses shortcomings of the <a href=\"#A138\">1982 Act</a> allowing Amerasians to immigrate to the U.S. together with family members. The children are classified as immigrants, but granted refugee benefits including 6 months of language and culture orientation. Approximately 6,000 Amerasians and 11,000 relatives are moved through the Orderly Departure Program (ODP) which is established by the U.S. and Vietnam governments and housed in the United Nations High Commission for Refugees (UNHCR)." },
+      text:"With tens of thousands of Amerasians still in Vietnam living with discrimination and persecution throughout their childhoods, the Amerasian Homecoming Act improves the <a href=\"#A138\">1982 Act</a> to allow Amerasians born between 1962 and 1977 to immigrate together with family members. The children are classified as immigrants, but granted refugee benefits including 6 months of language and culture orientation.  Initially a 2-year plan, it was extended twice due to slow processing." },
     { code:"B", cid:"B199",
       date:"1988-03-22",
       text:"Overriding President Reagan’s veto, Congress passes the Civil Rights Restoration Act, which expands the reach of non-discrimination laws within private institutions receiving federal funds." },
@@ -2717,6 +2717,9 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
     { code:"M", cid:"M45",
       date:"2002-01",
       text:"The Department of Justice announces the Alien Absconder Initiative, purporting to identify and deport 315,000 undocumented people who have ignored court orders to leave the United States. Although theoretically applicable to all immigrants, the government announces that the program would begin with six thousand immigrants from Muslim countries." },
+    { code:"M", cid:"M78",
+      date:"2002-04-18",
+      text:"The Chicago Palestinian Film Festival begins in response to the absence of positive media about Palestinians. Over the next several years, annual Palestinian film festivals in other cities begin." },
     { code:"A", cid:"A169",
       date:"2002-09-01", pic:"YujiIchioka.png",
       text:"UCLA professor and Asian American activist, Yuji Ichioka dies. He is credited with coining the term “Asian American.”" },
@@ -2786,6 +2789,9 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
     { code:"MU", cid:"M56",
       date:"2005-05-05",
       text:"The Arab American National Museum opens in Dearborn Michigan, the first museum in the United States devoted to the history, culture and contributions of Arab Americans from 1500 to the present day." },
+    { code:"M", cid:"M79",
+      date:"2005-07-09",
+      text:"The Boycott, Divestment and Sanctions (BDS) Movement is formed to increase political and economic pressure for Israel to end its occupation of Palestinian land and grant equality to Arab-Palestinian citizens of Israel." },
     { code:"N", cid:"N162",
       date:"2005-08-05",
       text:"The National Collegiate Athletic Association prohibits the use of 19 schools’ Native American mascots during post-season games, including Division 1 athletic icons Florida State (Seminoles), Illinois (Fighting Illini), and Utah (Utes). Regardless of stature, each institution will also be barred from hosting future NCAA postseason tournaments. Schools already selected as tournament sites would be asked to cover any offensive logos. NCAA then backpedals and allowed some schools to use their mascot names." },
@@ -2939,6 +2945,9 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
     { code:"L", cid:"L139",
       date:"2009",
       text:"Lou Dobbs, known as an anti-immigrant CNN anchor, resigns from his position thanks to the pressure from organizations like Presente.org and their “BastaDobbs” online campaign." },
+    { code:"M", cid:"M80",
+      date:"2009",
+      text:"As part of the <a href=\"#M79\">BDS</a>, the U.S. Campaign for the Academic & Cultural Boycott of Israel is formed by a group of United States professors." },
     { code:"BAU", cid:"B243",
       date:"2010-01-08", pic:"KamalaHarris.png",
       text:"Kamala Harris becomes the first woman, the first African American, the first Asian American, and the first Asian Indian American to serve as Attorney General of California. She beomes a U.S. Senator in 2017." },
