@@ -45,9 +45,10 @@ app.mode = (function () {
                       ["a", {href:"#interactive",
                              onclick:jt.fs("app.mode.chmode('interactive')")},
                        ["img", {id:"interactimg", src:"img/info.png"}]],
-                      ["a", {id:"disptoggle", href:"#textmode",
-                             onclick:jt.fs("app.mode.togdisp()")},
-                       ["img", {id:"disptoggleimg", src:"img/disptext.png"}]],
+                      //hiding display toggle for now, simplified interface...
+                      //["a", {id:"disptoggle", href:"#textmode",
+                      //       onclick:jt.fs("app.mode.togdisp()")},
+                      // ["img", {id:"disptoggleimg", src:"img/disptext.png"}]],
                       ["input", {type:"text", id:"srchin", size:25,
                                  placeholder:"Search for...",
                                  value:srchst.qstr, oninput:srchfstr}],
@@ -215,16 +216,16 @@ app.mode = (function () {
 
     function toggleDisplay () {
         if(ms.disp === "linear") {
-            jt.byId("disptoggle").href = "#linearmode";
-            jt.byId("disptoggleimg").src = "img/displinear.png";
+            // jt.byId("disptoggle").href = "#linearmode";
+            // jt.byId("disptoggleimg").src = "img/displinear.png";
             jt.byId("abgdiv").style.display = "none";
             jt.byId("lcontdiv").style.display = "none";
             jt.byId("tcontdiv").style.display = "block";
             ms.disp = "text";
             app.tabular.display(); }  //rebuild contents each time
         else {
-            jt.byId("disptoggle").href = "#textmode";
-            jt.byId("disptoggleimg").src = "img/disptext.png";
+            // jt.byId("disptoggle").href = "#textmode";
+            // jt.byId("disptoggleimg").src = "img/disptext.png";
             jt.byId("abgdiv").style.display = "block";
             jt.byId("lcontdiv").style.display = "block";
             jt.byId("tcontdiv").style.display = "none";
@@ -246,6 +247,9 @@ app.mode = (function () {
                 app.linear.clickCircle(ms.currpt); }
             else {  //no points left for display, show final supp vis again
                 app.linear.clickCircle(app.lev.suppVisByCode("fi").pts[0]); } }
+        else { //"reference"
+            if(ms.disp !== "text") {
+                toggleDisplay(); } }
     }
 
 
