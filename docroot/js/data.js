@@ -1403,7 +1403,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
       text:"The California Alien Land Act is amended to prohibit Asian immigrant parents from serving as guardians of property for American-born citizen children who are minors, and prohibiting any leasing of land." },
     { code:"B", cid:"B117",
       date:"1921-05-31-1921-06-01",
-      text:"A race riot in Tulsa, Oklahoma leaves 21 Whites and 60 Blacks dead. The violence destroys a thriving African American neighborhood and business district." },
+      text:"In Tulsa Oklahoma, conflict between whites and a group of African Americans gathered to prevent a lynching leaves several dead. Violence escalates, with thousands of whites rampaging through the black community killing people, looting, and destroying real estate. The white mob includes police, and attacks include airplanes. The violence leaves 300 dead, over 800 injured and approximately 10,000 homeless." },
     { code:"B", cid:"B118", sv:"ly",
       date:"1921",
       text:"Fifty-nine Black Americans are known to have been lynched in 1921." },
