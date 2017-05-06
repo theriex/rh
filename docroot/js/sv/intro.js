@@ -8,10 +8,12 @@ app.intro = (function () {
         tl = null,
         endf = null,
         chart = {colors: {bg: "#fff5ce", bbg: "#fdd53a", bb: "#7d6a22"}},
+        sa = {},  //stacked area chart vars
         exited = false;
 
 
     function initDisplayElements () {
+        var lnh = 40;  //line height
         d3.select("#suppvisdiv")
             .style("left", tl.margin.left + "px")
             .style("top", tl.margin.top + "px")
@@ -25,6 +27,74 @@ app.intro = (function () {
         jt.out("suppvisdiv", jt.tac2html(
             ["svg", {id: "svgin", width: tl.width2, height: tl.height}]));
         chart.vg = d3.select("#svgin").append("g");
+        chart.tp = {xl:tl.margin.left + 10,
+                    xc:Math.round(0.5 * tl.width2),
+                    xr:tl.width2 - tl.margin.right,
+                    h:lnh,  //line height
+                    fs:20,  //font-size
+                    yt:tl.margin.top + lnh,
+                    ym:Math.round(0.5 * (tl.height + lnh)),
+                    yb:tl.margin.top + tl.height - lnh};
+    }
+
+
+    function makeStackData (yg) {
+        var rd = [], xg, gd = [], cg = null;
+        yg = yg || 10;  //by default group years into decades
+        app.data.pts.forEach(function (pt) {
+            var dp = {tc:pt.tc};
+            app.data.timelines.forEach(function (tl) {
+                dp[tl.code] = (pt.code.indexOf(tl.code) >= 0)? 1 : 0; });
+            rd.push(dp); });
+        rd.sort(function (a, b) { return a.tc - b.tc; });
+        xg = 1600;  //everything before this year is lumped together
+        rd.forEach(function (dat) {
+            if(dat.tc > xg) {
+                gd.push(cg)
+                cg = null;
+                xg = Math.floor(dat.tc) + yg; }
+            if(!cg) {
+                cg = {tc:xg};
+                app.data.timelines.forEach(function (tl) {
+                    cg[tl.code] = dat[tl.code]; }); }
+            else {
+                app.data.timelines.forEach(function (tl) {
+                    cg[tl.code] += dat[tl.code]; }); } });
+        //convert data to percentages
+        gd.forEach(function (dat) {
+            var ttl = 0;
+            app.data.timelines.forEach(function (tl) {
+                ttl += dat[tl.code]; });
+            app.data.timelines.forEach(function (tl) {
+                var val = dat[tl.code];
+                val = Math.round((val / ttl) * 10000) / 10000;
+                dat[tl.code] = val; }); });
+        return gd;
+    }
+
+
+    function displayStacked () {
+        sa.dat = makeStackData(5);
+        sa.ks = ["N",      "B",      "L",      "A",      "M",      "R"];
+        sa.cs = ["#ff0000","#700000","#008000","#ffff00","#800080","#9191ff"];
+        sa.x = d3.scaleLinear()
+            .domain([sa.dat[0].tc, sa.dat[sa.dat.length - 1].tc])
+            .range([0, tl.width2]);
+        sa.y = d3.scaleLinear().range([tl.height, 0]);
+        sa.z = d3.scaleOrdinal(sa.cs).domain(sa.ks);
+        sa.stack = d3.stack().keys(sa.ks);
+        sa.area = d3.area()
+            .x(function (d) { return sa.x(d.data.tc); })
+            .y0(function (d) { return sa.y(d[0]); })
+            .y1(function (d) { return sa.y(d[1]); });
+        sa.g = chart.vg.append("g");
+        sa.layer = sa.g.selectAll(".layer")
+            .data(sa.stack(sa.dat))
+            .enter().append("g").attr("class", "layer");
+        sa.layer.append("path")
+            .attr("class", "area")
+            .style("fill", function (d) { return sa.z(d.key); })
+            .attr("d", sa.area);
     }
 
 
@@ -39,6 +109,8 @@ app.intro = (function () {
             rect.attr("rx", xtra.r).attr("ry", xtra.r); }
         if(xtra && xtra.fill) {
             rect.attr("fill", xtra.fill); }
+        if(xtra && xtra.opa) {
+            rect.attr("opacity", xtra.opa); }
         return rect;
     }
 
@@ -69,14 +141,14 @@ app.intro = (function () {
 
     function displayReturnLink () {
         var dim = {pad: 8, border: 4, ro: 8, ri: 6, drop: 4,
-                   x: chart.tx, y: Math.round(4.2 * chart.th),
+                   x: chart.tp.xc, y: Math.round(4.2 * chart.tp.h),
                    defw: 20, defh: 10},
             ele = {};
         dim.defbox = {x: dim.x - Math.round(dim.defw / 2),
                       y: dim.y - Math.round(dim.defw / 2),
                       w: dim.defw, h: dim.defh};
         ele.drop = makeRect("sbShadowRect", dim.defbox, 
-                      {r: dim.ro, fill:"#dad0a8", stroke: chart.colors.bg});
+                      {r: dim.ro, fill:"#333333", opa:0.6});
         ele.or = makeRect("sbOuterRect", dim.defbox, 
                           {r: dim.ro, fill: chart.colors.bb});
         ele.ir = makeRect("sbInnerRect", dim.defbox, 
@@ -86,7 +158,7 @@ app.intro = (function () {
             .attr("text-anchor", "middle")
             .attr("x", dim.x)
             .attr("y", dim.y)
-            .attr("font-size", chart.fs)
+            .attr("font-size", chart.tp.fs)
             .text("I'm ready");
         dim.bb = ele.txt.node().getBBox();
         dim.ib = {x: dim.bb.x - dim.pad,
@@ -110,63 +182,30 @@ app.intro = (function () {
 
 
     function displayText () {
-        chart.tx = tl.margin.left + Math.round(0.5 * tl.width2);
-        chart.th = 40;
-        chart.fs = 20;
-        chart.vg.append("text")
-            .attr("class", "svintext")
-            .attr("text-anchor", "middle")
-            .attr("x", chart.tx)
-            .attr("y", chart.th)
-            .attr("font-size", 0)
-            .text("Intro Level Completed!")
-            .transition().duration(2000)
-            .attr("font-size", chart.fs);
-        chart.vg.append("text")
-            .attr("class", "svintext")
-            .attr("text-anchor", "middle")
-            .attr("x", chart.tx)
-            .attr("y", 2 * chart.th)
-            .attr("font-size", 0)
-            .attr("opacity", 1)
-            .text("Welcome.")
-            .transition().delay(2000).duration(1000)
-            .attr("font-size", chart.fs)
-            .transition().delay(1000).duration(500)
-            .attr("opacity", 0);
-        chart.vg.append("text")
-            .attr("class", "svintext")
-            .attr("text-anchor", "middle")
-            .attr("x", chart.tx)
-            .attr("y", 2 * chart.th)
-            .attr("font-size", chart.fs)
-            .attr("opacity", 0)
-            .text("The next levels are chronological.")
-            .transition().delay(4000).duration(1000)
-            .attr("opacity", 1)
-            .transition().delay(2000).duration(1000)
-            .attr("opacity", 0);
-        chart.vg.append("text")
-            .attr("class", "svintext")
-            .attr("text-anchor", "middle")
-            .attr("x", chart.tx)
-            .attr("y", 2 * chart.th)
-            .attr("font-size", chart.fs)
-            .attr("opacity", 0)
-            .text("There are " + app.lev.progInfo().numlevels + " levels.")
-            .transition().delay(7000).duration(1000)
-            .attr("opacity", 1)
-        chart.vg.append("text")
-            .attr("class", "svintext")
-            .attr("text-anchor", "middle")
-            .attr("x", chart.tx)
-            .attr("y", 3 * chart.th)
-            .attr("font-size", chart.fs)
-            .attr("opacity", 0)
-            .text("Good luck!")
-            .transition().delay(9000).duration(1000)
-            .attr("opacity", 1)
-        setTimeout(displayReturnLink, 10000);
+        var words = [{x:chart.tp.xl, y:chart.tp.yt, ta:"start", 
+                      txt:"Knowledge"},
+                     {x:chart.tp.xc, y:chart.tp.ym, ta:"middle",
+                      txt:"Respect"},
+                     {x:chart.tp.xr, y:chart.tp.yb, ta:"end",
+                      txt:"Community"}],
+            idel = 2500,
+            wdel = 1000,
+            wft = 1000,
+            tv = 3000;
+        words.forEach(function (word, idx) {
+            chart.vg.append("text")
+                .attr("x", word.x)
+                .attr("y", word.y)
+                .attr("text-anchor", word.ta)
+                .attr("font-weight", "bold")
+                .attr("font-size", 28)
+                .text(word.txt)
+                .attr("opacity", 0)
+                .transition().delay(idel + (idx * wdel)).duration(wft)
+                .attr("opacity", 1)
+                .transition().delay(tv).duration(wft)
+                .attr("opacity", 0); 
+        });
     }
 
 
@@ -175,7 +214,11 @@ app.intro = (function () {
         tl = timeline;
         endf = endfunc;
         initDisplayElements();
+        displayStacked();
         displayText();
+        //display pie
+        //display "Starting from the beginning"
+        setTimeout(displayReturnLink, 10000);
     }
 
 
