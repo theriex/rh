@@ -205,7 +205,8 @@ app.lev = (function () {
         var currlev = getCurrentLevel();
         return {level: currlev.levnum, numlevels: levels.length, 
                 levpcnt: currlev.pv / currlev.pttl,
-                mainpcnt: ps.visited / (ps.avail + ps.visited)};
+                mainpcnt: ps.visited / (ps.avail + ps.visited),
+                levels: levels};
     }
 
 

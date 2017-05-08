@@ -85,6 +85,7 @@ circle { clip-path: url(../#clip); }
 .sbShadowRect { }
 .sbClickRect { stroke:none; fill:none; cursor:pointer; }
 .svintext { font-weight:bold; cursor:pointer; }
+.clickable { cursor:pointer; }
 
 #abgdiv { position:absolute; left:0px; top:0px; line-height:0px; 
   background:#fffae5; }
