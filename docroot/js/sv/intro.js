@@ -7,10 +7,10 @@ app.intro = (function () {
     var sv = null,
         tl = null,
         endf = null,
-        chart = {colors: {bg: "#fff5ce", bbg: "#fdd53a", bb: "#7d6a22"}},
+        chart = {colors: {bg: "#fff5ce", bbg: "#fdd53a", bb: "#7d6a22"},
+                 exited:false},
         sa = {},  //stacked area chart vars
-        pc = {},  //pie chart vars
-        exited = false;
+        pc = {};  //pie chart vars
 
 
     function initDisplayElements () {
@@ -103,8 +103,8 @@ app.intro = (function () {
 
     function closeAndReturn () {
         var nowiso;
-        if(!exited) {
-            exited = true;
+        if(!chart.exited) {  //ignore stray double clicks or bubbling
+            chart.exited = true;
             nowiso = (new Date()).toISOString();
             sv.pts.forEach(function (pt) {
                 pt.visited = nowiso; });
@@ -118,18 +118,25 @@ app.intro = (function () {
     function displayStartButton () {
         var sb = {r:Math.round(0.8 * pc.ir),
                   sh:3, timing:1000};
-        sb.ds = pc.g.append("circle")
+        //FF gives a 1/4 circle if starting from 0,0 even if g translated
+        sb.cx = sb.r;
+        sb.cy = sb.cx;
+        sb.ox = pc.x - sb.cx;
+        sb.oy = pc.y - sb.cy;
+        sb.g = chart.vg.append("g")
+            .attr("transform", "translate(" + sb.ox + "," + sb.oy + ")");
+        sb.ds = sb.g.append("circle")
             .attr("r", sb.r)
-            .attr("cx", sb.sh, sb.sh)
-            .attr("cy", sb.sh, sb.sh)
+            .attr("cx", sb.cx + sb.sh, sb.cy + sb.sh)
+            .attr("cy", sb.cx + sb.sh, sb.cy + sb.sh)
             .attr("fill", "333")
             .attr("opacity", 0.0)
             .transition().duration(sb.timing + 500)
             .attr("opacity", 1.0);
-        sb.cb = pc.g.append("circle")
+        sb.cb = sb.g.append("circle")
             .attr("r", 2)
-            .attr("cx", 0, 0)
-            .attr("cy", 0, 0)
+            .attr("cx", sb.cx, sb.cy)
+            .attr("cy", sb.cx, sb.cy)
             .attr("fill", "#07e048")
             .attr("class", "clickable")
             .on("click", closeAndReturn)
@@ -137,11 +144,11 @@ app.intro = (function () {
             .transition().duration(sb.timing)
             .attr("r", sb.r)
             .attr("opacity", 1.0);
-        sb.txt = pc.g.append("text")
+        sb.txt = sb.g.append("text")
             .attr("class", "svintext")
             .attr("text-anchor", "middle")
-            .attr("x", 0)
-            .attr("y", 8)
+            .attr("x", sb.cx)
+            .attr("y", sb.cy + 8)
             .attr("font-size", 28)
             .text("Go")
             .on("click", closeAndReturn)
@@ -354,6 +361,7 @@ app.intro = (function () {
         sv = suppvis;
         tl = timeline;
         endf = endfunc;
+        chart.exited = false;
         initDisplayElements();
         displayStacked();
         delay = displayText();
