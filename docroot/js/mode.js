@@ -150,12 +150,18 @@ app.mode = (function () {
 
 
     function next (quiet) {
+        var levstart, levend;
         app.dlg.close();
         if(!series || !series.length || quiet) {
+            levstart = app.lev.progInfo();
             app.db.saveState();
             getPointsForDisplay();
             updateLevelDisplay();
-            if(quiet) {
+            levend = app.lev.progInfo();
+            if(mode === "interactive" && (levstart.level !== levend.level || 
+                                          !series.length)) {  //no more levels
+                app.linear.levelCompleted(levstart); }
+            else if(quiet) {
                 app.mode.nextPass(); }
             else {
                 app.dlg.save(jt.fs("app.mode.nextPass()")); } }

@@ -113,28 +113,27 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
   suppvis:[  //related data points have the code value as an sv field.
     {code:"in", pc: "U", select:"random", passes: 3,
      //The first level is a short round of lesser known points in an
-     //attempt to pique curiosity and engagement.  The visualization
-     //is just an intro completion and welcome message.
-     module: "intro", name: "Introduction",
+     //attempt to pique curiosity and engagement.  No visualization.
+     module: "intro", name: "Introduction", menuselect:false,
      intro: "Intro completed..."},
     {code:"sl",
-     module: "slavery", name: "Slavery",
+     module: "slavery", name: "Slavery", menuselect:true,
      intro: "Regions, territories, and/or states where Africans and/or Indigenous people were legally held as chattel."},
     {code:"ly",
-     module: "lynch", name: "Lynchings",
+     module: "lynch", name: "Lynchings", menuselect:true,
      intro: "Please realize that every point on this scale represents a person who was attacked and murdered by a mob, without protection by law enforcement."},
     {code:"mg",
-     module: "misceg", name: "Miscegenation",
+     module: "misceg", name: "Miscegenation", menuselect:true,
      intro: "Laws restricting intermarriage between Whites and other races or people of mixed race heritage."},
     {code:"pc",
-     module: "popcomp", name: "Population Composition",
+     module: "popcomp", name: "Population Composition", menuselect:true,
      intro: "Population composition from U.S. Census numbers according to the categories available at the time. Also immigration composition numbers."},
     {code:"cz",
-     module: "citiz", name: "Citizenship",
+     module: "citiz", name: "Citizenship", menuselect:true,
      intro: "What year citizenship was explicitely disallowed or possible for particular groups"},
     {code:"fi",
-     module: "ending", name:"Finale",
-     intro: "Congratulations! You've read every point and are hopefully more knowledgeable. You can use the timeline as a quick search starting point. If this has been helpful, please consider making a small donation to help things like this get built and maintained. Thanks!"}],
+     module: "ending", name:"Finale", menuselect:true, //donation page
+     intro: "You finished! Now what? Search for what you want to learn more about. Keep learning. Donate to help make this available to others."}],
 
   pts:[
     { code:"", cid:"X1", sv:"in",

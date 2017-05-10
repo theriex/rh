@@ -27,6 +27,7 @@ var app = {},  //Global container for application level funcs and values
                        "js/tabular",  //text timeline display
                        "js/mode",     //interactive or reference
                        "js/sv/about",
+                       "js/sv/levelup",
                        "js/sv/intro",
                        "js/sv/slavery"
                       ];

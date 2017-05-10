@@ -8,7 +8,8 @@ app.lev = (function () {
     //complete when its points are all visited and the sv is visited.
     var levels = [], timelines = {}, suppvs = {},
         ps = {avail: 0, visited: 0},
-        pointsPerSave = 6;
+        pointsPerSave = 6,
+        currlev = null;
 
 
     function initStructures () {
@@ -89,8 +90,8 @@ app.lev = (function () {
     }
 
 
-    function getCurrentLevel () {
-        var currlev = null;
+    function findCurrentLevel () {
+        currlev = null;
         levels.forEach(function (lev) {
             if(!currlev) {
                 if(lev.pa > 0) {
@@ -170,7 +171,7 @@ app.lev = (function () {
     //timeline is nearly finished.
     function getNextPoints () {
         var currlev, tl, pts;
-        currlev = getCurrentLevel();
+        currlev = findCurrentLevel();
         if(!currlev) {     //no more points to display, done.
             return []; }
         currlev.pa = Math.min(currlev.pa, distributeAvailPointsByTL());
@@ -187,7 +188,7 @@ app.lev = (function () {
 
 
     function updateVisited (pts) {
-        var currlev = getCurrentLevel();
+        var currlev = findCurrentLevel();
         if(pts) {
             if(!pts[0].sv) {  //regular progress update
                 currlev.pa -= pts.length;
@@ -202,7 +203,6 @@ app.lev = (function () {
 
 
     function progInfo () {
-        var currlev = getCurrentLevel();
         return {level: currlev.levnum, numlevels: levels.length, 
                 levpcnt: currlev.pv / currlev.pttl,
                 mainpcnt: ps.visited / (ps.avail + ps.visited),
