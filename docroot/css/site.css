@@ -57,6 +57,8 @@ circle { clip-path: url(../#clip); }
 .contextLabel { font-weight:bold; }
 .contextArrowhead { stroke:#999; fill:#ccc; }
 .contextMidline { stroke:#999; }
+.elevatortext { fill:#999; font-weight:bold; font-style:italic; 
+  text-anchor:middle; }
 
 .introdlgdiv { display:flex; padding:0px 10px 0px 0px; }
 .titlediv { font-size:x-large; font-weight:bold; padding:10px 10px 10px 10px; 

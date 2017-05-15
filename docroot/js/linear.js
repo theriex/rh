@@ -171,7 +171,21 @@ app.linear = (function () {
 
 
     function zoomToPoint (d) {
-        var sel;
+        var sel, et = {fs:16, bpad:4};
+        if(!tl.elevator) {
+            sel = d3.select(".brush");  //elevator g
+            sel.insert("text", "rect")
+                .attr("class", "elevatortext")
+                .attr("font-size", et.fs)
+                .attr("x", Math.round(tl.width2 / 2))
+                .attr("y", et.fs + et.bpad)
+                .text("scroll: zoom");
+            sel.insert("text", "rect")
+                .attr("class", "elevatortext")
+                .attr("font-size", et.fs)
+                .attr("x", Math.round(tl.width2 / 2))
+                .attr("y", tl.height2 - et.bpad)
+                .text("drag: pan"); }
         sel = [tl.x2(d.tc) - Math.round(tl.width2 / 8),
                tl.x2(d.tc) + Math.round(tl.width2 / 8)];
         sel[0] = Math.max(sel[0], 0);
