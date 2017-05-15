@@ -36,7 +36,7 @@ app.linear = (function () {
         var sel;
         if(d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") {
             return; } // ignore brush-by-zoom
-        sel = d3.event.selection || tl.x2.range();
+        sel = d3.event.selection || tl.sel || tl.x2.range();
         tl.x.domain(sel.map(tl.x2.invert, tl.x2));
         redraw();
         //console.log("brushed sel[0]: " + sel[0] + ", sel[1]: " + sel[1]);
@@ -78,6 +78,26 @@ app.linear = (function () {
     }
 
 
+    function arrowZoom (direction) {
+        var jw;
+        if(!tl.sel) {
+            return; }
+        jw = Math.round(tl.width2 / 16);
+        tl.sel[0] += jw * direction;
+        tl.sel[1] += jw * direction;
+        if(direction < 0) {
+            tl.sel[0] = Math.max(tl.sel[0], 0);
+            tl.sel[1] = Math.max(tl.sel[1], jw); }
+        else {
+            tl.sel[0] = Math.min(tl.sel[0], tl.width2 - jw);
+            tl.sel[1] = Math.min(tl.sel[1], tl.width2); }
+        tl.svg.select(".zoom").transition().duration(1000).call(
+            tl.zoom.transform,
+            d3.zoomIdentity.scale(tl.width2 / (tl.sel[1] - tl.sel[0]))
+                .translate(-tl.sel[0], 0));
+    }
+
+
     function addContextDecorativeElements () {
         var label = {pad: 10, fs: Math.round(0.4 * tl.height2),
                      y: tl.margin2.top + Math.round(0.64 * tl.height2)},
@@ -103,18 +123,20 @@ app.linear = (function () {
             .attr("y", label.y)
             .attr("font-size", label.fs)
             .text(label.end);
-        tl.deco.append("path")
+        tl.deco.append("path")  //left arrow
             .attr("d", "M " + tl.margin.left + " " + tri.midy +
                       " L " + tl.margin2.left + " " + tl.margin2.top +
                       " L " + tl.margin2.left + " " + tri.ttly +
                       " Z")
-            .attr("class", "contextArrowhead");
-        tl.deco.append("path")
+            .attr("class", "contextArrowhead")
+            .on("click", function () { arrowZoom(-1); });
+        tl.deco.append("path")  //right arrow
             .attr("d", "M " + tri.rightmost + " " + tri.midy +
                       " L " + rightx + " " + tl.margin2.top +
                       " L " + rightx + " " + tri.ttly +
                       " Z")
-            .attr("class", "contextArrowhead");
+            .attr("class", "contextArrowhead")
+            .on("click", function () { arrowZoom(1); });
         tl.deco.append("path")
             .attr("d", "M " + tl.margin2.left + " " + tri.midy +
                       " L " + rightx + " " + tri.midy +
@@ -171,29 +193,29 @@ app.linear = (function () {
 
 
     function zoomToPoint (d) {
-        var sel, et = {fs:16, bpad:4};
+        var et = {fs:Math.round(0.3 * tl.height2), bpad:2};
         if(!tl.elevator) {
-            sel = d3.select(".brush");  //elevator g
-            sel.insert("text", "rect")
+            et.g = d3.select(".brush");
+            et.g.insert("text", "rect")
                 .attr("class", "elevatortext")
                 .attr("font-size", et.fs)
                 .attr("x", Math.round(tl.width2 / 2))
                 .attr("y", et.fs + et.bpad)
                 .text("scroll: zoom");
-            sel.insert("text", "rect")
+            et.g.insert("text", "rect")
                 .attr("class", "elevatortext")
                 .attr("font-size", et.fs)
                 .attr("x", Math.round(tl.width2 / 2))
                 .attr("y", tl.height2 - et.bpad)
                 .text("drag: pan"); }
-        sel = [tl.x2(d.tc) - Math.round(tl.width2 / 8),
-               tl.x2(d.tc) + Math.round(tl.width2 / 8)];
-        sel[0] = Math.max(sel[0], 0);
-        sel[1] = Math.min(sel[1], tl.width2);
+        tl.sel = [tl.x2(d.tc) - Math.round(tl.width2 / 8),
+                  tl.x2(d.tc) + Math.round(tl.width2 / 8)];
+        tl.sel[0] = Math.max(tl.sel[0], 0);
+        tl.sel[1] = Math.min(tl.sel[1], tl.width2);
         tl.svg.select(".zoom").transition().duration(2000).call(
             tl.zoom.transform,
-            d3.zoomIdentity.scale(tl.width2 / (sel[1] - sel[0]))
-                .translate(-sel[0], 0));
+            d3.zoomIdentity.scale(tl.width2 / (tl.sel[1] - tl.sel[0]))
+                .translate(-tl.sel[0], 0));
     }
 
 
