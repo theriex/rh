@@ -9,8 +9,8 @@ app.linear = (function () {
     function setChartWidthAndHeight () {
         var over, minw = 320,      //full width of a standard phone
             rat = {w: 3, h: 2};    //default to nice 3:2 aspect ratio
-        if(window.innerWidth < 600) {
-            rat = {w: 2, h: 3}; }  //switch to long and tall (phone)
+        if(window.innerWidth < 700) {
+            rat = {w: 2, h: 3}; }  //switch to long and tall (phone/portrait)
         tl.chart = {w: 0, h: 0};
         tl.chart.w = window.innerWidth - tl.offset.x;
         tl.chart.h = Math.round((tl.chart.w * rat.h) / rat.w);
