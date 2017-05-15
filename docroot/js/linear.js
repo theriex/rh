@@ -229,7 +229,7 @@ app.linear = (function () {
                               d.svo.module + "\" not found"); }
             app[d.svo.module].display(d.svo, tl, app.mode.nextQuiet); }
         else {
-            app.dlg.info(d, jt.fs("app.mode.next()")); }
+            app.dlg.info(d); }
     }
 
 

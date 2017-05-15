@@ -19,6 +19,7 @@ A:hover {text-decoration:underline; color:#00989a; }
 img { border:0px; vertical-align:middle; }
 
 #dlgbuttondiv { clear:both; text-align:center; padding:5px 0px 5px 0px; }
+#dlgbuttondiv button { margin-left:20px; }
 button { border: 2px solid #666666; border-radius:5px; cursor:pointer;
   background:#c9b609; box-shadow:1px 1px 1px #2f2b00;
   padding:0px 3px; font-size:large; font-weight:bold; }

@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge */
+/*jslint browser, multivar, white, fudge, for */
 /*global app, jt, d3 */
 
 app.dlg = (function () {
@@ -114,7 +114,7 @@ app.dlg = (function () {
                     name += " " + ch.toUpperCase(); }
                 else {
                     name += ch; } }
-            name = name.replace(/De Bakey/g, "DeBakey");
+            name = name.replace(/De\sBakey/g, "DeBakey");
             name = name.split(" ");
             name.forEach(function (na, idx) {
                 if(na.length === 1) {
@@ -127,9 +127,26 @@ app.dlg = (function () {
     }
 
 
-    function showInfoDialog (d, nextfstr) {
-        var html;
-        html = [["div", {id:"dlgdatediv"}, d.date],
+    function showInfoDialog (d) {
+        var titledeco = "", focid = "nextbutton", buttons, html;
+        tl.dlgdat = d;
+        buttons = [["button", {type:"button", id:"nextbutton",
+                               onclick:jt.fs("app.dlg.button()")},
+                    "Next"]];
+        if(d.code.indexOf("U") >= 0) {
+            buttons = [["span", {cla:"buttonintrospan"}, "Did you know?"],
+                       ["button", {type:"button", id:"yesbutton",
+                                   onclick:jt.fs("app.dlg.button('yes')")},
+                        "Yes"],
+                       ["button", {type:"button", id:"nobutton",
+                                   onclick:jt.fs("app.dlg.button('no')")},
+                        "No"]];
+            focid = "nobutton"; }
+        else if(d.code.indexOf("D") >= 0) {
+            titledeco = "!"; }
+        html = [["div", {id:"dlgdatediv"}, 
+                 [d.date,
+                  ["span", {cla: "infodlgdecospan"}, titledeco]]],
                 ["div", {id:"dlgxdiv"},
                  ["a", {href:"#close", 
                         onclick:jt.fs("app.dlg.close('reference')")},
@@ -137,14 +154,24 @@ app.dlg = (function () {
                 ["div", {id:"dlgcontentdiv"},
                  [["div", {cla:"dlgpicdiv"}, infoPicHTML(d)],
                   ["div", {cla:"dlgtextdiv"}, d.text]]],
-                ["div", {id:"dlgbuttondiv"},
-                 ["button", {type:"button", id:"nextbutton",
-                             onclick:nextfstr},
-                  "Next"]]];
+                ["div", {id:"dlgbuttondiv"}, buttons]];
         displayDialog(d, jt.tac2html(html));
+        d.interact = {start:Date.now()};
         //setting focus the first time does not work for whatever
         //reason, but it helps for subsequent dialog displays.
-        setTimeout(function () { jt.byId("nextbutton").focus(); }, 100);
+        setTimeout(function () { jt.byId(focid).focus(); }, 100);
+    }
+
+
+    function buttonPress (answer) {
+        var inter = tl.dlgdat.interact;
+        if(answer) {
+            inter.answer = answer; }
+        inter.end = Date.now();
+        inter.elapsed = Math.round((inter.end - inter.start) / 100);
+        inter.elapsed = inter.elapsed / 10;  //seconds
+        jt.log("dlg: " + answer + " " + inter.elapsed + " seconds");
+        app.mode.next();
     }
 
 
@@ -193,6 +220,7 @@ app.dlg = (function () {
         start: function (clickfstr) { showStartDialog(clickfstr); },
         info: function (d, nextfstr) { showInfoDialog(d, nextfstr); },
         close: function (mode) { closeDialog(mode); },
+        button: function (answer) { buttonPress(answer); },
         save: function (nextfstr) { showSaveConfirmationDialog(nextfstr); },
         nextColorTheme: function () { nextColorTheme(); }
     };
