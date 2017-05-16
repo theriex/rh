@@ -148,7 +148,7 @@ app.dlg = (function () {
                  [d.date,
                   ["span", {cla: "infodlgdecospan"}, titledeco]]],
                 ["div", {id:"dlgxdiv"},
-                 ["a", {href:"#close", 
+                 ["a", {href:"#close",
                         onclick:jt.fs("app.dlg.close('reference')")},
                   "X"]],
                 ["div", {id:"dlgcontentdiv"},

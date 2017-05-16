@@ -75,6 +75,7 @@ circle { clip-path: url(../#clip); }
 
 #dlgsavetitlediv { text-align:center; }
 #dlgsavelinkdiv { font-weight:bold; padding:20px; }
+.infodlgdecospan { padding-left:4px; }
 
 #leftcoldiv { position:absolute; left:0px; top:0px; background:#e7e1e2; }
 #lcontdiv, #tcontdiv { position:absolute; left:0px; top:0px; }

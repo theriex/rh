@@ -178,9 +178,12 @@ app.mode = (function () {
 
 
     function interject (pt) {
-        if(ms.currpt) {
-            series.push(ms.currpt);
-            ms.currpt = null; }  //don't stack up multiple interjects
+        if(ms.currpt) {  //have previously auto-selected point for display
+            series.push(ms.currpt);  //put it back on the queue for next
+            ms.currpt = null; } 
+        if(!pt.visited && !pt.sv) {  //count interject point in traversal
+            if(series.length) {  //not interjecting from start dialog..
+                series = series.slice(1); } }  //remove last point from series
         app.linear.clickCircle(pt);
     }
 
