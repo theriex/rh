@@ -183,7 +183,7 @@ app.mode = (function () {
             ms.currpt = null; }
         if(!pt.visited && !pt.sv) {  //count interject point in traversal
             if(series.length) {  //not interjecting from start dialog..
-                series = series.slice(1); } }  //remove last point from series
+                series = series.slice(1); } }  //remove lastmost series point
         app.linear.clickCircle(pt);
     }
 
