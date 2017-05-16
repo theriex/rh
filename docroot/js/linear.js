@@ -225,8 +225,8 @@ app.linear = (function () {
         if(d.sv) {
             d.svo = app.lev.suppVisByCode(d.sv);
             if(!app[d.svo.module]) {
-                return jt.err("Supplemental visualization module \"" + 
-                              d.svo.module + "\" not found"); }
+                jt.err("Not available yet. Point " + d.cid + " will be displayed as part of the " + d.svo.name + " supplemental visualization module.");
+                return app.mode.start(tl); }
             app[d.svo.module].display(d.svo, tl, app.mode.nextQuiet); }
         else {
             app.dlg.info(d); }
@@ -353,13 +353,13 @@ app.linear = (function () {
 
 
     function display () {
-        tl = {offset: { x:10, y:10 }, pts: app.data.pts, zscale: 1};
+        tl = {divid:"navdiv", offset:{x:10,y:10}, pts:app.data.pts, zscale:1};
         setChartWidthAndHeight();
         initDisplayVariableValues();
         initMainDisplayElements();
         app.picbg.init("abgdiv");
         bindDataAndDrawChart();
-        app.mode.start("navdiv", tl);
+        app.mode.start(tl);
     }
 
 

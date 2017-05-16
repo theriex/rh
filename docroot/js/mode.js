@@ -66,13 +66,15 @@ app.mode = (function () {
         if(fetchpoints) {
             app.lev.updateVisited(fetchpoints); }
         fetchpoints = app.lev.getNextPoints();
-        //TEST: Uncomment to choose specific points for testing
-        // var testcids = ["B264"];
-        // ms.skipstart = true;
-        // fetchpoints = [];
-        // app.data.pts.forEach(function (pt) {
-        //     if(testcids.indexOf(pt.cid) >= 0) {
-        //         fetchpoints.push(pt); } });
+        //TEST: Uncomment if specific points for testing at startup
+        // if(!ms.teststart) {
+        //     ms.teststart = true;
+        //     var testcids = ["B91"];
+        //     ms.skipstart = true;
+        //     fetchpoints = [];
+        //     app.data.pts.forEach(function (pt) {
+        //         if(testcids.indexOf(pt.cid) >= 0) {
+        //             fetchpoints.push(pt); } }); }
         series = fetchpoints.slice();  //working copy to chew up
     }
 
@@ -126,8 +128,8 @@ app.mode = (function () {
     }
 
 
-    function start (divid, tl) {
-        ms.divid = divid;
+    function start (tl) {
+        ms.divid = tl.divid;
         ms.tl = tl;
         ms.w = tl.width;
         ms.h = 30;
