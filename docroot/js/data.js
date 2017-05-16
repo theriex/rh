@@ -228,7 +228,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
       text:"Genocide of Native Americans begins, resulting in the death of over nine million Native Americans by 1700. Methods used to kill Native Americans during this genocidal period included lynching and the deliberate and inadvertent introduction of diseases by the colonists, forced migration and other tactics. This treatment of Native Americans continued into the 1700s, when many were captured and made to work on plantations with African American slaves." },
     { code:"B", cid:"B7",
       date:"1601",
-      text:"A law protecting Black slaves from abusive owners is passed in MA." },
+      text:"A law protecting Black slaves from abusive owners is passed in Massachusetts." },
     { code:"N", cid:"N18",
       date:"1605-1619",
       text:"English ships visit the New England coast, trading with and sometimes kidnapping Algonquins." },

@@ -206,7 +206,8 @@ app.lev = (function () {
         return {level: currlev.levnum, numlevels: levels.length, 
                 levpcnt: currlev.pv / currlev.pttl,
                 mainpcnt: ps.visited / (ps.avail + ps.visited),
-                levels: levels};
+                levPtsAvail: currlev.pa, levPtsVis: currlev.pv,
+                savelen: pointsPerSave, levels: levels};
     }
 
 

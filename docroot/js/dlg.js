@@ -25,8 +25,9 @@ app.dlg = (function () {
         var ct = lnfs[lnfidx];
         d3.select("#itemdispdiv").style("background", ct.dlgbg);
         d3.select(".dlgtextdiv").style("background", ct.textbg);
+        d3.select(".dlgsavediv").style("background", ct.textbg);
         d3.select("#dlgdatediv").style("background", ct.datebg);
-        d3.select("button").style("background", ct.buttonbg);
+        d3.selectAll("button").style("background", ct.buttonbg);
     }
 
 
@@ -176,7 +177,8 @@ app.dlg = (function () {
 
 
     function showSaveConfirmationDialog (nextfstr) {
-        var html, subj, body, vps = "";
+        var html, subj, body, vps = "", levinf = app.lev.progInfo();
+        levinf.savenum = Math.floor(levinf.levPtsVis / levinf.savelen);
         subj = "Race History restore link";
         body = "Click this link to restore your browser state:\n" +
             "http://localhost:8080";
@@ -188,8 +190,10 @@ app.dlg = (function () {
                  ["a", {href: "#close", 
                         onclick: jt.fs("app.dlg.close('reference')")},
                   "X"]],
-                ["div", {cla: "dlgtextdiv"},
-                 [["div", {id: "dlgsavetitlediv"}, "Progress saved."],
+                ["div", {cla: "dlgsavediv"},
+                 [["div", {id: "dlgsavelevinfdiv"}, 
+                   "Level " + levinf.level + " Save " + levinf.savenum],
+                  ["div", {id: "dlgsavetitlediv"}, "Progress saved."],
                   ["div", {id: "dlgsavelinkdiv"}, "building restore link..."]]],
                 ["div", {id: "dlgbuttondiv"},
                  ["button", {type: "button", id: "nextbutton",
