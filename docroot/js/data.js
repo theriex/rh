@@ -737,7 +737,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
       text:"Joseph Arthur de Gobineau (a well known anthropologist and French diplomat to Persia and Brazil) publishes The Inequality of the Human Races, where he argues for the supremacy of the White race, further stating that racial mixing degenerates the White race and causes problems because different (and confllicting) characteristics are carried in different races’ blood." },
     { code:"AD", cid:"A9",
       date:"1854",
-      text:"People vs. Hall forbids Chinese from testifying in court against whites, depriving Chinese of legal protection and subjecting them to repeated acts of violence." },
+      text:"People vs. Hall forbids Chinese from testifying in court against whites, depriving Chinese of legal protection from violence and freeing Hall who had been convicted for the murder of Chinese miner Ling Sing.  The case is argued as an extension of Section 394 of the Act Concerning Civil Cases, which barred the use of testimony by blacks, mulattoes, and Indians against whites." },
     { code:"R", cid:"R40",
       date:"1854",
       text:"Henry Hughs of Mississippi states: \"Impurity of the races is against the law of nature. Mulattos are monsters. The law of nature is the law of God. The same law which forbids consanguineous amalgamation forbids ethnical amalgamation. Both are incestuous. Amalgamation is incest.\"" },
