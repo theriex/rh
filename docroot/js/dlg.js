@@ -66,8 +66,8 @@ app.dlg = (function () {
         jt.out("itemdispdiv", html);
         adjustContentHeight(dim);
         if(dim.tracked) {
-            elem = jt.byId("dlgcontentdiv");
-            if(elem && elem.scrollHeight > elem.offsetHeight) {  //overflowed
+            elem = jt.byId("itemdispdiv");
+            if(elem && elem.scrollHeight > elem.clientHeight) {  //overflowed
                 dim.y = tl.margin.top + Math.round(0.04 * tl.height);
                 dim.h = Math.round(0.8 * tl.height);
                 adjustContentHeight(dim);
