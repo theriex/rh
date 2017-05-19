@@ -141,7 +141,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
       text:"[Introduction visualization]" },
     { code:"NL", cid:"N1",
       date:"1200 BCE",
-      text:"Olmec civilization arises in Central America sometime between 1200 BCE and 1000 BCE. The Olmec are the earliest civilization in Central America, and possibly the earliest civilization in the Americas. They originally live in the Gulf Coast region of southern Mexico, but soon expand into Guatemala." },
+      text:"Olmec civilization arises in Central America sometime between 1200 BCE and 1000 BCE, beginning in the Gulf Coast region of southern Mexico and expanding into Guatemala. The Olmec are the earliest civilization in Central America, and possibly the earliest civilization in the Americas." },
     { code:"NL", cid:"N2",
       date:"1000 BCE",
       text:"Chavín urban culture (so-called because its major site was found in the area of Chavín de Huantar) arises in the highlands of northern Peru and thrives until 500 BCE. Little is known about the Chavín, but they worshipped a jaguar-man god like the Olmecs, so there might have been some kind of cultural contact between the two. After the decline of the Chavín civilization, the Andean regions continued to be dominated by local urban cultures" },

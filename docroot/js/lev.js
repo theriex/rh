@@ -170,8 +170,8 @@ app.lev = (function () {
     //pointsPerSave if the level is nearly finished or if the chosen
     //timeline is nearly finished.
     function getNextPoints () {
-        var currlev, tl, pts;
-        currlev = findCurrentLevel();
+        var tl, pts;
+        findCurrentLevel();  //updated currlev
         if(!currlev) {     //no more points to display, done.
             return []; }
         currlev.pa = Math.min(currlev.pa, distributeAvailPointsByTL());
@@ -188,17 +188,11 @@ app.lev = (function () {
 
 
     function updateVisited (pts) {
-        var currlev = findCurrentLevel();
-        if(pts) {
-            if(!pts[0].sv) {  //regular progress update
-                currlev.pa -= pts.length;
-                currlev.pv += pts.length;
-                ps.avail -= pts.length;
-                ps.visited += pts.length; }
-            else {
-                //the supplemental visualization takes care of marking
-                //all of its covered points as visited 
-                currlev.sv.visited = true; } }
+        if(pts && !pts[0].sv) {  //the sv handles itself and all its points
+            currlev.pa -= pts.length;
+            currlev.pv += pts.length;
+            ps.avail -= pts.length;
+            ps.visited += pts.length; }
     }
 
 

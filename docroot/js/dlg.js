@@ -157,7 +157,7 @@ app.dlg = (function () {
                   ["div", {cla:"dlgtextdiv"}, d.text]]],
                 ["div", {id:"dlgbuttondiv"}, buttons]];
         displayDialog(d, jt.tac2html(html));
-        d.interact = {start:Date.now()};
+        d.interact = {start:new Date()};
         //setting focus the first time does not work for whatever
         //reason, but it helps for subsequent dialog displays.
         setTimeout(function () { jt.byId(focid).focus(); }, 100);
@@ -168,24 +168,20 @@ app.dlg = (function () {
         var inter = tl.dlgdat.interact;
         if(answer) {
             inter.answer = answer; }
-        inter.end = Date.now();
-        inter.elapsed = Math.round((inter.end - inter.start) / 100);
-        inter.elapsed = inter.elapsed / 10;  //seconds
+        inter.end = new Date();
+        tl.dlgdat.duration = app.db.getElapsedTime(inter.start, inter.end);
+        inter.elapsed = tl.dlgdat.duration / 10;  //seconds
         jt.log("dlg: " + answer + " " + inter.elapsed + " seconds");
         app.mode.next();
     }
 
 
     function showSaveConfirmationDialog (nextfstr) {
-        var html, subj, body, vps = "", levinf = app.lev.progInfo();
+        var html, subj, body, levinf = app.lev.progInfo();
         levinf.savenum = Math.floor(levinf.levPtsVis / levinf.savelen);
         subj = "Race History restore link";
         body = "Click this link to restore your browser state:\n" +
-            "http://localhost:8080";
-        tl.pts.forEach(function (pt) {
-            if(pt.visited) {
-                vps += "&" + pt.cid + "=" + jt.enc(pt.visited); } });
-        body += "?" + vps.slice(1);
+            "http://localhost:8080?" + app.db.getStateURLParams();
         html = [["div", {id: "dlgxdiv"},
                  ["a", {href: "#close", 
                         onclick: jt.fs("app.dlg.close('reference')")},

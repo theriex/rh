@@ -154,6 +154,7 @@ app.mode = (function () {
     function next (quiet) {
         var levstart, levend;
         app.dlg.close();
+        app.db.noteStartTime();
         if(!series || !series.length || quiet) {
             levstart = app.lev.progInfo();
             app.db.saveState();

@@ -1,0 +1,25 @@
+Wall clock time values are represented using the Date.toISOString
+representation with the millis truncated, followed by the timezone offset.
+e.g. 2017-05-18T00:10:18Z240
+
+Elapsed time values are integers representing tenths of seconds. So a value
+of 34 would represent 3.4 seconds.  Elapsed time values max out at 99999
+to save space since anything larger than that is kind of meaningless.
+
+id = User's unique ID number. If progress has not been saved to the server
+then the value is zero.  The id parameter is always listed first in the URL
+so it can be found easily.
+
+st = Start Time. The value is when the user first pressed the "Go" button.
+
+Zero or more supplemental visualization parameter/value pairs in the same
+order as declared in the data.  The parameter name is the suppvis code.  The
+parameter value is the start time followed by a colon followed by the
+elapsed time.  One suppvis per level, so this gives gross progress.
+e.g. sl=2017-05-18T00:10:18Z240:3000
+
+pb0 ... pbN Visited point blocks with max 100 points per block.  Points are
+separated by colons.  Each point is viewtime + cid + 'r' (if remembered).
+e.g. pb0="45N1:52N2:39B10r:..."
+The cid always starts with a letter and ends with a number.
+

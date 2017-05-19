@@ -112,25 +112,110 @@ app.db = (function () {
     }
 
 
+    //return time difference in tenths of seconds, max 99999
+    function getElapsedTime (startDate, endDate) {
+        var start, end, elap;
+        start = Math.round(startDate.getTime() / 100);
+        end = Math.round(endDate.getTime() / 100);
+        elap = Math.min(end - start, 99999);
+        return elap;
+    }
+
+
+    function wallClockTimeStamp (date) {
+        var idx, ts;
+        date = date || new Date();
+        ts = date.toISOString();
+        idx = ts.indexOf(".");
+        if(idx >= 0) {
+            ts = ts.slice(0, idx) + "Z"; }
+        ts += date.getTimezoneOffset();
+        return ts;
+    }
+
+
+    function wallClockTimeStamp2Date (ts) {
+        ts = ts || wallClockTimeStamp();
+        ts = ts.slice(0, ts.indexOf("Z") + 1);
+        return jt.isoString2Time(ts);
+    }
+
+
+    function noteStartTime () {
+        if(!app.startTime) {
+            app.startTime = wallClockTimeStamp(); }
+    }
+
+
+    function getStateURLParams () {
+        var pstr = "", pb = "", pc = 0, pidx = 0, pbm = 100;
+        pstr += "id=" + (app.userId || 0);
+        pstr += "&st=" + app.startTime;
+        app.data.suppvis.forEach(function (sv) {
+            if(sv.visited) {
+                pstr += "&" + sv.code + "=" + sv.startstamp + ":" + 
+                    sv.duration; } });
+        app.data.pts.forEach(function (pt) {
+            if(pt.visited && !pt.sv) {
+                if(pb) {
+                    pb += ":"; }
+                pb += String(pt.duration) + pt.cid;
+                if(pb.remembered) {
+                    pb += "r"; }
+                pc += 1;
+                if(pc >= pbm) {
+                    pstr += "&pb" + pidx + "=" + pb;
+                    pb = "";
+                    pc = 0;
+                    pidx += 1; } } });
+        if(pb) {  //append partially filled points block
+            pstr += "&pb" + pidx + "=" + pb; }
+        return pstr;
+    }
+
+
+    function readStateURLParams (pstr) {
+        var pobj = {}, preg = /(\d+)([A-Z]\d+)(r)?/, ptd = {}, idx, et;
+        pstr = pstr || window.location.search;
+        pobj = jt.paramsToObj(pstr, pobj, "String");  //userId too big for int
+        Object.keys(pobj).forEach(function (key) {
+            switch(key) {
+            case "id": app.userId = pobj[key]; break;
+            case "st": app.startTime = pobj[key]; break;
+            default:
+                if(key.startsWith("pb")) {
+                    pobj[key].split(":").forEach(function (ps) {
+                        var pcs = preg.exec(ps);
+                        ptd[pcs[2]] = {t:+pcs[1], r:pcs[3]}; }); }
+                else {  //treat as supplemental visualization
+                    idx = pobj[key].lastIndexOf(":");
+                    ptd[key] = {s:pobj[key].slice(0, idx),
+                                t:+pobj[key].slice(idx+1)}; }}});
+        //reconstruct visit time differences based on time per point
+        et = wallClockTimeStamp2Date(app.startTime).getTime();
+        app.data.pts.forEach(function (pt) {
+            if(ptd[pt.cid]) {
+                pt.visited = new Date(et).toISOString();
+                pt.duration = ptd[pt.cid].t;
+                et += pt.duration;
+                pt.remembered = ptd[pt.cid].r; }
+            else if(pt.sv && ptd[pt.sv]) {
+                //using the same reconstructed visit time for chromacoding
+                pt.visited = new Date(et).toISOString();
+                pt.duration = ptd[pt.sv].t; } });
+        app.data.suppvis.forEach(function (sv) {
+            if(ptd[sv.code]) {
+                idx = pobj[sv.code].lastIndexOf(":");
+                sv.startstamp = pobj[sv.code].slice(0, idx);
+                sv.duration = pobj[sv.code].slice(idx+1); } });
+    }
+
+
     function loadSavedState () {
-        var visited;
-        visited = jt.parseParams();
-        app.data.pts.forEach(function (pt) {
-            pt.visited = jt.toru(visited[pt.cid]); });
-        //local storage is probably more recent, so it takes precedence
-        visited = window.localStorage.getItem("visited");
-        if(visited) {
-            try {
-                visited = JSON.parse(visited);
-                app.data.pts.forEach(function (pt) {
-                    pt.visited = jt.toru(visited[pt.cid]) || pt.visited; });
-            } catch(exception) {
-                jt.err("loadSavedState failed: " + exception);
-            } }
-        app.oldestVisit = (new Date()).toISOString();
-        app.data.pts.forEach(function (pt) {
-            if(pt.visited && pt.visited < app.oldestVisit) {
-                app.oldestVisit = pt.visited; } });
+        var state = window.localStorage.getItem("savestatestr");
+        if(state) {
+            return readStateURLParams(state); }
+        readStateURLParams();  //read from URL parameters
     }
 
 
@@ -192,16 +277,16 @@ app.db = (function () {
 
 
     function saveState () {
-        var visited = {};
-        app.data.pts.forEach(function (pt) {
-            if(pt.visited) {
-                visited[pt.cid] = pt.visited; } });
-        visited = JSON.stringify(visited);
-        window.localStorage.setItem("visited", visited);
+        var state = getStateURLParams();
+        window.localStorage.setItem("savestatestr", state);
     }
 
 
     return {
+        noteStartTime: function () { noteStartTime(); },
+        wallClockTimeStamp: function (d) { return wallClockTimeStamp(d); },
+        getElapsedTime: function (sd, ed) { return getElapsedTime(sd, ed); },
+        getStateURLParams: function () { return getStateURLParams(); },
         prepData: function () { prepData(); },
         saveState: function () { saveState(); }
     };

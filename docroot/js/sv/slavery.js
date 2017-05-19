@@ -271,7 +271,7 @@ app.slavery = (function () {
             .attr("height", ks.h)
             .style("fill", neut);
         mid = {x: Math.round(tl.width2 / 2) + tl.margin.left,
-               y: Math.round(tl.height / 2) + tl.margin.top}
+               y: Math.round(tl.height / 2) + tl.margin.top};
         d3.select("#suppvisdiv")
             .style("left", mid.x - 15 + "px")
             .style("top", mid.y - 15 + "px")
@@ -358,6 +358,7 @@ app.slavery = (function () {
         sv = suppvis;
         tl = timeline;
         endf = endfunc;
+        sv.startDate = new Date();
         initDisplayElements();
         initAnimationSequence();
         setTimeout(displayNext, 2000);
@@ -406,10 +407,13 @@ app.slavery = (function () {
 
 
     function finish () {
-        var nowiso;
+        var date, nowiso;
         if(!ani.finished) {
             ani.finished = true;
-            nowiso = (new Date()).toISOString();
+            date = new Date();
+            sv.startstamp = app.db.wallClockTimeStamp(sv.startDate);
+            sv.duration = app.db.getElapsedTime(date, sv.startDate);
+            nowiso = date.toISOString();
             sv.pts.forEach(function (pt) {
                 pt.visited = nowiso; });
             sv.visited = nowiso;
