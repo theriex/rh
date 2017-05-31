@@ -52,6 +52,7 @@ app.mode = (function () {
                       ["input", {type:"text", id:"srchin", size:25,
                                  placeholder:"Search for...",
                                  value:srchst.qstr, oninput:srchfstr}],
+                      ["span", {cla:"srchinspan"}, "&nbsp;in&nbsp;"],
                       ["select", {id:"tlsel", onchange:srchfstr}, tlopts]]],
                     ["div", {id:"levdiv"},
                      ["svg", {id:"svgnav", width:ms.w, height:ms.h}]]];

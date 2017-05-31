@@ -119,6 +119,7 @@ circle { clip-path: url(../#clip); }
 
 #downloadlinkdiv { padding:0px 10px 5px 62px; font-size:small; }
 .downloadlinkimg { margin:0px 2px; }
+.srchinspan { font-size:small; }
 
 /* -------------------- */
 /* visualizations */
