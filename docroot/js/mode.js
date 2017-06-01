@@ -70,7 +70,7 @@ app.mode = (function () {
         //TEST: Uncomment if specific points for testing at startup
         // if(!ms.teststart) {
         //     ms.teststart = true;
-        //     var testcids = ["B91"];
+        //     var testcids = ["A188"];
         //     ms.skipstart = true;
         //     fetchpoints = [];
         //     app.data.pts.forEach(function (pt) {

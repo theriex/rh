@@ -43,7 +43,7 @@ app.tabular = (function () {
              ["span", {cla:"procspan"}, "Processing..."]]);
         dlh = "Date\tText\n";
         app.data.pts.forEach(function (pt) {
-            var linediv;
+            var linediv, ddc = pt.remembered ? "trowdescdivrem" : "trowdescdiv";
             if(!srchst || app.mode.ptmatch(pt)) {
                 dlh += pt.date + "\t" + cleanTDValue(pt.text) + "\n";
                 linediv = document.createElement("div");
@@ -54,7 +54,7 @@ app.tabular = (function () {
                         ["br"],
                         dateSpan(pt.end, "-"),
                         ["span", {cla: "tcspan"}, " (" + pt.code + ") "]]],
-                      ["div", {cla: "trowdescdiv"}, pt.text]]]);
+                      ["div", {cla: ddc}, pt.text]]]);
                 outdiv.appendChild(linediv); } });
         dlh = "data:text/plain;charset=utf-8," + encodeURIComponent(dlh);
         jt.out("downloadlinkdiv", jt.tac2html(

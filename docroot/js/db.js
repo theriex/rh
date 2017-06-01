@@ -160,7 +160,7 @@ app.db = (function () {
                 if(pb) {
                     pb += ":"; }
                 pb += String(pt.duration) + pt.cid;
-                if(pb.remembered) {
+                if(pt.remembered) {
                     pb += "r"; }
                 pc += 1;
                 if(pc >= pbm) {

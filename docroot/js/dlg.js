@@ -44,7 +44,7 @@ app.dlg = (function () {
 
 
     function displayDialog (d, html) {
-        var dim, elem;
+        var dim, elem, txtdiv, picdiv;
         if(tl.width < 500) {  //use full space on small devices
             dim = {x: tl.margin.left + Math.round(0.02 * tl.width),
                    y: tl.margin.top + Math.round(0.04 * tl.height),
@@ -67,7 +67,12 @@ app.dlg = (function () {
         adjustContentHeight(dim);
         if(dim.tracked) {
             elem = jt.byId("itemdispdiv");
-            if(elem && elem.scrollHeight > elem.clientHeight) {  //overflowed
+            txtdiv = jt.byId("dlgtextdiv");
+            picdiv = jt.byId("dlgpicdiv");
+            if(elem && ((elem.scrollHeight > elem.clientHeight) ||
+                        (txtdiv && txtdiv.clientHeight > elem.clientHeight) ||
+                        (picdiv && picdiv.clientHeight > elem.clientHeight))) {
+                //readjust to full screen to accommodate overflow
                 dim.y = tl.margin.top + Math.round(0.04 * tl.height);
                 dim.h = Math.round(0.8 * tl.height);
                 adjustContentHeight(dim);
@@ -145,6 +150,11 @@ app.dlg = (function () {
             focid = "nobutton"; }
         else if(d.code.indexOf("D") >= 0) {
             titledeco = "!"; }
+        buttons.push(["div", {cla:"checkboxdiv"},
+                      [["input", {type:"checkbox", id:"cbremember",
+                                  value:"remembered",
+                                  checked:jt.toru(d.remembered)}],
+                       ["label", {fo:"cbremember"}, "Revisit later"]]]);
         html = [["div", {id:"dlgdatediv"}, 
                  [d.date,
                   ["span", {cla: "infodlgdecospan"}, titledeco]]],
@@ -153,8 +163,8 @@ app.dlg = (function () {
                         onclick:jt.fs("app.dlg.close('reference')")},
                   "X"]],
                 ["div", {id:"dlgcontentdiv"},
-                 [["div", {cla:"dlgpicdiv"}, infoPicHTML(d)],
-                  ["div", {cla:"dlgtextdiv"}, d.text]]],
+                 [["div", {cla:"dlgpicdiv", id:"dlgpicdiv"}, infoPicHTML(d)],
+                  ["div", {cla:"dlgtextdiv", id:"dlgtextdiv"}, d.text]]],
                 ["div", {id:"dlgbuttondiv"}, buttons]];
         displayDialog(d, jt.tac2html(html));
         d.interact = {start:new Date()};
@@ -168,6 +178,7 @@ app.dlg = (function () {
         var inter = tl.dlgdat.interact;
         if(answer) {
             inter.answer = answer; }
+        tl.dlgdat.remembered = jt.byId("cbremember").checked;
         inter.end = new Date();
         tl.dlgdat.duration = app.db.getElapsedTime(inter.start, inter.end);
         inter.elapsed = tl.dlgdat.duration / 10;  //seconds

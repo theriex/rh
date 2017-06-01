@@ -79,6 +79,7 @@ circle { clip-path: url(../#clip); }
 #dlgsavetitlediv { text-align:center; font-weight:bold; }
 #dlgsavelinkdiv { font-weight:bold; padding:20px; }
 .infodlgdecospan { padding-left:4px; }
+.checkboxdiv { display:inline-block; padding-left:20px; }
 
 #leftcoldiv { position:absolute; left:0px; top:0px; background:#e7e1e2; }
 #lcontdiv, #tcontdiv { position:absolute; left:0px; top:0px; }
@@ -111,7 +112,8 @@ circle { clip-path: url(../#clip); }
 .trowdiv { padding-bottom:10px; }
 .trowdatediv { display:table-cell; min-width:80px; padding-right:10px; 
   text-align:right; }
-.trowdescdiv { display:table-cell; font-size:medium; }
+.trowdescdiv, .trowdescdivrem { display:table-cell; font-size:medium; }
+.trowdescdivrem { font-weight:bold; }
 .tcspan { font-size:small; font-style:italic; }
 .tdspan { font-size:small; }
 .tdspanyo { font-size:large; }
