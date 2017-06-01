@@ -35,15 +35,36 @@ app.tabular = (function () {
     }
 
 
+    function vizLinksHTML () {
+        var html = "";
+        app.data.suppvis.forEach(function (sv) {
+            var sm = sv.module;
+            if(sv.menuselect) {
+                if(app[sm]) {
+                    sm = jt.tac2html(
+                        ["a", {href:"#" + sm,
+                               onclick:jt.fs("app." + sm + ".display()")},
+                         sv.name]); }
+                else {
+                    sm = sv.name; }
+                if(html) {
+                    html += ", "; }
+                html += sm; } });
+        return "Visualizations: " + html + ".";
+    }
+
+
     function display (srchst) {
-        var outdiv, dlh, html;
+        var outdiv, dlh;
         outdiv = jt.byId("tcontdiv");
         outdiv.innerHTML = jt.tac2html(
             ["div", {id:"downloadlinkdiv"},
              ["span", {cla:"procspan"}, "Processing..."]]);
         dlh = "Date\tText\n";
-        app.data.pts.forEach(function (pt) {
-            var linediv, ddc = pt.remembered ? "trowdescdivrem" : "trowdescdiv";
+        app.data.pts.forEach(function (pt, idx) {
+            var linediv, ddc, ddt;
+            ddc = pt.remembered ? "trowdescdivrem" : "trowdescdiv";
+            ddt = idx ? pt.text : vizLinksHTML();
             if(!srchst || app.mode.ptmatch(pt)) {
                 dlh += pt.date + "\t" + cleanTDValue(pt.text) + "\n";
                 linediv = document.createElement("div");
@@ -54,7 +75,7 @@ app.tabular = (function () {
                         ["br"],
                         dateSpan(pt.end, "-"),
                         ["span", {cla: "tcspan"}, " (" + pt.code + ") "]]],
-                      ["div", {cla: ddc}, pt.text]]]);
+                      ["div", {cla: ddc}, ddt]]]);
                 outdiv.appendChild(linediv); } });
         dlh = "data:text/plain;charset=utf-8," + encodeURIComponent(dlh);
         jt.out("downloadlinkdiv", jt.tac2html(

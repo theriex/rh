@@ -373,6 +373,7 @@ app.linear = (function () {
         display: function () { display(); },
         clickCircle: function (pt) { clickCircle(pt); },
         levelCompleted: function (levpi) { app.levelup.display(tl, levpi); },
-        search: function () { search(); }
+        search: function () { search(); },
+        tldata: function () { return tl; }
     };
 }());

@@ -355,9 +355,9 @@ app.slavery = (function () {
 
 
     function display (suppvis, timeline, endfunc) {
-        sv = suppvis;
-        tl = timeline;
-        endf = endfunc;
+        sv = suppvis || app.lev.suppVisByCode("sl");
+        tl = timeline || app.linear.tldata();
+        endf = endfunc || app.dlg.close;
         sv.startDate = new Date();
         initDisplayElements();
         initAnimationSequence();
