@@ -126,6 +126,6 @@ circle { clip-path: url(../#clip); }
 /* -------------------- */
 /* visualizations */
 
-.playarrow { vertical-align:middle; cursor:pointer; }
-
+.tranctrl { vertical-align:middle; cursor:pointer; opacity:0.5; }
+.tranctrl:hover { opacity:0.8; }
 
