@@ -35,7 +35,7 @@ app.tabular = (function () {
     }
 
 
-    function vizLinksHTML () {
+    function textIntroHTML () {
         var html = "";
         app.data.suppvis.forEach(function (sv) {
             var sm = sv.module;
@@ -46,11 +46,13 @@ app.tabular = (function () {
                                onclick:jt.fs("app." + sm + ".display()")},
                          sv.name]); }
                 else {
-                    sm = sv.name; }
+                    sm = "<i>" + sv.name + "</i>"; }
                 if(html) {
                     html += ", "; }
                 html += sm; } });
-        return "Visualizations: " + html + ".";
+        html = "Supplemental visualizations: " + html + ".";
+        html = "<b><i>Welcome to tabular mode</i></b>. To return to interactive mode, click the \"i\" button in the upper left. To filter the display, just start typing in the search box and/or select a timeline. " + html;
+        return html;
     }
 
 
@@ -64,7 +66,7 @@ app.tabular = (function () {
         app.data.pts.forEach(function (pt, idx) {
             var linediv, ddc, ddt;
             ddc = pt.remembered ? "trowdescdivrem" : "trowdescdiv";
-            ddt = idx ? pt.text : vizLinksHTML();
+            ddt = idx ? pt.text : textIntroHTML();
             if(!srchst || app.mode.ptmatch(pt)) {
                 dlh += pt.date + "\t" + cleanTDValue(pt.text) + "\n";
                 linediv = document.createElement("div");
