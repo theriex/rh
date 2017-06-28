@@ -621,14 +621,17 @@ app.slavery = (function () {
         sps.forEach(function (st) {
             jt.byId(st.state).style.fill = chart.colors.map.neutral; });
         d3.select("#kytdiv").transition().duration(1400).style("opacity", 0.0);
-        setTimeout(function () { jt.out("kytdiv", ""); }, 1400);
+        ani.stateclicktimeout = setTimeout(function () { 
+            jt.out("kytdiv", ""); }, 1400);
     }
 
 
     function stateClick (stid) {
-        var stxt, wc, time;
+        var stxt, wc, txtwait;
         if(ani.stateclicktimeout) {
             clearTimeout(ani.stateclicktimeout); }
+        stateUnclick();
+        clearTimeout(ani.stateclicktimeout);
         jt.byId(stid).style.fill = chart.colors.map.slavery;
         if(!ani.statetext) {
             ani.statetext = {};
@@ -638,9 +641,10 @@ app.slavery = (function () {
         jt.out("kytdiv", stxt);
         d3.select("#kytdiv").transition().duration(300).style("opacity", 1.0);
         wc = stxt.split(" ").length;
-        time = Math.max(8, wc * (ani.wbase + (3 * ani.nudge))) * 1000;
+        txtwait = Math.max(8, Math.round(wc * ani.wbase)) * 1000;
+        jt.log("stateClick txtwait: " + txtwait);
         ani.stateclicktimeout = setTimeout(function () {
-            stateUnclick(stid); }, Math.round(time));
+            stateUnclick(stid); }, txtwait);
     }
 
 
