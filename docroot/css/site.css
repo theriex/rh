@@ -38,17 +38,18 @@ circle { clip-path: url(../#clip); }
   padding:10px; border-radius:5px; border: 2px solid #666666; }
 #itemdispdiv { position:absolute; left:80px; top:80px; 
   visibility:hidden; background:#e0cb07; overflow:scroll;
-  padding:10px; border-radius:10px; border: 2px solid #666666; 
+  padding:5px; border-radius:50px; border: 2px solid #666666; 
   box-shadow:5px 5px 3px #2f2b00; }
-#dlgdatediv { float:left; background:#fce934; padding:4px 4px 0px 4px;
-  margin:0px 0px 3px -4px; border-radius:4px; }
+#dlgdatediv { padding:0px 20px; text-align:center; }
+#dlgdatespan { background:#fce934; }
 #dlgxdiv, #aboutxdiv { float:right; font-size:x-small; font-weight:bold; 
   margin:-3px -3px 0px 0px; }
 #dlgcontentdiv { clear:both; overflow:scroll; }
 .dlgpicdiv { margin-top:5px; float:right }
 .infopic { margin:0px 0px 5px 10px; max-width:120px; max-height:166px; }
-.picnamediv { margin:0px 0px 0px 10px; text-align:center; max-width:120px; }
-.dlgtextdiv, .dlgsavediv { margin-top:5px; background:#ebd400; 
+.picnamediv { margin:0px 0px 0px 10px; text-align:center; max-width:120px; 
+  font-size:x-small; background-image:url('../img/whitewash.png'); }
+.dlgtextdiv, .dlgsavediv { margin-top:2px; background:#ebd400; 
   padding:4px 4px 4px 4px; overflow:scroll; 
   font-family: "Palatino Linotype", "Palatino", serif; }
 .dlgsavediv { font-family: "Open Sans", "Helvetica", sans-serif; }
@@ -64,7 +65,7 @@ circle { clip-path: url(../#clip); }
   text-anchor:middle; }
 
 .introdlgdiv { display:flex; padding:0px 10px 0px 0px; }
-.titlediv { font-size:x-large; font-weight:bold; padding:10px 10px 10px 10px; 
+.titlediv { font-size:x-large; font-weight:bold; padding:10px 10px 10px 16px; 
   line-height:150%; 
   font-family: "Open Sans", "Helvetica", sans-serif;
 }

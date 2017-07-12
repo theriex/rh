@@ -26,7 +26,7 @@ app.dlg = (function () {
         d3.select("#itemdispdiv").style("background", ct.dlgbg);
         d3.select(".dlgtextdiv").style("background", ct.textbg);
         d3.select(".dlgsavediv").style("background", ct.textbg);
-        d3.select("#dlgdatediv").style("background", ct.datebg);
+        d3.select("#dlgdatespan").style("background", ct.datebg);
         d3.selectAll("button").style("background", ct.buttonbg);
     }
 
@@ -90,21 +90,18 @@ app.dlg = (function () {
 
     function showStartDialog (clickfstr) {
         var html;
-        html = [["div", {id: "dlgxdiv"},
-                 ["a", {href: "#close", 
-                        onclick: jt.fs("app.dlg.close('reference')")},
-                  "X"]],
-                ["div", {cla: "dlgtextdiv"},
-                 ["div", {cla: "introdlgdiv"},
-                  [["div", {cla: "titlediv"},
-                    "American<br/>" + 
-                    "Race<br/>" + 
-                    "History<br/>" + 
-                    "Navigable</br>" + 
-                    "Timeline<br/>"],
-                   ["div", {cla: "startdiv", onclick: clickfstr},
-                    ["div", {cla: "startcontdiv"},
-                     "Start"]]]]]];
+        //removed dlgxdiv since dismissing the dialog does not leave you
+        //with an interactive application. Close interactivity instead.
+        html = [["div", {cla: "introdlgdiv"},
+                 [["div", {cla: "titlediv"},
+                   "American<br/>" + 
+                   "Race<br/>" + 
+                   "History<br/>" + 
+                   "Navigable</br>" + 
+                   "Timeline<br/>"],
+                  ["div", {cla: "startdiv", onclick: clickfstr},
+                   ["div", {cla: "startcontdiv"},
+                    "Start"]]]]];
         displayDialog(null, jt.tac2html(html));
     }
 
@@ -156,15 +153,15 @@ app.dlg = (function () {
                                   checked:jt.toru(d.remembered)}],
                        ["label", {fo:"cbremember"}, "Revisit later"]]]);
         html = [["div", {id:"dlgdatediv"}, 
-                 [d.date,
-                  ["span", {cla: "infodlgdecospan"}, titledeco]]],
-                ["div", {id:"dlgxdiv"},
-                 ["a", {href:"#close",
-                        onclick:jt.fs("app.dlg.close('reference')")},
-                  "X"]],
+                 ["span", {id:"dlgdatespan"},
+                  [d.date,
+                   ["span", {cla: "infodlgdecospan"}, titledeco]]]],
                 ["div", {id:"dlgcontentdiv"},
-                 [["div", {cla:"dlgpicdiv", id:"dlgpicdiv"}, infoPicHTML(d)],
-                  ["div", {cla:"dlgtextdiv", id:"dlgtextdiv"}, d.text]]],
+                 // [["div", {cla:"dlgpicdiv", id:"dlgpicdiv"}, infoPicHTML(d)],
+                 //  ["div", {cla:"dlgtextdiv", id:"dlgtextdiv"}, d.text]]],
+                 ["div", {cla:"dlgtextdiv", id:"dlgtextdiv"},
+                  [["div", {cla:"dlgpicdiv", id:"dlgpicdiv"}, infoPicHTML(d)],
+                   d.text]]],
                 ["div", {id:"dlgbuttondiv"}, buttons]];
         displayDialog(d, jt.tac2html(html));
         d.interact = {start:new Date()};
@@ -193,11 +190,7 @@ app.dlg = (function () {
         subj = "Race History restore link";
         body = "Click this link to restore your browser state:\n" +
             "http://localhost:8080?" + app.db.getStateURLParams();
-        html = [["div", {id: "dlgxdiv"},
-                 ["a", {href: "#close", 
-                        onclick: jt.fs("app.dlg.close('reference')")},
-                  "X"]],
-                ["div", {cla: "dlgsavediv"},
+        html = [["div", {cla: "dlgsavediv"},
                  [["div", {id: "dlgsavelevinfdiv"}, 
                    "Level " + levinf.level + " Save " + levinf.savenum],
                   ["div", {id: "dlgsavetitlediv"}, "Progress saved."],
@@ -221,7 +214,7 @@ app.dlg = (function () {
     function closeDialog (mode) {
         d3.select("#itemdispdiv")
             .style("visibility", "hidden");
-        if(mode) {
+        if(mode) {  //e.g. "reference"
             app.mode.chmode(mode); }
     }
 
