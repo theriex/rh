@@ -18,9 +18,7 @@ A:hover {text-decoration:underline; color:#00989a; }
 
 img { border:0px; vertical-align:middle; }
 
-#dlgbuttondiv { clear:both; text-align:center; padding:5px 0px 5px 0px; }
-#dlgbuttondiv button { margin-left:20px; }
-button { border: 2px solid #666666; border-radius:5px; cursor:pointer;
+button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
   background:#c9b609; box-shadow:1px 1px 1px #2f2b00;
   padding:0px 3px; font-size:large; font-weight:bold; }
 
@@ -42,6 +40,7 @@ circle { clip-path: url(../#clip); }
   box-shadow:5px 5px 3px #2f2b00; }
 #dlgdatediv { padding:0px 20px; text-align:center; }
 #dlgdatespan { background:#fce934; }
+#dlgdatequestion { font-style:italic; font-weight:bold; }
 #dlgxdiv, #aboutxdiv { float:right; font-size:x-small; font-weight:bold; 
   margin:-3px -3px 0px 0px; }
 #dlgcontentdiv { clear:both; overflow:scroll; }
@@ -53,6 +52,13 @@ circle { clip-path: url(../#clip); }
   padding:4px 4px 4px 4px; overflow:scroll; 
   font-family: "Palatino Linotype", "Palatino", serif; }
 .dlgsavediv { font-family: "Open Sans", "Helvetica", sans-serif; }
+#dlgbuttondiv { clear:both; text-align:center; padding:5px 0px 5px 0px; }
+#dlgbuttondiv button { margin:0px 3px; }
+.dlgbuttonsep { padding:0px 5px; }
+.dispdatemonth { font-size:medium; }
+.dispdateday { font-size:medium; }
+.dispdateyear { font-size:large; font-weight:bold; }
+.dispdatebce { font-size:medium; font-weight:bold; }
 
 .zoom { fill:none; pointer-events:all; }
 .tick line { visibility:hidden; }
@@ -80,7 +86,14 @@ circle { clip-path: url(../#clip); }
 #dlgsavetitlediv { text-align:center; font-weight:bold; }
 #dlgsavelinkdiv { font-weight:bold; padding:20px; }
 .infodlgdecospan { padding-left:4px; }
-.checkboxdiv { display:inline-block; padding-left:20px; }
+.buttonintrospan { font-style:italic; }
+.checkboxdiv { display:inline-block; }
+#choicebuttonsdiv { display:inline-block; padding:3px 15px; 
+  border-radius:20px; }
+#remcblabel { font-size:small; }
+.buttontimelineslabelspan {font-size:x-small; font-style:italic; }
+.buttontimelinesdiv { font-size:small; }
+
 
 #leftcoldiv { position:absolute; left:0px; top:0px; background:#e7e1e2; }
 #lcontdiv, #tcontdiv { position:absolute; left:0px; top:0px; }

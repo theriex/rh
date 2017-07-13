@@ -6,6 +6,28 @@ app.db = (function () {
 
     var maxcids = {};
 
+    function makeDisplayDate (pt) {
+        var dd = "",
+            months = ["January", "February", "March", "April", "May", "June",
+                      "July", "August", "September", "October", "November",
+                      "December"];
+        if(pt.start.month) {
+            dd += jt.tac2html(["span", {cla:"dispdatemonth"}, 
+                               months[pt.start.month - 1]]);
+            if(pt.start.day) {
+                dd += "&nbsp;" + jt.tac2html(["span", {cla:"dispdateday"},
+                                              pt.start.day]); }
+            dd += jt.tac2html(["span", {cla:"dispdatecommasep"}, ","]);
+            dd += "&nbsp;"; }
+        dd += jt.tac2html(["span", {cla:"dispdateyear"}, 
+                           Math.abs(pt.start.year)]);
+        if(pt.start.year < 0) {
+            dd += "&nbsp;" + jt.tac2html(["span", {cla:"dispdatebce"},
+                                          "BCE"]); }
+        pt.dispdate = dd;
+    }
+
+
     //See the project readme for allowable date form specfications.
     function parseDate (pt) {
         var date, mres;
@@ -46,6 +68,7 @@ app.db = (function () {
         if(mres) {
             date = date.slice(3);
             pt.end.day = +(mres[0].slice(1,3)); }
+        makeDisplayDate(pt);
     }
 
 
@@ -255,7 +278,7 @@ app.db = (function () {
             cs = {},
             ny = new Date().getFullYear();
         jt.out("rhcontentdiv", "Preparing data...");
-        app.data.pts.forEach(function (pt) {
+        app.data.pts.forEach(function (pt, idx) {
             if(!pt.cid) {
                 throw "Missing cid " + pt.date + " " + pt.text; }
             if(cs[pt.cid]) {
@@ -264,6 +287,7 @@ app.db = (function () {
                 throw "Either 'U' or 'D' (no save on intro) cid: " + pt.cid; }
             noteCitationIdMax(pt);
             cs[pt.cid] = pt;
+            pt.currdataindex = idx;
             parseDate(pt);
             makeCoordinates(pt, ctx);
             makePointIdent(pt, ny); });
