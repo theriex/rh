@@ -86,7 +86,7 @@ circle { clip-path: url(../#clip); }
 #dlgsavetitlediv { text-align:center; font-weight:bold; }
 #dlgsavelinkdiv { font-weight:bold; padding:20px; }
 .infodlgdecospan { padding-left:4px; }
-.buttonintrospan { font-style:italic; }
+.buttonintrospan { font-style:italic; padding:0px 5px 0px 0px; }
 .checkboxdiv { display:inline-block; }
 #choicebuttonsdiv { display:inline-block; padding:3px 15px; 
   border-radius:20px; }

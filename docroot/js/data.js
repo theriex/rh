@@ -1132,7 +1132,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
       text:"By 1900, the mestizos (Spanish and Native American heritage) have become the largest ethnic group in Mexico." },
     { code:"RU", cid:"R64",
       date:"1900",
-      text:"Census specifies that \"pure Negroes\" be counted separately from Mulattos. Mulatto is defined as \"all persons with some trace of Black blood.\"" },
+      text:"The U.S. Census specifies that \"pure Negroes\" be counted separately from Mulattos. Mulatto is defined as \"all persons with some trace of Black blood.\"" },
     { code:"L", cid:"L24",
       date:"1900s",
       text:"Brutality against Mexican Americans in the Southwest is commonplace. Lynching and murders of Mexican Americans become so common in California and Texas that in 1912, the Mexican ambassador formally protests the mistreatment and cites several brutal incidents that had recently taken place." },

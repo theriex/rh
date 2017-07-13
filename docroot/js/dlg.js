@@ -257,6 +257,17 @@ app.dlg = (function () {
     }
 
 
+    function transitionToNext () {
+        var dur = 600;
+        d3.select("#itemdispdiv").transition().duration(dur)
+            .style("top", (tl.height + 20) + "px")
+            .style("left", Math.round(tl.width / 2) + "px")
+            .style("max-width", "2px")
+            .style("max-height", "2px")
+            .on("end", app.mode.next);
+    }
+
+
     function buttonPress (answer) {
         var inter = tl.dlgdat.interact;
         if(answer) {
@@ -264,7 +275,7 @@ app.dlg = (function () {
         if(answer && answer !== buttonText.yes) {
             tl.dlgdat.remembered = jt.byId("cbremember").checked; }
         closeInteractionTimeTracking();
-        app.mode.next();
+        transitionToNext();
     }
 
 
@@ -276,7 +287,7 @@ app.dlg = (function () {
                 ["span", {id:"dlgdatespan"}, pt.dispdate]));
             pt.yearguesses.forEach(function (year) {
                 jt.byId(yearButtonId(year)).disabled = true; });
-            setTimeout(app.mode.next, 1000); }
+            setTimeout(transitionToNext, 1000); }
         else {
             jt.byId(yearButtonId(year)).disabled = true;
             jt.out("dlgdatequestion", 
