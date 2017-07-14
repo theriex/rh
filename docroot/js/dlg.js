@@ -297,6 +297,43 @@ app.dlg = (function () {
     }
 
 
+    function levelDetailText (levinf) {
+        var idx = 0, offset, trav = {}, pts = app.data.pts;
+        if(levinf.level <= 1) {
+            return "Level 1 is an introductory selection of some lesser known facts.  If you know most of these already, please volunteer to help with the project." }
+        //Which points, and how many, can vary from one save to the next due
+        //to extracurricular clicking, and/or changes to the data itself.
+        //The years covered can vary depending on which timeline is
+        //providing the points for the current pass.  Not exact.  Pretty
+        //much has to be guessed each time using heuristic traversal.
+        while(!pts[idx].sv || pts[idx].visited) {
+            idx += 1; }
+        trav.firstnewidx = idx;
+        offset = levinf.levPtsVis;
+        while(idx > 0) {
+            idx -= 1;
+            if(!pts[idx].sv && pts[idx].visited) {
+                offset -= 1; }
+            if(!offset) {
+                break; } }
+        trav.startidx = idx;
+        idx = trav.firstnewidx;
+        offset = levinf.levPtsAvail;
+        while(idx < pts.length) {
+            idx += 1;
+            if(!pts[idx].sv && !pts[idx].visited) {
+                offset -= 1; }
+            if(!offset) {
+                break; } }
+        trav.endidx = idx;
+        trav.start = pts[trav.startidx].start.year
+        if(trav.start < 0) {
+            trav.start = Math.abs(trav.start) + " BCE"; }
+        return "Level " + levinf.level + " covers from " + trav.start +
+            " to " + pts[trav.endidx].start.year;
+    }
+
+
     function showSaveConfirmationDialog (nextfstr) {
         var html, subj, body, levinf = app.lev.progInfo();
         levinf.savenum = Math.floor(levinf.levPtsVis / levinf.savelen);
@@ -306,12 +343,17 @@ app.dlg = (function () {
         html = [["div", {cla: "dlgsavediv"},
                  [["div", {id: "dlgsavelevinfdiv"}, 
                    "Level " + levinf.level + " Save " + levinf.savenum],
-                  ["div", {id: "dlgsavetitlediv"}, "Progress saved."],
+                  ["div", {id:"dlgsavelevdetdiv"}, levelDetailText(levinf)],
+                  ["div", {id: "dlgsavebrowserdiv"}, 
+                   "Progress saved in browser."],
+                  ["div", {id:"dlgsaveservermsgdiv"},
+                   ["a", {href:"#signin", onclick:jt.fs("app.dlg.signin()")},
+                    "Sign in to save to your account"]],
                   ["div", {id: "dlgsavelinkdiv"}, "building restore link..."]]],
                 ["div", {id: "dlgbuttondiv"},
                  ["button", {type: "button", id: "nextbutton",
                              onclick: nextfstr},
-                  "Continue"]]];
+                  "Ok"]]];
         displayDialog(null, jt.tac2html(html));
         //The mail href can sometimes take a long time to render leading
         //to the dialog looking like it has crashed.  So dump out the 
@@ -320,7 +362,7 @@ app.dlg = (function () {
             jt.out("dlgsavelinkdiv", jt.tac2html(
                 ["a", {href: "mailto:?subject=" + jt.dquotenc(subj) + 
                                     "&body=" + jt.dquotenc(body)},
-                 "Mail a Restore Link"])); }, 100);
+                 "Mail a Restore Progress link"])); }, 100);
     }
 
 
