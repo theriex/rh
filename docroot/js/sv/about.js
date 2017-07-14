@@ -14,6 +14,7 @@ app.about = (function () {
 
 
     function display () {
+        jt.byId("itemdispdiv").style.visibility = "hidden";
         d3.select("#suppvisdiv")
             .style("left", "0px")
             .style("top", "0px")
@@ -22,7 +23,7 @@ app.about = (function () {
             .style("background", "#fff5ce")
             .style("visibility", "visible")
             .transition().duration(2000)
-            .style("height", (window.innerHeight - 40) + "px")
+            .style("height", (window.innerHeight - 40) + "px");
         jt.out("suppvisdiv", jt.tac2html(
             [["div", {id:"aboutxdiv"},
               ["a", {href:"#close", onclick:jt.fs("app.about.close()")}, "X"]],

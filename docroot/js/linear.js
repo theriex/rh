@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge */
+/*jslint browser, multivar, white, fudge, this */
 /*global app, window, jt, d3 */
 
 app.linear = (function () {
@@ -290,7 +290,8 @@ app.linear = (function () {
              ["div", {id:"leftcoldiv", style:"top:25px;width:10px;"}],
              ["div", {id:"navdiv"}],
              ["div", {id:"suppvisdiv"}],
-             ["div", {id:"itemdispdiv"}, "hello"]]);
+             ["div", {id:"itemdispdiv"}, "hello"],
+             ["div", {id:"menudiv"}]]);
         tl.svg = d3.select("#svgmain");
         tl.margin = {top: 20, right: 10, bottom: 60, left: 10};
         tl.margin.hpad = tl.margin.top + tl.margin.bottom;
@@ -357,6 +358,7 @@ app.linear = (function () {
         setChartWidthAndHeight();
         initDisplayVariableValues();
         initMainDisplayElements();
+        app.mode.menu(false);
         app.picbg.init("abgdiv");
         bindDataAndDrawChart();
         app.mode.start(tl);

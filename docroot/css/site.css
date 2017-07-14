@@ -31,6 +31,10 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 circle { clip-path: url(../#clip); }
 .focusCircle { cursor:pointer; }
 #mouseoverLabel { fill:#f00; font-weight:bold; }
+#menudiv { position:absolute; left:320px; top:0px; margin-top:-3px; }
+.menuline, .menulinemain, .menulinesub { background:url('../img/menuback.png') }
+.menulinemain { padding:5px; }
+.menulinesub { padding:2px 2px 2px 20px; }
 #suppvisdiv { position:absolute; left:80px; top:80px; 
   visibility:hidden; background:#e0cb07; overflow:scroll;
   padding:10px; border-radius:5px; border: 2px solid #666666; }

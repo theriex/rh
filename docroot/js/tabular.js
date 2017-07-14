@@ -51,7 +51,7 @@ app.tabular = (function () {
                     html += ", "; }
                 html += sm; } });
         html = "Supplemental visualizations: " + html + ".";
-        html = "<b><i>Welcome to tabular mode</i></b>. To return to interactive mode, click the \"i\" button in the upper left. To filter the display, just start typing in the search box and/or select a timeline. " + html;
+        html = "<b><i>Rerence mode</i></b>: To filter the display, just start typing in the search box and/or select a timeline. " + html;
         return html;
     }
 

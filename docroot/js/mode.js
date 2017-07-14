@@ -39,17 +39,7 @@ app.mode = (function () {
             clearSearchState();  //init
             html = [["div", {id:"refdiv", style:"width:" + ms.w + "px;" +
                                                 "height:" + ms.h + "px;"},
-                     [["div", {id:"aboutdiv"},
-                       ["a", {href:"#about", onclick:jt.fs("app.mode.about()")},
-                        "?"]],
-                      ["a", {href:"#interactive",
-                             onclick:jt.fs("app.mode.chmode('interactive')")},
-                       ["img", {id:"interactimg", src:"img/info.png"}]],
-                      //hiding display toggle for now, simplified interface...
-                      //["a", {id:"disptoggle", href:"#textmode",
-                      //       onclick:jt.fs("app.mode.togdisp()")},
-                      // ["img", {id:"disptoggleimg", src:"img/disptext.png"}]],
-                      ["input", {type:"text", id:"srchin", size:25,
+                     [["input", {type:"text", id:"srchin", size:25,
                                  placeholder:"Search for...",
                                  value:srchst.qstr, oninput:srchfstr}],
                       ["span", {cla:"srchinspan"}, "&nbsp;in&nbsp;"],
@@ -234,6 +224,7 @@ app.mode = (function () {
             jt.byId("abgdiv").style.display = "none";
             jt.byId("lcontdiv").style.display = "none";
             jt.byId("tcontdiv").style.display = "block";
+            jt.byId("itemdispdiv").style.visibility = "hidden";
             ms.disp = "text";
             app.tabular.display(); }  //rebuild contents each time
         else {
@@ -266,6 +257,43 @@ app.mode = (function () {
     }
 
 
+    function displayMenu (expand, select) {
+        var html, mdiv;
+        html = ["a", {href:"#menu", onclick:jt.fs("app.mode.menu(" + 
+                                                  !expand + ")")},
+                ["img", {src:"img/menuicon.png", //50x38
+                         style:"max-height:20px;max-width:30px;"}]];
+        if(expand) {
+            html = [["div", {cla:"menuline", style:"text-align:right"}, html],
+                    ["div", {cla:"menulinemain"},
+                     ["a", {href:"#interactive", 
+                            onclick:jt.fs("app.mode.menu(0,'interactive')")},
+                      "Interactive&nbsp;Mode"]],
+                    ["div", {cla:"menulinemain"},
+                     ["a", {href:"#reference",
+                            onclick:jt.fs("app.mode.menu(0,'reference')")},
+                      "Reference&nbsp;Mode"]],
+                    ["div", {cla:"menulinesub"}, "Browse&nbsp;Later"],
+                    ["div", {cla:"menulinesub"}, "Landmark&nbsp;Dates"],
+                    ["div", {cla:"menulinesub"}, "Visualizations"],
+                    ["div", {cla:"menulinemain"},
+                     ["a", {href:"#about",
+                            onclick:jt.fs("app.mode.menu(0,'about')")},
+                      "About"]],
+                    ["div", {cla:"menulinemain"}, "Sign&nbsp;In"]]; }
+        jt.out("menudiv", jt.tac2html(html));
+        mdiv = jt.byId("menudiv");
+        mdiv.style.left = (window.innerWidth - mdiv.offsetWidth - 10) + "px";
+        if(select) {
+            jt.byId("itemdispdiv").style.visibility = "hidden";
+            jt.byId("suppvisdiv").style.visibility = "hidden";
+            switch(select) {
+            case "interactive": changeMode("interactive"); break;
+            case "reference": changeMode("reference"); break;
+            case "about": app.about.display(); break; } }
+    }
+
+
     return {
         start: function (divid, tl) { start(divid, tl); },
         next: function () { next(); },
@@ -276,6 +304,6 @@ app.mode = (function () {
         updatesrch: function () { updateSearchDisplay(); },
         ptmatch: function (pt) { return isMatchingPoint(pt); },
         interject: function (pt) { interject(pt); },
-        about: function () { app.about.display(); }
+        menu: function (expand, select) { displayMenu(expand, select); }
     };
 }());
