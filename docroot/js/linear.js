@@ -292,6 +292,7 @@ app.linear = (function () {
              ["div", {id:"suppvisdiv"}],
              ["div", {id:"itemdispdiv"}, "hello"],
              ["div", {id:"menudiv"}]]);
+        jt.makeDraggable("itemdispdiv");
         tl.svg = d3.select("#svgmain");
         tl.margin = {top: 20, right: 10, bottom: 60, left: 10};
         tl.margin.hpad = tl.margin.top + tl.margin.bottom;

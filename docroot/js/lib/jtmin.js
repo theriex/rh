@@ -730,6 +730,65 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
     };
 
 
+    //provide default move behavior for an element.  Typical use is to make
+    //an absolute positioned div moveable by the user.  Pass an appropriate
+    //functions object to override the default behavior.  To allow an
+    //absolute positioned div to be moved anywhere in the document body:
+    //    uo.makeDraggable("myElementId")
+    uo.makeDraggable = function (elem, fso) {
+        if(!elem) {
+            return; }
+        if(typeof elem === "string") {
+            elem = uo.byId(elem); }
+        elem.draggable = true;
+        fso = fso || {};
+        //set up dragstart handler for the given element
+        fso.dragstart = fso.dragstart || function (evt) {
+            var dat = evt.target.id + ":" + evt.pageX + ":" + evt.pageY;
+            //uo.log("drag started " + dat);
+            evt.target.style.opacity = "0.4";
+            evt.dataTransfer.effectAllowed = "move";
+            //Have to set data for DnD to be allowed
+            fso.dat = dat;  //dataTransfer not always available
+            evt.dataTransfer.setData("text/plain", dat); };
+        uo.on(elem, "dragstart", fso.dragstart);
+        //set up a general drop handler 
+        fso.drop = fso.drop || function (evt) {
+            var pos = {x: evt.pageX, y: evt.pageY},
+                dat = fso.dat.split(":"),
+                offset = {x: pos.x - (+dat[1]), y: pos.y - (+dat[2])},
+                srcelem = uo.byId(dat[0]),
+                coord = uo.geoPos(srcelem);
+            uo.evtend(evt);
+            srcelem.style.opacity = "1.0";
+            //uo.log("drag end offset: " + offset.x + "," + offset.y);
+            coord.x += offset.x;
+            coord.y += offset.y;
+            srcelem.style.left = coord.x + "px";
+            srcelem.style.top = coord.y + "px"; };
+        //set up a general dragover handler to let the drops through
+        fso.dragover = fso.dragover || function (evt) {
+            uo.evtend(evt);  //default action prevents drop
+            return false; };
+        //associate the dragover and drop handlers with the targets
+        fso.dropTargets = fso.dropTargets || [document.body];
+        fso.dropTargets.forEach(function (dt) {
+            uo.on(dt, "dragover", fso.dragover);
+            uo.on(dt, "drop", fso.drop); });
+        //add hooks for any other function overrides provided
+        if(fso.dragend) {
+            uo.on(elem, "dragend", fso.dragend); }
+        if(fso.drag) {
+            uo.on(elem, "drag", fso.drag); }
+        if(fso.dragenter) {
+            uo.on(elem, "dragenter", fso.dragenter); }
+        if(fso.dragexit) {
+            uo.on(elem, "dragexit", fso.dragexit); }
+        if(fso.dragleave) {
+            uo.on(elem, "dragleave", fso.dragleave); }
+    };
+
+
     ////////////////////////////////////////
     // HTML creation
     ////////////////////////////////////////
@@ -1079,7 +1138,7 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
             return { x: event.pageX, y: event.pageY };
         }
         pos = { h: -1, w: -1, x: event.offsetX, y: event.offsetY };
-        pos = uo.geoPos(event.srcElement, pos);
+        pos = uo.geoPos(event.srcElement || event.target, pos);
         if (!pos) {
             pos = { x: event.offsetX, y: event.offsetY };
         }
