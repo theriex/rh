@@ -113,7 +113,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
   suppvis:[  //related data points have the code value as an sv field.
     {code:"in", pc: "U", select:"random", passes: 3,
      //The first level is a short round of lesser known points in an
-     //attempt to pique curiosity and engagement.  No visualization.
+     //attempt to pique curiosity and engagement.
      module: "intro", name: "Introduction", menuselect:false,
      intro: "Intro completed..."},
     {code:"sl",

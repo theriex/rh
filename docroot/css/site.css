@@ -147,3 +147,5 @@ circle { clip-path: url(../#clip); }
 .tranctrl { vertical-align:middle; cursor:pointer; opacity:0.5; }
 .tranctrl:hover { opacity:0.8; }
 
+/* sv0: Intro */
+#sv0contdiv { }

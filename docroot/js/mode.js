@@ -58,14 +58,14 @@ app.mode = (function () {
             app.lev.updateVisited(fetchpoints); }
         fetchpoints = app.lev.getNextPoints();
         //TEST: Uncomment if specific points for testing at startup
-        // if(!ms.teststart) {
-        //     ms.teststart = true;
-        //     var testcids = ["A6"];
-        //     ms.skipstart = true;
-        //     fetchpoints = [];
-        //     app.data.pts.forEach(function (pt) {
-        //         if(testcids.indexOf(pt.cid) >= 0) {
-        //             fetchpoints.push(pt); } }); }
+        if(!ms.teststart) {
+            ms.teststart = true;
+            var testcids = ["X1"];
+            ms.skipstart = true;
+            fetchpoints = [];
+            app.data.pts.forEach(function (pt) {
+                if(testcids.indexOf(pt.cid) >= 0) {
+                    fetchpoints.push(pt); } }); }
         series = fetchpoints.slice();  //working copy to chew up
     }
 
