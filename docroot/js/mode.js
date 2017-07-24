@@ -258,7 +258,7 @@ app.mode = (function () {
 
 
     function displayMenu (expand, select) {
-        var html, mdiv;
+        var html, mdiv, leftx;
         html = ["a", {href:"#menu", onclick:jt.fs("app.mode.menu(" + 
                                                   !expand + ")")},
                 ["img", {src:"img/menuicon.png", //50x38
@@ -283,7 +283,9 @@ app.mode = (function () {
                     ["div", {cla:"menulinemain"}, "Sign&nbsp;In"]]; }
         jt.out("menudiv", jt.tac2html(html));
         mdiv = jt.byId("menudiv");
-        mdiv.style.left = (window.innerWidth - mdiv.offsetWidth - 10) + "px";
+        //mdiv.offsetWidth may be zero until all the images load.
+        leftx = window.innerWidth - (Math.max(mdiv.offsetWidth, 30) + 10);
+        mdiv.style.left = leftx + "px";
         if(select) {
             jt.byId("itemdispdiv").style.visibility = "hidden";
             jt.byId("suppvisdiv").style.visibility = "hidden";
