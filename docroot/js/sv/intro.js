@@ -8,7 +8,30 @@ app.intro = (function () {
         tl = null,       //linear timeline settings and data
         endf = null,     //callback for after visualization has finished
         chart = {},      //container for svg references
-        mobile = false;  //browser device flag
+        plat = {
+            type:"unknown",
+            //iOS Safari or comparable
+            ios: {
+                add:"Click the share button on your browser and select \"Add to Home Screen\"",
+                fav:"Click the share button on your browser and select \"Add to Favorites\""},
+            //Android Chrome or comparable.  In Firefox the "Add to Home
+            //Screen" option is under the "Page" submenu, which is crappy
+            //organization since this is more important than bookmarks.
+            //Going with Chrome as the standard
+            android: {
+                add:"In your browser menu, select \"Add to Home screen\".",
+                fav:"In your browser menu, select the star icon." },
+            //mobile device not otherwise covered specifically
+            genmob: {
+                fav:"Select the star icon or the bookmark option in your browser menu." },
+            //The command-D keyboard shortcut is recognized by Chrome,
+            //Safari, Firefox and others.  It brings up an appropriate
+            //dialog in each case.  At the time of this writing Safari does
+            //not have the star option on the desktop browser menu, so going
+            //with the keyboard shortcut standard.  Replace "command-D" with
+            //"Ctrl-D" for non-Mac.
+            pc: {
+                fav:"Press command-D to bookmark this site" }};
 
     function initHTMLContent () {
         jt.out("suppvisdiv", jt.tac2html(
@@ -249,22 +272,10 @@ app.intro = (function () {
     }
 
 
-    function addToHomeScreen () {
+    function displayActionText (action) {
         jt.out("sv0txtdiv", jt.tac2html(
-            ["div", {id:"sv0howtodiv"}, 
-             ["Not implemented yet",
-              ["div", {id:"sv0buttonsdiv"},
-               ["button", {type:"button", cla:"ghostbutton",
-                           onclick:jt.fs("app.intro.hidetxtdiv()")},
-                "Ok"]]]]));
-        jt.byId("sv0txtdiv").style.opacity = 1.0;
-    }
-
-
-    function addToBookmarks () {
-        jt.out("sv0txtdiv", jt.tac2html(
-            ["div", {id:"sv0howtodiv"}, 
-             ["Not implemented yet",
+            ["div", {id:"sv0actiondiv"},
+             [plat[plat.type][action],
               ["div", {id:"sv0buttonsdiv"},
                ["button", {type:"button", cla:"ghostbutton",
                            onclick:jt.fs("app.intro.hidetxtdiv()")},
@@ -274,29 +285,52 @@ app.intro = (function () {
 
 
     function displayActionLink () {
-        if(mobile) {
-            jt.out("sv0linkdiv", jt.tac2html(
-                ["a", {href:"#addToHomeScreen",
-                       onclick:jt.fs("app.intro.addToHomeScreen()")},
-                 "Add This Site To Your Home Screen"])); }
+        var html;
+        if(plat.type === "pc" || plat.type === "mac") {
+            html = plat.pc.fav;
+            if(plat.type === "pc") {
+                html = html.replace(/command-D/ig, "Ctrl-D"); }
+            jt.out("sv0linkdiv", html); }
         else {
-            jt.out("sv0linkdiv", jt.tac2html(
-                ["a", {href:"#addToBookmarks",
-                       onclick:jt.fs("app.intro.addToBookmarks()")},
-                 "Bookmark This Site"])); }
+            html = jt.byId("sv0textdiv").innerHTML;
+            html += "<br/>Add this site to your";
+            jt.out("sv0textdiv", html);
+            html = [];
+            if(!plat[plat.type]) {  //should always be defined but just in case
+                plat.type = "genmob"; }
+            if(plat[plat.type].add) {
+                html.push(["a", {href:"#addToHomeScreen",
+                                 onclick:jt.fs("app.intro.actlink('add')")},
+                           "Home Screen"]);
+                html.push(" | "); }
+            html.push(["a", {href:"#addToFavorites",
+                             onclick:jt.fs("app.intro.actlink('fav')")},
+                       "Favorites"]); }
+        jt.out("sv0linkdiv", jt.tac2html(html));
         setTimeout(showCloseButton, 5000);
     }
 
 
+    //The goal here is to provide an easy path back to resuming the timeline
+    //since it takes several visits to complete.  Bookmarking the site can
+    //help people return, but adding the app to the homescreen is normally
+    //preferable in terms of visibility and ease of access.  This prompting
+    //is in addition to whatever automated support is provided via the
+    //manifest/serviceWorker interface.
     function initLinkText () {
         var userAgent = navigator.userAgent || navigator.vendor || window.opera;
         //windows phones also claim android and IOS.
-        if((/windows\sphone/i.test(userAgent)) ||
-           (/android/i.test(userAgent)) ||
-           (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream)) {
-            mobile = true; }
-        //Removed statement about being speedier or more thorough.  Keep
-        //this concise
+        if(/windows\sphone/i.test(userAgent)) {
+            plat.type = "genmob"; }
+        else if(/android/i.test(userAgent)) {
+            plat.type = "android"; }
+        else if(/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+            plat.type = "ios"; }
+        else if(/Mac/.test(userAgent)) {
+            plat.type = "mac"; }
+        else {
+            plat.type = "pc"; }
+        //Removed "You might be speedier or more thorough" chatter.
         jt.out("sv0textdiv", "This will take more than one visit.");
         setTimeout(displayActionLink, 1200);
     }
@@ -350,8 +384,7 @@ app.intro = (function () {
 
     return {
         display: function (sv, tl, endf) { display(sv, tl, endf); },
-        addToHomeScreen: function () { addToHomeScreen(); },
-        addToBookmarks: function () { addToBookmarks(); },
+        actlink: function (action) { displayActionText(action); },
         close: function () { close(); },
         hidetxtdiv: function () { jt.byId("sv0txtdiv").style.opacity = 0; }
     };
