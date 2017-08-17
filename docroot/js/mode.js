@@ -292,7 +292,7 @@ app.mode = (function () {
             switch(select) {
             case "interactive": changeMode("interactive"); break;
             case "reference": changeMode("reference"); break;
-            case "about": app.about.display(); break; } }
+            case "about": app.about.display(ms); break; } }
     }
 
 
