@@ -75,15 +75,15 @@ circle { clip-path: url(../#clip); }
 .elevatortext { fill:#999; font-weight:bold; font-style:italic; 
   text-anchor:middle; }
 
-.introdlgdiv { display:flex; padding:0px 10px 0px 0px; }
-.titlediv { font-size:x-large; font-weight:bold; padding:10px 10px 10px 16px; 
-  line-height:150%; 
+#introdlgdiv { padding:0px 10px 0px 0px; }
+#introtitlediv { font-size:x-large; font-weight:bold; text-align:center;
+  padding:10px 10px 10px 16px; line-height:150%;
   font-family: "Open Sans", "Helvetica", sans-serif;
 }
-.startdiv { margin:auto auto auto -5px; padding:40px; cursor:pointer;
+#startdiv { float:right; padding:40px; cursor:pointer;
   background:#07e048; width:40px; height:40px; border-radius:50%; 
   border: 2px solid #666666; box-shadow:3px 3px 1px #2f2b00; }
-.startcontdiv { margin:8px 0px 0px -8px; 
+#startcontdiv { margin:8px 0px 0px -8px; 
   font-size:x-large; font-weight:bold; }
 
 #dlgsavelevinfdiv { text-align:center; font-weight:bold; font-size:small; 

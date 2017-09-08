@@ -94,16 +94,20 @@ app.dlg = (function () {
         var html;
         //removed dlgxdiv since dismissing the dialog does not leave you
         //with an interactive application. Close interactivity instead.
-        html = [["div", {cla: "introdlgdiv"},
-                 [["div", {cla: "titlediv"},
-                   "American<br/>" + 
-                   "Race<br/>" + 
-                   "History<br/>" + 
-                   "Navigable</br>" + 
-                   "Timeline<br/>"],
-                  ["div", {cla: "startdiv", onclick: clickfstr},
-                   ["div", {cla: "startcontdiv"},
-                    "Start"]]]]];
+        html = ["div", {id:"introdlgdiv"},
+                [["div", {id:"introtitlediv"}, "U.S. Race History"],
+                 ["table",
+                  ["tr",
+                   [["td",
+                     ["div", {cla: "dlgtextdiv"},
+                      "An introduction<br/>" +
+                      "to the history of<br/>" +
+                      "race and racism in<br/>" +
+                      "the United States<br/>"]],
+                    ["td", 
+                     ["div", {id: "startdiv", onclick: clickfstr},
+                      ["div", {id: "startcontdiv"},
+                       "Start"]]]]]]]];
         displayDialog(null, jt.tac2html(html));
     }
 
