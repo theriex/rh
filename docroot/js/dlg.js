@@ -382,6 +382,7 @@ app.dlg = (function () {
         init: function (timeline) { tl = timeline; },
         start: function (clickfstr) { showStartDialog(clickfstr); },
         info: function (d, nextfstr) { showInfoDialog(d, nextfstr); },
+        show: function (html) { displayDialog(null, html); },
         close: function (mode) { closeDialog(mode); },
         button: function (answer) { buttonPress(answer); },
         guessyear: function (year) { yearGuessButtonPress(year); },

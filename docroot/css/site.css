@@ -33,7 +33,8 @@ circle { clip-path: url(../#clip); }
 .focusCircle { cursor:pointer; }
 #mouseoverLabel { fill:#f00; font-weight:bold; }
 #menudiv { position:absolute; left:320px; top:0px; margin-top:-3px; }
-.menuline, .menulinemain, .menulinesub { background:url('../img/menuback.png') }
+.menuline, .menulinemain, .menulinesub { 
+  background:url('../img/menuback.png'); }
 .menulinemain { padding:5px; }
 .menulinesub { padding:2px 2px 2px 20px; }
 #suppvisdiv { position:absolute; left:80px; top:80px; 
@@ -141,6 +142,12 @@ circle { clip-path: url(../#clip); }
 #downloadlinkdiv { padding:0px 10px 5px 62px; font-size:small; }
 .downloadlinkimg { margin:0px 2px; }
 .srchinspan { font-size:small; }
+#downloadoptsdiv { margin:20px; }
+#dloptseltitlediv { font-style:italic; }
+.dloptseldiv { min-width:100px; padding:10px 10px 2px 2px;
+  background-image:url('../img/whitewash.png'); }
+#downloadactiondiv { min-width:150px; font-weight:bold; padding:16px 0px; }
+
 
 /* -------------------- */
 /* visualizations */
