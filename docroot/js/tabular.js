@@ -63,13 +63,16 @@ app.tabular = (function () {
     function pointTAC (pt, idx) {
         var ddc = pt.remembered ? "trowdescdivrem" : "trowdescdiv",
             ddt = idx ? pt.text : textIntroHTML(),
-            html = ["div", {cla:"trowdiv"},
-                    [["div", {cla:"trowdatediv"},
-                      [dateSpan(pt.start),
-                       ["br"],
-                       dateSpan(pt.end, "-"),
-                       ["span", {cla:"tcspan"}, " (" + pt.code + ") "]]],
-                     ["div", {cla:ddc}, ddt]]];
+            code, html;
+        code = pt.code.replace(/U/g, "");
+        code = code.replace(/D/g, "");
+        html = ["div", {cla:"trowdiv"},
+                [["div", {cla:"trowdatediv"},
+                  [dateSpan(pt.start),
+                   ["br"],
+                   dateSpan(pt.end, "-"),
+                   ["span", {cla:"tcspan"}, " (" + code + ") "]]],
+                 ["div", {cla:ddc}, ddt]]];
         return html;
     }
 

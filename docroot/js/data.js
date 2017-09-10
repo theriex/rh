@@ -104,7 +104,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
     { name:"Not Usual",
       ident:"Intro",
       code:"U",
-      over:"Facts and events that are surprising to some people." },
+      over:"Good points to use for the initial intro before chronological." },
     { name:"Anchor Date",
       ident:"Date",
       code:"D",
