@@ -126,6 +126,7 @@ circle { clip-path: url(../#clip); }
   margin:2px 5px 2px 5px; }
 #disptoggleimg { margin:0px 5px 2px 5px; }
 #aboutdiv { float:right; font-size:medium; margin:3px 3px 0px 0px; }
+#abokbuttondiv { clear:both; text-align:center; padding:5px 0px 5px 0px; }
 
 /* -------------------- */
 /* tabular */

@@ -206,14 +206,19 @@ app.db = (function () {
             case "id": app.userId = pobj[key]; break;
             case "st": app.startTime = pobj[key]; break;
             default:
-                if(key.startsWith("pb")) {
-                    pobj[key].split(":").forEach(function (ps) {
-                        var pcs = preg.exec(ps);
-                        ptd[pcs[2]] = {t:+pcs[1], r:pcs[3]}; }); }
-                else {  //treat as supplemental visualization
-                    idx = pobj[key].lastIndexOf(":");
-                    ptd[key] = {s:pobj[key].slice(0, idx),
-                                t:+pobj[key].slice(idx+1)}; }}});
+                try {
+                    if(key.startsWith("pb")) {
+                        pobj[key].split(":").forEach(function (ps) {
+                            var pcs = preg.exec(ps);
+                            ptd[pcs[2]] = {t:+pcs[1], r:pcs[3]}; }); }
+                    else {  //treat as supplemental visualization
+                        idx = pobj[key].lastIndexOf(":");
+                        ptd[key] = {s:pobj[key].slice(0, idx),
+                                    t:+pobj[key].slice(idx+1)}; }
+                } catch (err) {
+                    jt.log("readStateURLParams param error " + key + ": " + 
+                           pobj[key] + " " + err);
+                } } });
         //reconstruct visit time differences based on time per point
         et = wallClockTimeStamp2Date(app.startTime).getTime();
         app.data.pts.forEach(function (pt) {
