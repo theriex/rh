@@ -29,7 +29,8 @@ var app = {},  //Global container for application level funcs and values
                        "js/sv/about",
                        "js/sv/levelup",
                        "js/sv/intro",
-                       "js/sv/slavery"
+                       "js/sv/slavery",
+                       "js/sv/lynching"
                       ];
         jtminjsDecorateWithUtilities(jt);
         jt.out("rhcontentdiv", "Loading app modules...");
