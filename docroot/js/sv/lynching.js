@@ -7,9 +7,13 @@ app.lynching = (function () {
     var sv = null,
         tl = null,
         endf = null,
-        chart = {colors: {bg: "#fef6d7", 
-                          map: {neutral:"#fadb66",
-                                hover:"#d3aaaa"}}},
+        chart = {colors:{bg: "#fef6d7", 
+                         map:{neutral:"#fadb66",
+                              hover:"#d3aaaa"}},
+                 //Map SVG and related values
+                 ms: {w:0, h:0, tm:20}, //top margin space
+                 //Bar chart SVG and related values
+                 bs: {w:0, h:0}},
         ani = {},
         //See http://www.chesnuttarchive.org/classroom/lynchingstat.html
         //in particular the notes about totals and "Whites".
@@ -148,12 +152,84 @@ app.lynching = (function () {
                 ["Wyoming", 30, 5, 35]];
 
 
+    function usmapTAC () {
+        var html = [];
+        app.svcommon.usmap().forEach(function (state) {
+            html.push(["path", {id:state.id, d:state.d,
+                                fill:chart.colors.map.neutral}]) });
+        html = ["svg", {id:"mapsvg", width:chart.ms.w, height:chart.ms.h,
+                        viewBox:"0 0 959 593", preserveAspectRatio:"none"},
+                ["g", {id:"outlines"},
+                 html]];
+        return html;
+    }
+
+
+    function barTAC () {
+        return "";
+    }
+
+
+    function displayTitle () {
+        var mid, tg, delay = 3500, duration = 2000;
+        mid = {x: Math.round(0.5 * 959),   //calculate from viewbox
+               y: Math.round(0.35 * 593)};
+        tg = d3.select("#mapsvg").append("g").attr("opacity", 1.0);
+        tg.append("text")
+            .attr("text-anchor", "middle")
+            .attr("x", mid.x)
+            .attr("y", mid.y)
+            .attr("font-size", 78)
+            .attr("font-weight", "bold")
+            .text("Lynching");
+        tg.transition().delay(delay).duration(duration)
+            .attr("opacity", 0.0)
+            .remove();
+        setTimeout(function () { app.lynching.yrsel(ldty[1][0]); },
+                   delay + duration - 500);
+    }
+
+
+    function initDisplayElements () {
+        var mid;
+        chart.ms.w = tl.width2;
+        chart.ms.h = Math.min(tl.height, tl.width2) - chart.ms.tm;
+        chart.bs.w = tl.width2;
+        chart.bs.h = chart.ms.h + chart.ms.tm;
+        jt.out("suppvisdiv", jt.tac2html(
+            [["div", {id:"mapdiv"}, usmapTAC()],
+             ["div", {id:"bardiv"}, barTAC()],
+             ["div", {id:"lytdiv"}]]));
+        displayTitle();
+        mid = {x: Math.round(tl.width2 / 2) + tl.margin.left,
+               y: Math.round(tl.height / 2) + tl.margin.top};
+        d3.select("#suppvisdiv")
+            .style("left", mid.x - 15 + "px")
+            .style("top", mid.y - 15 + "px")
+            .style("width", 30 + "px")
+            .style("height", 30 + "px")
+            .style("background", chart.colors.bg)
+            .style("visibility", "visible")
+            .transition().duration(2000)
+            .style("left", tl.margin.left + "px")
+            .style("top", tl.margin.top + "px")
+            .style("width", tl.width2 + "px")
+            .style("height", tl.height + "px");
+    }
+
+
+    function initAnimationSequence () {
+        //???
+    }
+
+
     function display (suppvis, timeline, endfunc) {
         sv = suppvis || app.lev.suppVisByCode("sl");
         tl = timeline || app.linear.tldata();
         endf = endfunc || app.dlg.close;
         sv.startDate = new Date();
-        jt.err("Not implemented yet");
+        initDisplayElements();
+        initAnimationSequence();
     }
 
 
@@ -178,6 +254,7 @@ app.lynching = (function () {
         //TODO: need to init data points for each year so they show up in
         //the main display at start.
         display: function (sv, tl, endf) { display(sv, tl, endf); },
+        yrsel: function (year) { displayYear(year); },
         transport: function (command) { transport(command); },
         selcid: function (cid) { displayPointById(cid); },
         selyear: function (year) { displayPointByYear(year); },

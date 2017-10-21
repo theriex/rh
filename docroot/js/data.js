@@ -120,7 +120,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
      module: "slavery", name: "Slavery", menuselect:true,
      intro: "Regions, territories, and/or states where Africans and/or Indigenous people were legally held as chattel."},
     {code:"ly",
-     module: "lynch", name: "Lynchings", menuselect:true,
+     module: "lynching", name: "Lynchings", menuselect:true,
      intro: "An overview of lynching numbers in the United States."},
     {code:"mg",
      module: "misceg", name: "Miscegenation", menuselect:true,
