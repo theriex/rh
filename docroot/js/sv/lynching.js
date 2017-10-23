@@ -13,7 +13,7 @@ app.lynching = (function () {
                  //Map SVG and related values
                  ms: {w:0, h:0, tm:20}, //top margin space
                  //Bar chart SVG and related values
-                 bs: {w:0, h:0}},
+                 bs: {w:0, h:0, bi:{}, tmax:0}},
         ani = {},
         //See http://www.chesnuttarchive.org/classroom/lynchingstat.html
         //in particular the notes about totals and "Whites".
@@ -152,6 +152,58 @@ app.lynching = (function () {
                 ["Wyoming", 30, 5, 35]];
 
 
+    function centerPoint (path) {
+        var ptd = {xttl:0, xcount:0, yttl:0, ycount:0};
+        path = path.toLowerCase();
+        path = path.replace(/m/g, "");
+        path = path.replace(/l/g, "");
+        path = path.replace(/z/g, "");
+        //console.log("centerPoint: " + path);
+        path.split(" ").forEach(function (pt) {
+            //console.log("centerPoint: " + pt);
+            if(pt.startsWith("v")) {  //vertical line
+                ptd.yttl += +(pt.slice(1));
+                ptd.ycount += 1; }
+            else if(pt.startsWith("h")) {  //horizontal line
+                ptd.xttl += +(pt.slice(1));
+                ptd.xcount += 1; }
+            else { //x,y coordinate
+                pt = pt.split(",");
+                ptd.xttl += +(pt[0].trim());
+                ptd.xcount += 1; 
+                ptd.yttl = +(pt[1].trim());
+                ptd.ycount += 1; } });
+        return {x:Math.round(ptd.xttl / ptd.xcount),
+                y:Math.round(ptd.yttl / ptd.ycount)};
+    }
+
+
+    function initData () {
+        var ttl = 0;
+        //initialize bar chart data series
+        chart.dat = [];
+        ldty.forEach(function (yrd, idx) {
+            var keys = ldty[0], obj = {};
+            if(idx) {  //skip first line with key values
+                keys.forEach(function (key, idx) {
+                    obj[key] = yrd[idx]; });
+                chart.bs.tmax = Math.max(chart.bs.tmax, obj.total);
+                chart.dat.push(obj); } });
+        //initialize percentages and center points for states
+        chart.pct = {};
+        ldts.forEach(function (st, idx) {
+            if(idx) {
+                ttl += st[3]; } });
+        ldts.forEach(function (st, idx) {
+            if(idx) {
+                chart.pct[st[0]] = {pct:st[3] / ttl}; } });
+        app.svcommon.usmap().forEach(function (state) {
+            if(chart.pct[state.name]) {
+                chart.pct[state.name].id = state.id;
+                chart.pct[state.name].center = centerPoint(state.d); } });
+    }
+
+
     function usmapTAC () {
         var html = [];
         app.svcommon.usmap().forEach(function (state) {
@@ -166,7 +218,50 @@ app.lynching = (function () {
 
 
     function barTAC () {
-        return "";
+        var html, bi = chart.bs.bi;
+        bi.margin = {top:20, right:20, bottom:40, left:40};
+        bi.w = chart.bs.w - bi.margin.right - bi.margin.left;
+        bi.h = chart.bs.h - bi.margin.top - bi.margin.bottom;
+        bi.sx = d3.scaleBand()
+            .rangeRound([0, bi.w]).padding(0.1)
+            .domain(chart.dat.map(function (d) { return d.year; }));
+        bi.sy = d3.scaleLinear()
+            .rangeRound([bi.h, 0])
+            .domain([0, chart.bs.tmax]);
+        html = ["svg", {id:"barsvg", width:chart.bs.w, height:chart.bs.h}];
+        return html;
+    }
+
+
+    function barInit () {
+        var svg = d3.select("#barsvg"), bi = chart.bs.bi;
+        chart.bs.transg = svg.append("g").attr("id", "transg")
+            .attr("transform", "translate(" + bi.margin.left + "," +
+                                              bi.margin.top + ")");
+        chart.bs.transg.append("g").attr("id", "xaxisg")
+            .attr("class", "xaxis")
+            .attr("transform", "translate(0," + bi.h + ")")
+            .call(d3.axisBottom(bi.sx))
+            .selectAll("text")	
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", "-.25em")
+            .attr("transform", function(d) {
+                return "rotate(-65)" 
+            });
+        chart.bs.transg.append("g").attr("id", "yaxisg")
+            .attr("class", "yaxis")
+            .call(d3.axisLeft(bi.sy).ticks(10));
+        chart.bs.transg.selectAll(".bar")
+            .data(chart.dat)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .style("fill", "brown")
+            .attr("x", function(d) { return chart.bs.bi.sx(d.year); })
+            .attr("y", function(d) { return chart.bs.bi.sy(d.total); })
+            .attr("width", chart.bs.bi.sx.bandwidth())
+            .attr("height", function(d) { 
+                return chart.bs.bi.h - chart.bs.bi.sy(d.total); });
     }
 
 
@@ -200,6 +295,7 @@ app.lynching = (function () {
             [["div", {id:"mapdiv"}, usmapTAC()],
              ["div", {id:"bardiv"}, barTAC()],
              ["div", {id:"lytdiv"}]]));
+        barInit();
         displayTitle();
         mid = {x: Math.round(tl.width2 / 2) + tl.margin.left,
                y: Math.round(tl.height / 2) + tl.margin.top};
@@ -228,6 +324,7 @@ app.lynching = (function () {
         tl = timeline || app.linear.tldata();
         endf = endfunc || app.dlg.close;
         sv.startDate = new Date();
+        initData();
         initDisplayElements();
         initAnimationSequence();
     }
