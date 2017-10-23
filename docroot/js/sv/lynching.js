@@ -178,17 +178,52 @@ app.lynching = (function () {
     }
 
 
+    function makeYearDataObject (ldtr) {
+        var obj = {};
+        ldty[0].forEach(function (key, idx) {
+            obj[key] = ldtr[idx]; });
+        return obj;
+    }
+
+
+    function groupDataYears (dat, gc, limit) {
+        var grps = [], i, cgc = gc, cs = null, rem;
+        limit = limit || dat.length;
+        rem = dat.length - limit;
+        for(i = dat.length - 1; i >= 0 && limit > 0; i -= 1) {
+            if(!cs) {  //use current year data as grouping accumulator
+                cgc = gc;
+                cs = dat[i];
+                cs.year = String(cs.year).slice(-2); }
+            else {  //add current year data to accumulator
+                ldty[0].forEach(function (key, idx) {
+                    if(idx) {  //skip year field
+                        cs[key] += dat[i][key]; } }); }
+            limit -= 1;
+            cgc -= 1;
+            if(cgc <= 0 || limit <= 0 || i === 0) {
+                chart.bs.tmax = Math.max(chart.bs.tmax, cs.total);
+                cs.year = String(dat[i].year).slice(0,4) + "-" + cs.year;
+                grps.unshift(cs);
+                cs = null; } }
+        if(rem) {
+            grps = dat.slice(0, rem).concat(grps); }
+        return grps;
+    }
+
+
     function initData () {
         var ttl = 0;
         //initialize bar chart data series
         chart.dat = [];
         ldty.forEach(function (yrd, idx) {
-            var keys = ldty[0], obj = {};
+            var obj;
             if(idx) {  //skip first line with key values
-                keys.forEach(function (key, idx) {
-                    obj[key] = yrd[idx]; });
+                obj = makeYearDataObject(yrd);
                 chart.bs.tmax = Math.max(chart.bs.tmax, obj.total);
                 chart.dat.push(obj); } });
+        chart.dat = groupDataYears(chart.dat, 5, 30);
+        chart.dat = groupDataYears(chart.dat, 5);
         //initialize percentages and center points for states
         chart.pct = {};
         ldts.forEach(function (st, idx) {
