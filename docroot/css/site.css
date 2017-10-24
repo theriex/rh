@@ -172,3 +172,4 @@ circle { clip-path: url(../#clip); }
 #lytdiv { position:absolute; left:0px; top:0px; }
 .yaxis .tick line { visibility:visible; }
 .xaxis .tick line { visibility:visible; }
+#lytransg { opacity:0.8; }

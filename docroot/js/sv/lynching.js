@@ -13,7 +13,7 @@ app.lynching = (function () {
                  //Map SVG and related values
                  ms: {w:0, h:0, tm:20}, //top margin space
                  //Bar chart SVG and related values
-                 bs: {w:0, h:0, bi:{}, tmax:0}},
+                 bs: {w:0, h:0, bi:{}, tmax:0, clkto:null}},
         ani = {},
         //See http://www.chesnuttarchive.org/classroom/lynchingstat.html
         //in particular the notes about totals and "Whites".
@@ -254,7 +254,7 @@ app.lynching = (function () {
 
     function barTAC () {
         var html, bi = chart.bs.bi;
-        bi.margin = {top:20, right:20, bottom:40, left:40};
+        bi.margin = {top:50, right:20, bottom:30, left:60};
         bi.w = chart.bs.w - bi.margin.right - bi.margin.left;
         bi.h = chart.bs.h - bi.margin.top - bi.margin.bottom;
         bi.sx = d3.scaleBand()
@@ -262,41 +262,98 @@ app.lynching = (function () {
             .domain(chart.dat.map(function (d) { return d.year; }));
         bi.sy = d3.scaleLinear()
             .rangeRound([bi.h, 0])
-            .domain([0, chart.bs.tmax]);
+            .domain([chart.bs.tmax, 0]);
         html = ["svg", {id:"barsvg", width:chart.bs.w, height:chart.bs.h}];
         return html;
     }
 
 
+    function hideSelectionBars () {
+        chart.dat.forEach(function (ignore, idx) {
+            d3.select("#bar" + idx + "column").style("opacity", 0.0); });
+    }
+
+
+    function mouseover () {
+        var rid = this.id;
+        d3.select("#" + rid).style("opacity", 0.4);
+    }
+
+
+    function rectclick (rid) {
+        var selidx;
+        if(chart.bs.clkto) {
+            clearTimeout(chart.bs.clkto);
+            chart.bs.clkto = null; }
+        rid = rid || this.id;
+        selidx = +(rid.match(/bar(\d+)column/)[1]);
+        console.log("rectclick selidx: " + selidx);
+        chart.dat.forEach(function (bd, idx) {
+            var opa = 0.0;
+            if(idx < selidx) {
+                opa = 0.35; }
+            else if(idx === selidx) {
+                opa = 1.0; }
+            d3.select("#bar" + idx + "other")
+                .transition().duration(1000).style("opacity", opa);
+            d3.select("#bar" + idx + "black")
+                .transition().duration(1000).style("opacity", opa);
+            d3.select("#bar" + idx + "column")
+                .transition().duration(1000).style("opacity", 0.0); });
+        selidx += 1;
+        if(selidx <= chart.dat.length) {
+            chart.bs.clkto = setTimeout(function () { 
+                rectclick("bar" + selidx + "column"); },
+                                        2500); }
+    }
+
+
     function barInit () {
         var svg = d3.select("#barsvg"), bi = chart.bs.bi;
-        chart.bs.transg = svg.append("g").attr("id", "transg")
+        chart.bs.transg = svg.append("g").attr("id", "lytransg")
             .attr("transform", "translate(" + bi.margin.left + "," +
                                               bi.margin.top + ")");
         chart.bs.transg.append("g").attr("id", "xaxisg")
             .attr("class", "xaxis")
-            .attr("transform", "translate(0," + bi.h + ")")
-            .call(d3.axisBottom(bi.sx))
-            .selectAll("text")	
-            .style("text-anchor", "end")
-            .attr("dx", "-.8em")
-            .attr("dy", "-.25em")
+            .call(d3.axisTop(bi.sx))
+            .selectAll("text")
+            .style("text-anchor", "start")
+            .attr("dx", "0.55em")
+            .attr("dy", "1.1em")
             .attr("transform", function(d) {
-                return "rotate(-65)" 
-            });
+                return "rotate(-65)" });
         chart.bs.transg.append("g").attr("id", "yaxisg")
             .attr("class", "yaxis")
             .call(d3.axisLeft(bi.sy).ticks(10));
-        chart.bs.transg.selectAll(".bar")
-            .data(chart.dat)
-            .enter().append("rect")
-            .attr("class", "bar")
-            .style("fill", "brown")
-            .attr("x", function(d) { return chart.bs.bi.sx(d.year); })
-            .attr("y", function(d) { return chart.bs.bi.sy(d.total); })
-            .attr("width", chart.bs.bi.sx.bandwidth())
-            .attr("height", function(d) { 
-                return chart.bs.bi.h - chart.bs.bi.sy(d.total); });
+        chart.dat.forEach(function (bd, idx) {
+            chart.bs.transg.append("rect")
+                .attr("id", "bar" + idx + "other")
+                .style("fill", "red")
+                .style("opacity", 0.0)
+                .attr("x", chart.bs.bi.sx(bd.year))
+                .attr("y", 0)
+                .attr("width", chart.bs.bi.sx.bandwidth())
+                .attr("height", chart.bs.bi.sy(bd.other));
+            chart.bs.transg.append("rect")
+                .attr("id", "bar" + idx + "black")
+                .style("fill", "brown")
+                .style("opacity", 0.0)
+                .attr("x", chart.bs.bi.sx(bd.year))
+                .attr("y", chart.bs.bi.sy(bd.other))
+                .attr("width", chart.bs.bi.sx.bandwidth())
+                .attr("height", chart.bs.bi.sy(bd.black));
+            chart.bs.transg.append("rect")
+                .attr("id", "bar" + idx + "column")
+                .style("fill", "#666")
+                .style("opacity", 0.0)
+                .attr("x", chart.bs.bi.sx(bd.year))
+                .attr("y", 0)
+                .attr("width", chart.bs.bi.sx.bandwidth())
+                .attr("height", chart.bs.bi.sy(chart.bs.tmax))
+                .on("mouseover", mouseover)
+                .on("mouseout", hideSelectionBars)
+                .on("click", rectclick);
+        });
     }
 
 
@@ -315,7 +372,7 @@ app.lynching = (function () {
         tg.transition().delay(delay).duration(duration)
             .attr("opacity", 0.0)
             .remove();
-        setTimeout(function () { app.lynching.yrsel(ldty[1][0]); },
+        setTimeout(function () { rectclick("bar0column"); },
                    delay + duration - 500);
     }
 
