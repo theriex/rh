@@ -14,7 +14,8 @@ app.lynching = (function () {
                               hover:"#d3aaaa"}},
                  //Map SVG and related values
                  ms: {w:0, h:0, tm:20,  //top margin space
-                      vbw: 959, vbh: 593},  //viewbox width and height
+                      vbw:959, vbh:593,  //viewbox width and height
+                      minr:2},  //min radius for circle indicators
                  //Bar chart SVG and related values
                  bs: {w:0, h:0, bi:{}, tmax:0, clkto:null}},
         ani = {},
@@ -155,186 +156,6 @@ app.lynching = (function () {
                 ["Wyoming", 30, 5, 35]];
 
 
-    function parseAccumPoint (vs, state, pt) {
-        if(state.co && ((state.si + 1) % (state.co + 1) !== 0)) {
-            //pt is a control point for a Bezier curve or an Arc, not a vertex.
-            return; }
-        pt = pt.toLowerCase().trim();
-        if(pt.endsWith("z")) {
-            pt = pt.slice(0, -1);
-            if(!pt) {
-                return; } }
-        pt = pt.split(",");
-        //set the prevx/y values so subsequent single parameter calls can
-        //fill out the appropriate opposing axis coordinate.
-        if(!state.offset) {
-            state.prevx = 0;
-            state.prevy = 0; }
-        state.prevx += +(pt[0].trim());
-        state.prevy += +(pt[1].trim());
-        pt = {x:state.prevx, y:state.prevy};
-        vs.push(pt);
-        return pt;
-    }
-
-
-    function pathToVertexCoordinates (path) {
-        //https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d
-        var vs = [], temp = {},
-            state = {prevx:0, prevy:0, offset:false, si:0, co:0}
-        //ensure command letters are clumped with their first coordinate
-        path = path.replace(/([MmLlQqCcTtSsAa])\s+/g, "$1");
-        path.split(" ").forEach(function (pt, idx) {
-            state.si += 1;  //increment current command series index
-            if(pt.startsWith("M")) {  //moveto (absolute)
-                state.offset = false;
-                state.si = 1;  //reset series index
-                state.co = 0;  //no coordinate offset
-                pt = parseAccumPoint(vs, state, pt.slice(1));
-                //subsequent coordinates are relative by default
-                state.offset = true; }
-            else if(pt.startsWith("m")) {  //moveto (relative)
-                state.offset = true;
-                state.si = 1;
-                state.co = 0;
-                parseAccumPoint(vs, state, pt.slice(1)); }
-            else if(pt.startsWith("L")) {  //lineto (absolute)
-                state.offset = false;
-                state.si = 1;
-                state.co = 0;
-                parseAccumPoint(vs, state, pt.slice(1)); }
-            else if(pt.startsWith("l")) {  //lineto (relative)
-                state.offset = true;
-                state.si = 1;
-                state.co = 0;
-                parseAccumPoint(vs, state, pt.slice(1)); }
-            else if(pt.startsWith("Q")) {  //curveto (quadratic, absolute)
-                state.offset = false;
-                state.si = 1;
-                state.co = 1;  //second coordinate is the actual value
-                parseAccumPoint(vs, state, pt.slice(1)); }
-            else if(pt.startsWith("q")) {  //curveto (quadratic, relative)
-                state.offset = true;
-                state.si = 1;
-                state.co = 1;
-                parseAccumPoint(vs, state, pt.slice(1)); }
-            else if(pt.startsWith("C")) {  //curveto (cubic, absolute)
-                state.offset = false;
-                state.si = 1;
-                state.co = 2;  //third coordinate is the actual value
-                parseAccumPoint(vs, state, pt.slice(1)); }
-            else if(pt.startsWith("c")) {  //curveto (cubic, relative)
-                state.offset = true;
-                state.si = 1;
-                state.co = 2;
-                parseAccumPoint(vs, state, pt.slice(1)); }
-            //There are no curve continuation commands in the current dataset
-            //but assuming that these are also series, not one-shot.
-            else if(pt.startsWith("T")) {
-                state.offset = false;
-                state.si = 1;
-                state.co = 0;
-                parseAccumPoint(vs, state, pt.slice(1)); }
-            else if(pt.startsWith("t")) {
-                state.offset = true;
-                state.si = 1;
-                state.co = 0;
-                parseAccumPoint(vs, state, pt.slice(1)); }
-            else if(pt.startsWith("S")) {
-                state.offset = false;
-                state.si = 1;
-                state.co = 1;
-                parseAccumPoint(vs, state, pt.slice(1)); }
-            else if(pt.startsWith("s")) {
-                state.offset = true;
-                state.si = 1;
-                state.co = 1;
-                parseAccumPoint(vs, state, pt.slice(1)); }
-            //horizontal and vertical lines are one-shot commands.  They are
-            //typically followed by a standard coordinate pair, which may not
-            //be prefixed with an explicit lineto e.g. v-1.8 l0.2,-0.8
-            else if(pt.startsWith("H")) {  //horizontal line (absolute)
-                temp = {offset:state.offset, co:state.co};
-                state.offset = false;
-                state.co = 0;
-                parseAccumPoint(vs, state, pt.slice(1) + "," + state.prevy);
-                state.offset = temp.offset;
-                state.co = temp.co; }
-            else if(pt.startsWith("h")) {  //horizontal line (relative)
-                temp = {offset:state.offset, co:state.co};
-                state.offset = true;
-                state.co = 0;
-                parseAccumPoint(vs, state, pt.slice(1) + ",0");
-                state.offset = temp.offset;
-                state.co = temp.co; }
-            else if(pt.startsWith("V")) {  //vertical line (absolute)
-                temp = {offset:state.offset, co:state.co};
-                state.offset = false;
-                state.co = 0;
-                parseAccumPoint(vs, state, state.prevx + "," + pt.slice(1));
-                state.offset = temp.offset;
-                state.co = temp.co; }
-            else if(pt.startsWith("v")) {  //vertical line (relative)
-                temp = {offset:state.offset, co:state.co};
-                state.offset = true;
-                state.co = 0;
-                parseAccumPoint(vs, state, "0," + pt.slice(1));
-                state.offset = temp.offset;
-                state.co = temp.co; }
-            else {  //no command, regular coordinate pair
-                parseAccumPoint(vs, state, pt); } });
-        return vs;
-    }
-
-
-    function centerPoint (path, method) {
-        var ptd = {xmin:1000000, xmax:0, ymin:1000000, ymax:0,
-                   xsum:0, xcount:0, ysum:0, ycount:0,
-                   xvals:[], yvals:[],
-                   str:""};
-        method = method || "mean";
-        path = pathToVertexCoordinates(path);
-        path.forEach(function (pt) {
-            ptd.str += (ptd.str? " " : "") + pt.x.toFixed(2) + 
-                                       "," + pt.y.toFixed(2);
-            ptd.xvals.push(pt.x);
-            ptd.yvals.push(pt.y);
-            ptd.xmin = Math.min(ptd.xmin, pt.x);
-            ptd.xmax = Math.max(ptd.xmax, pt.x);
-            ptd.ymin = Math.min(ptd.ymin, pt.y);
-            ptd.ymax = Math.max(ptd.ymax, pt.y); 
-            ptd.xsum += pt.x;
-            ptd.xcount += 1;
-            ptd.ysum += pt.y;
-            ptd.ycount += 1; });
-        switch(method) {
-        case "median":
-            ptd.xvals.sort(function (a, b) { return a - b; });
-            ptd.xmid = Math.floor(ptd.xvals.length / 2);
-            if(ptd.xvals.length % 2) {
-                ptd.x = ptd.xvals[ptd.xmid]; }
-            else {
-                ptd.x = (ptd.xvals[ptd.xmid - 1] + ptd.xvals[ptd.xmid]) / 2; }
-            ptd.yvals.sort(function (a, b) { return a - b; });
-            ptd.ymid = Math.floor(ptd.yvals.length / 2);
-            if(ptd.yvals.length % 2) {
-                ptd.y = ptd.yvals[ptd.ymid]; }
-            else {
-                ptd.y = (ptd.yvals[ptd.ymid - 1] + ptd.yvals[ptd.ymid]) / 2; }
-            return {x:ptd.x, y:ptd.y, ps:ptd.str};
-        case "range":
-            return {x:ptd.xmin + ((ptd.xmax - ptd.xmin) / 2),
-                    y:ptd.ymin + ((ptd.ymax - ptd.ymin) / 2),
-                    ps:ptd.str};
-        case "mean":
-            return {x:ptd.xsum / ptd.xcount,
-                    y:ptd.ysum / ptd.ycount,
-                    ps:ptd.str};
-        default:
-            console.log("Unknown centerPoint method: " + method); }
-    }
-
-
     function makeRowObject (keyrow, datarow) {
         var obj = {};
         keyrow.forEach(function (key, idx) {
@@ -402,14 +223,13 @@ app.lynching = (function () {
         app.svcommon.usmap().forEach(function (state) {
             var pt, stob;
             if(chart.pct[state.name]) {
-                pt = centerPoint(state.d);
-                // console.log(state.id + " x:" + pt.x + ", y:" + pt.y +
-                //             " [" + pt.ps + "]");
                 stob = chart.pct[state.name];
+                pt = state.pinpt.split(",");
+                pt = {x:+(pt[0]), y:+(pt[1])};
+                stob.center = pt;
                 // console.log(state.id + " opc: " + stob.opc + 
                 //             ", bpc: " + stob.bpc);
-                stob.id = state.id;
-                stob.center = pt; } });
+                stob.id = state.id; } });
     }
 
 
@@ -421,7 +241,7 @@ app.lynching = (function () {
         html = ["svg", {id:"mapsvg", width:chart.ms.w, height:chart.ms.h,
                         viewBox:"0 0 " + chart.ms.vbw + " " + chart.ms.vbh,
                         preserveAspectRatio:"none"},
-                ["g", {id:"mappaths"},
+                ["g", {id:"mappathsg"},
                  html]];
         return html;
     }
@@ -465,7 +285,7 @@ app.lynching = (function () {
             bmr = (barsumttl / grandttl) * maxr;
         Object.keys(chart.pct).forEach(function (name) {
             var stob = chart.pct[name],
-                stmr = Math.max(1, stob.tpc * bmr);
+                stmr = Math.max(chart.ms.minr, stob.tpc * bmr);
             d3.select("#circ" + stob.id + "other")
                 .transition().duration(1200).attr("r", stmr);
             d3.select("#circ" + stob.id + "black")
@@ -550,10 +370,36 @@ app.lynching = (function () {
     }
 
 
+    function mapdebug () {
+        d3.select("#mapsvg").on("mousemove", function () {
+            var coords = d3.mouse(this);
+            d3.select("#coordtxt").text(Math.round(coords[0]) + "," + 
+                                        Math.round(coords[1])); });
+        // Show the path vertices for a given state
+        // app.svcommon.usmap().forEach(function (state) {
+        //     var vs;
+        //     if(state.id === "KS") {
+        //         vs = app.svcommon.pathToVertices(state.d);
+        //         vs.forEach(function (pt) {
+        //             chart.ms.circg.append("circle")
+        //                 .style("fill", "blue")
+        //                 .attr("cx", pt.x)
+        //                 .attr("cy", pt.y)
+        //                 .attr("r", 2); }); } });
+    }
+
+
     function circInit () {
         if(!chart.ms.circg) {
             chart.ms.circg = d3.select("#mapsvg").append("g")
                 .attr("id", "lycircg"); }
+        chart.ms.circg.append("text")
+            .attr("id", "coordtxt")
+            .attr("text-anchor", "start")
+            .attr("x", 800)
+            .attr("y", 500)
+            .attr("font-size", 10)
+            .text("start");
         Object.keys(chart.pct).forEach(function (key) {
             var stob = chart.pct[key];
             chart.ms.circg.append("circle")
@@ -562,14 +408,14 @@ app.lynching = (function () {
                 //.style("opacity", 0.0)
                 .attr("cx", stob.center.x)
                 .attr("cy", stob.center.y)
-                .attr("r", 1);
+                .attr("r", chart.ms.minr);
             chart.ms.circg.append("circle")
                 .attr("id", "circ" + stob.id + "black")
                 .style("fill", chart.colors.black)
                 //.style("opacity", 0.0)
                 .attr("cx", stob.center.x)
                 .attr("cy", stob.center.y)
-                .attr("r", 1); 
+                .attr("r", chart.ms.minr); 
             // chart.ms.circg.append("text")
             //     .attr("text-anchor", "middle")
             //     .attr("x", stob.center.x)
@@ -578,16 +424,7 @@ app.lynching = (function () {
             //     .attr("font-weight", "bold")
             //     .text(stob.id);
         });
-        // app.svcommon.usmap().forEach(function (state) {
-        //     var vs;
-        //     if(state.id === "KS") {
-        //         vs = pathToVertexCoordinates(state.d);
-        //         vs.forEach(function (pt) {
-        //             chart.ms.circg.append("circle")
-        //                 .style("fill", "blue")
-        //                 .attr("cx", pt.x)
-        //                 .attr("cy", pt.y)
-        //                 .attr("r", 2); }); } });
+        mapdebug();
     }
 
 

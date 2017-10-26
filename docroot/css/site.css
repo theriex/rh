@@ -173,4 +173,4 @@ circle { clip-path: url(../#clip); }
 .yaxis .tick line { visibility:visible; }
 .xaxis .tick line { visibility:visible; }
 #lytransg { opacity:0.8; }
-#lycircg { opacity:0.7; }
+#lycircg { opacity:0.5; }
