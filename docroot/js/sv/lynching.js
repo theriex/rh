@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge, this */
+/*jslint browser, multivar, white, fudge, this, for */
 /*global app, window, jt, d3 */
 
 app.lynching = (function () {
@@ -17,8 +17,8 @@ app.lynching = (function () {
                       vbw:959, vbh:593,  //viewbox width and height
                       minr:2},  //min radius for circle indicators
                  //Bar chart SVG and related values
-                 bs: {w:0, h:0, bi:{}, tmax:0, clkto:null}},
-        ani = {},
+                 bs: {w:0, h:0, bi:{}, tmax:0, moa:false, selidx:0}},
+        ani = {idx:0, pts:[], shto:null},
         //See http://www.chesnuttarchive.org/classroom/lynchingstat.html
         //in particular the notes about totals and "Whites".
         ldty = [["year", "other", "black", "total"],
@@ -172,7 +172,8 @@ app.lynching = (function () {
             if(!cs) {  //use current year data as grouping accumulator
                 cgc = gc;
                 cs = dat[i];
-                cs.year = String(cs.year).slice(-2); }
+                cs.date = String(cs.year);  //used for sorting with data points
+                cs.year = cs.date.slice(-2); }
             else {  //add current year data to accumulator
                 ldty[0].forEach(function (key, idx) {
                     if(idx) {  //skip year field
@@ -181,7 +182,8 @@ app.lynching = (function () {
             cgc -= 1;
             if(cgc <= 0 || limit <= 0 || i === 0) {
                 chart.bs.tmax = Math.max(chart.bs.tmax, cs.total);
-                cs.year = String(dat[i].year).slice(0,4) + "-" + cs.year;
+                cs.startYear = String(dat[i].year).slice(0,4);
+                cs.year = cs.startYear + "-" + cs.year;
                 grps.unshift(cs);
                 cs = null; } }
         if(rem) {
@@ -190,23 +192,31 @@ app.lynching = (function () {
     }
 
 
-    function initData () {
-        var ttlo = 0, ttlb = 0, ttla = 0;
+    function initBarChartDataSeries () {
+        var ttlo = 0, ttlb = 0;
         //initialize bar chart data series
         chart.dat = [];
         ldty.forEach(function (yrd, idx) {
             var obj;
             if(idx) {  //skip first line with key values
                 obj = makeRowObject(ldty[0], yrd);
+                obj.startYear = String(obj.year);
+                obj.endYear = String(obj.year);
                 chart.bs.tmax = Math.max(chart.bs.tmax, obj.total);
                 chart.dat.push(obj); } });
         chart.dat = groupDataYears(chart.dat, 5, 30);
         chart.dat = groupDataYears(chart.dat, 5);
-        chart.dat.forEach(function (bd) {
+        chart.dat.forEach(function (bd, idx) {
+            bd.baridx = idx;  //for showNextPoint
             ttlo += bd.other;
             ttlb += bd.black;
             bd.sumo = ttlo;
             bd.sumb = ttlb; });
+    }
+
+
+    function initStatePercentages () {
+        var ttla = 0;
         //initialize percentages and center points for states
         chart.pct = {};
         ldts.forEach(function (st, idx) {
@@ -233,11 +243,64 @@ app.lynching = (function () {
     }
 
 
+    function lynchingDefHTML (idx) {
+        var crit = [
+            {p:"There must be legal evidence that a person was killed.",
+             s:"If not killed, or no body found - not counted."},
+            {p:"That person must have met death illegally.",
+             s:"If accident, or self defense - not counted."},
+            {p:"A group of three or more persons must have participated in the killing.",
+             s:"Murder by one or two - not counted."},
+            {p:"The group must have acted under the pretext of service to justice, race or tradition."}], i, html = "";
+        for(i = 0; i <= idx; i += 1) {
+            html += jt.tac2html(
+                ["li", ["div", {cla:"lynchcrititemdiv"},
+                        [["div", {cla:"lynchcritpdiv"}, crit[i].p],
+                         ["div", {cla:"lynchcritsdiv"}, crit[i].s]]]]); }
+        html = jt.tac2html([["div", {cla:"lynchcrittdiv"}, "Lynching Criteria"],
+                            ["ol", {id:"lynchritol"}, html]]);
+        return html;
+    }
+
+
+    function initShowPoints () {
+        ani.pts.push({date:0, text:lynchingDefHTML(0), delay:6000});
+        ani.pts.push({date:1, text:lynchingDefHTML(1), delay:6000});
+        ani.pts.push({date:2, text:lynchingDefHTML(2), delay:6000});
+        ani.pts.push({date:3, text:lynchingDefHTML(3), delay:6000});
+        sv.pts.forEach(function (pt) {
+            ani.pts.push(
+                {date:pt.date, delay:Math.round(38 * pt.text.length),
+                 text:jt.tac2html(
+                     [["div", {cla:"lynchcrittdiv"}, pt.date],
+                      ["div", {cla:"lynchcrititemdiv"}, pt.text]])}); });
+        ani.pts = ani.pts.concat(chart.dat);
+        ani.pts.sort(function (a, b) { return (+(a.date)) - (+(b.date)); });
+        ani.pts.push({date:"", delay:6000, text:jt.tac2html(
+            [["div", {cla:"lynchcrittdiv"}, ""],
+             ["div", {cla:"lynchcrititemdiv"},
+              "Lynchings have occurred beyond the timeframe of this dataset."
+             ]])});
+        ani.pts.push({date:"", delay:4000, text:jt.tac2html(
+            [["div", {cla:"lynchcrittdiv"}, ""],
+             ["div", {cla:"lynchcrititemdiv"},
+              "Click any time period to show totals at that time."
+             ]])});
+    }
+
+
+    function initData () {
+        initBarChartDataSeries();
+        initStatePercentages();
+        initShowPoints();
+    }
+
+
     function usmapTAC () {
         var html = [];
         app.svcommon.usmap().forEach(function (state) {
             html.push(["path", {id:state.id, d:state.d,
-                                fill:chart.colors.map.neutral}]) });
+                                fill:chart.colors.map.neutral}]); });
         html = ["svg", {id:"mapsvg", width:chart.ms.w, height:chart.ms.h,
                         viewBox:"0 0 " + chart.ms.vbw + " " + chart.ms.vbh,
                         preserveAspectRatio:"none"},
@@ -249,7 +312,7 @@ app.lynching = (function () {
 
     function barTAC () {
         var html, bi = chart.bs.bi;
-        bi.margin = {top:50, right:20, bottom:30, left:60};
+        bi.margin = {top:50, right:20, bottom:30, left:30};
         bi.w = chart.bs.w - bi.margin.right - bi.margin.left;
         bi.h = chart.bs.h - bi.margin.top - bi.margin.bottom;
         bi.sx = d3.scaleBand()
@@ -271,7 +334,8 @@ app.lynching = (function () {
 
     function mouseover () {
         var rid = this.id;
-        d3.select("#" + rid).style("opacity", 0.4);
+        if(chart.bs.moa) {
+            d3.select("#" + rid).style("opacity", 0.4); }
     }
 
 
@@ -294,18 +358,17 @@ app.lynching = (function () {
 
 
     function rectclick (rid) {
-        var selidx;
-        if(chart.bs.clkto) {
-            clearTimeout(chart.bs.clkto);
-            chart.bs.clkto = null; }
         rid = rid || this.id;
-        selidx = +(rid.match(/bar(\d+)column/)[1]);
-        console.log("rectclick selidx: " + selidx);
+        chart.bs.selidx = +(rid.match(/bar(\d+)column/)[1]);
+        console.log("rectclick selidx: " + chart.bs.selidx);
         chart.dat.forEach(function (bd, idx) {
             var opa = 0.0;
-            if(idx < selidx) {
+            if(idx < chart.bs.selidx) {
                 opa = 0.35; }
-            else if(idx === selidx) {
+            else if(idx === chart.bs.selidx) {
+                d3.select("#lysumtotaltext")
+                    .text(chart.dat[0].startYear + "-" + bd.endYear +
+                          ": " + (bd.sumo + bd.sumb));
                 opa = 1.0; }
             d3.select("#bar" + idx + "other")
                 .transition().duration(1000).style("opacity", opa);
@@ -313,12 +376,8 @@ app.lynching = (function () {
                 .transition().duration(1000).style("opacity", opa);
             d3.select("#bar" + idx + "column")
                 .transition().duration(1000).style("opacity", 0.0); });
-        redrawCircles(chart.dat[selidx]);
-        selidx += 1;
-        if(selidx <= chart.dat.length) {
-            chart.bs.clkto = setTimeout(function () { 
-                rectclick("bar" + selidx + "column"); },
-                                        2500); }
+        redrawCircles(chart.dat[chart.bs.selidx]);
+        chart.bs.moa = true;  //activate mouseover after first rect displayed
     }
 
 
@@ -334,8 +393,7 @@ app.lynching = (function () {
             .style("text-anchor", "start")
             .attr("dx", "0.55em")
             .attr("dy", "1.1em")
-            .attr("transform", function(d) {
-                return "rotate(-65)" });
+            .attr("transform", function() { return "rotate(-65)"; });
         chart.bs.transg.append("g").attr("id", "yaxisg")
             .attr("class", "yaxis")
             .call(d3.axisLeft(bi.sy).ticks(10));
@@ -371,10 +429,10 @@ app.lynching = (function () {
 
 
     function mapdebug () {
-        d3.select("#mapsvg").on("mousemove", function () {
-            var coords = d3.mouse(this);
-            d3.select("#coordtxt").text(Math.round(coords[0]) + "," + 
-                                        Math.round(coords[1])); });
+        // d3.select("#mapsvg").on("mousemove", function () {
+        //     var coords = d3.mouse(this);
+        //     d3.select("#coordtxt").text(Math.round(coords[0]) + "," + 
+        //                                 Math.round(coords[1])); });
         // Show the path vertices for a given state
         // app.svcommon.usmap().forEach(function (state) {
         //     var vs;
@@ -393,13 +451,19 @@ app.lynching = (function () {
         if(!chart.ms.circg) {
             chart.ms.circg = d3.select("#mapsvg").append("g")
                 .attr("id", "lycircg"); }
+        // chart.ms.circg.append("text")
+        //     .attr("id", "coordtxt")
+        //     .attr("text-anchor", "start")
+        //     .attr("x", 800)
+        //     .attr("y", 500)
+        //     .attr("font-size", 10)
+        //     .text("start");
         chart.ms.circg.append("text")
-            .attr("id", "coordtxt")
+            .attr("id", "lysumtotaltext")
             .attr("text-anchor", "start")
-            .attr("x", 800)
-            .attr("y", 500)
-            .attr("font-size", 10)
-            .text("start");
+            .attr("x", 490)
+            .attr("y", 550)
+            .text(" ");
         Object.keys(chart.pct).forEach(function (key) {
             var stob = chart.pct[key];
             chart.ms.circg.append("circle")
@@ -428,6 +492,26 @@ app.lynching = (function () {
     }
 
 
+    function showNextPoint () {
+        var pt = ani.pts[ani.idx];
+        ani.idx += 1;
+        if(ani.shto) {
+            clearTimeout(ani.shto);
+            ani.shto = null; }
+        if(!pt) {  //call to clear activity and allow exit
+            jt.byId("lytdiv").style.display = "none";
+            rectclick("bar" + chart.dat.length + "column"); }
+        else if(pt.total) {  //show bar
+            jt.byId("lytdiv").style.display = "none";
+            rectclick("bar" + pt.baridx + "column"); }
+        else {
+            jt.out("lytdiv", pt.text);
+            jt.byId("lytdiv").style.display = "block"; }
+        if(ani.idx <= ani.pts.length) {
+            ani.shto = setTimeout(showNextPoint, pt.delay || 2500); }
+    }
+
+
     function displayTitle () {
         var mid, tg, delay = 3500, duration = 2000;
         mid = {x: Math.round(0.5 * chart.ms.vbw),
@@ -443,8 +527,7 @@ app.lynching = (function () {
         tg.transition().delay(delay).duration(duration)
             .attr("opacity", 0.0)
             .remove();
-        setTimeout(function () { rectclick("bar0column"); },
-                   delay + duration - 500);
+        setTimeout(showNextPoint, delay + duration - 500);
     }
 
 
@@ -478,11 +561,6 @@ app.lynching = (function () {
     }
 
 
-    function initAnimationSequence () {
-        //???
-    }
-
-
     function display (suppvis, timeline, endfunc) {
         sv = suppvis || app.lev.suppVisByCode("sl");
         tl = timeline || app.linear.tldata();
@@ -490,7 +568,6 @@ app.lynching = (function () {
         sv.startDate = new Date();
         initData();
         initDisplayElements();
-        initAnimationSequence();
     }
 
 
@@ -515,14 +592,6 @@ app.lynching = (function () {
         //TODO: need to init data points for each year so they show up in
         //the main display at start.
         display: function (sv, tl, endf) { display(sv, tl, endf); },
-        yrsel: function (year) { displayYear(year); },
-        transport: function (command) { transport(command); },
-        selcid: function (cid) { displayPointById(cid); },
-        selyear: function (year) { displayPointByYear(year); },
-        stclick: function (stid) { stateClick(stid); },
-        stunclick: function (stid) { stateUnclick(stid); },
-        stmouseover: function (stid) { stateMouseOver(stid); },
-        stmouseout: function (stid) { stateMouseOut(stid); },
         finish: function () { finish(); }
     };
 }());

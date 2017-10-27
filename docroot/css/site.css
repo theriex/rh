@@ -169,8 +169,15 @@ circle { clip-path: url(../#clip); }
 /* sv2: lynching */
 #mapdiv { position:absolute; left:0px; top:0px; }
 #bardiv { position:absolute; left:0px; top:0px; }
-#lytdiv { position:absolute; left:0px; top:0px; }
+#lytdiv { position:absolute; left:0px; top:0px; padding:10px;
+  background-image:url('../img/bleachscrub.png'); font-size:medium; }
 .yaxis .tick line { visibility:visible; }
 .xaxis .tick line { visibility:visible; }
 #lytransg { opacity:0.8; }
 #lycircg { opacity:0.5; }
+.lynchcrittdiv { text-align:center; font-size:x-large; font-weight:bold; }
+.lynchcritpdiv { font-size:medium; }
+.lynchcritsdiv { font-size:small; font-style:italic; }
+#lynchritol { margin:5px 2px; padding:2px 0px 2px 14px; }
+.lynchcrititemdiv { background-image:url('../img/bleachscrub.png'); }
+#lysumtotaltext { font-size:28px; font-weight:bold; }
