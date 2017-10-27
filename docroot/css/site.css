@@ -181,3 +181,4 @@ circle { clip-path: url(../#clip); }
 #lynchritol { margin:5px 2px; padding:2px 0px 2px 14px; }
 .lynchcrititemdiv { background-image:url('../img/bleachscrub.png'); }
 #lysumtotaltext { font-size:28px; font-weight:bold; }
+#lyxdiv { position:absolute; right:0px; top:0px; padding:8px 10px; }

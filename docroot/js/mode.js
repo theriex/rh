@@ -59,14 +59,14 @@ app.mode = (function () {
         fetchpoints = app.lev.getNextPoints();
         //TEST: Uncomment if specific points for testing at startup
         //      slavery:B2, lynching:B120.
-        if(!ms.teststart) {
-            ms.teststart = true;
-            var testcids = ["B120"];
-            ms.skipstart = true;
-            fetchpoints = [];
-            app.data.pts.forEach(function (pt) {
-                if(testcids.indexOf(pt.cid) >= 0) {
-                    fetchpoints.push(pt); } }); }
+        // if(!ms.teststart) {
+        //     ms.teststart = true;
+        //     var testcids = ["B120"];
+        //     ms.skipstart = true;
+        //     fetchpoints = [];
+        //     app.data.pts.forEach(function (pt) {
+        //         if(testcids.indexOf(pt.cid) >= 0) {
+        //             fetchpoints.push(pt); } }); }
         series = fetchpoints.slice();  //working copy to chew up
     }
 

@@ -499,6 +499,9 @@ app.lynching = (function () {
             clearTimeout(ani.shto);
             ani.shto = null; }
         if(!pt) {  //call to clear activity and allow exit
+            jt.out("lyxdiv", jt.tac2html(
+                ["a", {href:"#exit",
+                       onclick:jt.fs("app.lynching.finish()")}, "x"]));
             jt.byId("lytdiv").style.display = "none";
             rectclick("bar" + chart.dat.length + "column"); }
         else if(pt.total) {  //show bar
@@ -540,7 +543,8 @@ app.lynching = (function () {
         jt.out("suppvisdiv", jt.tac2html(
             [["div", {id:"mapdiv"}, usmapTAC()],
              ["div", {id:"bardiv"}, barTAC()],
-             ["div", {id:"lytdiv"}]]));
+             ["div", {id:"lytdiv"}],
+             ["div", {id:"lyxdiv"}]]));
         barInit();
         circInit();
         displayTitle();
@@ -562,7 +566,7 @@ app.lynching = (function () {
 
 
     function display (suppvis, timeline, endfunc) {
-        sv = suppvis || app.lev.suppVisByCode("sl");
+        sv = suppvis || app.lev.suppVisByCode("ly");
         tl = timeline || app.linear.tldata();
         endf = endfunc || app.dlg.close;
         sv.startDate = new Date();
