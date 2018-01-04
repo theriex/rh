@@ -304,7 +304,7 @@ app.dlg = (function () {
     function levelDetailText (levinf) {
         var idx = 0, offset, trav = {}, pts = app.data.pts;
         if(levinf.level <= 1) {
-            return "Level 1 is an introductory selection of some lesser known facts.  If you know most of these already, please volunteer to help with the project." }
+            return "Intro Level: Lesser Known Facts"; }
         //Which points, and how many, can vary from one save to the next due
         //to extracurricular clicking, and/or changes to the data itself.
         //The years covered can vary depending on which timeline is
@@ -333,7 +333,7 @@ app.dlg = (function () {
         trav.start = pts[trav.startidx].start.year
         if(trav.start < 0) {
             trav.start = Math.abs(trav.start) + " BCE"; }
-        return "Level " + levinf.level + " covers from " + trav.start +
+        return "Level " + levinf.level + ": " + trav.start +
             " to " + pts[trav.endidx].start.year;
     }
 

@@ -117,7 +117,7 @@ circle { clip-path: url(../#clip); }
 .clickable { cursor:pointer; }
 
 #abgdiv { position:absolute; left:0px; top:0px; line-height:0px; 
-  background:#fffae5; }
+  background:#fffae5; opacity:0.5; }
 .bgpicdiv { display:inline-block; overflow:hidden; text-align:center; }
 .bgpicimg { opacity:0.6; }
 

@@ -182,8 +182,9 @@ app.lev = (function () {
             jt.log("Selected " + pts.length + " points from " + tl.ident + 
                    " out of " + currlev.pa + " left available");
             return pts; }
+        //no points available left, return the final supp viz pts
         jt.log("Selected supp vis points for " + currlev.sv.name);
-        return currlev.sv.pts;  //only the final supp vis left
+        return currlev.sv.pts;
     }
 
 

@@ -32,6 +32,13 @@ app.linear = (function () {
     }
 
 
+    function unzoom () {
+        tl.svg.select(".zoom").call(
+            tl.zoom.transform,
+            d3.zoomIdentity.scale(1));
+    }
+
+
     function brushed () {
         var sel;
         if(d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") {
@@ -377,6 +384,7 @@ app.linear = (function () {
         clickCircle: function (pt) { clickCircle(pt); },
         levelCompleted: function (levpi) { app.levelup.display(tl, levpi); },
         search: function () { search(); },
-        tldata: function () { return tl; }
+        tldata: function () { return tl; },
+        unzoom: function () { unzoom(); }
     };
 }());
