@@ -366,7 +366,7 @@ app.dlg = (function () {
             jt.out("dlgsavelinkdiv", jt.tac2html(
                 ["a", {href: "mailto:?subject=" + jt.dquotenc(subj) + 
                                     "&body=" + jt.dquotenc(body)},
-                 "Mail a Restore Progress link"])); }, 100);
+                 "Mail a Progress link"])); }, 100);
     }
 
 

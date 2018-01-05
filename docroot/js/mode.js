@@ -137,7 +137,7 @@ app.mode = (function () {
             if(ms.skipstart) {
                 app.mode.next(); }
             else {
-                app.dlg.start(jt.fs("app.mode.next()")); } }
+                app.dlg.start(jt.fs("app.mode.showNext()")); } }
         else {
             showModeElements("reference"); }
     }
@@ -166,9 +166,79 @@ app.mode = (function () {
     }
 
 
+    function showSelectStat (task, info) {
+        var tl = app.linear.tldata();
+        if(info.level <= 1) {
+            task.msg = "Selecting " + series.length + " Lesser Known Facts"; }
+        else {
+            task.msg = "Selecting " + series.length + " Facts"; }
+        jt.out("suppvisdiv", jt.tac2html(
+            ["div", {id:"statmsgdiv"}, task.msg]));
+        d3.select("#suppvisdiv")
+            .style("left", tl.margin.left + "px")
+            .style("top", tl.margin.top + "px")
+            .style("width", tl.width2 + "px")
+            .style("height", 5 + "px")  //squeeze into div padding
+            .style("background", "#CCC")
+            .style("visibility", "visible");
+    }
+
+
+    function highlightCircles (task) {
+        var tl = app.linear.tldata();
+        fetchpoints.forEach(function (d) {
+            tl.focus.select("#" + d.id)
+                //setting z-index has no effect, even if initialized.
+                .style("fill", "#FF0000")
+                .transition().duration(0.8 * task.dur)
+                .attr("r", 10);   //was 5
+        });
+    }
+
+
+    function normalizeCircles (task) {
+        var tl = app.linear.tldata();
+        fetchpoints.forEach(function (d) {
+            tl.focus.select("#" + d.id)
+                .transition().duration(0.8 * task.dur)
+                .attr("r", 5);   //original value
+        });
+    }
+
+
+    function showNextPoints (tasks) {
+        var info = app.lev.progInfo(), task;
+        app.dlg.close();
+        if(!tasks) {
+            tasks = [{cmd:"unzoom", dur:100},
+                     {cmd:"highlight", dur:1400},
+                     {cmd:"normalize", dur:100}]; }
+        if(!tasks.length) {
+            next(); }
+        task = tasks[0];
+        tasks = tasks.slice(1);
+        switch(task.cmd) {
+        case "unzoom":
+            app.linear.unzoom();
+            showSelectStat(task, info);
+            break;
+        case "highlight":
+            highlightCircles(task);
+            break;
+        case "normalize":
+            normalizeCircles(task);
+            jt.byId("suppvisdiv").style.visibility = "hidden";
+            break;
+        default:
+            jt.log("Unknown task.cmd " + task.cmd); }
+        setTimeout(function () {
+            showNextPoints(tasks); }, task.dur || 0);
+    }
+
+
     function nextPass () {
         app.dlg.nextColorTheme();
-        next();
+        showNextPoints();
     }
 
 
@@ -307,6 +377,7 @@ app.mode = (function () {
         updatesrch: function () { updateSearchDisplay(); },
         ptmatch: function (pt) { return isMatchingPoint(pt); },
         interject: function (pt) { interject(pt); },
-        menu: function (expand, select) { displayMenu(expand, select); }
+        menu: function (expand, select) { displayMenu(expand, select); },
+        showNext: function () { showNextPoints(); }
     };
 }());

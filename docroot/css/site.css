@@ -40,6 +40,7 @@ circle { clip-path: url(../#clip); }
 #suppvisdiv { position:absolute; left:80px; top:80px; 
   visibility:hidden; background:#e0cb07; overflow:scroll;
   padding:10px; border-radius:5px; border: 2px solid #666666; }
+#statmsgdiv { font-size:16px; height:16px; margin-top:-5px; }
 #itemdispdiv { position:absolute; left:80px; top:80px; 
   visibility:hidden; background:#e0cb07; overflow:scroll;
   padding:5px; border-radius:50px; border: 2px solid #666666; 
