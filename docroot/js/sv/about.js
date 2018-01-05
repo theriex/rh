@@ -6,13 +6,15 @@ app.about = (function () {
 
     var content = [
         ["h2", "Purpose"],
-        ["p", "The goal of this timeline is to increase understanding and respect for the context of people whose histories are frequently ignored.  The intent is to reach people a few minutes at a time when they have a moment, building up scaffolding for further understanding."],
-        ["p", "I'm grateful to friends who have helped me learn, and feel a responsibility to try help others as I have been helped. As a web software developer, I can reach people in ways not available to everyone else. My goal is to do that, with respect for the people and communities mentioned."],
+        ["p", "The goal of this timeline is to increase understanding and respect for the context of people whose histories are frequently ignored.  The intent is to provide useful interaction a few minutes at a time, building scaffolding for further understanding."],
+
+        ["h2", "Motivation"],
+        ["p", "I need basic understanding of the context of the people of the United States to feel like a competent citizen. I am indebted to those who have helped me learn, and I feel a responsibility to help others as I have been helped. As a software developer, I can do that through things like this."],
 
         ["h2", "Caveats"],
-        ["p", "This timeline is incomplete. The initial release is extremely limited in scope, and fails to include women, LGBTQ people, people with less money, or people percieved as less able. The limiting was necessary to make a first release achievable. The goal is to grow the timeline in later releases."],
+        ["p", "This timeline is incomplete. The initial release is extremely limited in scope, and fails to cover sexism, ableism, classism or LGBTQ folks. This limiting was necessary to make a first release achievable. The goal is to grow the timeline in later releases."],
         ["p", "This timeline will always be incomplete.  It's purpose is to provide a highly abbreviated outline of points for further inquiry. You are encouraged to check all points for yourself. Knowledge evolves over time. History has multiple perspectives."],
-        ["p", "Points are categorized for search based on the racism that was being applied, which leads to things like Hawai'i and the Pacific Islands usually included with Asian timeline.  This reflects the situation even though it's wrong.  Hawai'i is spelled \"Hawaii\" because sometimes it's quoted like that and the search is currently unsophisticated.  This should be improved."],
+        ["p", "Points are categorized for search based on the racism that was being applied, which leads to things like Hawai'i and the Pacific Islands usually included with Asian timeline.  This reflects the situation even though it's not right.  Hawai'i is spelled \"Hawaii\" because sometimes it's quoted like that and the search is currently unsophisticated.  The search and the mainland orientation need to be improved."],
 
         ["h2", "Acknowledgments"],
         ["p", "The starting points for this timeline were compiled by Karen L. Suyemoto, Ph.D. - UMass (Boston) Psychology and Asian American Studies. The points were updated 2005-2006 by Claudia Fox Tree and Elli Stern for EMI Empowering Multicultural Initiatives. In 2014 the points were updated again by Emily Davis, for K. Suyemoto. In 2017, I converted these points into an interactive timeline and supporting visualizations, updating much of the data and creating a public project. If you find anything problematic, please open an issue (or comment on an existing issue) on github."],  //github linkage created below..
