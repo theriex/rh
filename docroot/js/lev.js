@@ -7,7 +7,7 @@ app.lev = (function () {
     //Each level ends with a supplemental visualization.  A level is
     //complete when its points are all visited and the sv is visited.
     var levels = [], timelines = {}, suppvs = {},
-        ps = {avail: 0, visited: 0},
+        ps = {avail:0, visited:0, supp:0},
         pointsPerSave = 6,
         currlev = null;
 
@@ -23,6 +23,7 @@ app.lev = (function () {
         app.data.pts.forEach(function (pt) {
             var i, code;
             if(pt.sv) {
+                ps.supp += 1;
                 if(pt.visited) {
                     suppvs[pt.sv].visited = true; }
                 suppvs[pt.sv].pts.push(pt); }
@@ -74,8 +75,9 @@ app.lev = (function () {
 
 
     function logLevels () {
-        jt.log("Total " + (ps.avail + ps.visited) + ", avail: " + ps.avail + 
-               ", visited: " + ps.visited);
+        jt.log("Total interactive: " + (ps.avail + ps.visited) + 
+               ", avail: " + ps.avail + ", visited: " + ps.visited + 
+               ", additional suppviz points: " + ps.supp);
         levels.forEach(function (lev, idx) {
             jt.log("level " + idx + " ttl: " + lev.pttl + ", ava: " + lev.pa +
                    ", vis: " + lev.pv + ", sv: " + (lev.sv.visited || false));
