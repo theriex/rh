@@ -368,7 +368,7 @@ app.lynching = (function () {
             else if(idx === chart.bs.selidx) {
                 d3.select("#lysumtotaltext")
                     .text(chart.dat[0].startYear + "-" + bd.endYear +
-                          ": " + (bd.sumo + bd.sumb));
+                          ": " + (bd.sumo + bd.sumb) + " Lynchings");
                 opa = 1.0; }
             d3.select("#bar" + idx + "other")
                 .transition().duration(1000).style("opacity", opa);
