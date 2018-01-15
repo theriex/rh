@@ -58,7 +58,8 @@ app.dlg = (function () {
                    y: tl.margin.top + Math.round(0.04 * tl.height),
                    w: Math.round(0.9 * tl.width)};
             if(d) {
-                dim.y = tl.margin.top + tl.y(d.oc); }
+                dim.y = tl.margin.top + tl.y(d.oc);
+                dim.y = Math.min(dim.y, Math.round(0.7 * tl.height)); }
             dim.h = Math.round(0.9 * tl.height) - dim.y; }
         d3.select("#itemdispdiv")
             .style("left", dim.x + "px")
