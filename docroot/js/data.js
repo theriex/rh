@@ -111,7 +111,7 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
       over:"Milestone or pivotal facts and events where the date is especially important to recall." } ],
 
   suppvis:[  //related data points have the code value as an sv field.
-    {code:"in", pc: "U", select:"random", passes: 3,
+    {code:"in", pc: "U", select:"random", passes: 3, ppp: 3,
      //The first level is a short round of lesser known points in an
      //attempt to pique curiosity and engagement.
      module: "intro", name: "Introduction", menuselect:false,
@@ -127,10 +127,16 @@ app.data = { credit:"Compiled by: Karen L. Suyemoto, Ph.D. - UMass (Boston) Psyc
      intro: "Laws restricting intermarriage between Whites and other races or people of mixed race heritage."},
     {code:"pc",
      module: "popcomp", name: "Population Composition", menuselect:true,
-     intro: "Population composition from U.S. Census numbers according to the categories available at the time. Also immigration composition numbers."},
+     intro: "Population composition from U.S. Census numbers according to the categories available at the time."},
+    {code:"im",
+     module: "imflow", name: "Immigration Flows", menuselect:true,
+     intro: "Immigration flow into what is now the U.S. (over time)"},
     {code:"cz",
      module: "citiz", name: "Citizenship", menuselect:true,
      intro: "What year citizenship was explicitely disallowed or possible for particular groups"},
+    {code:"ml",
+     module: "monlo", name: "Monetary Loss", menuselect:true,
+     intro: "Monetary loss from systemic racial discrimination"},
     {code:"fi",
      module: "ending", name:"Finale", menuselect:true, //donation page
      intro: "You finished! Now what? Search for what you want to learn more about. Keep learning. Donate to help make this available to others."}],

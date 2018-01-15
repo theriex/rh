@@ -8,7 +8,6 @@ app.lev = (function () {
     //complete when its points are all visited and the sv is visited.
     var levels = [], timelines = {}, suppvs = {},
         ps = {avail:0, visited:0, supp:0},
-        pointsPerSave = 6,
         currlev = null;
 
 
@@ -38,6 +37,16 @@ app.lev = (function () {
     }
 
 
+    function pointsPerSave (level) {
+        if(level && level.sv && level.sv.ppp) {
+            return level.sv.ppp; }
+        //By default, cover enough points to make it feel like you've done
+        //some reading, but with a reasonable chance of remembering the
+        //points you've covered (so definitely <= 7).
+        return 6; 
+    }
+
+
     function pointsForLevel (cc, lev, pttl) {
         lev.pttl = pttl;
         if(cc.dv) {
@@ -58,8 +67,9 @@ app.lev = (function () {
                   da: ps.avail,     //available points left to distribute
                   dv: ps.visited};  //visited points left to distribute
         levels.forEach(function (lev) {
-            if(lev.sv.passes) {
-                pointsForLevel(cc, lev, lev.sv.passes * pointsPerSave); }
+            //intro level is 3 passes with 3 points per pass
+            if(lev.sv.passes && lev.sv.ppp) {
+                pointsForLevel(cc, lev, lev.sv.passes * lev.sv.ppp); }
             else {
                 cc.la += 1; } });
         cc.tp = cc.da + cc.dv;              //total points to distribute
@@ -180,7 +190,7 @@ app.lev = (function () {
         if(currlev.pa > 0) {
             tl = selectNextTimeline(currlev.sv.pc);
             pts = selectPoints(tl.pts, currlev.sv.select,
-                               Math.min(currlev.pa, pointsPerSave));
+                               Math.min(currlev.pa, pointsPerSave(currlev)));
             jt.log("Selected " + pts.length + " points from " + tl.ident + 
                    " out of " + currlev.pa + " left available");
             return pts; }
@@ -204,7 +214,7 @@ app.lev = (function () {
                 levpcnt: currlev.pv / currlev.pttl,
                 mainpcnt: ps.visited / (ps.avail + ps.visited),
                 levPtsAvail: currlev.pa, levPtsVis: currlev.pv,
-                savelen: pointsPerSave, levels: levels};
+                savelen: pointsPerSave(currlev), levels: levels};
     }
 
 

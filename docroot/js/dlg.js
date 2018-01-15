@@ -348,11 +348,11 @@ app.dlg = (function () {
                  [["div", {id: "dlgsavelevinfdiv"}, 
                    "Level " + levinf.level + " Save " + levinf.savenum],
                   ["div", {id:"dlgsavelevdetdiv"}, levelDetailText(levinf)],
-                  ["div", {id: "dlgsavebrowserdiv"}, 
-                   "Progress saved in browser."],
+                  // ["div", {id: "dlgsavebrowserdiv"}, 
+                  //  "Progress saved in browser."],
                   ["div", {id:"dlgsaveservermsgdiv"},
                    ["a", {href:"#signin", onclick:jt.fs("app.dlg.signin()")},
-                    "Sign in to save to your account"]],
+                    "Sign in to save progress"]],
                   ["div", {id: "dlgsavelinkdiv"}, "building restore link..."]]],
                 ["div", {id: "dlgbuttondiv"},
                  ["button", {type: "button", id: "nextbutton",
@@ -387,6 +387,7 @@ app.dlg = (function () {
         button: function (answer) { buttonPress(answer); },
         guessyear: function (year) { yearGuessButtonPress(year); },
         save: function (nextfstr) { showSaveConfirmationDialog(nextfstr); },
-        nextColorTheme: function () { nextColorTheme(); }
+        nextColorTheme: function () { nextColorTheme(); },
+        signin: function () { jt.err("Login not implemented yet"); }
     };
 }());

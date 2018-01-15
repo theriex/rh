@@ -214,7 +214,7 @@ app.mode = (function () {
                      {cmd:"highlight", dur:1400},
                      {cmd:"normalize", dur:100}]; }
         if(!tasks.length) {
-            next(); }
+            return next(); }
         task = tasks[0];
         tasks = tasks.slice(1);
         switch(task.cmd) {
