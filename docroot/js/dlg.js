@@ -181,16 +181,16 @@ app.dlg = (function () {
     }
 
 
-    function timelineNamesCSV (codes) {
-        var cidx, code, tidx, timeline, csv = "";
+    function pointCodeNamesCSV (codes) {
+        var cidx, code, tidx, ptc, csv = "";
         for(cidx = 0; cidx < codes.length; cidx += 1) {
             code = codes.charAt(cidx);
-            for(tidx = 0; tidx < app.data.timelines.length; tidx += 1) {
-                timeline = app.data.timelines[tidx];
-                if(timeline.code === code) {
+            for(tidx = 0; tidx < app.data.ptcs.length; tidx += 1) {
+                ptc = app.data.ptcs[tidx];
+                if(ptc.code === code) {
                     if(csv) {
                         csv += ", "; }
-                    csv += timeline.name;
+                    csv += ptc.name;
                     break; } } }
         return csv;
     }
@@ -222,10 +222,10 @@ app.dlg = (function () {
             ret.date = ["span", {id:"dlgdatespan"}, 
                         ["span", {id:"dlgdatequestion"}, "When?"]]; }
         else {
-            ret.tac = [["div", {cla:"buttontimelinesdiv"},
-                        [["span", {cla:"buttontimelineslabelspan"}, 
-                          "Timelines: "],
-                         timelineNamesCSV(d.code)]],
+            ret.tac = [["div", {cla:"buttonptcodessdiv"},
+                        [["span", {cla:"buttonptcodeslabelspan"}, 
+                          "Groups: "],
+                         pointCodeNamesCSV(d.code)]],
                        ["button", {type:"button", id:"nextbutton",
                                    onclick:jt.fs("app.dlg.button()")},
                         "Continue"]];
@@ -308,7 +308,7 @@ app.dlg = (function () {
             return "Intro Level: Lesser Known Facts"; }
         //Which points, and how many, can vary from one save to the next due
         //to extracurricular clicking, and/or changes to the data itself.
-        //The years covered can vary depending on which timeline is
+        //The years covered can vary depending on which usrace group is
         //providing the points for the current pass.  Not exact.  Pretty
         //much has to be guessed each time using heuristic traversal.
         while(!pts[idx].sv || pts[idx].visited) {

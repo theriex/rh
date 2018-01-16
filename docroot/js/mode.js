@@ -31,7 +31,7 @@ app.mode = (function () {
         var tlopts, html, srchfstr;
         srchfstr = jt.fs("app.mode.updatesrch()");
         tlopts = [["option", {value:""}, "All"]];
-        app.data.timelines.forEach(function (tl) {
+        app.data.ptcs.forEach(function (tl) {
             if(tl.type !== "marker") {
                 tlopts.push(["option", {value:tl.code}, 
                              tl.ident + " (" + tl.name + ")"]); } });

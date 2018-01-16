@@ -55,7 +55,7 @@ app.tabular = (function () {
                     html += ", "; }
                 html += sm; } });
         html = "Supplemental visualizations: " + html + ".";
-        html = "<b><i>Reference mode</i></b>: To filter the display, just start typing in the search box and/or select a timeline. " + html;
+        html = "<b><i>Reference mode</i></b>: To filter the display, enter text to match. You can also select a point grouping. " + html;
         return html;
     }
 

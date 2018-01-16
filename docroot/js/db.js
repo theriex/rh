@@ -248,8 +248,8 @@ app.db = (function () {
 
 
     function describeData () {
-        jt.log("Timeline codes and names");
-        app.data.timelines.forEach(function (tl) {
+        jt.log("Point racial codes and names");
+        app.data.ptcs.forEach(function (tl) {
             if(tl.type !== "marker") {
                 jt.log("  " + tl.code + ": " + tl.name + 
                        " (" + tl.ident + ") maxcid: " + maxcids[tl.code]); } });
@@ -268,7 +268,7 @@ app.db = (function () {
 
 
     //Each data point has the following fields:
-    //  code: One or more timeline letter codes this point is associated with
+    //  code: One or more code letter ids this point is associated with
     //  cid: Unique citation identifier
     //  date: Colloquial text for display date or date range
     //  text: Event description text

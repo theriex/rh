@@ -98,8 +98,8 @@ circle { clip-path: url(../#clip); }
 #choicebuttonsdiv { display:inline-block; padding:3px 15px; 
   border-radius:20px; }
 #remcblabel { font-size:small; }
-.buttontimelineslabelspan {font-size:x-small; font-style:italic; }
-.buttontimelinesdiv { font-size:small; }
+.buttonptcodeslabelspan {font-size:x-small; font-style:italic; }
+.buttonptcodesdiv { font-size:small; }
 
 
 #leftcoldiv { position:absolute; left:0px; top:0px; background:#e7e1e2; }

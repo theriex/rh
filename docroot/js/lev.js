@@ -6,15 +6,15 @@ app.lev = (function () {
 
     //Each level ends with a supplemental visualization.  A level is
     //complete when its points are all visited and the sv is visited.
-    var levels = [], timelines = {}, suppvs = {},
+    var levels = [], ptcs = {}, suppvs = {},
         ps = {avail:0, visited:0, supp:0},
         currlev = null, rdist = null;
 
 
     function initStructures () {
-        app.data.timelines.forEach(function (tl) {
+        app.data.ptcs.forEach(function (tl) {
             tl.pttl = 0;
-            timelines[tl.code] = tl; });
+            ptcs[tl.code] = tl; });
         app.data.suppvis.forEach(function (sv, idx) {
             sv.pts = [];
             suppvs[sv.code] = sv;
@@ -33,7 +33,7 @@ app.lev = (function () {
                     ps.avail += 1; } }
             for(i = 0; i < pt.code.length; i += 1) {
                 code = pt.code.charAt(i);
-                timelines[code].pttl += 1; } });
+                ptcs[code].pttl += 1; } });
     }
 
 
@@ -116,19 +116,19 @@ app.lev = (function () {
 
     function distributeAvailPointsByTL () {
         var ttlavail = 0;
-        app.data.timelines.forEach(function (tl) {
+        app.data.ptcs.forEach(function (tl) {
             tl.visited = 0;
             tl.pts = []; });
         app.data.pts.forEach(function (pt) {
             if(!pt.sv && !pt.visited) {
                 ttlavail += 1; }
-            app.data.timelines.forEach(function (tl) {
+            app.data.ptcs.forEach(function (tl) {
                 if(!pt.sv && pt.code.indexOf(tl.code) >= 0) {
                     if(pt.visited) {
                         tl.visited += 1; }
                     else {
                         tl.pts.push(pt); } } }); });
-        app.data.timelines.forEach(function (tl) {
+        app.data.ptcs.forEach(function (tl) {
             tl.pcntcomp = 1;
             if(tl.pts.length) {
                 tl.pcntcomp = tl.visited / tl.pts.length; } });
@@ -137,22 +137,22 @@ app.lev = (function () {
 
 
     //Given there are points available for display, and given that the
-    //available points for display have been distributed across the
-    //timelines already with percentage complete calculated, choose the next
-    //timeline to select points from.
-    function selectNextTimeline (code) {
+    //available points for display have been distributed across the usrace
+    //groups already with percentage complete calculated, choose the next
+    //usrace group to select points from.
+    function selectNextPointsGroup (code) {
         var tls = [];
-        //if there is a preferred timeline specified by code, and there
-        //are points available in that timeline, return it.
-        if(code && timelines[code].pts.length) {
-            return timelines[code]; }
-        //Select from real timelines that still have points available
+        //if there is a preferred points group specified by code, and there
+        //are points available in that group, return it.
+        if(code && ptcs[code].pts.length) {
+            return ptcs[code]; }
+        //Select from non-marker groups that still have points available
         //for display.
-        app.data.timelines.forEach(function (tl) {
+        app.data.ptcs.forEach(function (tl) {
             if(tl.type !== "marker" && tl.pts.length) {
                 tls.push(tl); } });
-        //Choose by oldest unvisited timeline point to avoid leaping around
-        //in time. If same, go with whichever timeline has more points left.
+        //Choose by oldest unvisited grouping point to avoid leaping around
+        //in time. If same, go with whichever group has more points left.
         tls.sort(function (a, b) {
             if(a.pts[0].tc < b.pts[0].tc) { return -1; }
             if(a.pts[0].tc > b.pts[0].tc) { return 1; }
@@ -172,7 +172,7 @@ app.lev = (function () {
         var mino, idx;
         if(!rdist) {
             rdist = {};
-            app.data.timelines.forEach(function (tl) {
+            app.data.ptcs.forEach(function (tl) {
                 if(tl.type !== "marker") {
                     rdist[tl.code] = 0; } }); }
         mino = {code:"x", count:9999999};
@@ -221,10 +221,10 @@ app.lev = (function () {
 
 
     //Return an array of points that have not been visited yet.  For
-    //presentation consistency, the returned points are all from the
-    //same timeline.  The number of points returned might be less than
+    //presentation consistency, the returned points are all from the same
+    //usrace grouping.  The number of points returned might be less than
     //pointsPerSave if the level is nearly finished or if the chosen
-    //timeline is nearly finished.
+    //grouping is nearly finished.
     function getNextPoints () {
         var tl, pts;
         findCurrentLevel();  //updated currlev
@@ -232,7 +232,7 @@ app.lev = (function () {
             return []; }
         currlev.pa = Math.min(currlev.pa, distributeAvailPointsByTL());
         if(currlev.pa > 0) {
-            tl = selectNextTimeline(currlev.sv.pc);
+            tl = selectNextPointsGroup(currlev.sv.pc);
             pts = selectPoints(tl.pts, currlev.sv.select,
                                Math.min(currlev.pa, pointsPerSave(currlev)));
             jt.log("Selected " + pts.length + " points from " + tl.ident + 
