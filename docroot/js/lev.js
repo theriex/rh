@@ -8,7 +8,7 @@ app.lev = (function () {
     //complete when its points are all visited and the sv is visited.
     var levels = [], timelines = {}, suppvs = {},
         ps = {avail:0, visited:0, supp:0},
-        currlev = null;
+        currlev = null, rdist = null;
 
 
     function initStructures () {
@@ -161,17 +161,61 @@ app.lev = (function () {
     }
 
 
+    function noteRandomlySelectedPoint (pt) {
+        Object.keys(rdist).forEach(function (code) {
+            if(pt.code.indexOf(code) >= 0) {
+                rdist[code] += 1; } });
+    }
+
+
+    function findDistributedRandomPointIndex (pts) {
+        var mino, idx;
+        if(!rdist) {
+            rdist = {};
+            app.data.timelines.forEach(function (tl) {
+                if(tl.type !== "marker") {
+                    rdist[tl.code] = 0; } }); }
+        mino = {code:"x", count:9999999};
+        Object.keys(rdist).forEach(function (code) {
+            if(rdist[code] < mino.count) {
+                mino.code = code;
+                mino.count = rdist[code]; } });
+        idx = Math.floor(Math.random() * pts.length);
+        while(idx < pts.length && pts[idx].code.indexOf(mino.code) < 0) {
+            idx += 1; }
+        if(idx < pts.length) {  //found something
+            noteRandomlySelectedPoint(pts[idx]);
+            return idx; }       //done
+        idx = 0;  //retry from beginning
+        while(idx < pts.length && pts[idx].code.indexOf(mino.code) < 0) {
+            idx += 1; }
+        if(idx < pts.length) {  //found something
+            noteRandomlySelectedPoint(pts[idx]);
+            return idx; }       //done
+        //give up and just return random
+        idx = Math.floor(Math.random() * pts.length);
+        return idx;
+    }
+
+
     function selectPoints (pts, method, maxsel) {
         var sel = [], idx;
         while(pts.length && sel.length < maxsel) {
             if(method === "random") {
-                idx = Math.floor(Math.random() * pts.length); }
+                idx = findDistributedRandomPointIndex(pts); }
             else {  //sequential
                 idx = 0; }
             sel.push(pts[idx]);
             pts.splice(idx, 1); }
         //sort in reverse order so points pop off in chrono order
         sel.sort(function (a, b) { return b.tc - a.tc; });
+        if(method === "random") {
+            jt.log("Random distribution:");
+            Object.keys(rdist).forEach(function (code) {
+                jt.log(code + ": " + rdist[code]); });
+            sel.forEach(function (pt) {
+                jt.log(pt.code + " " + pt.date + 
+                       " " + pt.text.slice(0,60)); }); }
         return sel;
     }
 
