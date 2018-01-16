@@ -32,7 +32,7 @@ app.mode = (function () {
         srchfstr = jt.fs("app.mode.updatesrch()");
         tlopts = [["option", {value:""}, "All"]];
         app.data.timelines.forEach(function (tl) {
-            if(tl.code !== "U" && tl.code !== "D") {
+            if(tl.type !== "marker") {
                 tlopts.push(["option", {value:tl.code}, 
                              tl.ident + " (" + tl.name + ")"]); } });
         if(!ms.progsvg) {
@@ -40,7 +40,7 @@ app.mode = (function () {
             html = [["div", {id:"refdiv", style:"width:" + ms.w + "px;" +
                                                 "height:" + ms.h + "px;"},
                      [["input", {type:"text", id:"srchin", size:25,
-                                 placeholder:"Search for...",
+                                 placeholder:"Filter text...",
                                  value:srchst.qstr, oninput:srchfstr}],
                       ["span", {cla:"srchinspan"}, "&nbsp;in&nbsp;"],
                       ["select", {id:"tlsel", onchange:srchfstr}, tlopts]]],

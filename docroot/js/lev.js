@@ -149,7 +149,7 @@ app.lev = (function () {
         //Select from real timelines that still have points available
         //for display.
         app.data.timelines.forEach(function (tl) {
-            if(tl.code !== "U" && tl.code !== "D" && tl.pts.length) {
+            if(tl.type !== "marker" && tl.pts.length) {
                 tls.push(tl); } });
         //Choose by oldest unvisited timeline point to avoid leaping around
         //in time. If same, go with whichever timeline has more points left.

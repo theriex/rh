@@ -250,7 +250,7 @@ app.db = (function () {
     function describeData () {
         jt.log("Timeline codes and names");
         app.data.timelines.forEach(function (tl) {
-            if("UD".indexOf(tl.code) < 0) {
+            if(tl.type !== "marker") {
                 jt.log("  " + tl.code + ": " + tl.name + 
                        " (" + tl.ident + ") maxcid: " + maxcids[tl.code]); } });
         //an sv datum will have an sv field set to the sv code.
