@@ -85,6 +85,25 @@ app.lev = (function () {
 
 
     function logLevels () {
+        var tstat = {min:9999, max:0, sum:0, count:0, 
+                     green:0, yellow:0, red:0, over:0};
+        app.data.pts.forEach(function (pt) {
+            if(pt.text.length < 400) {
+                tstat.green += 1; }
+            else if(pt.text.length < 600) {
+                tstat.yellow += 1; }
+            else if(pt.text.length < 1200) {
+                tstat.red += 1; }
+            else {
+                jt.log("   OVER: " + pt.cid + " " + pt.text.slice(0,40)); }
+            tstat.min = Math.min(tstat.min, pt.text.length);
+            tstat.max = Math.max(tstat.max, pt.text.length);
+            tstat.sum += pt.text.length;
+            tstat.count += 1; });
+        jt.log("Point text length min: " + tstat.min + ", max: " + tstat.max +
+               ", avg: " + Math.round(tstat.sum / tstat.count) +
+               ", green: " + tstat.green + ", yellow: " + tstat.yellow + 
+               ", red: " + tstat.red);
         jt.log("Total interactive: " + (ps.avail + ps.visited) + 
                ", avail: " + ps.avail + ", visited: " + ps.visited + 
                ", additional suppviz points: " + ps.supp);
@@ -209,13 +228,13 @@ app.lev = (function () {
             pts.splice(idx, 1); }
         //sort in reverse order so points pop off in chrono order
         sel.sort(function (a, b) { return b.tc - a.tc; });
-        if(method === "random") {
-            jt.log("Random distribution:");
-            Object.keys(rdist).forEach(function (code) {
-                jt.log(code + ": " + rdist[code]); });
-            sel.forEach(function (pt) {
-                jt.log(pt.code + " " + pt.date + 
-                       " " + pt.text.slice(0,60)); }); }
+        // if(method === "random") {
+        //     jt.log("Random distribution:");
+        //     Object.keys(rdist).forEach(function (code) {
+        //         jt.log(code + ": " + rdist[code]); });
+        //     sel.forEach(function (pt) {
+        //         jt.log(pt.code + " " + pt.date + 
+        //                " " + pt.text.slice(0,60)); }); }
         return sel;
     }
 
