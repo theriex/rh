@@ -492,6 +492,23 @@ app.lynching = (function () {
     }
 
 
+    function centerAbsoluteDiv (pid, cid) {
+        var par = {div:jt.byId(pid)}, chi = {div:jt.byId(cid)};
+        par.h = par.div.offsetHeight;
+        par.w = par.div.offsetWidth;
+        chi.h = chi.div.offsetHeight;
+        chi.w = chi.div.offsetWidth;
+        //jt.log("par " + par.w + "x" + par.h + ", chi " + chi.w + "x" + chi.h);
+        if(!chi.w || !chi.h) {
+            jt.log("Zero content size"); }
+        chi.x = Math.round(0.5 * (par.w - chi.w));
+        chi.y = Math.round(0.4 * (par.h - chi.h));
+        //jt.log("top left: " + chi.x + ", " + chi.y);
+        chi.div.style.left = chi.x + "px";
+        chi.div.style.top = chi.y + "px";
+    }
+
+
     function showNextPoint () {
         var pt = ani.pts[ani.idx];
         ani.idx += 1;
@@ -509,7 +526,9 @@ app.lynching = (function () {
             rectclick("bar" + pt.baridx + "column"); }
         else {
             jt.out("lytdiv", pt.text);
-            jt.byId("lytdiv").style.display = "block"; }
+            jt.byId("lytdiv").style.display = "block";
+            //have to center after displayed, otherwise lytdiv may be 0x0
+            centerAbsoluteDiv("suppvisdiv", "lytdiv"); }
         if(ani.idx <= ani.pts.length) {
             ani.shto = setTimeout(showNextPoint, pt.delay || 2500); }
     }
