@@ -67,6 +67,13 @@ circle { clip-path: url(../#clip); }
 .dispdateyear { font-size:large; font-weight:bold; }
 .dispdatebce { font-size:medium; font-weight:bold; }
 
+#genindspan { font-size:small; margin-left:10px; }
+.genbutton { font-size:x-small; vertical-align:top; margin-left:10px; }
+#genentrytitlediv { text-align:center; font-weight:bold; }
+.genentrylabel { text-align:right; font-size:small; }
+.genyearinput { width:4em; }
+#genbuttonsdiv { text-align:center; margin-bottom:10px; }
+
 .zoom { fill:none; pointer-events:all; }
 .tick line { visibility:hidden; }
 .contextCircle { fill:#ccc; }

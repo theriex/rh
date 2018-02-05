@@ -12,6 +12,20 @@ app.dlg = (function () {
         {name: "sky", dlgbg: "#d6edf2", textbg: "#e8f6f9", 
          datebg: "#e9f5f8", buttonbg: "#c0e3eb"}],
         buttonText = {yes:"Yes", no:"No"},
+        birthyeardefault = (new Date()).getFullYear() - 27,
+        generationyrs = 30,
+        gendat = {accepted:false, gens:[
+            {id:"geyou", abbr:"You", name: "You", year: birthyeardefault},
+            {id:"gepar", abbr:"Parents", name: "Parents", 
+             year: birthyeardefault - generationyrs},
+            {id:"gegrn", abbr:"Grands", name: "Grandparents", 
+             year: birthyeardefault - 2 * generationyrs},
+            {id:"gegrt", abbr:"G.Grands", name: "Great Grandparents", 
+             year: birthyeardefault - 3 * generationyrs },
+            {id:"geold", abbr:"Ancestors", name: "Ancestors", 
+             year: 1000},
+            {id:"geanc", abbr:"Ancients", name:"Ancient Ancestors", 
+             year: -90000}]},
         lnfidx = 0,
         tl = null;
 
@@ -235,11 +249,99 @@ app.dlg = (function () {
     }
 
 
+    function cascadeGenerationInfo (id) {
+        var cascading = -1, val = 0;
+        gendat.gens.forEach(function (gen, idx) {
+            var input = null;
+            if(gen.id === id) {
+                input = jt.byId(id + "in");
+                if(input) {
+                    val = input.value; }
+                cascading = idx; }
+            else if(cascading >= 0) {
+                input = jt.byId(gen.id + "in");
+                if(input) {
+                    input.value = val - (
+                        (idx - cascading) * generationyrs); } } });
+    }
+
+
+    function showGenerationEntryForm () {
+        var html = [];
+        gendat.gens.forEach(function (gen, idx) {
+            if(idx <= 3) {
+                html.push(["tr", [
+                    ["td", {cla:"genentrylabel"}, gen.name],
+                    ["td", ["input", {type:"number", id:gen.id + "in",
+                                      cla:"genyearinput",
+                                      oninput:jt.fs("app.dlg.cascgen('" + 
+                                                    gen.id + "')"),
+                                      value: gen.year}]]]]); } });
+        html = ["div", {id:"genentrycontentdiv"},
+                [["div", {id:"genentrytitlediv"}, "Generation Birth Years"],
+                 ["div", {id:"genyearstablediv"},
+                  ["table", {style:"margin:auto;"}, html]],
+                 ["div", {id:"genbuttonsdiv"},
+                  [["button", {type:"button", id:"genbcancel", cla:"genbutton",
+                               onclick:jt.fs("app.dlg.closegenentry()")},
+                    "Cancel"],
+                   ["button", {type:"button", id:"genbok", cla:"genbutton",
+                               onclick:jt.fs("app.dlg.okgenentry()")},
+                    "Ok"]]]]];
+        jt.out("genentrydiv", jt.tac2html(html));
+        jt.out("genindspan", "");
+    }
+
+
+    function generationIndicator (d) {
+        var html, genobj = null, i, label;
+        if(!gendat.accepted) {
+            html = ["button", {type:"button", cla:"genbutton",
+                               onclick:jt.fs("app.dlg.genentry()")},
+                    "Generations"]; }
+        else {
+            for(i = 0; !genobj && i < gendat.gens.length; i += 1) {
+                if(gendat.gens[i].year <= d.start.year) {
+                    genobj = gendat.gens[i]; } }
+            label = jt.byId("rhcontentdiv");
+            if(label && label.offsetWidth > 600) {
+                label = genobj.name; }
+            else {
+                label = genobj.abbr; }
+            if(genobj.id === "geyou") {
+                label += " (" + (d.start.year - genobj.year) + ")"; }
+            html = ["a", {href:"#generations",
+                          onclick:jt.fs("app.dlg.genentry()")},
+                    "[" + label + "]"]; }
+        return html;
+    }
+
+
+    function closeGenerationEntry () {
+        jt.out("genentrydiv", "");
+        jt.out("genindspan", jt.tac2html(generationIndicator(tl.dlgdat)));
+    }
+
+
+    function saveGenerationInfo () {
+        gendat.gens.forEach(function (gen) {
+            var input = jt.byId(gen.id + "in");
+            if(input) {
+                gen.year = Number(input.value); } });
+        gendat.accepted = true;
+        closeGenerationEntry();
+        jt.log("dlg.saveGenerationInfo not writing to server yet...");
+    }
+
+
     function showInfoDialog (d) {
         var buttons, html;
         tl.dlgdat = d;
         buttons = infoButtons(d);
-        html = [["div", {id:"dlgdatediv"}, buttons.date],
+        html = [["div", {id:"genentrydiv"}],
+                ["div", {id:"dlgdatediv"}, 
+                 [buttons.date,
+                  ["span", {id:"genindspan"}, generationIndicator(d)]]],
                 ["div", {id:"dlgcontentdiv"},
                  ["div", {cla:"dlgtextdiv", id:"dlgtextdiv"},
                   [["div", {cla:"dlgpicdiv", id:"dlgpicdiv"}, infoPicHTML(d)],
@@ -331,7 +433,7 @@ app.dlg = (function () {
             if(!offset) {
                 break; } }
         trav.endidx = idx;
-        trav.start = pts[trav.startidx].start.year
+        trav.start = pts[trav.startidx].start.year;
         if(trav.start < 0) {
             trav.start = Math.abs(trav.start) + " BCE"; }
         return "Level " + levinf.level + ": " + trav.start +
@@ -389,6 +491,10 @@ app.dlg = (function () {
         guessyear: function (year) { yearGuessButtonPress(year); },
         save: function (nextfstr) { showSaveConfirmationDialog(nextfstr); },
         nextColorTheme: function () { nextColorTheme(); },
-        signin: function () { jt.err("Login not implemented yet"); }
+        signin: function () { jt.err("Login not implemented yet"); },
+        genentry: function () { showGenerationEntryForm(); },
+        cascgen: function (id) { cascadeGenerationInfo(id); },
+        closegenentry: function () { closeGenerationEntry(); },
+        okgenentry: function () { saveGenerationInfo(); }
     };
 }());
