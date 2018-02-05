@@ -9,7 +9,8 @@ app.tabular = (function () {
         dnld = {srchst:"", opts:[{format:"html", name:"Document (HTML)"},
                                  {format:"pdf", name:"Document (PDF)"},
                                  {format:"tsv", name:"Spreadsheet (TSV)"},
-                                 {format:"json", name:"JavaScript (JSON)"}]};
+                                 {format:"json", name:"JavaScript (JSON)"},
+                                 {format:"none", name:"Nevermind"}]};
 
 
     function dateSpan (dobj, prefix) {
@@ -160,6 +161,13 @@ app.tabular = (function () {
                  [["img", {src: "img/download.png"}],
                   ["span", {id:"downloadactiontextspan"}, 
                    "Download JSON"]]]));
+            break;
+        case "none":
+            jt.out("downloadactiondiv", jt.tac2html(
+                ["a", {id:"downloadactionlink", href:"#close",
+                       onclick:jt.fs("app.dlg.close()")},
+                 ["span", {id:"downloadactiontextspan"},
+                  "Close Menu"]]));
             break;
         default:
             jt.out("downloadactiondiv", "Unknown Format"); }
