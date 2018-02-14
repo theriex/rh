@@ -307,6 +307,7 @@ app.db = (function () {
 
     function saveState () {
         var state = getStateURLParams();
+        jt.log("db.saveState: " + state);
         window.localStorage.setItem("savestatestr", state);
     }
 
