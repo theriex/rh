@@ -1,5 +1,4 @@
 *~
 .DS_Store
-node_modules
-scratch
-
+ref/srcdat/node_modules
+ref/srcdat/scratch
