@@ -335,23 +335,31 @@ app.mode = (function () {
                 ["img", {src:"img/menuicon.png", //50x38
                          style:"max-height:20px;max-width:30px;"}]];
         if(expand) {
-            html = [["div", {cla:"menuline", style:"text-align:right"}, html],
-                    ["div", {cla:"menulinemain"},
-                     ["a", {href:"#interactive", 
-                            onclick:jt.fs("app.mode.menu(0,'interactive')")},
-                      "Interactive&nbsp;Mode"]],
-                    ["div", {cla:"menulinemain"},
-                     ["a", {href:"#reference",
-                            onclick:jt.fs("app.mode.menu(0,'reference')")},
-                      "Reference&nbsp;Mode"]],
-                    ["div", {cla:"menulinesub"}, "Browse&nbsp;Later"],
-                    ["div", {cla:"menulinesub"}, "Landmark&nbsp;Dates"],
-                    ["div", {cla:"menulinesub"}, "Visualizations"],
-                    ["div", {cla:"menulinemain"},
-                     ["a", {href:"#about",
-                            onclick:jt.fs("app.mode.menu(0,'about')")},
-                      "About"]],
-                    ["div", {cla:"menulinemain"}, "Sign&nbsp;In"]]; }
+            html = [["div", {cla:"menuline", style:"text-align:right"}, html]];
+            if(mode === "interactive") {
+                html.push(["div", {cla:"menulinemain"},
+                           ["a", {href:"#refmode",
+                                  onclick:jt.fs("app.mode.menu(0,'refmode')")},
+                            "Reference&nbsp;Mode"]]); }
+            else { //in reference mode
+                html.push(["div", {cla:"menulinemain"},
+                           ["a", {href:"#visual", 
+                                  onclick:jt.fs("app.mode.menu(0,'visual')")},
+                            "Interactive&nbsp;Mode"]]); }
+            if(app.user) {
+                html.push(["div", {cla:"menulinemain"},
+                           ["a", {href:"SignOut",
+                                  onclick:jt.fs("app.mode.menu(0, 'signout')")},
+                            "Sign&nbsp;Out"]]); }
+            else { //not signed in
+                html.push(["div", {cla:"menulinemain"},
+                           ["a", {href:"#SignIn",
+                                  onclick:jt.fs("app.mode.menu(0,'signin')")},
+                            "Sign&nbsp;In"]]); }
+            html.push(["div", {cla:"menulinemain"},
+                       ["a", {href:"#about",
+                              onclick:jt.fs("app.mode.menu(0,'about')")},
+                        "About"]]); }
         jt.out("menudiv", jt.tac2html(html));
         mdiv = jt.byId("menudiv");
         //mdiv.offsetWidth may be zero until all the images load.
@@ -361,9 +369,11 @@ app.mode = (function () {
             jt.byId("itemdispdiv").style.visibility = "hidden";
             jt.byId("suppvisdiv").style.visibility = "hidden";
             switch(select) {
-            case "interactive": changeMode("interactive"); break;
-            case "reference": changeMode("reference"); break;
-            case "about": app.about.display(ms); break; } }
+            case "visual": changeMode("interactive"); break;
+            case "refmode": changeMode("reference"); break;
+            case "about": app.about.display(ms); break; 
+            case "signin": app.dlg.signin(); break;
+            case "signout": app.signout(); break; } }
     }
 
 

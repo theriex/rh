@@ -1,4 +1,5 @@
 *~
+*.pyc
 .DS_Store
 ref/srcdat/node_modules
 ref/srcdat/scratch

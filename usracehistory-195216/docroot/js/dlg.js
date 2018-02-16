@@ -454,7 +454,7 @@ app.dlg = (function () {
                   // ["div", {id: "dlgsavebrowserdiv"}, 
                   //  "Progress saved in browser."],
                   ["div", {id:"dlgsaveservermsgdiv"},
-                   ["a", {href:"#signin", onclick:jt.fs("app.dlg.signin()")},
+                   ["a", {href:"#signin", onclick:jt.fs("app.dlg.login()")},
                     "Sign in to save progress"]],
                   ["div", {id: "dlgsavelinkdiv"}, "building restore link..."]]],
                 ["div", {id: "dlgbuttondiv"},
@@ -470,6 +470,120 @@ app.dlg = (function () {
                 ["a", {href: "mailto:?subject=" + jt.dquotenc(subj) + 
                                     "&body=" + jt.dquotenc(body)},
                  "Mail a Progress link"])); }, 100);
+    }
+
+
+    function readInputFieldValues (fields) {
+        var vals = {}, filled = true;
+        fields.forEach(function (field) {
+            var lv = jt.byId("lab" + field);
+            lv.innerHTML = lv.innerHTML.replace("*", "");
+            lv.style.fontWeight = "normal";
+            vals[field] = jt.byId(field).value; });
+        fields.forEach(function (field) {
+            var lv = jt.byId("lab" + field);
+            if(!vals[field] || ((field.indexOf("mail") >= 0) &&
+                                (!jt.isProbablyEmail(vals[field])))) {
+                lv.innerHTML += "*";
+                lv.style.fontWeight = "bold";
+                filled = false; } });
+        if(!filled) {
+            return null; }
+        return vals;
+    }
+
+
+    function inputsToParams (obj) {
+        var co = {};
+        Object.keys(obj).forEach(function (field) {
+            if(field.endsWith("in")) {
+                co[field.slice(0, -2)] = obj[field]; }
+            else {
+                co[field] = obj[field]; } });
+        return jt.objdata(co);
+    }
+
+
+    function createAccount () {
+        var cred = readInputFieldValues(["emailin", "passwordin"]);
+        if(cred) {
+            jt.out("loginstatdiv", "Creating account...");
+            jt.call("POST", "updacc", inputsToParams(cred),
+                    function (result) {
+                        app.user = {acc: result[0],
+                                    tok: result[1]};
+                        app.dlg.close();
+                        app.dlg.updprof(); },
+                    function (code, errtxt) {
+                        jt.log("createAccount " + code + " " + errtxt);
+                        jt.out("loginstatdiv", errtxt); },
+                    jt.semaphore("dlg.createAccount")); }
+    }
+
+
+    function updateProfile () {
+        jt.err("Not implemented yet");
+    }
+
+
+    function processSignIn () {
+        var cred = readInputFieldValues(["emailin", "passwordin"]);
+        if(cred) {
+            jt.call("GET", "acctok?" + inputsToParams(cred), null,
+                    function (result) {
+                        jt.log("processSignIn successful");
+                        app.user = {acc: result[0],
+                                    tok: result[1]};
+                        app.dlg.close(); },
+                    function (code, errtxt) {
+                        jt.log("processSignIn: " + code + " " + errtxt);
+                        jt.out("loginstatdiv", errtxt); },
+                    jt.semaphore("dlg.processSignIn")); }
+    }
+
+
+    function forgotPassword () {
+        var cred = readInputFieldValues(["emailin"]);
+        if(cred) {
+            jt.err("Not implemented yet"); }
+    }
+
+
+    function showSignInDialog () {
+        var html;
+        html = [["div", {id:"dlgtitlediv"},
+                 [["a", {href:"#back", onclick:jt.fs("app.dlg.close()")},
+                   ["img", {src:"img/backward.png", cla:"dlgbackimg"}]],
+                  "Welcome"]],
+                ["div", {cla:"dlgsignindiv"},
+                 [["div", {cla:"dlgformline"},
+                   [["label", {fo:"emailin", cla:"liflab", id:"labemailin"}, 
+                     "Email"],
+                    ["input", {type:"email", cla:"lifin", 
+                               name:"emailin", id:"emailin",
+                               placeholder:"nospam@example.com"}]]],
+                  ["div", {cla:"dlgformline"},
+                   [["label", {fo:"passwordin", cla:"liflab", 
+                               id:"labpasswordin"}, 
+                     "Password"],
+                    ["input", {type:"password", cla:"lifin",
+                               name:"passwordin", id:"passwordin",
+                               onchange:jt.fs("app.dlg.login()")}]]]]],
+                ["div", {id:"loginstatdiv"}],
+                ["div", {id:"dlgbuttondiv"},
+                 [["button", {type:"button", id:"newaccbutton",
+                              onclick:jt.fs("app.dlg.newacc()")},
+                   "Sign Up"],
+                  "&nbsp;or&nbsp;",
+                  ["button", {type:"button", id:"signinbutton",
+                              onclick:jt.fs("app.dlg.login()")},
+                   "Sign In"]]],
+                ["div", {id:"forgotpassdiv"},
+                 ["a", {href:"#forgotpassword",
+                        onclick:jt.fs("app.dlg.forgotpw()")},
+                  "forgot password"]]];
+        displayDialog(null, jt.tac2html(html));
+        jt.byId("emailin").focus();
     }
 
 
@@ -491,10 +605,14 @@ app.dlg = (function () {
         guessyear: function (year) { yearGuessButtonPress(year); },
         save: function (nextfstr) { showSaveConfirmationDialog(nextfstr); },
         nextColorTheme: function () { nextColorTheme(); },
-        signin: function () { jt.err("Login not implemented yet"); },
+        signin: function () { showSignInDialog(); },
         genentry: function () { showGenerationEntryForm(); },
         cascgen: function (id) { cascadeGenerationInfo(id); },
         closegenentry: function () { closeGenerationEntry(); },
-        okgenentry: function () { saveGenerationInfo(); }
+        okgenentry: function () { saveGenerationInfo(); },
+        newacc: function () { createAccount(); },
+        updprof: function () { updateProfile(); },
+        login: function () { processSignIn(); },
+        forgotpw: function () { forgotPassword(); }
     };
 }());

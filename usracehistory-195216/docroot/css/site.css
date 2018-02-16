@@ -34,7 +34,7 @@ circle { clip-path: url(../#clip); }
 #mouseoverLabel { fill:#f00; font-weight:bold; }
 #menudiv { position:absolute; left:320px; top:0px; margin-top:-3px; }
 .menuline, .menulinemain, .menulinesub { 
-  background:url('../img/menuback.png'); }
+  background:url('../img/menuback.png'); text-align:center; }
 .menulinemain { padding:5px; }
 .menulinesub { padding:2px 2px 2px 20px; }
 #suppvisdiv { position:absolute; left:80px; top:80px; 
@@ -108,7 +108,6 @@ circle { clip-path: url(../#clip); }
 .buttonptcodeslabelspan {font-size:x-small; font-style:italic; }
 .buttonptcodesdiv { font-size:small; }
 
-
 #leftcoldiv { position:absolute; left:0px; top:0px; background:#e7e1e2; }
 #lcontdiv, #tcontdiv { position:absolute; left:0px; top:0px; }
 #navdiv { position:absolute; left:0px; top:-5px; }
@@ -135,6 +134,17 @@ circle { clip-path: url(../#clip); }
 #disptoggleimg { margin:0px 5px 2px 5px; }
 #aboutdiv { float:right; font-size:medium; margin:3px 3px 0px 0px; }
 #abokbuttondiv { clear:both; text-align:center; padding:5px 0px 5px 0px; }
+
+#dlgtitlediv { padding:5px 20px; text-align:center; font-weight:bold; 
+  font-size:x-large; font-family: "Open Sans", "Helvetica", sans-serif; }
+.dlgformline { padding:2px 0px; }
+.liflab { font-size:medium; font-weight:normal; text-align:right; 
+  padding:0px 2px 0px 2px; display:block; float:left; width:80px; }
+.lifin { padding:0px; font-size:small; width:145px; }
+.lifsep { clear:both; }
+#forgotpassdiv { text-align:center; font-size:medium; padding:6px 0px 0px 0px; }
+.dlgbackimg { max-height:27px; opacity:0.5; }
+#loginstatdiv { padding:5px 0 0 0; }
 
 /* -------------------- */
 /* tabular */

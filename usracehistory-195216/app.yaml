@@ -4,9 +4,26 @@ runtime: python27
 api_version: 1
 threadsafe: yes
 
+libraries:
+- name: pycrypto
+  version: "2.3"
+
 handlers:
 ######################################################################
-##  API:
+##  API: bracketed params are optional.
+
+## Retrieve the account and an access token.
+## GET params: email, password
+- url: .*/acctok.*
+  script: src.py.appuser.app
+
+
+## Create or update the specified account.  If no authtok create new.
+## POST params: email, [authtok], password, [actcode, name, url, shoutout,
+##              lang, settings, remtls, rempts, completed, started, built]
+- url: .*/updacc.*
+  script: src.py.appuser.app
+
 
 ######################################################################
 ##  General Config
