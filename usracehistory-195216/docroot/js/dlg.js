@@ -26,6 +26,8 @@ app.dlg = (function () {
              year: 1000},
             {id:"geanc", abbr:"Ancients", name:"Ancient Ancestors", 
              year: -90000}]},
+        cookname = "userauth",
+        cookdelim = "..usracehistory..",
         lnfidx = 0,
         tl = null;
 
@@ -504,16 +506,21 @@ app.dlg = (function () {
     }
 
 
+    function setAuthentication (email, result) {
+        app.user = {email: email, acc: result[0], tok: result[1].token};
+        jt.cookie(cookname, email + cookdelim + app.user.tok, 365);
+    }
+
+
     function createAccount () {
         var cred = readInputFieldValues(["emailin", "passwordin"]);
         if(cred) {
             jt.out("loginstatdiv", "Creating account...");
             jt.call("POST", "updacc", inputsToParams(cred),
                     function (result) {
-                        app.user = {acc: result[0],
-                                    tok: result[1]};
+                        setAuthentication(cred.emailin, result);
                         app.dlg.close();
-                        app.dlg.updprof(); },
+                        app.dlg.myacc(); },
                     function (code, errtxt) {
                         jt.log("createAccount " + code + " " + errtxt);
                         jt.out("loginstatdiv", errtxt); },
@@ -521,24 +528,43 @@ app.dlg = (function () {
     }
 
 
-    function updateProfile () {
+    function myAccount () {
         jt.err("Not implemented yet");
     }
 
 
-    function processSignIn () {
-        var cred = readInputFieldValues(["emailin", "passwordin"]);
+    function processSignIn (cred) {
+        var params;
+        cred = cred || readInputFieldValues(["emailin", "passwordin"]);
+        params = inputsToParams(cred);
+        jt.log("processSignIn params: " + params);
         if(cred) {
-            jt.call("GET", "acctok?" + inputsToParams(cred), null,
+            jt.call("GET", "acctok?" + params, null,
                     function (result) {
-                        jt.log("processSignIn successful");
-                        app.user = {acc: result[0],
-                                    tok: result[1]};
-                        app.dlg.close(); },
+                        setAuthentication(cred.emailin, result)
+                        app.dlg.close();
+                        app.mode.chmode(); },
                     function (code, errtxt) {
                         jt.log("processSignIn: " + code + " " + errtxt);
                         jt.out("loginstatdiv", errtxt); },
                     jt.semaphore("dlg.processSignIn")); }
+    }
+
+
+    function processSignOut () {
+        app.user = null;
+        jt.cookie(cookname, "", -1);
+        app.mode.chmode();
+    }
+
+
+    function checkCookieSignIn () {
+        var cval = jt.cookie(cookname);
+        jt.log("cookie " + cookname + ": " + cval);
+        if(cval) {
+            cval = cval.split(cookdelim);
+            processSignIn({email:cval[0].replace("%40", "@"),
+                           authtok:cval[1]}); }
     }
 
 
@@ -611,8 +637,10 @@ app.dlg = (function () {
         closegenentry: function () { closeGenerationEntry(); },
         okgenentry: function () { saveGenerationInfo(); },
         newacc: function () { createAccount(); },
-        updprof: function () { updateProfile(); },
+        myacc: function () { myAccount(); },
         login: function () { processSignIn(); },
+        logout: function () { processSignOut(); },
+        chkcook: function () { checkCookieSignIn(); },
         forgotpw: function () { forgotPassword(); }
     };
 }());

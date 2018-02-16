@@ -186,6 +186,59 @@ def find_user_by_email(email):
     return cached_get(email, qp)
 
 
+def asciienc(val):
+    val = unicode(val)
+    return val.encode('utf8')
+
+
+def pwd2key(password):
+    pwd = unicode(password)
+    pwd = asciienc(pwd)
+    # passwords have a min length of 6 so get at least 32 by repeating it
+    key = str(pwd) * 6
+    key = key[:32]
+    return key
+
+
+def acctoken(email, password):
+    key = pwd2key(password)
+    token = ":" + str(int(round(time.time()))) + ":" + asciienc(email)
+    token = token.rjust(48, 'X')
+    token = token[:48]
+    token = AES.new(key, AES.MODE_CBC).encrypt(token)
+    token = base64.b64encode(token)
+    # make base64 encoding url safe
+    token = token.replace("+", "-")
+    token = token.replace("/", "_")
+    token = token.replace("=", ".")
+    return token
+
+
+def dectoken(key, token):
+    token = token.replace("-", "+")
+    token = token.replace("_", "/")
+    token = token.replace(".", "=")
+    token = base64.b64decode(token)
+    token = AES.new(key, AES.MODE_CBC).decrypt(token)
+    return token
+
+
+def match_token_to_acc(token, acc):
+    key = pwd2key(acc.password)
+    decoded = dectoken(key, token)
+    if not decoded:
+        return None
+    emidx = -1
+    try:
+        emidx = decoded.index(asciienc(acc.email))
+    except:
+        emidx = -1
+    if emidx <= 2:
+        return None
+    # Not enforcing token expiration. Check the time here if that's needed
+    return acc
+
+
 # The email parameter is required. Then either password or authok.
 def get_authenticated_account(handler, create):
     params = read_params(handler, ["email", "authtok", "password"])
@@ -200,9 +253,15 @@ def get_authenticated_account(handler, create):
         else:
             return srverr(handler, 404, "Account not found.")
     else: # have acc
-        if(params["password"] != acc.password and 
-           params["authtok"] != acctoken(acc)):
-            return srverr(handler, 403, "Authentication failed.")
+        if not params["password"] and not params["authtok"]:
+            return srverr(handler, 403, "password or authtok required.")
+        # if password sent, that has precedence over a possibly outdated token
+        if params["password"]:
+            if params["password"] != acc.password:
+                return srverr(handler, 403, "Password authentication failed.")
+        else: # authtok
+            if not match_token_to_acc(params["authtok"], acc):
+                return srverr(handler, 403, "Token authentication failed.")
     return acc
 
 
@@ -240,34 +299,6 @@ def return_json(handler, data):
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Content-Type'] = 'application/json'
     response.out.write(jsontxt)
-
-
-def asciienc(val):
-    val = unicode(val)
-    return val.encode('utf8')
-
-
-def pwd2key(password):
-    pwd = unicode(password)
-    pwd = asciienc(pwd)
-    # passwords have a min length of 6 so get at least 32 by repeating it
-    key = str(pwd) * 6
-    key = key[:32]
-    return key
-
-
-def acctoken(email, password):
-    key = pwd2key(password)
-    token = ":" + str(int(round(time.time()))) + ":" + asciienc(email)
-    token = token.rjust(48, 'X')
-    token = token[:48]
-    token = AES.new(key, AES.MODE_CBC).encrypt(token)
-    token = base64.b64encode(token)
-    # make base64 encoding url safe
-    token = token.replace("+", "-")
-    token = token.replace("/", "_")
-    token = token.replace("=", ".")
-    return token
 
 
 class UpdateAccount(webapp2.RequestHandler):

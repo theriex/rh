@@ -310,6 +310,7 @@ app.mode = (function () {
 
 
     function changeMode (chmode) {
+        chmode = chmode || mode;
         showModeElements(chmode);
         if(mode === "interactive") {
             if(ms.disp === "text") {
@@ -348,7 +349,11 @@ app.mode = (function () {
                             "Interactive&nbsp;Mode"]]); }
             if(app.user) {
                 html.push(["div", {cla:"menulinemain"},
-                           ["a", {href:"SignOut",
+                           ["a", {href:"#profile",
+                                  onclick:jt.fs("app.mode.menu(0, 'myacc')")},
+                            "Account&nbsp;Details"]]);
+                html.push(["div", {cla:"menulinemain"},
+                           ["a", {href:"#SignOut",
                                   onclick:jt.fs("app.mode.menu(0, 'signout')")},
                             "Sign&nbsp;Out"]]); }
             else { //not signed in
@@ -373,7 +378,8 @@ app.mode = (function () {
             case "refmode": changeMode("reference"); break;
             case "about": app.about.display(ms); break; 
             case "signin": app.dlg.signin(); break;
-            case "signout": app.signout(); break; } }
+            case "myacc": app.dlg.myacc(); break;
+            case "signout": app.dlg.logout(); break; } }
     }
 
 
