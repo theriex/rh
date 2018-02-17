@@ -4,7 +4,7 @@
 app.db = (function () {
     "use strict";
 
-    var maxcids = {};
+    var maxcids = {}, pointcounts = {};
 
     function makeDisplayDate (pt) {
         var dd = "",
@@ -251,8 +251,9 @@ app.db = (function () {
         jt.log("Point racial codes and names");
         app.data.ptcs.forEach(function (tl) {
             if(tl.type !== "marker") {
-                jt.log("  " + tl.code + ": " + tl.name + 
-                       " (" + tl.ident + ") maxcid: " + maxcids[tl.code]); } });
+                jt.log("  " + tl.code + ": " + pointcounts[tl.code] + " " + 
+                       tl.name + " (" + tl.ident + ") maxcid: " + 
+                       maxcids[tl.code]); } });
         //an sv datum will have an sv field set to the sv code.
         // jt.log("Supplemental Visualizations");
         // app.data.suppvis.forEach(function (sv) {
@@ -261,9 +262,14 @@ app.db = (function () {
 
 
     function noteCitationIdMax (pt) {
-        var code = pt.cid.charAt(0),
+        var i, code = pt.cid.charAt(0),
             count = +(pt.cid.slice(1));
         maxcids[code] = Math.max((maxcids[code] || 0), count);
+        for(i = 0; i < pt.code.length; i += 1) {
+            if(!pointcounts[pt.code.charAt(i)]) {
+                pointcounts[pt.code.charAt(i)] = 1; }
+            else {
+                pointcounts[pt.code.charAt(i)] += 1; } }
     }
 
 
