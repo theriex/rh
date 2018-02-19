@@ -351,7 +351,7 @@ app.mode = (function () {
                 html.push(["div", {cla:"menulinemain"},
                            ["a", {href:"#profile",
                                   onclick:jt.fs("app.mode.menu(0, 'myacc')")},
-                            "Account&nbsp;Details"]]);
+                            "My&nbsp;Account"]]);
                 html.push(["div", {cla:"menulinemain"},
                            ["a", {href:"#SignOut",
                                   onclick:jt.fs("app.mode.menu(0, 'signout')")},

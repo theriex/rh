@@ -475,20 +475,23 @@ app.dlg = (function () {
     }
 
 
-    function readInputFieldValues (fields) {
+    function readInputFieldValues (fields, defaultvals) {
         var vals = {}, filled = true;
         fields.forEach(function (field) {
             var lv = jt.byId("lab" + field);
             lv.innerHTML = lv.innerHTML.replace("*", "");
             lv.style.fontWeight = "normal";
             vals[field] = jt.byId(field).value; });
-        fields.forEach(function (field) {
+        fields.forEach(function (field, idx) {
             var lv = jt.byId("lab" + field);
             if(!vals[field] || ((field.indexOf("mail") >= 0) &&
                                 (!jt.isProbablyEmail(vals[field])))) {
-                lv.innerHTML += "*";
-                lv.style.fontWeight = "bold";
-                filled = false; } });
+                if(!defaultvals || !defaultvals[idx]) {
+                    lv.innerHTML += "*";
+                    lv.style.fontWeight = "bold";
+                    filled = false; }
+                else {
+                    vals[field] = defaultvals[idx]; } } });
         if(!filled) {
             return null; }
         return vals;
@@ -529,7 +532,59 @@ app.dlg = (function () {
 
 
     function myAccount () {
-        jt.err("Not implemented yet");
+        var html;
+        html = [["div", {id:"dlgtitlediv"},
+                 [["a", {href:"#back", onclick:jt.fs("app.dlg.back()")},
+                   ["img", {src:"img/backward.png", cla:"dlgbackimg"}]],
+                  app.user.email]],
+                ["div", {cla:"dlgsignindiv"},
+                 [["div", {cla:"dlgformline"},
+                   [["label", {fo:"namein", cla:"liflab", id:"labnamein"},
+                     "Name"],
+                    ["input", {type:"text", cla:"lifin",
+                               name:"namein", id:"namein",
+                               value:app.user.acc.name}]]],
+                  ["div", {cla:"dlgformline"},
+                   [["label", {fo:"titlein", cla:"liflab", id:"labtitlein"},
+                     "Title"],
+                    ["input", {type:"text", cla:"lifin",
+                               name:"titlein", id:"titlein",
+                               value:app.user.acc.title}]]],
+                  ["div", {cla:"dlgformline"},
+                   [["label", {fo:"webin", cla:"liflab", id:"labwebin"},
+                     "Website"],
+                    ["input", {type:"text", cla:"lifin",
+                               name:"webin", id:"webin",
+                               value:app.user.acc.web}]]]]],
+                ["div", {id:"loginstatdiv"}],
+                ["div", {id:"dlgbuttondiv"},
+                 [["button", {type:"button", id:"updaccbutton",
+                              onclick:jt.fs("app.dlg.updacc()")},
+                   "Ok"]]]];
+        displayDialog(null, jt.tac2html(html));
+        jt.byId("namein").focus();
+    }
+
+
+    function authparams () {
+        return "email=" + jt.enc(app.user.email) + "&authtok=" + app.user.tok;
+    }
+
+
+    function updateAccount () {
+        var data = readInputFieldValues(["namein", "titlein", "webin"],
+                                        ["none",   "none",    "none"]);
+        if(data) {
+            jt.out("loginstatdiv", "Updating account...");
+            jt.call("POST", "updacc?" + authparams(), inputsToParams(data),
+                    function (result) {
+                        app.user.acc = result[0];
+                        app.dlg.close();
+                        app.mode.chmode(); },
+                    function (code, errtxt) {
+                        jt.log("updateAccount " + code + ": " + errtxt);
+                        jt.lut("loginstatdiv", errtxt); },
+                    jt.semaphore("dlg.updateAccount")); }
     }
 
 
@@ -563,7 +618,7 @@ app.dlg = (function () {
         jt.log("cookie " + cookname + ": " + cval);
         if(cval) {
             cval = cval.split(cookdelim);
-            processSignIn({email:cval[0].replace("%40", "@"),
+            processSignIn({emailin:cval[0].replace("%40", "@"),
                            authtok:cval[1]}); }
     }
 
@@ -578,7 +633,7 @@ app.dlg = (function () {
     function showSignInDialog () {
         var html;
         html = [["div", {id:"dlgtitlediv"},
-                 [["a", {href:"#back", onclick:jt.fs("app.dlg.close()")},
+                 [["a", {href:"#back", onclick:jt.fs("app.dlg.back()")},
                    ["img", {src:"img/backward.png", cla:"dlgbackimg"}]],
                   "Welcome"]],
                 ["div", {cla:"dlgsignindiv"},
@@ -638,6 +693,8 @@ app.dlg = (function () {
         okgenentry: function () { saveGenerationInfo(); },
         newacc: function () { createAccount(); },
         myacc: function () { myAccount(); },
+        updacc: function () { updateAccount(); },
+        back: function () { closeDialog(); app.mode.chmode(); },
         login: function () { processSignIn(); },
         logout: function () { processSignOut(); },
         chkcook: function () { checkCookieSignIn(); },

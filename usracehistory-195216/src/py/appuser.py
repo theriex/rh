@@ -44,8 +44,8 @@ class AppUser(db.Model):
     actcode = db.StringProperty(indexed=False) # account activation code
     # optional public descriptive information
     name = db.StringProperty(indexed=False)
-    url = db.StringProperty(indexed=False)
-    shoutout = db.TextProperty()
+    title = db.StringProperty(indexed=False)
+    web = db.StringProperty(indexed=False)
     # app working values
     lang = db.StringProperty()      # preferred lang code for data points
     settings = db.TextProperty()    # JSON object (age, parent's age etc)
@@ -175,7 +175,7 @@ def cached_get(ckey, qps):
     vq = VizQuery(qps["dboc"], qps["where"], qps["wags"])
     instances = vq.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
     if len(instances) > 0:
-        instance = intances[0]
+        instance = instances[0]
         cached_put(ckey, instance)
         return instance
     return None
@@ -316,9 +316,14 @@ class UpdateAccount(webapp2.RequestHandler):
                                     "shoutout", "lang", "settings", "remtls",
                                     "rempts", "completed", "started", "built"])
         for fieldname in params:
-            if fieldname.startswith("upd"):
-                fieldname = fieldname[3:]
-            setattr(acc, fieldname, params[fieldname])
+            attr = fieldname
+            val = params[fieldname]
+            if attr.startswith("upd"):
+                attr = attr[3:]
+            if val: 
+                if val.lower() == "none":
+                    val = ""
+                setattr(acc, attr, val)
         cached_put(acc.email, acc)
         return_json(self, [acc, {"token": acctoken(acc.email, acc.password)}])
         
