@@ -39,7 +39,6 @@ class AppUser(db.Model):
     email = db.EmailProperty(required=True)
     password = db.StringProperty(required=True)
     status = db.StringProperty()        # Pending|Active|Inactive|Unreachable
-    accessed = db.StringProperty()      # isodate
     actsends = db.TextProperty(indexed=False)  # isodate;emaddr,d2;e2...
     actcode = db.StringProperty(indexed=False) # account activation code
     # optional public descriptive information
@@ -55,10 +54,10 @@ class AppUser(db.Model):
     started = db.TextProperty()     # JSON array of timeline progress instances
     built = db.TextProperty()       # CSV of timeline ids created by this user
     # write privileges
-    org = db.IntegerProperty()      # Organization id
+    orgid = db.IntegerProperty()    # Organization id (if any). 1 is global.
     lev = db.IntegerProperty()      # 0:User, 1:Contributor, 2:Administrator
     # activity sorting
-    created = db.StringProperty()   # ISO datetime;creator
+    created = db.StringProperty()   # ISO datetime
     accessed = db.StringProperty()  # ISO datetime;count
     
 
@@ -78,40 +77,6 @@ def verify_secure_comms(handler):
     handler.error(405)
     handler.response.out.write("Request must be over https")
     return False
-
-
-def point_codes():
-    codes = { 
-        # At least one usrace code must be assigned for every point.
-        "usrace": [{"code": "N",
-                    "name": "Native American",
-                    "abbr": "Native" },
-                   {"code": "B",
-                    "name": "African American",
-                    "abbr": "Black"},
-                   {"code": "L",
-                    "name": "Latino/as",
-                    "abbr": "Latinx"},
-                   {"code": "A",
-                    "name": "Asian American",
-                    "abbr": "AsAm"},
-                   {"code": "M",
-                    "name": "Middle East and North Africa",
-                    "abbr": "MENA"},
-                   {"code": "R",
-                    "name": "Multiracial",
-                    "abbr": "Multi"}],
-        # Optional marker codes to trigger special presentation handling.
-        "marker": [{"code": "U",            # Did you know?
-                    "name": "Unusual",
-                    "abbr": "Unusual"},
-                   {"code": "F",            # Legacy
-                    "name": "Firsts",
-                    "abbr": "Firsts"},
-                   {"code": "D",            # Click the correct date
-                    "name": "Important Date",
-                    "abbr": "Date"}]}
-    return codes
 
 
 class VizQuery(object):
@@ -239,6 +204,15 @@ def match_token_to_acc(token, acc):
     return acc
 
 
+def nowISO():
+    dt = datetime.datetime.utcnow()
+    iso = str(dt.year) + "-" + str(dt.month).rjust(2, '0') + "-"
+    iso += str(dt.day).rjust(2, '0') + "T" + str(dt.hour).rjust(2, '0')
+    iso += ":" + str(dt.minute).rjust(2, '0') + ":"
+    iso += str(dt.second).rjust(2, '0') + "Z"
+    return iso
+
+
 # The email parameter is required. Then either password or authok.
 def get_authenticated_account(handler, create):
     params = read_params(handler, ["email", "authtok", "password"])
@@ -249,7 +223,13 @@ def get_authenticated_account(handler, create):
     acc = find_user_by_email(params["email"])
     if not acc:
         if create and params["password"]:
-            acc = AppUser(email=params["email"], password=params["password"])
+            now = nowISO()
+            acc = AppUser(email=params["email"], password=params["password"],
+                          status="Pending", actsends="", actcode="", name="",
+                          title="", web="", lang="en-US", settings="",
+                          remtls="", rempts="", completed="", started="",
+                          build="", orgid=0, lev=0, created=now, 
+                          accessed=now + ";1")
         else:
             return srverr(handler, 404, "Account not found.")
     else: # have acc

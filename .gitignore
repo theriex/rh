@@ -3,3 +3,4 @@
 .DS_Store
 ref/srcdat/node_modules
 ref/srcdat/scratch
+build/node_modules

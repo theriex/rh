@@ -18,11 +18,25 @@ handlers:
   script: src.py.appuser.app
 
 
-## Create or update the specified account.  If no authtok create new.
+## Create account or update if authtok provided.
 ## POST params: email, [authtok], password, [actcode, name, url, shoutout,
 ##              lang, settings, remtls, rempts, completed, started, built]
 - url: .*/updacc.*
   script: src.py.appuser.app
+
+
+## Add or update a point (org contributor accounts only)
+## POST params: email, authtok, date, text, codes, orgid, source, [keywords,
+##              refs, srclang, translations, pic]
+- url: .*/updpt.*
+  script: src.py.point.app
+
+
+## Retrieve a point pic
+## GET params: pointid
+- url: .*/ptpic.*
+  script: src.py.point.app
+
 
 
 ######################################################################
