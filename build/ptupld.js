@@ -27,6 +27,9 @@ var ptupld = (function () {
 
     function uploadDataPoint (pt, createOnly) {
         var formdat, imgdir = "../usracehistory-195216/docroot/img/datapics/";
+        if(!pt) {
+            console.log("uploadDataPoint null pt. Quitting");
+            return;
         if(!pt.code) {
             console.log("Skipping uncoded " + pt.text);
             return uploadNextPoint(); }
