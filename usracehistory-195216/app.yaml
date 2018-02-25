@@ -38,6 +38,17 @@ handlers:
   script: src.py.point.app
 
 
+## Add or update a timeline.  If instid not provided, then adding new.
+## POST params: email, authtok, instid, name, ctype, cids, [slug, lang, comment]
+- url: .*/updtl.*
+  script: src.py.timeline.app
+
+
+## Fetch the specified Timeline.
+## GET params: tlid
+- url: .*/fetchtl.*
+  script: src.py.timeline.app
+
 
 ######################################################################
 ##  General Config

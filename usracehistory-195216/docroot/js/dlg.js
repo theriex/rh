@@ -512,6 +512,10 @@ app.dlg = (function () {
     function setAuthentication (email, result) {
         app.user = {email: email, acc: result[0], tok: result[1].token};
         jt.cookie(cookname, email + cookdelim + app.user.tok, 365);
+        if(!app.auth) {
+            app.auth = function () {
+                return "email=" + jt.enc(app.user.email) + "&authtok=" +
+                    app.user.tok; }; }
     }
 
 
@@ -598,6 +602,9 @@ app.dlg = (function () {
                     function (result) {
                         setAuthentication(cred.emailin, result)
                         app.dlg.close();
+                        //TEST: Uncomment to launch menu command post login
+                        setTimeout(function () { 
+                            app.mode.menu(0, 'newtl'); }, 200);
                         app.mode.chmode(); },
                     function (code, errtxt) {
                         jt.log("processSignIn: " + code + " " + errtxt);

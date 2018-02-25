@@ -13,7 +13,6 @@ var app = {},  //Global container for application level funcs and values
         app.db.prepData();
         app.lev.init();
         app.linear.display();
-        //app.tabular.display();
     };
 
 
@@ -40,6 +39,5 @@ var app = {},  //Global container for application level funcs and values
         app.amdtimer.load = { start: new Date() };
         jt.loadAppModules(app, modules, href, app.init2, "?cbp=161223");
     };
-
 
 }());

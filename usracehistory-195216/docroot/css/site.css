@@ -128,7 +128,7 @@ circle { clip-path: url(../#clip); }
 .bgpicdiv { display:inline-block; overflow:hidden; text-align:center; }
 .bgpicimg { opacity:0.6; }
 
-#refdiv { padding:2px 10px 0px 10px; }
+#refdiv { padding:8px 10px 0px 10px; font-weight:bold; }
 #interactimg, #disptoggleimg { width:18px; height:18px;
   margin:2px 5px 2px 5px; }
 #disptoggleimg { margin:0px 5px 2px 5px; }
@@ -167,6 +167,18 @@ circle { clip-path: url(../#clip); }
   background-image:url('../img/whitewash.png'); }
 #downloadactiondiv { min-width:150px; font-weight:bold; padding:16px 0px; }
 
+.formicoimg { max-width:25px; max-height:25px; }
+.formseldiv { display:inline-block; }
+#tlrndmaxin { width:3em; }
+#ppsin {width:2em; }
+.wlab { font-size:medium; font-weight:normal; text-align:right; 
+  padding:0px 2px 0px 2px; display:block; float:left; width:90px; }
+.wfin { padding:0px; font-size:small; width:200px; }
+#etlsetdiv { border:2px solid #666666; border-radius:5px; margin-bottom:10px;
+  padding:5px 0px; }
+.buttonsdiv { text-align:center; }
+.buttonsdiv button { background:white; }
+#tlctxdiv, #ptfilterdiv { padding-left:10px; }
 
 /* -------------------- */
 /* visualizations */

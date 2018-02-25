@@ -28,27 +28,16 @@ app.mode = (function () {
 
 
     function verifyDisplayElements () {
-        var tlopts, html, srchfstr;
-        srchfstr = jt.fs("app.mode.updatesrch()");
-        tlopts = [["option", {value:""}, "All"]];
-        app.data.ptcs.forEach(function (tl) {
-            if(tl.type !== "marker") {
-                tlopts.push(["option", {value:tl.code}, 
-                             tl.ident + " (" + tl.name + ")"]); } });
+        var html;
         if(!ms.progsvg) {
             clearSearchState();  //init
             html = [["div", {id:"refdiv", style:"width:" + ms.w + "px;" +
                                                 "height:" + ms.h + "px;"},
-                     [["input", {type:"text", id:"srchin", size:25,
-                                 placeholder:"Filter text...",
-                                 value:srchst.qstr, oninput:srchfstr}],
-                      ["span", {cla:"srchinspan"}, "&nbsp;in&nbsp;"],
-                      ["select", {id:"tlsel", onchange:srchfstr}, tlopts]]],
+                     "Reference Title"],
                     ["div", {id:"levdiv"},
                      ["svg", {id:"svgnav", width:ms.w, height:ms.h}]]];
             jt.out(ms.divid, jt.tac2html(html));
             ms.progsvg = d3.select("#svgnav"); }
-        jt.byId("tlsel").style.width = "64px";
         showModeElements();
     }
 
@@ -353,6 +342,10 @@ app.mode = (function () {
                                   onclick:jt.fs("app.mode.menu(0, 'myacc')")},
                             "My&nbsp;Account"]]);
                 html.push(["div", {cla:"menulinemain"},
+                           ["a", {href:"#create",
+                                  onclick:jt.fs("app.mode.menu(0, 'newtl')")},
+                            "Create&nbsp;Timeline"]]);
+                html.push(["div", {cla:"menulinemain"},
                            ["a", {href:"#SignOut",
                                   onclick:jt.fs("app.mode.menu(0, 'signout')")},
                             "Sign&nbsp;Out"]]); }
@@ -373,12 +366,16 @@ app.mode = (function () {
         if(select) {
             jt.byId("itemdispdiv").style.visibility = "hidden";
             jt.byId("suppvisdiv").style.visibility = "hidden";
-            switch(select) {
+            switch(select) {  //update title if needed
+            case "refmode": jt.out("refdiv", "Reference Mode"); break;
+            case "newtl": jt.out("refdiv", "Create Timeline"); break; }
+            switch(select) {  //next action
             case "visual": changeMode("interactive"); break;
             case "refmode": changeMode("reference"); break;
             case "about": app.about.display(ms); break; 
             case "signin": app.dlg.signin(); break;
             case "myacc": app.dlg.myacc(); break;
+            case "newtl": app.tabular.tledit(); break;
             case "signout": app.dlg.logout(); break; } }
     }
 
@@ -394,6 +391,7 @@ app.mode = (function () {
         ptmatch: function (pt) { return isMatchingPoint(pt); },
         interject: function (pt) { interject(pt); },
         menu: function (expand, select) { displayMenu(expand, select); },
-        showNext: function () { showNextPoints(); }
+        showNext: function () { showNextPoints(); },
+        searchstate: function () { return srchst; }
     };
 }());

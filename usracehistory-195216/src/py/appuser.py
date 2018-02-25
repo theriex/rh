@@ -48,11 +48,11 @@ class AppUser(db.Model):
     # app working values
     lang = db.StringProperty()      # preferred lang code for data points
     settings = db.TextProperty()    # JSON object (age, parent's age etc)
-    remtls = db.TextProperty()      # CSV of remembered timeline ids
+    remtls = db.TextProperty()      # JSON array remembered timeline ids/names
     rempts = db.TextProperty()      # CSV of remembered point ids
     completed = db.TextProperty()   # CSV of tlid;ISOFirst;ISOLatest;count
     started = db.TextProperty()     # JSON array of timeline progress instances
-    built = db.TextProperty()       # CSV of timeline ids created by this user
+    built = db.TextProperty()       # JSON array of created timeline ids/names
     # write privileges
     orgid = db.IntegerProperty()    # Organization id (if any). 1 is global.
     lev = db.IntegerProperty()      # 0:User, 1:Contributor, 2:Administrator
@@ -260,8 +260,8 @@ def dbo2json(dbo):
         if(isinstance(val, (int, long)) and (prop.endswith("id"))):
             props[prop] = str(props[prop])
     jsontxt = json.dumps(props, True)
-    # Include entity id as a field for reference in JavaScript
-    jsontxt = "{\"_id\":\"" + str(dbo.key().id()) + "\", " + jsontxt[1:]
+    # Include instance id as a field for reference in JavaScript
+    jsontxt = "{\"instid\":\"" + str(dbo.key().id()) + "\", " + jsontxt[1:]
     return jsontxt
 
 
