@@ -11,6 +11,9 @@ libraries:
 handlers:
 ######################################################################
 ##  API: bracketed params are optional.
+##
+
+## -------------------- appuser --------------------
 
 ## Retrieve the account and an access token.
 ## GET params: email, password
@@ -25,6 +28,8 @@ handlers:
   script: src.py.appuser.app
 
 
+## -------------------- point --------------------
+
 ## Add or update a point (org contributor accounts only)
 ## POST params: email, authtok, date, text, codes, orgid, source, [keywords,
 ##              refs, srclang, translations, pic]
@@ -37,6 +42,15 @@ handlers:
 - url: .*/ptpic.*
   script: src.py.point.app
 
+
+## Fetch all points (admin accounts only). Read docs/allpts.json to fetch
+## all the points, this endpoint exists to allow building that file.
+## GET params: email, authtok
+- url: .*/allpts.*
+  script: src.py.point.app
+
+
+## -------------------- timeline --------------------
 
 ## Add or update a timeline.  If instid not provided, then adding new.
 ## POST params: email, authtok, instid, name, ctype, cids, [slug, lang, comment]

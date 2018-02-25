@@ -108,7 +108,16 @@ class RecentPoints(webapp2.RequestHandler):
 
 class AllPoints(webapp2.RequestHandler):
     def get(self):
-        appuser.srverr(self, 500, "Not implemented yet")
+        acc = appuser.get_authenticated_account(self, False)
+        if not acc:
+            return
+        if acc.orgid != 1 or acc.lev != 2:
+            return appuser.srverr(self, 403, "Admin access only.")
+        res = []
+        pts = Point.all()
+        for pt in pts:
+            res.append(pt)
+        appuser.return_json(self, res)
 
 
 class UpdatePoint(webapp2.RequestHandler):
@@ -143,7 +152,7 @@ class GetPointPic(webapp2.RequestHandler):
 
 
 app = webapp2.WSGIApplication([('.*/recentpoints', RecentPoints),
-                               ('.*/allpoints', AllPoints),
+                               ('.*/allpts', AllPoints),
                                ('.*/updpt', UpdatePoint),
                                ('.*/ptpic', GetPointPic)],
                               debug=True)
