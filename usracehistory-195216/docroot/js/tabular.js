@@ -13,7 +13,8 @@ app.tabular = (function () {
                                  {format:"none", name:"Nevermind"}]},
         tlflds = {},
         currtl = null,
-        dbtl = null;
+        dbtl = null,
+        ptflds = {};
 
 
     function dateSpan (dobj, prefix) {
@@ -65,18 +66,14 @@ app.tabular = (function () {
 
 
     function pointTAC (pt, idx) {
-        var ddc = pt.remembered ? "trowdescdivrem" : "trowdescdiv",
-            ddt = idx ? pt.text : textIntroHTML(),
-            code, html;
-        code = pt.code.replace(/U/g, "");
-        code = code.replace(/D/g, "");
+        var html;
         html = ["div", {cla:"trowdiv"},
-                [["div", {cla:"trowdatediv"},
+                [["div", {cla:"trowdatediv"}, 
                   [dateSpan(pt.start),
                    ["br"],
                    dateSpan(pt.end, "-"),
-                   ["span", {cla:"tcspan"}, " (" + code + ") "]]],
-                 ["div", {cla:ddc}, ddt]]];
+                   ["span", {cla:"tcspan"}, " (" + pt.codes + ") "]]],
+                 ["div", {cla:"trowdescdiv"}, pt.text]]];
         return html;
     }
 
@@ -199,62 +196,82 @@ app.tabular = (function () {
         var html, tlopts;
         if(jt.byId("pointsdispdiv")) {  //already set up
             return; }
-        tlopts = [["option", {value:""}, "All"]];
-        app.data.ptcs.forEach(function (tl) {
-            if(tl.type !== "marker") {
-                tlopts.push(["option", {value:tl.code}, 
-                             tl.ident + " (" + tl.name + ")"]); } });
+        ptflds.selpool = makeSelect(
+            "ptdpsel", jt.fs("app.tabular.ptdisp()"),
+            [{value:"All", text:"All Points"},
+             {value:"Timeline", text:"Timeline Points"}]);
+        ptflds.selcode = makeSelect(
+            "ptcodesel", jt.fs("app.tabular.ptdisp()"),
+            [{value:"All", text:"All Codes"},
+             {value:"N", text:"Native American"},
+             {value:"B", text:"African American"},
+             {value:"L", text:"Latino/as"},
+             {value:"A", text:"Asian American"},
+             {value:"M", text:"Middle East and North Africa"},
+             {value:"R", text:"Multiracial"},
+             {value:"U", text:"Did you know?"},
+             {value:"F", text:"Firsts"},
+             {value:"D", text:"What year?"}]);
         html = [["div", {id:"tlctxdiv"}, ""],  //timeline context
+                ["div", {id:"ptdispmodediv"},
+                 [ptflds.selpool.tac(), ptflds.selcode.tac()]],
                 ["div", {id:"ptfilterdiv"},  //point filtering
-                 [["input", {type:"text", id:"srchin", size:25,
+                 [["input", {type:"number", cla:"yearin",
+                             onchange:jt.fs("app.tabular.ptdisp()"),
+                             name:"yearstartin", id:"yearstartin",
+                             min:-1200, max:2016, value:-1200}],
+                  ["span", {cla:"srchinspan"}, "&nbsp;to&nbsp;"],
+                  ["input", {type:"number", cla:"yearin",
+                             onchange:jt.fs("app.tabular.ptdisp()"),
+                             name:"yearendin", id:"yearendin",
+                             min:-1200, max:2016, value:2016}],
+                  ["input", {type:"text", id:"srchin", size:18,
                              placeholder:"Filter text...",
                              value:app.mode.searchstate().qstr, 
-                             oninput:jt.fs("app.mode.updatesrch()")}],
-                  ["span", {cla:"srchinspan"}, "&nbsp;in&nbsp;"],
-                  ["select", {id:"tlsel", style:"width:64px;",
-                              onchange:jt.fs("app.mode.updatesrch()")}, 
-                   tlopts]]],
-                ["div", {id:"downloadlinkdiv"}, ""],
+                             oninput:jt.fs("app.tabular.ptdisp()")}],
+                  ["div", {id:"downloadlinkdiv"}, ""]]],
                 ["div", {id:"pointsdispdiv"}, ""]];
         jt.out("tcontdiv", jt.tac2html(html));
     }
 
 
     function display (srchst) {
-        var outdiv;
         verifyDisplayElements();
-        outdiv = jt.byId("pointsdispdiv");
-        jt.out("downloadlinkdiv", jt.tac2html(
-            ["span", {cla:"procspan"}, "Processing..."]));
-        outdiv.innerHTML = "";
-        dnld.srchst = srchst;
-        app.data.pts.forEach(function (pt, idx) {
-            var linediv;
-            if(!srchst || app.mode.ptmatch(pt)) {
-                linediv = document.createElement("div");
-                linediv.innerHTML = jt.tac2html(pointTAC(pt, idx));
-                outdiv.appendChild(linediv); } });
-        jt.out("downloadlinkdiv", jt.tac2html(
-            ["a", {href:"#Download", id:"downloadlink",
-                   title:"Download the displayed points",
-                   onclick:jt.fs("app.tabular.showDownloadDialog")},
-             [["img", {src:"img/download.png", cla:"downloadlinkimg"}],
-              "Download"]]));
+        app.tabular.ptdisp();
+    }
+
+
+    function makeSelect (domid, onchangestr, options) {
+        var spec = {id:domid, chgstr:onchangestr, opts:options};
+        return {
+            tac: function () {
+                var html = [];
+                spec.opts.forEach(function (opt) {
+                    html.push(["option", {value:opt.value},
+                               opt.text || opt.value]); });
+                return ["select", {name:spec.id, id:spec.id,
+                                   onchange:spec.chgstr},
+                        html]; },
+            setValue: function (val) {
+                jt.byId(spec.id).value = val; },
+            getValue: function () {
+                var sel = jt.byId(spec.id);
+                return sel.options[sel.selectedIndex].value; }};
     }
 
 
     function timelineSelectHTML () {
-        var html = [], btls = JSON.parse(app.user.acc.built || "[]");
+        var btls, selopts = [];
+        btls = JSON.parse(app.user.acc.built || "[]");
         //PENDING: sort btls alphabetically, set selection index to current tl
         if(!btls.length) {
             btls = [{tlid:"none", name:""}]; }
         btls.push({tlid:"new", name:"New&nbsp;Timeline"});
         btls.forEach(function (btl) {
-            html.push(["option", {value:btl.tlid}, btl.name]); });
-        html = ["select", {name:"tlselname", id:"tlselname",
-                           onchange:jt.fs("app.tabular.tledchg()")},
-                html];
-        return html;
+            selopts.push({value:btl.tlid, text:btl.name}); });
+        tlflds.selname = makeSelect("tlselname", jt.fs("app.tabular.tledchg()"),
+                                    selopts);
+        return tlflds.selname.tac();
     }
 
 
@@ -313,24 +330,21 @@ app.tabular = (function () {
     function editTimeline () {
         var html;
         app.mode.chmode("reference");  //verify correct display
+        tlflds.seltype = makeSelect("tlseltype", jt.fs("app.tabular.tledchg()"),
+                                    [{value:"Points"}, {value:"Timelines"}]);
+        tlflds.selseq = makeSelect("tlselseq", jt.fs("app.tabular.tledchg()"),
+                                   [{value:"Sequential"}, {value:"Random"}]);
         html = [["div", {id:"etlselpropdiv"},
                  [timelineSelectHTML(),
                   ["a", {href:"#settings",
                          onclick:jt.fs("app.tabular.tlset()")},
                    ["img", {src:"img/settings.png", cla:"formicoimg"}]],
                   ["div", {id:"tltypeseldiv", cla:"formseldiv"},
-                   ["select", {name:"tlseltype", id:"tlseltype",
-                               onchange:jt.fs("app.tabular.tledchg()")},
-                    [["option", {value:"Points"}, "Points"],
-                     ["option", {value:"Timelines"}, "Timelines"]]]],
+                   tlflds.seltype.tac()],
                   ["div", {id:"tlseqseldiv", cla:"formseldiv"},
-                   ["select", {name:"tlselseq", id:"tlselseq",
-                               onchange:jt.fs("app.tabular.tledchg()")},
-                    [["option", {value:"Sequential"}, "Sequential"],
-                     ["option", {value:"Random"}, "Random"]]]]]],
+                   tlflds.selseq.tac()]]],
                 ["div", {id:"etlsetdiv", style:"display:none;"}, 
-                 timelineSettingsHTML()],
-                ["div", {id:"etlseldiv"}, "selection stuff goes here"]];
+                 timelineSettingsHTML()]];
         jt.out("tlctxdiv", jt.tac2html(html));
         app.tabular.tledchg();
     }
@@ -345,14 +359,6 @@ app.tabular = (function () {
     }
 
 
-    function selectval (selid) {
-        var sel = jt.byId(selid);
-        if(!sel) {
-            jt.log("selectval unable to find element " + selid); }
-        return sel.options[sel.selectedIndex].value;
-    }
-
-
     function slugify (str) {
         str = str.toLowerCase().replace(/\s/g, "");
         return str;
@@ -362,15 +368,15 @@ app.tabular = (function () {
     function setDisplayInputFieldsFromTimeline (tl) {
         var elems = tl.ctype.split(":");
         if(elems[0] === "Timelines") {
-            jt.byId("tlseltype").value = "Timelines"; }
+            tlflds.seltype.setValue("Timelines"); }
         else {
-            jt.byId("tlseltype").value = "Points";
+            tlflds.seltype.setValue("Points");
             jt.byId("ppsin").value = elems[1] || 6;
             if(elems[0] === "Random") {
-                jt.byId("tlselseq").value = "Random";
+                tlflds.selseq.setValue("Random");
                 jt.byId("tlrndmaxin").value = elems[2] || 18; }
             else {
-                jt.byId("tlselseq").value = "Sequential"; } }
+                tlflds.selseq.setValue("Sequential"); } }
         jt.byId("namein").value = tl.name;
         jt.byId("slugin").value = tl.slug;
         jt.byId("commentin").value = tl.comment;
@@ -379,19 +385,19 @@ app.tabular = (function () {
                 
     function timelineEditFieldChange () {
         var currtl, tlid;
-        tlflds = {selname: selectval("tlselname")};
+        tlflds.name = tlflds.selname.getValue();
         //hide all display inputs
         jt.byId("tltypeseldiv").style.display = "none";
         jt.byId("tlseqseldiv").style.display = "none";
         jt.byId("tlrndmaxdiv").style.display = "none";
         jt.byId("ppsindiv").style.display = "none";
-        if(tlflds.selname === "none") {
+        if(tlflds.name === "none") {
             return; }
-        if(tlflds.selname === "new") {  //open settings if not already done
+        if(tlflds.name === "new") {  //open settings if not already done
             if(jt.byId("etlsetdiv").style.display === "none") {
                 timelineSettings(); } }
         else { 
-            tlid = tlflds.selname;
+            tlid = tlflds.name;
             app.user.tls = app.user.tls || {};
             currtl = app.user.tls[tlid];
             if(!currtl) {
@@ -407,12 +413,11 @@ app.tabular = (function () {
             setDisplayInputFieldsFromTimeline(currtl); }
         //unhide appropriate display inputs
         jt.byId("tltypeseldiv").style.display = "inline-block";
-        tlflds.type = selectval("tlseltype");
+        tlflds.type = tlflds.seltype.getValue();
         if(tlflds.type === "Points") {
             jt.byId("ppsindiv").style.display = "block";
             jt.byId("tlseqseldiv").style.display = "inline-block";
-            tlflds.seq = selectval("tlselseq");
-            if(tlflds.seq === "Random") {
+            if(tlflds.selseq.getValue() === "Random") {
                 jt.byId("tlrndmaxdiv").style.display = "block";
                 tlflds.rndmax = jt.byId("tlrndmaxin").value; } }
         tlflds.name = jt.byId("namein").value || "";
@@ -426,9 +431,9 @@ app.tabular = (function () {
         if(jt.byId("slugin")) {
             currtl.slug = jt.byId("slugin").value; }
         currtl.comment = jt.byId("commentin").value;
-        currtl.ctype = selectval("tlseltype");
+        currtl.ctype = tlflds.seltype.getValue();
         if(currtl.ctype === "Points") {
-            if(selectval("tlselseq") === "Random") {
+            if(tlflds.selseq.getValue() === "Random") {
                 currtl.ctype = "Random"; }
             currtl.ctype += ":" + jt.byId("ppsin").value;
             if(currtl.ctype.startsWith("Random")) {
@@ -450,6 +455,83 @@ app.tabular = (function () {
     }
 
 
+    function getPointMatchCriteria () {
+        var crit = {code: ptflds.selcode.getValue(),
+                    start: +(jt.byId("yearstartin").value),
+                    end: +(jt.byId("yearendin").value),
+                    srch: jt.byId("srchin").value};
+        // jt.log("getPointMatchCriteria:");
+        // Object.keys(crit).forEach(function (key) {
+        //     jt.log("    " + key + ": " + crit[key]); });
+        return crit;
+    }
+
+
+    function isMatchingPoint (crit, pt) {
+        var srchtxt;
+        if(crit.code !== "All" && pt.codes.indexOf(crit.code) < 0) {
+            return false; }
+        if(pt.start.year < crit.start || pt.start.year > crit.end) {
+            return false; }
+        if(crit.srch) {
+            srchtxt = crit.srch.toLowerCase();
+            if((pt.text.toLowerCase().indexOf(srchtxt) < 0) &&
+               (pt.keywords.toLowerCase().indexOf(srchtxt) < 0)) {
+                return false; } }
+        return true;
+    }
+
+
+    function preparePointsData () {
+        app.allpts.forEach(function (pt) {
+            app.db.parseDate(pt); });
+        app.allpts.sort(function (a, b) {
+            var av, bv;
+            if(a.start.year < b.start.year) { return -1; }
+            if(a.start.year > b.start.year) { return 1; }
+            av = a.start.month || 0;
+            bv = b.start.month || 0;
+            if(av < bv) { return -1; }
+            if(av > bv) { return 1; }
+            av = a.start.day || 0;
+            bv = b.start.day || 0;
+            if(av < bv) { return -1; }
+            if(av > bv) { return 1; }
+            return 0; });
+    }
+
+
+    function updatePointsDisplay () {
+        var mcrit, outdiv = jt.byId("pointsdispdiv");
+        jt.out("downloadlinkdiv", jt.tac2html(
+            ["img", {src:"img/wait.png", cla:"downloadlinkimg"}]));
+        outdiv.innerHTML = "";
+        //PENDING: react to ptflds.selpool to get appropriate points
+        if(!app.allpts) {
+            jt.call("GET", "docs/allpts.json", null,
+                    function (result) {
+                        app.allpts = result;
+                        preparePointsData();
+                        updatePointsDisplay(); },
+                    function (code, errtxt) {
+                        alert("Fetch allpts failed " + code + " " + errtxt); },
+                    jt.semaphore("tabular.updatePointsDisplay"));
+            return; }  //nothing to do until points are available
+        mcrit = getPointMatchCriteria();
+        app.allpts.forEach(function (pt, idx) {
+            var linediv;
+            if(isMatchingPoint(mcrit, pt)) {
+                linediv = document.createElement("div");
+                linediv.innerHTML = jt.tac2html(pointTAC(pt, idx));
+                outdiv.appendChild(linediv); } });
+        jt.out("downloadlinkdiv", jt.tac2html(
+            ["a", {href:"#Download", id:"downloadlink",
+                   title:"Download the displayed points",
+                   onclick:jt.fs("app.tabular.showDownloadDialog")},
+             ["img", {src:"img/download.png", cla:"downloadlinkimg"}]]));
+    }
+
+
     return {
         display: function () { display(); },
         search: function (srchst) { display(srchst); },
@@ -458,6 +540,7 @@ app.tabular = (function () {
         tledit: function () { editTimeline(); },
         tlset: function () { timelineSettings(); },
         tledchg: function () { timelineEditFieldChange(); },
-        savetl: function () { saveTimeline(); }
+        savetl: function () { saveTimeline(); },
+        ptdisp: function () { updatePointsDisplay(); }
     };
 }());

@@ -46,7 +46,7 @@ handlers:
 ## Fetch all points (admin accounts only). Read docs/allpts.json to fetch
 ## all the points, this endpoint exists to allow building that file.
 ## GET params: email, authtok
-- url: .*/allpts.*
+- url: .*/dbqpts.*
   script: src.py.point.app
 
 

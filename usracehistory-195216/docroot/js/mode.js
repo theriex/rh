@@ -251,7 +251,7 @@ app.mode = (function () {
         srchst.qstr = jt.byId("srchin").value;
         if(srchst.qstr) {
             srchst.qstr = srchst.qstr.toLowerCase(); }
-        srchst.tlcode = jt.byId("tlsel").value;
+        srchst.tlcode = jt.byId("ptcodesel").value;
         if(ms.disp === "text") {
             updf = app.tabular.search; }
         else {

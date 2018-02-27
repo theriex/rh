@@ -128,7 +128,8 @@ circle { clip-path: url(../#clip); }
 .bgpicdiv { display:inline-block; overflow:hidden; text-align:center; }
 .bgpicimg { opacity:0.6; }
 
-#refdiv { padding:8px 10px 0px 10px; font-weight:bold; }
+#refdiv { padding:8px 10px 0px 10px; font-weight:bold; font-style:italic; 
+  color:#555; }
 #interactimg, #disptoggleimg { width:18px; height:18px;
   margin:2px 5px 2px 5px; }
 #disptoggleimg { margin:0px 5px 2px 5px; }
@@ -158,9 +159,10 @@ circle { clip-path: url(../#clip); }
 .tdspanyo { font-size:large; }
 .bcespan { font-size:x-small; font-style:italic; font-weight:bold; }
 
-#downloadlinkdiv { padding:0px 10px 5px 62px; font-size:small; }
-.downloadlinkimg { margin:0px 2px; }
+#downloadlinkdiv { padding:0px; font-size:small; display:inline-block; }
+.downloadlinkimg { margin:0px; }
 .srchinspan { font-size:small; }
+#srchin { margin-left:5px; }
 #downloadoptsdiv { margin:20px; }
 #dloptseltitlediv { font-style:italic; }
 .dloptseldiv { min-width:100px; padding:10px 10px 2px 2px;
@@ -178,7 +180,8 @@ circle { clip-path: url(../#clip); }
   padding:5px 0px; }
 .buttonsdiv { text-align:center; }
 .buttonsdiv button { background:white; }
-#tlctxdiv, #ptfilterdiv { padding-left:10px; }
+#tlctxdiv, #ptfilterdiv, #ptdispmodediv { padding-left:10px; }
+.yearin { width:4em; }
 
 /* -------------------- */
 /* visualizations */

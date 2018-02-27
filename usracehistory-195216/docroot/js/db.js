@@ -324,6 +324,7 @@ app.db = (function () {
         getElapsedTime: function (sd, ed) { return getElapsedTime(sd, ed); },
         getStateURLParams: function () { return getStateURLParams(); },
         prepData: function () { prepData(); },
-        saveState: function () { saveState(); }
+        saveState: function () { saveState(); },
+        parseDate: function (pt) { parseDate(pt); }
     };
 }());
