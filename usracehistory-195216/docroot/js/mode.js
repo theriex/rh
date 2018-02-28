@@ -242,29 +242,6 @@ app.mode = (function () {
     }
 
 
-    function updateSearchDisplay () {
-        var updf;
-        if(srchst.status === "processing") {
-            srchst.pending = true;
-            return; }
-        srchst.status = "processing";
-        srchst.qstr = jt.byId("srchin").value;
-        if(srchst.qstr) {
-            srchst.qstr = srchst.qstr.toLowerCase(); }
-        srchst.tlcode = jt.byId("ptcodesel").value;
-        if(ms.disp === "text") {
-            updf = app.tabular.search; }
-        else {
-            updf = app.linear.search; }
-        setTimeout(function () {  //async update to stay responsive
-            updf(srchst);
-            srchst.status = "";
-            if(srchst.pending) {
-                srchst.pending = false;
-                updateSearchDisplay(); } }, 400);
-    }
-
-
     function isMatchingPoint (pt) {
         if(srchst) {
             if(srchst.qstr) {
@@ -294,7 +271,6 @@ app.mode = (function () {
             jt.byId("lcontdiv").style.display = "block";
             jt.byId("tcontdiv").style.display = "none";
             ms.disp = "linear"; }
-        updateSearchDisplay();
     }
 
 
@@ -387,7 +363,6 @@ app.mode = (function () {
         nextQuiet: function () { next(true); },
         chmode: function (mode) { changeMode(mode); },
         togdisp: function () { toggleDisplay(); },
-        updatesrch: function () { updateSearchDisplay(); },
         ptmatch: function (pt) { return isMatchingPoint(pt); },
         interject: function (pt) { interject(pt); },
         menu: function (expand, select) { displayMenu(expand, select); },

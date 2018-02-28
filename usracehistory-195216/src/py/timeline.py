@@ -1,7 +1,6 @@
 import webapp2
 import datetime
 from google.appengine.ext import db
-from google.appengine.api import memcache
 import logging
 import appuser
 import json
@@ -85,17 +84,23 @@ def update_or_create_timeline(handler, acc, params):
         if int(instid) != tls[0].key().id():
             return appuser.srverr(handler, 406, "Name already used")
         timeline = tls[0]
+    if instid and not timeline:
+        timeline = Timeline.get_by_id(int(instid))
+        if not timeline:
+            return appuser.srverr(handler, 404, "No Timeline " + instid)
     if not timeline:  # not found, create new
-        timeline = Timeline(name=params["name"], slug=params["slug"] or "",
-                            lang=params["lang"] or "en-US",
-                            comment=params["comment"] or "",
-                            orgid=acc.orgid, ctype=params["ctype"],
-                            cids=params["cids"] or "",
-                            created=now)
-    cname = canonize(timeline.name)
+        timeline = Timeline(name=params["name"], created=now)
+    timeline.name = params["name"]
+    timeline.cname = canonize(timeline.name)
+    timeline.slug = params["slug"] or ""
+    timeline.lang = params["lang"] or "en-US"
+    timeline.comment = params["comment"] or ""
+    timeline.orgid = acc.orgid
+    timeline.ctype = params["ctype"]
+    timeline.cids = params["cids"] or ""
     # TODO: update prebuilt points data (rebuild all in case text changed)
     timeline.modified = now
-    appuser.cached_put(str(timeline.key().id()), timeline)
+    appuser.cached_put(None, timeline)
     return timeline
 
 
@@ -104,7 +109,7 @@ def update_timeline_list(tlist, timeline):
     tlist = json.loads(tlist)
     found = False
     for entry in tlist:
-        if int(entry.tlid) == timeline.key().id():
+        if int(entry["tlid"]) == timeline.key().id():
             found = True
             entry["name"] = timeline.name
     if not found:
@@ -132,7 +137,7 @@ class UpdateTimeline(webapp2.RequestHandler):
 class FetchTimeline(webapp2.RequestHandler):
     def get(self):
         tlid = self.request.get("tlid")
-        tl = memcache.get(tlid)
+        tl = appuser.cached_get(tlid, {"dboc": Timeline, "byid": tlid})
         if not tl:
             tl = Timeline.get_by_id(int(tlid))
         if not tl:

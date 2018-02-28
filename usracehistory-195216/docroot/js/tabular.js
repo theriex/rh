@@ -14,7 +14,8 @@ app.tabular = (function () {
         tlflds = {},
         currtl = null,
         dbtl = null,
-        ptflds = {};
+        ptflds = {},
+        mode = "refdisp";  //tledit
 
 
     function dateSpan (dobj, prefix) {
@@ -66,13 +67,23 @@ app.tabular = (function () {
 
 
     function pointTAC (pt, idx) {
-        var html;
+        var html = "", si;
+        if(mode === "tledit") {
+            si = {type:"checkbox", id:"cb" + pt.instid,
+                  onchange:jt.fs("app.tabular.togptsel('" + 
+                                 pt.instid + "')")};
+            if(currtl && currtl.cids && currtl.cids.csvcontains(pt.instid)) {
+                si.checked = "checked"; }
+            html = ["div", {cla:"ptseldiv"},
+                    [["label", {fo:"cb" + pt.instid}, "Include"],
+                     ["input", si]]]; }
         html = ["div", {cla:"trowdiv"},
                 [["div", {cla:"trowdatediv"}, 
                   [dateSpan(pt.start),
                    ["br"],
                    dateSpan(pt.end, "-"),
-                   ["span", {cla:"tcspan"}, " (" + pt.codes + ") "]]],
+                   ["span", {cla:"tcspan"}, " (" + pt.codes + ") "],
+                   html]],
                  ["div", {cla:"trowdescdiv"}, pt.text]]];
         return html;
     }
@@ -212,31 +223,34 @@ app.tabular = (function () {
              {value:"U", text:"Did you know?"},
              {value:"F", text:"Firsts"},
              {value:"D", text:"What year?"}]);
-        html = [["div", {id:"tlctxdiv"}, ""],  //timeline context
-                ["div", {id:"ptdispmodediv"},
-                 [ptflds.selpool.tac(), ptflds.selcode.tac()]],
-                ["div", {id:"ptfilterdiv"},  //point filtering
-                 [["input", {type:"number", cla:"yearin",
-                             onchange:jt.fs("app.tabular.ptdisp()"),
-                             name:"yearstartin", id:"yearstartin",
-                             min:-1200, max:2016, value:-1200}],
-                  ["span", {cla:"srchinspan"}, "&nbsp;to&nbsp;"],
-                  ["input", {type:"number", cla:"yearin",
-                             onchange:jt.fs("app.tabular.ptdisp()"),
-                             name:"yearendin", id:"yearendin",
-                             min:-1200, max:2016, value:2016}],
-                  ["input", {type:"text", id:"srchin", size:18,
-                             placeholder:"Filter text...",
-                             value:app.mode.searchstate().qstr, 
-                             oninput:jt.fs("app.tabular.ptdisp()")}],
-                  ["div", {id:"downloadlinkdiv"}, ""]]],
+        html = [["div", {id:"tcontheaddiv"},
+                 [["div", {id:"tlctxdiv"}, ""],  //timeline context
+                  ["div", {id:"ptdispmodediv"},
+                   [ptflds.selpool.tac(), ptflds.selcode.tac()]],
+                  ["div", {id:"ptfilterdiv"},  //point filtering
+                   [["input", {type:"number", cla:"yearin",
+                               onchange:jt.fs("app.tabular.ptdisp()"),
+                               name:"yearstartin", id:"yearstartin",
+                               min:-1200, max:2016, value:-1200}],
+                    ["span", {cla:"srchinspan"}, "&nbsp;to&nbsp;"],
+                    ["input", {type:"number", cla:"yearin",
+                               onchange:jt.fs("app.tabular.ptdisp()"),
+                               name:"yearendin", id:"yearendin",
+                               min:-1200, max:2016, value:2016}],
+                    ["input", {type:"text", id:"srchin", size:18,
+                               placeholder:"Filter text...",
+                               value:app.mode.searchstate().qstr, 
+                               oninput:jt.fs("app.tabular.ptdisp()")}],
+                    ["div", {id:"downloadlinkdiv"}, ""]]]]],
                 ["div", {id:"pointsdispdiv"}, ""]];
         jt.out("tcontdiv", jt.tac2html(html));
     }
 
 
-    function display (srchst) {
+    function display () {
+        mode = "refdisp";
         verifyDisplayElements();
+        jt.byId("tlctxdiv").style.display = "none";
         app.tabular.ptdisp();
     }
 
@@ -277,8 +291,8 @@ app.tabular = (function () {
 
     function timelineSettingsHTML () {
         var html = [];
-        currtl = currtl || {instid:"", name:"", slug:"", comment:""};
-        if(currtl.id) {
+        currtl = currtl || {instid:"", name:"", slug:"", comment:"", cids:""};
+        if(currtl.instid) {
             html.push(["div", {cla:"dlgformline"},
                        [["label", {fo:"idin", cla:"wlab", id:"labidin"}, 
                          "Id"],
@@ -310,13 +324,15 @@ app.tabular = (function () {
                    [["label", {fo:"tlrndmaxin", cla:"wlab", id:"labtlrndmaxin"},
                      "Max Display"],
                     ["input", {type:"number", cla:"wfin",
-                               name:"tlrndmaxin", id:"tlrndmaxin", 
+                               name:"tlrndmaxin", id:"tlrndmaxin",
+                               min:3, max:900,
                                value:tlflds.maxpts || 18}]]]);
         html.push(["div", {cla:"dlgformline", id:"ppsindiv"},
                    [["label", {fo:"ppsin", cla:"wlab", id:"labppsin"},
                      "Points/Save"],
                     ["input", {type:"number", cla:"wfin",
                                name:"ppsin", id:"ppsin",
+                               min:3, max:50,
                                value:tlflds.pps || 6}]]]);
         html.push(["div", {id:"tlsavestatdiv"}]);
         html.push(["div", {cla:"buttonsdiv"},
@@ -330,6 +346,8 @@ app.tabular = (function () {
     function editTimeline () {
         var html;
         app.mode.chmode("reference");  //verify correct display
+        mode = "tledit";
+        jt.byId("tlctxdiv").style.display = "block";
         tlflds.seltype = makeSelect("tlseltype", jt.fs("app.tabular.tledchg()"),
                                     [{value:"Points"}, {value:"Timelines"}]);
         tlflds.selseq = makeSelect("tlselseq", jt.fs("app.tabular.tledchg()"),
@@ -347,15 +365,41 @@ app.tabular = (function () {
                  timelineSettingsHTML()]];
         jt.out("tlctxdiv", jt.tac2html(html));
         app.tabular.tledchg();
+        app.tabular.ptdisp();
     }
 
 
-    function timelineSettings () {
-        var div = jt.byId("etlsetdiv");
-        if(div.style.display === "none") {
+    function timelineChanged () {
+        if(!dbtl) {
+            return true; }
+        if(currtl.name !== dbtl.name ||
+           currtl.slug !== dbtl.slug ||
+           currtl.lang !== dbtl.lang ||
+           currtl.comment !== dbtl.comment ||
+           currtl.ctype !== dbtl.ctype ||
+           currtl.cids !== dbtl.cids) {
+            return true; }
+        return false;
+    }
+
+
+    function timelineSettings (spec) {
+        var div, ptsh;
+        div = jt.byId("etlsetdiv");
+        if(spec === "required") {
             div.style.display = "block"; }
-        else {
-            div.style.display = "none"; }
+        else if(spec === "ifchanged") {
+            if(timelineChanged()) {
+                div.style.display = "block"; }
+            else {
+                div.style.display = "none"; } }
+        else {  //toggle
+            if(div.style.display === "none") {
+                div.style.display = "block"; }
+            else {
+                div.style.display = "none"; } }
+        ptsh = window.innerHeight - (jt.byId("tcontheaddiv").offsetHeight + 30);
+        jt.byId("pointsdispdiv").style.height = String(ptsh) + "px";
     }
 
 
@@ -366,7 +410,10 @@ app.tabular = (function () {
 
 
     function setDisplayInputFieldsFromTimeline (tl) {
-        var elems = tl.ctype.split(":");
+        var elems;
+        if(!tl || !tl.ctype) {
+            return; }
+        elems = tl.ctype.split(":");
         if(elems[0] === "Timelines") {
             tlflds.seltype.setValue("Timelines"); }
         else {
@@ -383,8 +430,16 @@ app.tabular = (function () {
     }
             
                 
+    function setStateToDatabaseTimeline (tl) {
+        dbtl = tl;
+        currtl = Object.assign({}, dbtl);
+        app.user.tls = app.user.tls || {};
+        app.user.tls[dbtl.instid] = dbtl;
+    }
+
+
     function timelineEditFieldChange () {
-        var currtl, tlid;
+        var tlid;
         tlflds.name = tlflds.selname.getValue();
         //hide all display inputs
         jt.byId("tltypeseldiv").style.display = "none";
@@ -393,25 +448,28 @@ app.tabular = (function () {
         jt.byId("ppsindiv").style.display = "none";
         if(tlflds.name === "none") {
             return; }
-        if(tlflds.name === "new") {  //open settings if not already done
-            if(jt.byId("etlsetdiv").style.display === "none") {
-                timelineSettings(); } }
-        else { 
+        if(tlflds.name === "new") {
+            timelineSettings("required"); }
+        else {
             tlid = tlflds.name;
             app.user.tls = app.user.tls || {};
-            currtl = app.user.tls[tlid];
-            if(!currtl) {
+            if((!currtl || currtl.instid !== tlid) && app.user.tls[tlid]) {
+                currtl = Object.assign({}, app.user.tls[tlid]); }
+            if(!currtl || currtl.instid !== tlid) {
                 jt.call("GET", "fetchtl?tlid=" + tlid, null,
                         function (result) {
-                            app.user.tls[result[0].instid] = result[0];
+                            setStateToDatabaseTimeline(result[0]);
+                            app.tabular.ptdisp();
                             timelineEditFieldChange(); },
                         function (code, errtxt) {
                             jt.log("tlefc " + code + " " + errtxt);
                             jt.err("Timeline fetch " + code + " " + errtxt); },
                         jt.semaphore("tabular.timelineEditFieldChange"));
                 return; }  //don't unhide until data available
-            setDisplayInputFieldsFromTimeline(currtl); }
+            if(currtl) {
+                setDisplayInputFieldsFromTimeline(currtl); } }
         //unhide appropriate display inputs
+        timelineSettings("ifchanged");
         jt.byId("tltypeseldiv").style.display = "inline-block";
         tlflds.type = tlflds.seltype.getValue();
         if(tlflds.type === "Points") {
@@ -438,14 +496,13 @@ app.tabular = (function () {
             currtl.ctype += ":" + jt.byId("ppsin").value;
             if(currtl.ctype.startsWith("Random")) {
                 currtl.ctype += ":" + jt.byId("tlrndmaxin").value; } }
-        //read selected cids here
+        //cids already updated
         jt.log("saveTimeline parameters:");
         Object.keys(currtl).forEach(function (field) {
             jt.log("    " + field + ": " + currtl[field]); });
         jt.call("POST", "updtl?" + app.auth(), jt.objdata(currtl),
                 function (result) {
-                    dbtl = result[0];
-                    currtl = Object.assign({}, dbtl);
+                    setStateToDatabaseTimeline(result[0]);
                     app.user.acc = result[1]
                     editTimeline(); },  //redraw reflecting new/updated name
                 function (code, errtxt) {
@@ -532,15 +589,24 @@ app.tabular = (function () {
     }
 
 
+    function togglePointInclude (ptid) {
+        if(currtl.cids.csvcontains(ptid)) {
+            currtl.cids = currtl.cids.csvremove(ptid); }
+        else {
+            currtl.cids = currtl.cids.csvappend(ptid); }
+        app.tabular.tledchg();
+    }
+
+
     return {
         display: function () { display(); },
-        search: function (srchst) { display(srchst); },
         showDownloadDialog: function () { showDownloadDialog(); },
         dldrad: function (idx) { selectDownloadOption(idx); },
         tledit: function () { editTimeline(); },
         tlset: function () { timelineSettings(); },
         tledchg: function () { timelineEditFieldChange(); },
         savetl: function () { saveTimeline(); },
-        ptdisp: function () { updatePointsDisplay(); }
+        ptdisp: function () { updatePointsDisplay(); },
+        togptsel: function (ptid) { togglePointInclude(ptid); }
     };
 }());

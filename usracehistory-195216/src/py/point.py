@@ -152,7 +152,7 @@ class GetPointPic(webapp2.RequestHandler):
 
 
 app = webapp2.WSGIApplication([('.*/recentpoints', RecentPoints),
-                               ('.*/allpts', AllPoints),
+                               ('.*/dbqpts', AllPoints),
                                ('.*/updpt', UpdatePoint),
                                ('.*/ptpic', GetPointPic)],
                               debug=True)

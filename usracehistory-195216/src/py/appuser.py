@@ -128,6 +128,8 @@ def valid_email_address(emaddr):
 
 def cached_put(ckey, dbobj):
     dbobj.put()
+    if not ckey:
+        ckey = str(dbobj.key().id())
     memcache.set(ckey, pickle.dumps(dbobj))
 
 
@@ -137,6 +139,11 @@ def cached_get(ckey, qps):
         instance = pickle.loads(instance)
         # logging.info("cached_get found cached instance: " + str(instance))
         return instance
+    if "byid" in qps:
+        instance = qps["dboc"].get_by_id(int(qps["byid"]))
+        if instance:
+            cached_put(ckey, instance)
+            return instance
     vq = VizQuery(qps["dboc"], qps["where"], qps["wags"])
     instances = vq.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
     if len(instances) > 0:
