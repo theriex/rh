@@ -210,7 +210,8 @@ app.tabular = (function () {
         ptflds.selpool = makeSelect(
             "ptdpsel", jt.fs("app.tabular.ptdisp()"),
             [{value:"All", text:"All Points"},
-             {value:"Timeline", text:"Timeline Points"}]);
+             {value:"Timeline", text:"Timeline Points"},
+             {value:"Suppviz", text:"Visualizations"}]);
         ptflds.selcode = makeSelect(
             "ptcodesel", jt.fs("app.tabular.ptdisp()"),
             [{value:"All", text:"All Codes"},
@@ -277,7 +278,10 @@ app.tabular = (function () {
     function timelineSelectHTML () {
         var btls, selopts = [];
         btls = JSON.parse(app.user.acc.built || "[]");
-        //PENDING: sort btls alphabetically, set selection index to current tl
+        btls.sort(function (a, b) {
+            if(a.name < b.name) { return -1; }
+            if(a.name > b.name) { return 1; }
+            return 0; })
         if(!btls.length) {
             btls = [{tlid:"none", name:""}]; }
         btls.push({tlid:"new", name:"New&nbsp;Timeline"});
@@ -289,9 +293,15 @@ app.tabular = (function () {
     }
 
 
+    function emptyTimeline () {
+        return {instid:"", name:"", slug:"", comment:"", 
+                ctype:"Points:6", cids:"", svs:""};
+    }
+
+
     function timelineSettingsHTML () {
         var html = [];
-        currtl = currtl || {instid:"", name:"", slug:"", comment:"", cids:""};
+        currtl = currtl || emptyTimeline();
         if(currtl.instid) {
             html.push(["div", {cla:"dlgformline"},
                        [["label", {fo:"idin", cla:"wlab", id:"labidin"}, 
@@ -304,16 +314,16 @@ app.tabular = (function () {
                      "Name"],
                     ["input", {type:"text", cla:"wfin",
                                name:"namein", id:"namein",
-                               onchange:jt.fs("app.tabular.tledchg()"),
+                               //updates are reflected after save (new timeline)
+                               //onchange:jt.fs("app.tabular.tledchg()"),
                                value:currtl.name}]]]);
-        //if(app.user && app.user.acc.orgid && app.user.acc.lev >= 1) {
-        if(true) {
+        if(app.user && app.user.acc.orgid && app.user.acc.lev >= 1) {
             html.push(["div", {cla:"dlgformline"},
                        [["label", {fo:"slugin", cla:"wlab", id:"labslugin"},
                          "Slug"],
                         ["input", {type:"text", cla:"wfin",
                                    name:"slugin", id:"slugin",
-                                   value:currtl.slug, disabled:true}]]]); }
+                                   value:currtl.slug}]]]); }
         html.push(["div", {cla:"dlgformline"},
                    [["label", {fo:"commentin", cla:"wlab", id:"labcommentin"},
                      "Comment"],
@@ -364,6 +374,8 @@ app.tabular = (function () {
                 ["div", {id:"etlsetdiv", style:"display:none;"}, 
                  timelineSettingsHTML()]];
         jt.out("tlctxdiv", jt.tac2html(html));
+        if(currtl && currtl.instid) {
+            tlflds.selname.setValue(currtl.instid); }
         app.tabular.tledchg();
         app.tabular.ptdisp();
     }
@@ -377,7 +389,8 @@ app.tabular = (function () {
            currtl.lang !== dbtl.lang ||
            currtl.comment !== dbtl.comment ||
            currtl.ctype !== dbtl.ctype ||
-           currtl.cids !== dbtl.cids) {
+           currtl.cids !== dbtl.cids ||
+           currtl.svs !== dbtl.svs) {
             return true; }
         return false;
     }
@@ -449,6 +462,8 @@ app.tabular = (function () {
         if(tlflds.name === "none") {
             return; }
         if(tlflds.name === "new") {
+            currtl = emptyTimeline();
+            setDisplayInputFieldsFromTimeline(currtl);
             timelineSettings("required"); }
         else {
             tlid = tlflds.name;
@@ -517,6 +532,8 @@ app.tabular = (function () {
                     start: +(jt.byId("yearstartin").value),
                     end: +(jt.byId("yearendin").value),
                     srch: jt.byId("srchin").value};
+        if(ptflds.selpool.getValue() === "Timeline") {
+            crit.ids = currtl.cids; }
         // jt.log("getPointMatchCriteria:");
         // Object.keys(crit).forEach(function (key) {
         //     jt.log("    " + key + ": " + crit[key]); });
@@ -526,6 +543,8 @@ app.tabular = (function () {
 
     function isMatchingPoint (crit, pt) {
         var srchtxt;
+        if(crit.ids && !crit.ids.csvcontains(pt.instid)) {
+            return false; }
         if(crit.code !== "All" && pt.codes.indexOf(crit.code) < 0) {
             return false; }
         if(pt.start.year < crit.start || pt.start.year > crit.end) {
@@ -558,12 +577,64 @@ app.tabular = (function () {
     }
 
 
+    function displayPointFilters (val) {
+        jt.byId("ptcodesel").style.display = val;
+        jt.byId("ptfilterdiv").style.display = val;
+    }
+
+
+    function updateSuppvizDisplay () {
+        var html = [], si,
+            svs = [
+                // sv/about is a suppviz but not for timelines
+                // sv/levelup runs automatically as part of leveling
+                // discussion: https://github.com/theriex/rh/issues/2
+                // - Finale: Fireworks, donation, build your own..
+                // - Population Composition: Census categories/numbers over time
+                // - Immigration Flows: Who from where over time
+                // - Citizenship: Residency/Citizenship availability over time
+                // - Monetary Loss: Monetary loss from systemic racism
+                // - Worldwide ancient cities (Teotihuacán context)
+                // - Officials of color by state (first and cumulative)
+                // - Indigenous nations territories over time
+                {module:"intro", name:"Intro Completion",
+                 descr:"Chronology Unlocked, please bookmark"},
+                {module:"slavery", name:"Slavery",
+                 descr:"Chattel slavery by state, some context"},
+                {module:"lynching", name:"Lynching",
+                 descr:"Lynchings by year range and region"}];
+        svs.forEach(function (sv) {
+            var si = "";
+            if(mode === "tledit") {
+                si = {type:"checkbox", id:"cb" + sv.module,
+                      onchange:jt.fs("app.tabular.togsvsel('" + 
+                                     sv.module + "')")};
+                if(currtl && currtl.svs && currtl.svs.csvcontains(sv.module)) {
+                    si.checked = "checked"; }
+                si = ["span", {cla:"ptseldiv"},
+                      [["label", {fo:"cb" + sv.module}, "Include"],
+                       ["input", si]]]; }
+            html.push(["div", {cla:"svlistdiv"},
+                       [["div", {cla:"svlistnamediv"}, 
+                         [si, 
+                          ["span", {cla:"svlistnamespan"}, sv.name]]],
+                        //PENDING: "Run" and "About" buttons
+                        ["div", {cla:"svlistdescdiv"}, sv.descr]]]); });
+        html = ["div", {id:"svsdispdiv"}, html]; 
+        jt.out("pointsdispdiv", jt.tac2html(html));
+    }
+
+
     function updatePointsDisplay () {
         var mcrit, outdiv = jt.byId("pointsdispdiv");
         jt.out("downloadlinkdiv", jt.tac2html(
             ["img", {src:"img/wait.png", cla:"downloadlinkimg"}]));
         outdiv.innerHTML = "";
-        //PENDING: react to ptflds.selpool to get appropriate points
+        if(ptflds.selpool.getValue() === "Suppviz") {
+            displayPointFilters("none");
+            return updateSuppvizDisplay(); }
+        else {
+            displayPointFilters("initial"); }
         if(!app.allpts) {
             jt.call("GET", "docs/allpts.json", null,
                     function (result) {
@@ -598,6 +669,16 @@ app.tabular = (function () {
     }
 
 
+    function toggleSuppvizInclude (svmn) {
+        currtl.svs = currtl.svs || "";
+        if(currtl.svs.csvcontains(svmn)) {
+            currtl.svs = currtl.svs.csvremove(svmn); }
+        else {
+            currtl.svs = currtl.svs.csvappend(svmn); }
+        app.tabular.tledchg();
+    }
+
+
     return {
         display: function () { display(); },
         showDownloadDialog: function () { showDownloadDialog(); },
@@ -607,6 +688,7 @@ app.tabular = (function () {
         tledchg: function () { timelineEditFieldChange(); },
         savetl: function () { saveTimeline(); },
         ptdisp: function () { updatePointsDisplay(); },
-        togptsel: function (ptid) { togglePointInclude(ptid); }
+        togptsel: function (ptid) { togglePointInclude(ptid); },
+        togsvsel: function (svmn) { toggleSuppvizInclude(svmn); }
     };
 }());

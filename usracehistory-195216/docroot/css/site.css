@@ -182,8 +182,14 @@ circle { clip-path: url(../#clip); }
 .buttonsdiv button { background:white; }
 #tcontheaddiv { padding-left:10px; margin-top:-8px; }
 .yearin { width:4em; }
-.ptseldiv { font-size:x-small; }
+.ptseldiv { font-size:x-small; font-weight:normal; }
 #pointsdispdiv { overflow:scroll; }
+
+#svsdispdiv { padding-left:10px; font-size:medium; }
+.svlistnamediv { font-size:large; font-weight:bold; }
+.svlistnamespan { padding-left:10px; }
+.svlistdescdiv { padding-left:10px; }
+.svlistdiv { padding:5px 0px; }
 
 /* -------------------- */
 /* visualizations */

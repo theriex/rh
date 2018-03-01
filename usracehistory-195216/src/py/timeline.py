@@ -39,6 +39,7 @@ class Timeline(db.Model):
     orgid = db.IntegerProperty()   # Organization id (if accepted by org)
     ctype = db.StringProperty()    # Timelines|Points|Random [:levcnt:rndmax]
     cids = db.TextProperty()       # CSV of Point ids or Timeline ids
+    svs = db.TextProperty()        # CSV of SuppViz module names
     preb = db.TextProperty()       # prebuilt point data
     created = db.StringProperty()  # ISO datetime;TLAcc id (owner)
     modified = db.StringProperty() # ISO datetime;TLAcc id
@@ -98,6 +99,7 @@ def update_or_create_timeline(handler, acc, params):
     timeline.orgid = acc.orgid
     timeline.ctype = params["ctype"]
     timeline.cids = params["cids"] or ""
+    timeline.svs = params["svs"] or ""
     # TODO: update prebuilt points data (rebuild all in case text changed)
     timeline.modified = now
     appuser.cached_put(None, timeline)
@@ -124,7 +126,7 @@ class UpdateTimeline(webapp2.RequestHandler):
         if not acc:
             return
         params = appuser.read_params(self, ["instid", "name", "ctype", "cids", 
-                                            "slug", "lang", "comment"]);
+                                            "svs", "slug", "lang", "comment"]);
         timeline = update_or_create_timeline(self, acc, params)
         if timeline:
             updated = update_timeline_list(acc.built, timeline)
