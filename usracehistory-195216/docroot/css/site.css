@@ -179,7 +179,7 @@ circle { clip-path: url(../#clip); }
 #etlsetdiv { border:2px solid #666666; border-radius:5px; margin-bottom:10px;
   padding:5px 0px; }
 .buttonsdiv { text-align:center; }
-.buttonsdiv button { background:white; }
+.buttonsdiv button { background:white; margin-right:10px; }
 #tcontheaddiv { padding-left:10px; margin-top:-8px; }
 .yearin { width:4em; }
 .ptseldiv { font-size:x-small; font-weight:normal; }

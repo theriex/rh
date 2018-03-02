@@ -299,6 +299,21 @@ app.tabular = (function () {
     }
 
 
+    function timelineChanged () {
+        if(!dbtl) {
+            return true; }
+        if(currtl.name !== dbtl.name ||
+           currtl.slug !== dbtl.slug ||
+           currtl.lang !== dbtl.lang ||
+           currtl.comment !== dbtl.comment ||
+           currtl.ctype !== dbtl.ctype ||
+           currtl.cids !== dbtl.cids ||
+           currtl.svs !== dbtl.svs) {
+            return true; }
+        return false;
+    }
+
+
     function timelineSettingsHTML () {
         var html = [];
         currtl = currtl || emptyTimeline();
@@ -346,9 +361,12 @@ app.tabular = (function () {
                                value:tlflds.pps || 6}]]]);
         html.push(["div", {id:"tlsavestatdiv"}]);
         html.push(["div", {cla:"buttonsdiv"},
-                   ["button", {type:"button", id:"etlsetokbutton",
-                               onclick:jt.fs("app.tabular.savetl()")},
-                    "Save"]]);
+                   [["button", {type:"button", id:"etlsetcancelbutton",
+                                onclick:jt.fs("app.tabular.canctl()")},
+                     "Cancel"],
+                    ["button", {type:"button", id:"etlsetokbutton",
+                                onclick:jt.fs("app.tabular.savetl()")},
+                     "Save"]]]);
         return html;
     }
 
@@ -378,21 +396,6 @@ app.tabular = (function () {
             tlflds.selname.setValue(currtl.instid); }
         app.tabular.tledchg();
         app.tabular.ptdisp();
-    }
-
-
-    function timelineChanged () {
-        if(!dbtl) {
-            return true; }
-        if(currtl.name !== dbtl.name ||
-           currtl.slug !== dbtl.slug ||
-           currtl.lang !== dbtl.lang ||
-           currtl.comment !== dbtl.comment ||
-           currtl.ctype !== dbtl.ctype ||
-           currtl.cids !== dbtl.cids ||
-           currtl.svs !== dbtl.svs) {
-            return true; }
-        return false;
     }
 
 
@@ -448,6 +451,14 @@ app.tabular = (function () {
         currtl = Object.assign({}, dbtl);
         app.user.tls = app.user.tls || {};
         app.user.tls[dbtl.instid] = dbtl;
+    }
+
+
+    function cancelTimelineEdit() {
+        if(dbtl) {
+            setStateToDatabaseTimeline (dbtl); }
+        timelineSettings();  //toggle closed
+        app.tabular.ptdisp();
     }
 
 
@@ -689,6 +700,7 @@ app.tabular = (function () {
         savetl: function () { saveTimeline(); },
         ptdisp: function () { updatePointsDisplay(); },
         togptsel: function (ptid) { togglePointInclude(ptid); },
-        togsvsel: function (svmn) { toggleSuppvizInclude(svmn); }
+        togsvsel: function (svmn) { toggleSuppvizInclude(svmn); },
+        canctl: function () { cancelTimelineEdit(); }
     };
 }());
