@@ -603,8 +603,8 @@ app.dlg = (function () {
                         setAuthentication(cred.emailin, result)
                         app.dlg.close();
                         //TEST: Uncomment to launch menu command post login
-                        setTimeout(function () { 
-                            app.mode.menu(0, 'newtl'); }, 200);
+                        // setTimeout(function () { 
+                        //     app.mode.menu(0, 'newtl'); }, 200);
                         app.mode.chmode(); },
                     function (code, errtxt) {
                         jt.log("processSignIn: " + code + " " + errtxt);

@@ -66,7 +66,7 @@ app.tabular = (function () {
     }
 
 
-    function pointTAC (pt, idx) {
+    function pointTAC (pt) {
         var html = "", si;
         if(mode === "tledit") {
             si = {type:"checkbox", id:"cb" + pt.instid,
@@ -203,8 +203,27 @@ app.tabular = (function () {
     }
 
 
+    function makeSelect (domid, onchangestr, options) {
+        var spec = {id:domid, chgstr:onchangestr, opts:options};
+        return {
+            tac: function () {
+                var html = [];
+                spec.opts.forEach(function (opt) {
+                    html.push(["option", {value:opt.value},
+                               opt.text || opt.value]); });
+                return ["select", {name:spec.id, id:spec.id,
+                                   onchange:spec.chgstr},
+                        html]; },
+            setValue: function (val) {
+                jt.byId(spec.id).value = val; },
+            getValue: function () {
+                var sel = jt.byId(spec.id);
+                return sel.options[sel.selectedIndex].value; }};
+    }
+
+
     function verifyDisplayElements () {
-        var html, tlopts;
+        var html;
         if(jt.byId("pointsdispdiv")) {  //already set up
             return; }
         ptflds.selpool = makeSelect(
@@ -226,23 +245,24 @@ app.tabular = (function () {
              {value:"D", text:"What year?"}]);
         html = [["div", {id:"tcontheaddiv"},
                  [["div", {id:"tlctxdiv"}, ""],  //timeline context
-                  ["div", {id:"ptdispmodediv"},
-                   [ptflds.selpool.tac(), ptflds.selcode.tac()]],
-                  ["div", {id:"ptfilterdiv"},  //point filtering
-                   [["input", {type:"number", cla:"yearin",
-                               onchange:jt.fs("app.tabular.ptdisp()"),
-                               name:"yearstartin", id:"yearstartin",
-                               min:-1200, max:2016, value:-1200}],
-                    ["span", {cla:"srchinspan"}, "&nbsp;to&nbsp;"],
-                    ["input", {type:"number", cla:"yearin",
-                               onchange:jt.fs("app.tabular.ptdisp()"),
-                               name:"yearendin", id:"yearendin",
-                               min:-1200, max:2016, value:2016}],
-                    ["input", {type:"text", id:"srchin", size:18,
-                               placeholder:"Filter text...",
-                               value:app.mode.searchstate().qstr, 
-                               oninput:jt.fs("app.tabular.ptdisp()")}],
-                    ["div", {id:"downloadlinkdiv"}, ""]]]]],
+                  ["div", {id:"ptctxdiv"},       //points context
+                   [["div", {id:"ptdispmodediv"},
+                     [ptflds.selpool.tac(), ptflds.selcode.tac()]],
+                    ["div", {id:"ptfilterdiv"},  //point filtering
+                     [["input", {type:"number", cla:"yearin",
+                                 onchange:jt.fs("app.tabular.ptdisp()"),
+                                 name:"yearstartin", id:"yearstartin",
+                                 min:-1200, max:2016, value:-1200}],
+                      ["span", {cla:"srchinspan"}, "&nbsp;to&nbsp;"],
+                      ["input", {type:"number", cla:"yearin",
+                                 onchange:jt.fs("app.tabular.ptdisp()"),
+                                 name:"yearendin", id:"yearendin",
+                                 min:-1200, max:2016, value:2016}],
+                      ["input", {type:"text", id:"srchin", size:18,
+                                 placeholder:"Filter text...",
+                                 value:app.mode.searchstate().qstr, 
+                                 oninput:jt.fs("app.tabular.ptdisp()")}],
+                      ["div", {id:"downloadlinkdiv"}, ""]]]]]]],
                 ["div", {id:"pointsdispdiv"}, ""]];
         jt.out("tcontdiv", jt.tac2html(html));
     }
@@ -256,32 +276,13 @@ app.tabular = (function () {
     }
 
 
-    function makeSelect (domid, onchangestr, options) {
-        var spec = {id:domid, chgstr:onchangestr, opts:options};
-        return {
-            tac: function () {
-                var html = [];
-                spec.opts.forEach(function (opt) {
-                    html.push(["option", {value:opt.value},
-                               opt.text || opt.value]); });
-                return ["select", {name:spec.id, id:spec.id,
-                                   onchange:spec.chgstr},
-                        html]; },
-            setValue: function (val) {
-                jt.byId(spec.id).value = val; },
-            getValue: function () {
-                var sel = jt.byId(spec.id);
-                return sel.options[sel.selectedIndex].value; }};
-    }
-
-
     function timelineSelectHTML () {
         var btls, selopts = [];
         btls = JSON.parse(app.user.acc.built || "[]");
         btls.sort(function (a, b) {
             if(a.name < b.name) { return -1; }
             if(a.name > b.name) { return 1; }
-            return 0; })
+            return 0; });
         if(!btls.length) {
             btls = [{tlid:"none", name:""}]; }
         btls.push({tlid:"new", name:"New&nbsp;Timeline"});
@@ -474,6 +475,8 @@ app.tabular = (function () {
             return; }
         if(tlflds.name === "new") {
             currtl = emptyTimeline();
+            if(tlflds.seltype.getValue() === "Timelines") {
+                currtl.ctype = "Timelines"; }
             setDisplayInputFieldsFromTimeline(currtl);
             timelineSettings("required"); }
         else {
@@ -507,6 +510,7 @@ app.tabular = (function () {
         tlflds.name = jt.byId("namein").value || "";
         if(jt.byId("slugin")) {
             jt.byId("slugin").value = slugify(tlflds.name); }
+        app.tabular.ptdisp();  //might need to switch points/timelines
     }
 
 
@@ -529,7 +533,7 @@ app.tabular = (function () {
         jt.call("POST", "updtl?" + app.auth(), jt.objdata(currtl),
                 function (result) {
                     setStateToDatabaseTimeline(result[0]);
-                    app.user.acc = result[1]
+                    app.user.acc = result[1];
                     editTimeline(); },  //redraw reflecting new/updated name
                 function (code, errtxt) {
                     jt.log("saveTimeline " + code + " " + errtxt);
@@ -540,8 +544,8 @@ app.tabular = (function () {
 
     function getPointMatchCriteria () {
         var crit = {code: ptflds.selcode.getValue(),
-                    start: +(jt.byId("yearstartin").value),
-                    end: +(jt.byId("yearendin").value),
+                    start: Number(jt.byId("yearstartin").value),
+                    end: Number(jt.byId("yearendin").value),
                     srch: jt.byId("srchin").value};
         if(ptflds.selpool.getValue() === "Timeline") {
             crit.ids = currtl.cids; }
@@ -588,14 +592,58 @@ app.tabular = (function () {
     }
 
 
-    function displayPointFilters (val) {
+    function displayPointFilters (val, all) {
+        if(all && val === "none") {
+            jt.byId("ptdpsel").style.display = val; }
+        else if(val !== "none") {
+            jt.byId("ptdpsel").style.display = val; }
         jt.byId("ptcodesel").style.display = val;
         jt.byId("ptfilterdiv").style.display = val;
     }
 
 
+    function updateTimelinesDisplay () {
+        var tls = [], accflds = ["remtls", "built", "completed"], html = [];
+        accflds.forEach(function (fld) {
+            var arr = app.user.acc[fld] || "[]";
+            if(typeof arr === "string") {
+                arr = JSON.parse(arr); }
+            arr.forEach(function (tl) {
+                if(tl.tlid !== currtl.instid) {
+                    tls.push({tlid:tl.tlid, name:tl.name}); } }); });
+        tls.sort(function (a, b) {
+            var aidx = currtl.cids.indexOf(a.tlid),
+                bidx = currtl.cids.indexOf(b.tlid);
+            if(aidx >= 0 && bidx < 0) { return -1; }
+            if(aidx < 0 && bidx >= 0) { return 1; }
+            if(aidx < bidx) { return -1; }
+            if(aidx > bidx) { return 1; }
+            if(a.name < b.name) { return -1; }
+            if(a.name > b.name) { return 1; }
+            return 0; });
+        //use the suppviz display classes and ids for consistent presentation
+        tls.forEach(function (tl) {
+            var si = "";
+            if(mode === "tledit") {
+                si = {type:"checkbox", id:"cb" + tl.tlid,
+                      onchange:jt.fs("app.tabular.togtlsel('" + 
+                                     tl.tlid + "')")};
+                if(currtl && currtl.cids && currtl.cids.csvcontains(tl.tlid)) {
+                    si.checked = "checked"; }
+                si = ["span", {cla:"ptseldiv"},
+                      [["label", {fo:"cb" + tl.tlid}, "Include"],
+                       ["input", si]]]; }
+            html.push(["div", {cla:"svlistdiv"},
+                       [["div", {cla:"svlistnamediv"}, 
+                         [si, 
+                          ["span", {cla:"svlistnamespan"}, tl.name]]]]]); });
+        html = ["div", {id:"svsdispdiv"}, html]; 
+        jt.out("pointsdispdiv", jt.tac2html(html));
+    }
+
+
     function updateSuppvizDisplay () {
-        var html = [], si,
+        var html = [],
             svs = [
                 // sv/about is a suppviz but not for timelines
                 // sv/levelup runs automatically as part of leveling
@@ -641,11 +689,14 @@ app.tabular = (function () {
         jt.out("downloadlinkdiv", jt.tac2html(
             ["img", {src:"img/wait.png", cla:"downloadlinkimg"}]));
         outdiv.innerHTML = "";
+        if(tlflds && tlflds.seltype && 
+           tlflds.seltype.getValue() === "Timelines") {
+            displayPointFilters("none", true);
+            return updateTimelinesDisplay(); }
         if(ptflds.selpool.getValue() === "Suppviz") {
             displayPointFilters("none");
             return updateSuppvizDisplay(); }
-        else {
-            displayPointFilters("initial"); }
+        displayPointFilters("initial");
         if(!app.allpts) {
             jt.call("GET", "docs/allpts.json", null,
                     function (result) {
@@ -653,7 +704,7 @@ app.tabular = (function () {
                         preparePointsData();
                         updatePointsDisplay(); },
                     function (code, errtxt) {
-                        alert("Fetch allpts failed " + code + " " + errtxt); },
+                        jt.err("Fetch allpts failed " + code + " " + errtxt); },
                     jt.semaphore("tabular.updatePointsDisplay"));
             return; }  //nothing to do until points are available
         mcrit = getPointMatchCriteria();
@@ -672,6 +723,8 @@ app.tabular = (function () {
 
 
     function togglePointInclude (ptid) {
+        if(tlflds.selname.getValue() === "new") {
+            jt.err("Name and save your new timeline"); }
         if(currtl.cids.csvcontains(ptid)) {
             currtl.cids = currtl.cids.csvremove(ptid); }
         else {
@@ -701,6 +754,7 @@ app.tabular = (function () {
         ptdisp: function () { updatePointsDisplay(); },
         togptsel: function (ptid) { togglePointInclude(ptid); },
         togsvsel: function (svmn) { toggleSuppvizInclude(svmn); },
+        togtlsel: function (tlid) { togglePointInclude(tlid); },
         canctl: function () { cancelTimelineEdit(); }
     };
 }());

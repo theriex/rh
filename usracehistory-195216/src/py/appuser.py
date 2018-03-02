@@ -48,11 +48,11 @@ class AppUser(db.Model):
     # app working values
     lang = db.StringProperty()      # preferred lang code for data points
     settings = db.TextProperty()    # JSON object (age, parent's age etc)
-    remtls = db.TextProperty()      # JSON array remembered timeline ids/names
     rempts = db.TextProperty()      # CSV of remembered point ids
-    completed = db.TextProperty()   # CSV of tlid;ISOFirst;ISOLatest;count
-    started = db.TextProperty()     # JSON array of timeline progress instances
-    built = db.TextProperty()       # JSON array of created timeline ids/names
+    remtls = db.TextProperty()      # JSON [] remembered timeline ids/names
+    completed = db.TextProperty()   # JSON [] id, name, firstCompl, latestComp
+    started = db.TextProperty()     # JSON [] timeline progress instances
+    built = db.TextProperty()       # JSON [] created timeline ids/names
     # write privileges
     orgid = db.IntegerProperty()    # Organization id (if any). 1 is global.
     lev = db.IntegerProperty()      # 0:User, 1:Contributor, 2:Administrator
