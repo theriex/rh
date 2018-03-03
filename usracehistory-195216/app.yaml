@@ -81,6 +81,10 @@ handlers:
 - url: /index.html
   static_files: docroot/index.html
   upload: docroot
+## The index page with a specific timeline slug/id
+- url: .*/timeline/.*
+  static_files: docroot/index.html
+  upload: docroot
 ## Trap anything ending with a slash and send it to index.html since
 ## there is no default processing to figure that out otherwise.
 - url: (.*)/

@@ -9,10 +9,9 @@ var app = {},  //Global container for application level funcs and values
 
     app.init2 = function () {
         app.amdtimer.load.end = new Date();
+        app.user = {};  //used for general reference
         app.dlg.chkcook();
-        app.db.prepData();
-        app.lev.init();
-        app.linear.display();
+        app.db.fetchDisplayTimeline();
     };
 
 

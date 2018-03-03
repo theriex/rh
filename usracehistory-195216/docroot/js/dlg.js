@@ -510,7 +510,9 @@ app.dlg = (function () {
 
 
     function setAuthentication (email, result) {
-        app.user = {email: email, acc: result[0], tok: result[1].token};
+        app.user.email = email;
+        app.user.acc = result[0];
+        app.user.tok = result[1].token;
         jt.cookie(cookname, email + cookdelim + app.user.tok, 365);
         if(!app.auth) {
             app.auth = function () {
@@ -614,7 +616,7 @@ app.dlg = (function () {
 
 
     function processSignOut () {
-        app.user = null;
+        app.user = {};
         jt.cookie(cookname, "", -1);
         app.mode.chmode();
     }

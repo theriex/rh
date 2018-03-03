@@ -1,8 +1,10 @@
 import webapp2
 import datetime
 from google.appengine.ext import db
+from google.appengine.api import memcache
 import logging
 import appuser
+import point
 import json
 import re
 
@@ -74,6 +76,35 @@ def canonize(cankey):
     return cankey
 
 
+def rebuild_prebuilt_timeline_points(tl):
+    if tl.ctype.startswith("Timelines"):
+        tl.preb = ""
+        return
+    jtxt = ""
+    ptids = tl.cids.split(",")
+    # No need to cache individual points as they are never accessed by 
+    # themselves except in this case.
+    for ptid in ptids:
+        pt = point.Point.get_by_id(int(ptid))
+        if not pt:
+            logging.warn("timeline " + str(tl.key().id()) + 
+                         " references non-existant point " + ptid)
+            continue
+        if jtxt:
+            jtxt += ","
+        # PENDING: match tl lang to appropriate point translation
+        jtxt += json.dumps({"ptid": ptid,
+                            "date": pt.date,
+                            "text": pt.text,
+                            "codes": pt.codes,
+                            "orgid": str(pt.orgid),
+                            "keywords": pt.keywords,
+                            "source": pt.source,
+                            "modified": pt.modified})
+    jtxt = "[" + jtxt + "]"
+    return jtxt
+
+
 def update_or_create_timeline(handler, acc, params):
     timeline = None
     now = appuser.nowISO()
@@ -100,7 +131,7 @@ def update_or_create_timeline(handler, acc, params):
     timeline.ctype = params["ctype"]
     timeline.cids = params["cids"] or ""
     timeline.svs = params["svs"] or ""
-    # TODO: update prebuilt points data (rebuild all in case text changed)
+    timeline.preb = rebuild_prebuilt_timeline_points(timeline)
     timeline.modified = now
     appuser.cached_put(None, timeline)
     return timeline
@@ -118,6 +149,36 @@ def update_timeline_list(tlist, timeline):
         tlist.append({"tlid": str(timeline.key().id()),
                       "name": timeline.name})
     return json.dumps(tlist)
+
+
+def fetch_timeline_by_id (tlid):
+    tlid = str(tlid)
+    tl = appuser.cached_get(tlid, {"dboc": Timeline, "byid": tlid})
+    return tl
+    
+
+def fetch_timeline_by_slug (slug):
+    instid = memcache.get(slug)
+    if instid:
+        return fetch_timeline_by_id(instid)
+    vq = appuser.VizQuery(Timeline, "WHERE slug=:1 LIMIT 1", slug)
+    instances = vq.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
+    if len(instances) > 0:
+        timeline = instances[0]
+        memcache.set(slug, str(timeline.key().id()))
+        appuser.cached_put(None, timeline)
+        return timeline
+    return None
+
+
+def contained_timelines (tl):
+    result = [tl]
+    if tl.ctype.startswith("Timelines"):
+        for cid in tl.cids.split(","):
+            ct = fetch_timeline_by_id(int(cid))
+            ct = ct or "null"
+            result.append(ct)
+    return result
 
 
 class UpdateTimeline(webapp2.RequestHandler):
@@ -139,12 +200,18 @@ class UpdateTimeline(webapp2.RequestHandler):
 class FetchTimeline(webapp2.RequestHandler):
     def get(self):
         tlid = self.request.get("tlid")
-        tl = appuser.cached_get(tlid, {"dboc": Timeline, "byid": tlid})
-        if not tl:
-            tl = Timeline.get_by_id(int(tlid))
+        if tlid:
+            tl = fetch_timeline_by_id(tlid)
+        else:
+            slug = self.request.get("slug")
+            if not slug:
+                slug = "demo"
+            slug = slug.lower()  # just in case someone camel cases a url..
+            tl = fetch_timeline_by_slug(slug)
         if not tl:
             return appuser.srverr(self, 404, "No Timeline " + tlid)
-        appuser.return_json(self, [tl])
+        tls = contained_timelines(tl);
+        appuser.return_json(self, tls);
 
 
 app = webapp2.WSGIApplication([('.*/updtl', UpdateTimeline),

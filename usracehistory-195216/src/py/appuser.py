@@ -144,6 +144,7 @@ def cached_get(ckey, qps):
         if instance:
             cached_put(ckey, instance)
             return instance
+        return None
     vq = VizQuery(qps["dboc"], qps["where"], qps["wags"])
     instances = vq.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
     if len(instances) > 0:

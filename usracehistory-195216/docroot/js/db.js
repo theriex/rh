@@ -318,6 +318,33 @@ app.db = (function () {
     }
 
 
+    function fetchDisplayTimeline () {
+        var slug = "demo",
+            url = window.location.href,
+            idx = url.indexOf("/timeline/")
+        if(idx >= 0) {
+            slug = url.slice(idx + "/timeline/".length); }
+        jt.log("fetchDisplayTimeline: " + slug);
+        jt.out("rhcontentdiv", "Loading " + slug + "...");
+        app.user.tls = app.user.tls || {};
+        jt.call("GET", "fetchtl?slug=" + slug, null,
+                function (result) {  //one or more timeline objects
+                    result.forEach(function (tl) {
+                        jt.log("caching timeline " + tl.instid + " " + tl.name);
+                        app.user.tls[tl.instid] = tl; });
+                    app.db.prepData();
+                    app.lev.init();
+                    app.linear.display(); },
+                function (code, errtxt) {
+                    jt.out("rhcontentdiv", jt.tac2html([
+                        "Could not load " + slug + ": " + code + " " + errtxt,
+                        ["br"],
+                        ["a", {href:"https://usracehistory.org"},
+                         "Load default timeline"]])); },
+                jt.semaphore("db.fetchDisplayTimeline"));
+    }
+
+
     return {
         noteStartTime: function () { noteStartTime(); },
         wallClockTimeStamp: function (d) { return wallClockTimeStamp(d); },
@@ -325,6 +352,7 @@ app.db = (function () {
         getStateURLParams: function () { return getStateURLParams(); },
         prepData: function () { prepData(); },
         saveState: function () { saveState(); },
-        parseDate: function (pt) { parseDate(pt); }
+        parseDate: function (pt) { parseDate(pt); },
+        fetchDisplayTimeline: function () { fetchDisplayTimeline(); }
     };
 }());

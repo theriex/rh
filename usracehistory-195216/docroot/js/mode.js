@@ -312,7 +312,7 @@ app.mode = (function () {
                            ["a", {href:"#visual", 
                                   onclick:jt.fs("app.mode.menu(0,'visual')")},
                             "Interactive&nbsp;Mode"]]); }
-            if(app.user) {
+            if(app.user && app.user.tok) {
                 html.push(["div", {cla:"menulinemain"},
                            ["a", {href:"#profile",
                                   onclick:jt.fs("app.mode.menu(0, 'myacc')")},

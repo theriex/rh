@@ -483,7 +483,7 @@ app.tabular = (function () {
             tlid = tlflds.name;
             app.user.tls = app.user.tls || {};
             if((!currtl || currtl.instid !== tlid) && app.user.tls[tlid]) {
-                currtl = Object.assign({}, app.user.tls[tlid]); }
+                setStateToDatabaseTimeline(app.user.tls[tlid]); }
             if(!currtl || currtl.instid !== tlid) {
                 jt.call("GET", "fetchtl?tlid=" + tlid, null,
                         function (result) {
@@ -527,6 +527,7 @@ app.tabular = (function () {
             if(currtl.ctype.startsWith("Random")) {
                 currtl.ctype += ":" + jt.byId("tlrndmaxin").value; } }
         //cids already updated
+        currtl.preb = "";  //rebuilt by server
         jt.log("saveTimeline parameters:");
         Object.keys(currtl).forEach(function (field) {
             jt.log("    " + field + ": " + currtl[field]); });
