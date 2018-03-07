@@ -1,6 +1,7 @@
 /*jslint browser, multivar, white, fudge */
 /*global app, window, jt, d3 */
 
+//Menu and other top nav area functionality.
 app.mode = (function () {
     "use strict";
 
@@ -42,26 +43,41 @@ app.mode = (function () {
     }
 
 
-    function getPointsForDisplay () {
-        if(fetchpoints) {
-            app.lev.updateVisited(fetchpoints); }
-        fetchpoints = app.lev.getNextPoints();
-        //TEST: Uncomment if specific points for testing at startup
-        //      slavery:B2, lynching:B120.
-        // if(!ms.teststart) {
-        //     ms.teststart = true;
-        //     var testcids = ["B120"];
-        //     ms.skipstart = true;
-        //     fetchpoints = [];
-        //     app.data.pts.forEach(function (pt) {
-        //         if(testcids.indexOf(pt.cid) >= 0) {
-        //             fetchpoints.push(pt); } }); }
-        series = fetchpoints.slice();  //working copy to chew up
+    function progressInformation () {
+        var dcon = app.db.displayContext(),
+            levs = [],
+            cmpsvs = dcon.prog.sv || "",
+            ttlpts = 0,
+            donepts = dcon.prog.pts.csvarray().length,
+            levidx = 0,
+            info;
+        dcon.tl.svs.csvarray().forEach(function (svn) {
+            levs.push({svn:svn, svcmp:cmpsvs.csvcontains(svn)}); });
+        if(!levs.length) {
+            levs.push({svn:"finale", svcmp:false}); }
+        if(!dcon.tl.ctype.startsWith("Timelines")) {
+            //use selected display points to determine the total
+            ttlpts = dcon.tl.points.length; }
+        levs.forEach(function (lev, idx) {
+            lev.levnum = idx + 1;
+            if(idx < levs.length - 1) {
+                lev.levpts = Math.floor(ttlpts / levs.length); }
+            else {  //extra points covered in last level
+                lev.levpts = Math.ceil(ttlpts / levs.length); }
+            lev.ptscmp = Math.min(donepts, lev.levpts);
+            donepts = Math.max((donepts - lev.levpts), 0);
+            if(lev.levpts <= lev.ptscmp) {
+                levidx += 1; } });
+        info = {levnum: levidx + 1,
+                levpcnt: levs[levidx].ptscmp / levs[levidx].levpts,
+                level: levs[levidx],
+                levels: levs};
+        return info;
     }
 
 
     function updateLevelDisplay () {
-        var proginfo = app.lev.progInfo(),
+        var proginfo = progressInformation(),
             ti = {fs: 18,   //font size for level number
                   p: {t: 1, r: 2, b: 1, l: 2},  //padding top right bottom left
                   m: {t: 3, r: 2, b: 0, l: 3}}, //margin  top right bottom left
@@ -90,7 +106,7 @@ app.mode = (function () {
                 .attr("y", tc.y - ti.p.t)
                 .attr("dy", "-.1em")   //fudge text baseline
                 .attr("font-size", ti.fs)
-                .text(String(proginfo.level));
+                .text(String(proginfo.levnum));
             ms.prog.prback = ms.prog.g.append("rect")
                 .attr("class", "progbarback")
                 .attr("x", rc.x)
@@ -105,7 +121,8 @@ app.mode = (function () {
                 .attr("height", rc.h)
                 .attr("width", 0); }
         ms.prog.prfill.attr("width", Math.round(proginfo.levpcnt * rc.w));
-        ms.prog.levnum.text(String(proginfo.level));
+        ms.prog.levnum.text(String(proginfo.levnum));
+        return proginfo;
     }
 
 
@@ -117,50 +134,37 @@ app.mode = (function () {
         jt.byId("tcontdiv").style.top = String(ms.h) + "px";
         ms.disp = "linear";  //other option is "text"
         verifyDisplayElements();
-        getPointsForDisplay();
-        updateLevelDisplay();
+        ms.levinf = updateLevelDisplay();
+        ms.pointsPerSave = app.db.displayContext().tl.pointsPerSave;
         app.dlg.init(tl);
-        //app.linear.clickCircle(app.lev.suppVisByCode("in").pts[0]);
-        if(series && series.length) {
-            showModeElements("interactive");
-            if(ms.skipstart) {
-                app.mode.next(); }
-            else {
-                app.dlg.start(jt.fs("app.mode.showNext()")); } }
+        if(ms.levinf.levnum === 1 && ms.levinf.levpcnt === 0) {
+            app.dlg.start(jt.fs("app.mode.showNext()")); }
         else {
-            showModeElements("reference"); }
+            app.mode.next(); }
     }
 
 
     function next (quiet) {
-        var levstart, levend;
-        app.dlg.close();
-        app.db.noteStartTime();
-        if(!series || !series.length || quiet) {
-            levstart = app.lev.progInfo();
-            app.db.saveState();
-            getPointsForDisplay();
-            updateLevelDisplay();
-            levend = app.lev.progInfo();
-            if(mode === "interactive" && (levstart.level !== levend.level || 
-                                          !series.length)) {  //no more levels
-                app.linear.levelCompleted(levstart); }
-            else if(quiet) {
-                app.mode.nextPass(); }
-            else {
-                app.dlg.save(jt.fs("app.mode.nextPass()")); } }
-        else {
-            ms.currpt = series.pop();
-            app.linear.clickCircle(ms.currpt); }
+        var level = ms.levinf.level, 
+            dcon = app.db.displayContext();
+        if(ms.tl.pendingSaves >= ms.pointsPerSave) {
+            return app.dlg.saveProgress(); }
+        if(level.levpts > level.ptscmp) {
+            ms.currpt = app.db.nextPoint();
+            return app.linear.clickCircle(ms.currpt); }
+        if(!level.svcmp) {
+            return app[level.svn].display(app.mode.next); }
+        //moving to the next level would have already been handled
+        else if(dcon.tlidx < dcon.ds.length) {
+            app.db.displayNextTimeline(); }
+        //if nothing else to do, display the finale with no continuation func
+        app.finale.display();
     }
 
 
-    function showSelectStat (task, info) {
+    function showSelectStat (task) {
         var tl = app.linear.tldata();
-        if(info.level <= 1) {
-            task.msg = "Selecting " + series.length + " Lesser Known Facts"; }
-        else {
-            task.msg = "Selecting " + series.length + " Facts"; }
+        task.msg = "Selecting " + fetchpoints.length + " Facts";
         jt.out("suppvisdiv", jt.tac2html(
             ["div", {id:"statmsgdiv"}, task.msg]));
         d3.select("#suppvisdiv")
@@ -196,8 +200,9 @@ app.mode = (function () {
 
 
     function showNextPoints (tasks) {
-        var info = app.lev.progInfo(), task;
+        var task;
         app.dlg.close();
+        fetchpoints = app.db.nextPoint(ms.pointsPerSave);
         if(!tasks) {
             tasks = [{cmd:"unzoom", dur:100},
                      {cmd:"highlight", dur:1400},
@@ -209,7 +214,7 @@ app.mode = (function () {
         switch(task.cmd) {
         case "unzoom":
             app.linear.unzoom();
-            showSelectStat(task, info);
+            showSelectStat(task);
             break;
         case "highlight":
             highlightCircles(task);
@@ -357,7 +362,7 @@ app.mode = (function () {
 
 
     return {
-        start: function (divid, tl) { start(divid, tl); },
+        start: function (tl) { start(tl); },
         next: function () { next(); },
         nextPass: function () { nextPass(); },
         nextQuiet: function () { next(true); },

@@ -84,7 +84,7 @@ circle { clip-path: url(../#clip); }
 .elevatortext { fill:#999; font-weight:bold; font-style:italic; 
   text-anchor:middle; }
 
-#introdlgdiv { padding:0px 10px 0px 0px; }
+#introdlgdiv { padding:0px 10px 20px 0px; }
 #introtitlediv { font-size:x-large; font-weight:bold; text-align:center;
   padding:10px 10px 10px 16px; line-height:150%;
   font-family: "Open Sans", "Helvetica", sans-serif;

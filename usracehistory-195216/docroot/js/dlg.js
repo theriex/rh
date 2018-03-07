@@ -109,18 +109,19 @@ app.dlg = (function () {
 
     function showStartDialog (clickfstr) {
         var html;
-        //removed dlgxdiv since dismissing the dialog does not leave you
-        //with an interactive application. Close interactivity instead.
+        html = "An introduction<br/>" +
+            " to the history<br/>" +
+            " of race and racism<br/>" +
+            " in the United States<br/>";
+        if(window.innerWidth < 400) {
+            html = html.replace("<br/>", ""); }
+        //no dialog dismissal option.  Use menu select to do something else.
         html = ["div", {id:"introdlgdiv"},
                 [["div", {id:"introtitlediv"}, "U.S. Race History"],
                  ["table",
                   ["tr",
                    [["td",
-                     ["div", {cla: "dlgtextdiv"},
-                      "An introduction<br/>" +
-                      "to the history of<br/>" +
-                      "race and racism in<br/>" +
-                      "the United States<br/>"]],
+                     ["div", {cla: "dlgtextdiv"}, html]],
                     ["td", 
                      ["div", {id: "startdiv", onclick: clickfstr},
                       ["div", {id: "startcontdiv"},
@@ -140,6 +141,7 @@ app.dlg = (function () {
                     name += " " + ch.toUpperCase(); }
                 else {
                     name += ch; } }
+            //PENDING: Find a way to deal with this kind of formatting issue
             name = name.replace(/De\sBakey/g, "DeBakey");
             name = name.split(" ");
             name.forEach(function (na, idx) {
@@ -214,7 +216,7 @@ app.dlg = (function () {
 
     function infoButtons (d) {
         var ret = {tac:[], focid:"", date:""};
-        if(d.code.indexOf("U") >= 0) {
+        if(d.codes.indexOf("U") >= 0) {
             ret.tac = [["span", {cla:"buttonintrospan"}, "Did you know?"],
                        ["div", {id:"choicebuttonsdiv"},
                         [["button", {type:"button", id:"yesbutton",
@@ -227,7 +229,7 @@ app.dlg = (function () {
                          rememberCheckboxTAC(true)]]];
             ret.focid = "nobutton";
             ret.date = ["span", {id:"dlgdatespan"}, d.dispdate]; }
-        else if(d.code.indexOf("D") >= 0) {
+        else if(d.codes.indexOf("D") >= 0) {
             ret.tac = [];
             d.yearguesses = getYearGuessOptions(d, 3);
             d.yearguesses.forEach(function (year) {
@@ -241,7 +243,7 @@ app.dlg = (function () {
             ret.tac = [["div", {cla:"buttonptcodessdiv"},
                         [["span", {cla:"buttonptcodeslabelspan"}, 
                           "Groups: "],
-                         pointCodeNamesCSV(d.code)]],
+                         pointCodeNamesCSV(d.codes)]],
                        ["button", {type:"button", id:"nextbutton",
                                    onclick:jt.fs("app.dlg.button()")},
                         "Continue"]];
@@ -359,10 +361,38 @@ app.dlg = (function () {
 
 
     function closeInteractionTimeTracking () {
-        var inter = tl.dlgdat.interact;
+        var pt = tl.dlgdat,
+            inter = pt.interact,
+            ptid = pt.ptid,
+            prog = app.db.displayContext().prog,
+            pstr = "";
         inter.end = new Date();
-        tl.dlgdat.duration = app.db.getElapsedTime(inter.start, inter.end);
-        inter.elapsed = tl.dlgdat.duration / 10;  //seconds
+        if(prog.pts.csvcontains(ptid)) {
+            prog.pts.csvarray().forEach(function (ps) {
+                if(ps.startsWith(ptid)) {
+                    ps = ps.split(";");
+                    ps[3] = String(Number(ps[3]) + 1);
+                    ps = ps.join(";"); }
+                pstr.csvappend(ps); }); }
+        else { //no existing save status entry
+            tl.pendingSaves = tl.pendingSaves || 0;
+            tl.pendingSaves += 1;
+            pstr = ptid + ";" + inter.start.toISOString() + ";" +
+                inter.end.toISOString() + ";1;";
+            if(pt.remembered) {
+                pstr += "r"; }
+            if(pt.codes.indexOf("U") >= 0) {
+                if(inter.answer === "yes") {
+                    pstr += "k"; }
+                if(inter.answer === "no") {
+                    pstr += "u"; } }
+            if(pt.codes.indexOf("D") >= 0) {
+                if(!pt.yearmisscount || pt.yearmisscount === 1) {
+                    pstr += "1"; }
+                else {
+                    pstr += pt.yearmisscount; } }
+            pstr = prog.pts.csvappend(pstr); }
+        prog.pts = pstr;
     }
 
 
@@ -401,8 +431,8 @@ app.dlg = (function () {
             jt.byId(yearButtonId(year)).disabled = true;
             jt.out("dlgdatequestion", 
                    jt.byId("dlgdatequestion").innerHTML + "?");
-            pt.yearguesscount = pt.yearguesscount || 1;
-            pt.yearguesscount += 1; }
+            pt.yearmisscount = pt.yearmisscount || 0;
+            pt.yearmisscount += 1; }
     }
 
 
@@ -527,6 +557,7 @@ app.dlg = (function () {
             jt.out("loginstatdiv", "Creating account...");
             jt.call("POST", "updacc", inputsToParams(cred),
                     function (result) {
+                        app.db.deserialize("AppUser", result[0]);
                         setAuthentication(cred.emailin, result);
                         app.dlg.close();
                         app.dlg.myacc(); },
@@ -584,6 +615,7 @@ app.dlg = (function () {
             jt.out("loginstatdiv", "Updating account...");
             jt.call("POST", "updacc?" + authparams(), inputsToParams(data),
                     function (result) {
+                        app.db.deserialize("AppUser", result[0]);
                         app.user.acc = result[0];
                         app.dlg.close();
                         app.mode.chmode(); },
@@ -595,6 +627,8 @@ app.dlg = (function () {
 
 
     function processSignIn (cred) {
+        //PENDING: Go with localStorage user instance if found, then redisplay
+        //if any significant changes found after db retrieval.
         var params;
         cred = cred || readInputFieldValues(["emailin", "passwordin"]);
         params = inputsToParams(cred);
@@ -602,6 +636,7 @@ app.dlg = (function () {
         if(cred) {
             jt.call("GET", "acctok?" + params, null,
                     function (result) {
+                        app.db.deserialize("AppUser", result[0])
                         setAuthentication(cred.emailin, result)
                         app.dlg.close();
                         //TEST: Uncomment to launch menu command post login
@@ -677,6 +712,19 @@ app.dlg = (function () {
     }
 
 
+    function saveProgress () {
+        //- Prompt to sign in if no account yet.  Need an account to save.
+        //- Progress is saved in app.db.displayContext().prog which needs to
+        //  be merged into the account before calling to save.
+        //- Reset tl.pendingSaves to zero if saved or continuing past error..
+        //- After saving:
+        //  - move to next color theme
+        //  - call mode.updateLevelDisplay
+        //  - call app.mode.next()
+        jt.err("dlg.saveProgress not implemented yet");
+    }
+
+
     function closeDialog (mode) {
         d3.select("#itemdispdiv")
             .style("visibility", "hidden");
@@ -707,6 +755,7 @@ app.dlg = (function () {
         login: function () { processSignIn(); },
         logout: function () { processSignOut(); },
         chkcook: function () { checkCookieSignIn(); },
-        forgotpw: function () { forgotPassword(); }
+        forgotpw: function () { forgotPassword(); },
+        saveProgress: function () { saveProgress(); }
     };
 }());

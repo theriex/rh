@@ -4,7 +4,8 @@
 app.db = (function () {
     "use strict";
 
-    var maxcids = {}, pointcounts = {};
+    var dcon = null;  //The current display context (timeline, progress etc)
+
 
     function makeDisplayDate (pt) {
         var dd = "",
@@ -101,7 +102,7 @@ app.db = (function () {
         // if(pts.length >= 4) {
         //     jt.log("centerPointGroup " + pts[0].start.year); }
         pts.forEach(function (pt) {
-            var mx = app.data.maxy,
+            var mx = dcon.maxy,
                 mid = Math.round(mx / 2),
                 off = mid - Math.round(pts.length / 2);
             pt.oc = (mx + 1) - pt.oc;   //invert so first point in series is top
@@ -157,13 +158,6 @@ app.db = (function () {
     }
 
 
-    function wallClockTimeStamp2Date (ts) {
-        ts = ts || wallClockTimeStamp();
-        ts = ts.slice(0, ts.indexOf("Z") + 1);
-        return jt.isoString2Time(ts);
-    }
-
-
     function noteStartTime () {
         if(!app.startTime) {
             app.startTime = wallClockTimeStamp(); }
@@ -197,117 +191,82 @@ app.db = (function () {
     }
 
 
-    function readStateURLParams (pstr) {
-        var pobj = {}, preg = /(\d+)([A-Z]\d+)(r)?/, ptd = {}, idx, et;
-        pstr = pstr || window.location.search;
-        pobj = jt.paramsToObj(pstr, pobj, "String");  //userId too big for int
-        Object.keys(pobj).forEach(function (key) {
-            switch(key) {
-            case "id": app.userId = pobj[key]; break;
-            case "st": app.startTime = pobj[key]; break;
-            default:
-                try {
-                    if(key.startsWith("pb")) {
-                        pobj[key].split(":").forEach(function (ps) {
-                            var pcs = preg.exec(ps);
-                            ptd[pcs[2]] = {t:+pcs[1], r:pcs[3]}; }); }
-                    else {  //treat as supplemental visualization
-                        idx = pobj[key].lastIndexOf(":");
-                        ptd[key] = {s:pobj[key].slice(0, idx),
-                                    t:+pobj[key].slice(idx+1)}; }
-                } catch (err) {
-                    jt.log("readStateURLParams param error " + key + ": " + 
-                           pobj[key] + " " + err);
-                } } });
-        //reconstruct visit time differences based on time per point
-        et = wallClockTimeStamp2Date(app.startTime).getTime();
-        app.data.pts.forEach(function (pt) {
-            if(ptd[pt.cid]) {
-                pt.visited = new Date(et).toISOString();
-                pt.duration = ptd[pt.cid].t;
-                et += pt.duration;
-                pt.remembered = ptd[pt.cid].r; }
-            else if(pt.sv && ptd[pt.sv]) {
-                //using the same reconstructed visit time for chromacoding
-                pt.visited = new Date(et).toISOString();
-                pt.duration = ptd[pt.sv].t; } });
-        app.data.suppvis.forEach(function (sv) {
-            if(ptd[sv.code]) {
-                idx = pobj[sv.code].lastIndexOf(":");
-                sv.startstamp = pobj[sv.code].slice(0, idx);
-                sv.duration = pobj[sv.code].slice(idx+1); } });
+    function describePoints () {
+        jt.log("Point distributions for " + dcon.tl.name + 
+               " (" + dcon.tl.points.length + " for display)");
+        Object.keys(dcon.stat).forEach(function (key) {
+            var stat = dcon.stat[key];
+            jt.log(("    " + stat.count).slice(-4) + " " + stat.name); });
     }
 
 
-    function loadSavedState () {
-        var state = window.localStorage.getItem("savestatestr");
-        if(state) {
-            return readStateURLParams(state); }
-        readStateURLParams();  //read from URL parameters
+    function notePointCounts (pt) {
+        dcon.stat = dcon.stat || {
+            N: {count:0, name:"Native American"},
+            B: {count:0, name:"African American"},
+            L: {count:0, name:"Latino/as"},
+            A: {count:0, name:"Asian American"},
+            M: {count:0, name:"Middle East and North Africa"},
+            R: {count:0, name:"Multiracial"}};
+        for(var i = 0; i < pt.codes.length; i += 1) {
+            if(dcon.stat[pt.codes.charAt(i)]) {
+                dcon.stat[pt.codes.charAt(i)].count += 1; } }
     }
 
 
-    function describeData () {
-        jt.log("Point racial codes and names");
-        app.data.ptcs.forEach(function (tl) {
-            if(tl.type !== "marker") {
-                jt.log("  " + tl.code + ": " + pointcounts[tl.code] + " " + 
-                       tl.name + " (" + tl.ident + ") maxcid: " + 
-                       maxcids[tl.code]); } });
-        //an sv datum will have an sv field set to the sv code.
-        // jt.log("Supplemental Visualizations");
-        // app.data.suppvis.forEach(function (sv) {
-        //     jt.log("  " + sv.code + ": " + sv.name); });
+    function compareStartDate (a, b) {
+        var am, bm, ad, bd;
+        if(a.start.year < b.start.year) { return -1; }
+        if(a.start.year > b.start.year) { return 1; }
+        am = a.month || 0;
+        bm = b.month || 0;
+        if(am < bm) { return -1; }
+        if(am > bm) { return 1; }
+        ad = a.day || 0;
+        bd = b.day || 0;
+        if(ad < bd) { return -1; }
+        if(ad > bd) { return 1; }
+        return 0;
     }
 
 
-    function noteCitationIdMax (pt) {
-        var i, code = pt.cid.charAt(0),
-            count = +(pt.cid.slice(1));
-        maxcids[code] = Math.max((maxcids[code] || 0), count);
-        for(i = 0; i < pt.code.length; i += 1) {
-            if(!pointcounts[pt.code.charAt(i)]) {
-                pointcounts[pt.code.charAt(i)] = 1; }
-            else {
-                pointcounts[pt.code.charAt(i)] += 1; } }
-    }
-
-
-    //Each data point has the following fields:
-    //  code: One or more code letter ids this point is associated with
-    //  cid: Unique citation identifier
-    //  date: Colloquial text for display date or date range
-    //  text: Event description text
-    //  start: {year: number, month?, day?}
-    //  end?: {year: number, month?, day?}
-    //  tc: time coordinate number (start year + percentage) * 100
-    //  oc: offset coordinate number (one-based start year event count val)
-    //  id: text years ago + sep + offset
-    //  visited?: ISO date when last displayed
+    //The preb data points in the timeline are a subset of the database
+    //fields (see timeline.py rebuild_prebuilt_timeline_points):
+    //    ptid: The database point instance id.  Aka "citation id"
+    //    date: Date or range.  See README.md for allowed formats.
+    //    text: Description of the point (max 1200 chars)
+    //    codes: NBLAMRUFD (see point.py point_codes)
+    //    orgid: Organization id, 1 is public
+    //    keywords: CSV of org defined keywords (regions, categories, tags)
+    //    source: Arbitrary source tag used when the point was loaded.
+    //    pic: ptid if an image exists, empty string otherwise
+    //    modified: ISO when the point was last updated
+    //These fields added from calculations and user data:
+    //    start: {year: number, month?, day?}
+    //    end?: {year: number, month?, day?}
+    //    tc: time coordinate number (start year + percentage) * 100
+    //    oc: offset coordinate number (one-based start year event count val)
+    //    id: text years ago + sep + offset (used for dom elements)
+    //    isoShown: ISO date when last shown
+    //    isoClosed: ISO date when last completed (ok, right date, etc)
+    //    tagCodes: rku1234 (see appuser.py AppUser class def comment)
     function prepData () {
         var ctx = {yr: 0, dy: 0, maxy: 0},
-            cs = {},
             ny = new Date().getFullYear();
         jt.out("rhcontentdiv", "Preparing data...");
-        app.data.pts.forEach(function (pt, idx) {
-            if(!pt.cid) {
-                throw "Missing cid " + pt.date + " " + pt.text; }
-            if(cs[pt.cid]) {
-                throw "Duplicate cid: " + pt.cid; }
-            if(pt.code.indexOf("U") >= 0 && pt.code.indexOf("D") >= 0) {
-                throw "Either 'U' or 'D' (no save on intro) cid: " + pt.cid; }
-            noteCitationIdMax(pt);
-            cs[pt.cid] = pt;
+        dcon.tl.points.forEach(function (pt, idx) {
+            notePointCounts(pt);
             pt.currdataindex = idx;
             parseDate(pt);
             makeCoordinates(pt, ctx);
             makePointIdent(pt, ny); });
-        app.data.maxy = ctx.maxy;
+        dcon.maxy = ctx.maxy;
         ctx = {yr: 0, grp: null};
-        app.data.pts.forEach(function (pt) {
+        dcon.tl.points.sort(function (a, b) {  //verify in chrono order
+            return compareStartDate(a, b); });
+        dcon.tl.points.forEach(function (pt) {
             centerYCoordinates(pt, ctx); });
-        loadSavedState();
-        describeData();
+        describePoints();
     }
 
 
@@ -315,6 +274,118 @@ app.db = (function () {
         var state = getStateURLParams();
         jt.log("db.saveState: " + state);
         window.localStorage.setItem("savestatestr", state);
+    }
+
+
+    function stackTimeline (par) {
+        //present all children in order, then this timeline
+        if(par.ctype.startsWith("Timelines")) {
+            par.cids.csvarray().forEach(function (tlid) {
+                var chi = app.user.tls[tlid] || null;
+                stackTimeline(chi); }); }
+        dcon.ds.push(par);
+    }
+
+
+    function getTimelineProgressRecord (tl) {
+        var prog = {tlid:tl.instid, st:new Date().toISOString(), sv:"", pts:""};
+        if(app.user && app.user.acc && app.user.acc.started) {
+            app.user.acc.started.forEach(function (st) {
+                if(st.tlid === tl.instid) {
+                    prog = st; } }); }
+        return prog;
+    }
+
+
+    function makeTimelineDisplaySeries (tls) {
+        var prog, serstr = "", idx;
+        tls.forEach(function (tl) {
+            jt.log("caching timeline " + tl.instid + " " + tl.name);
+            app.user.tls[tl.instid] = tl; });
+        dcon = {ds:[], tl:null, prog:null};  //reset display context
+        stackTimeline(tls[0]);  //recursive walk to build display series 
+        dcon.ds.forEach(function (tl) {
+            var ctc;
+            ctc = tl.ctype.split(":");
+            ctc = {type:ctc[0], levcnt:ctc[1] || 6, rndmax:ctc[2] || 18};
+            tl.pointsPerSave = Number(ctc.levcnt);
+            tl.points = tl.preb;
+            if(ctc.type === "Random") {
+                ctc.rndmax = Number(ctc.rndmax);
+                tl.randpts = [];
+                tl.unused = tl.preb.slice();
+                //move all visited points from unused into randpts
+                prog = getTimelineProgressRecord(tl);
+                prog.pts.csvarray().forEach(function (pp) {
+                    var idx = findPointForId(pp.split(":")[0], tl.unused);
+                    if(idx >= 0) {
+                        tl.randpts.push(tl.unused[idx]);
+                        tl.unused.splice(idx, 1); } });
+                //randomly select remaining points from unused
+                while(tl.randpts.length < ctc.rndmax) {
+                    idx = Math.floor(Math.random() * tl.unused.length);
+                    tl.randpts.push(tl.unused.splice(idx, 1)[0]); }
+                jt.log("Random points for " + tl.name);
+                tl.randpts.forEach(function (pt, idx) {
+                    jt.log(("    " + idx).slice(-4) + " " + pt.date + " " +
+                           pt.text.slice(0, 40) + "..."); });
+                tl.points = tl.randpts; } });
+        dcon.ds.forEach(function (tl) {
+            if(serstr) {
+                serstr += ", "; }
+            serstr += tl.name; });
+        jt.log("Timeline display series: " + serstr);
+    }
+
+
+    function timelineCompleted (tl) {
+        var svsdone = true, prog = getTimelineProgressRecord(tl);
+        prog.ttlpts = 0;
+        prog.cmplpts = 0;
+        tl.cids.csvarray().forEach(function (cid) {
+            if(prog.pts.csvcontains(cid)) {
+                prog.cmplpts += 1; }
+            prog.ttlpts += 1; });
+        if(prog.cmplpts === prog.ttlpts) {
+            if(prog.sv) {
+                tl.svs.csvarray().forEach(function (sv) {
+                    if(!prog.sv.csvcontains(sv)) {
+                        svsdone = false; } }); }
+            if(svsdone) {
+                return true; } }
+        dcon.tl = tl;
+        dcon.prog = prog;
+        return false;
+    }
+
+
+    function displayNextTimeline () {
+        dcon.tl = null;
+        dcon.prog = null;
+        dcon.tlidx = 0;
+        while(dcon.ds[dcon.tlidx].ctype.startsWith("Timelines") ||
+              timelineCompleted(dcon.ds[dcon.tlidx])) {
+            dcon.tlidx += 1; }
+        if(dcon.tlidx < dcon.ds.length) {
+            dcon.tl = dcon.ds[dcon.tlidx];
+            prepData(); }
+        app.linear.display();  //displays finale if dcon.tl is null
+    }
+
+
+    function nextUnvisitedPoint (numpoints) {
+        var res = [];
+        numpoints = numpoints || 1;
+        if(!dcon.prog || !dcon.tl) {
+            return jt.log("db.nextUnvisitedPoint called without tl or prog"); }
+        dcon.tl.points.forEach(function (pt) {
+            if(res.length < numpoints && dcon.prog.pts.indexOf(pt.ptid) < 0) {
+                res.push(pt); } });
+        if(!res.length) {
+            return null; }
+        if(numpoints === 1) {
+            return res[0]; }
+        return res;
     }
 
 
@@ -327,14 +398,14 @@ app.db = (function () {
         jt.log("fetchDisplayTimeline: " + slug);
         jt.out("rhcontentdiv", "Loading " + slug + "...");
         app.user.tls = app.user.tls || {};
+        //PENDING: Go with localStorage timeline if available, then redisplay
+        //if db fetch shows anything has changed.
         jt.call("GET", "fetchtl?slug=" + slug, null,
                 function (result) {  //one or more timeline objects
                     result.forEach(function (tl) {
-                        jt.log("caching timeline " + tl.instid + " " + tl.name);
-                        app.user.tls[tl.instid] = tl; });
-                    app.db.prepData();
-                    app.lev.init();
-                    app.linear.display(); },
+                        app.db.deserialize("Timeline", tl); });
+                    makeTimelineDisplaySeries(result);
+                    displayNextTimeline();},
                 function (code, errtxt) {
                     jt.out("rhcontentdiv", jt.tac2html([
                         "Could not load " + slug + ": " + code + " " + errtxt,
@@ -345,14 +416,70 @@ app.db = (function () {
     }
 
 
+    function serialize (dbc, dbo) {
+        switch(dbc) {
+        case "AppUser":
+            dbo.settings = JSON.stringify(dbo.settings || {});
+            dbo.remtls = JSON.stringify(dbo.remtls || []);
+            dbo.completed = JSON.stringify(dbo.completed || []);
+            dbo.started = JSON.stringify(dbo.started || []);
+            dbo.built = JSON.stringify(dbo.built || []);
+            break;
+        case "Timeline":
+            dbo.preb = JSON.stringify(dbo.preb || []);
+            break;
+        case "Point":
+            dbo.refs = JSON.stringify(dbo.refs || []);
+            dbo.translations = JSON.stringify(dbo.translations || []);
+            dbo.stats = JSON.stringify(dbo.stats || {});
+            break;
+        default:
+            jt.log("Attempt to serialize unknown db class: " + dbc); }
+    }
+
+
+    function deserialize (dbc, dbo) {
+        switch(dbc) {
+        case "AppUser":
+            dbo.settings = JSON.parse(dbo.settings || "{}");
+            dbo.remtls = JSON.parse(dbo.remtls || "[]")
+            dbo.completed = JSON.parse(dbo.completed || "[]")
+            dbo.started = JSON.parse(dbo.started || "[]")
+            dbo.built = JSON.parse(dbo.built || "[]")
+            break;
+        case "Timeline":
+            dbo.preb = JSON.parse(dbo.preb || "[]");
+        case "Point":
+            dbo.refs = JSON.parse(dbo.refs || "[]");
+            dbo.translations = JSON.parse(dbo.translations || "[]");
+            dbo.stats = JSON.parse(dbo.stats || "{}");
+            break;
+        default:
+            jt.log("Attempt to deserialize unknown db class: " + dbc); }
+    }
+
+
+    function postdata (dbc, dbo) {
+        var dat;
+        serialize(dbc, dbo);
+        dat = jt.objdata(dbo);
+        deserialize(dbc, dbo);
+        return dat;
+    }
+            
+        
     return {
         noteStartTime: function () { noteStartTime(); },
         wallClockTimeStamp: function (d) { return wallClockTimeStamp(d); },
         getElapsedTime: function (sd, ed) { return getElapsedTime(sd, ed); },
         getStateURLParams: function () { return getStateURLParams(); },
-        prepData: function () { prepData(); },
         saveState: function () { saveState(); },
         parseDate: function (pt) { parseDate(pt); },
-        fetchDisplayTimeline: function () { fetchDisplayTimeline(); }
+        fetchDisplayTimeline: function () { fetchDisplayTimeline(); },
+        serialize: function (dbc, dbo) { serialize(dbc, dbo); },
+        deserialize: function (dbc, dbo) { deserialize(dbc, dbo); },
+        postdata: function (dbc, dbo) { postdata(dbc, dbo); },
+        displayContext: function () { return dcon; },
+        nextPoint: function (ptc) { return nextUnvisitedPoint(ptc); }
     };
 }());

@@ -176,9 +176,11 @@ app.linear = (function () {
         if(over) {
             tl.focus.select("#" + d.id)
                 .style("fill", "#f00");
+            //jt.log("overCircle x: " + tl.x(d.tc) + ", y: " + tl.y(d.oc + 1));
+            jt.log("overCircle d.oc: " + d.oc);
             tl.focus.select("#mouseoverLabel")
-                .attr("x", tl.x(d.tc))
-                .attr("y", tl.y(d.oc + 1))
+                .attr("x", tl.x2(d.tc) + 10)  //x2 for left right pad, adjust
+                .attr("y", tl.y(d.oc) - 14)  //above circle
                 .text(d.id); }
         else {
             tl.focus.select("#" + d.id)
@@ -194,8 +196,6 @@ app.linear = (function () {
         d.visited = (new Date()).toISOString();
         tl.focus.select("#" + d.id)
             .style("fill", fillColorForPoint(d));
-        tl.pendingSaves = tl.pendingSaves || [];
-        tl.pendingSaves.push(d);
     }
 
 
@@ -229,21 +229,15 @@ app.linear = (function () {
     function clickCircle (d) {
         zoomToPoint(d);
         markPointVisited(d);
-        if(d.sv) {
-            d.svo = app.lev.suppVisByCode(d.sv);
-            if(!app[d.svo.module]) {
-                jt.err("Not available yet. Point " + d.cid + " will be displayed as part of the " + d.svo.name + " supplemental visualization module.");
-                return app.mode.start(tl); }
-            app[d.svo.module].display(d.svo, tl, app.mode.nextQuiet); }
-        else {
-            app.dlg.info(d); }
+        app.dlg.info(d);
     }
 
 
     function bindDataAndDrawChart () {
+        var dcon = app.db.displayContext();
         tl.x.domain([tl.pts[0].tc - 20,  //avoid half dots at edges
                      tl.pts[tl.pts.length - 1].tc + 1]);
-        tl.y.domain([0, app.data.maxy + 2]);  //avoid half dots at top
+        tl.y.domain([0, dcon.maxy + 2]);  //avoid half dots at top
         tl.x2.domain(tl.x.domain());
         tl.y2.domain(tl.y.domain());
         tl.focus.append("g")
@@ -361,13 +355,55 @@ app.linear = (function () {
     }
 
 
+    function paintWallpaper (divid) {
+        var picpts = [], selpts = [], grid, idx, div, dd, sd, cs, i, j;
+        tl.pts.forEach(function (pt) {
+            if(pt.pic) {
+                picpts.push(pt); } });
+        if(picpts.length >= 60)      { grid = {x:10, y:6}; }
+        else if(picpts.length >= 40) { grid = {x:8, y:5}; }
+        else if(picpts.length >= 24) { grid = {x:6, y:4}; }
+        else if(picpts.length >= 12) { grid = {x:4, y:3}; }
+        else { jt.log("Not enough pic points to display. " + picpts.length +
+                     " of " + tl.pts.length + "."); return; }
+        while(selpts.length < (grid.x * grid.y)) {
+            idx = Math.floor(Math.random() * picpts.length);
+            selpts.push(picpts.splice(idx, 1)[0]); }
+        div = jt.byId(divid);
+        dd = {w:div.offsetWidth, h:div.offsetHeight};
+        if(dd.h > dd.w) {  //invert the drid to be tall instead of wide
+            grid = {x:grid.y, y:grid.x}; }
+        sd = {w: Math.floor(dd.w / grid.x), wm: (dd.w % grid.x) - 1,
+              h: Math.floor(dd.h / grid.y), hm: (dd.h % grid.y) - 1};
+        cs = {w: 0, h: 0};
+        for(i = 0; i < grid.y; i += 1) {
+            for(j = 0; j < grid.x; j += 1) {
+                cs.w = sd.w;
+                if(j < sd.wm) {
+                    cs.w += 1; }
+                cs.h = sd.h;
+                if(i < sd.hm) {
+                    cs.h += 1; }
+                idx = (i * grid.x) + j;
+                html.push(
+                    ["div", {id:"pdx" + j + "y" + i, cla:"bgpicdiv",
+                             style:"width:" + cs.w + "px;" +
+                                   "height:" + cs.h + "px;"},
+                     ["img", {src: "/ptpic?pointid=" + picpts[idx].instid,
+                              cla: "bgpicimg",
+                              style: "max-width:" + cs.w + "px;" +
+                                     "max-height:" + cs.h + "px;"}]]); } }
+        jt.out(divid, jt.tac2html(html));
+    }
+
+
     function display () {
-        tl = {divid:"navdiv", offset:{x:10,y:10}, pts:app.data.pts, zscale:1};
+        var dcon = app.db.displayContext();
+        tl = {divid:"navdiv", offset:{x:10,y:10}, pts:dcon.tl.points, zscale:1};
         setChartWidthAndHeight();
         initDisplayVariableValues();
         initMainDisplayElements();
-        app.mode.menu(false);
-        app.picbg.init("abgdiv");
+        paintWallpaper("abgdiv");
         bindDataAndDrawChart();
         app.mode.start(tl);
     }

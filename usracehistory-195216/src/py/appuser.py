@@ -25,7 +25,7 @@ import string
 #      tlid: id of timeline
 #      st: ISO when the timeline was started (ISO, not wallclock)
 #      sv*: zero or more sv code fields, each with ISOStart;durationSeconds
-#      pts: CSV of ptid;durationSeconds;tagcodes
+#      pts: CSV of ptid;isoShown;isoClosed;dispcount;tagcodes
 #         tagcodes: 'r' (remembered) point noted to revisit later
 #                   'k' (known) knew this before
 #                   'u' (unknown) did not know this before

@@ -42,7 +42,7 @@ class Timeline(db.Model):
     ctype = db.StringProperty()    # Timelines|Points|Random [:levcnt:rndmax]
     cids = db.TextProperty()       # CSV of Point ids or Timeline ids
     svs = db.TextProperty()        # CSV of SuppViz module names
-    preb = db.TextProperty()       # prebuilt point data
+    preb = db.TextProperty()       # JSON prebuilt point data
     created = db.StringProperty()  # ISO datetime;TLAcc id (owner)
     modified = db.StringProperty() # ISO datetime;TLAcc id
 
@@ -90,6 +90,9 @@ def rebuild_prebuilt_timeline_points(tl):
             logging.warn("timeline " + str(tl.key().id()) + 
                          " references non-existant point " + ptid)
             continue
+        picval = ""
+        if pt.pic:
+            picval = ptid
         if jtxt:
             jtxt += ","
         # PENDING: match tl lang to appropriate point translation
@@ -100,6 +103,7 @@ def rebuild_prebuilt_timeline_points(tl):
                             "orgid": str(pt.orgid),
                             "keywords": pt.keywords,
                             "source": pt.source,
+                            "pic": picval,
                             "modified": pt.modified})
     jtxt = "[" + jtxt + "]"
     return jtxt

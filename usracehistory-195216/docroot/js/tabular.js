@@ -277,8 +277,9 @@ app.tabular = (function () {
 
 
     function timelineSelectHTML () {
-        var btls, selopts = [];
-        btls = JSON.parse(app.user.acc.built || "[]");
+        var btls = [], selopts = [];
+        app.user.acc.built.forEach(function (tl) {
+            btls.push(tl); });
         btls.sort(function (a, b) {
             if(a.name < b.name) { return -1; }
             if(a.name > b.name) { return 1; }
@@ -487,6 +488,7 @@ app.tabular = (function () {
             if(!currtl || currtl.instid !== tlid) {
                 jt.call("GET", "fetchtl?tlid=" + tlid, null,
                         function (result) {
+                            app.db.deserialize("Timeline", result[0]);
                             setStateToDatabaseTimeline(result[0]);
                             app.tabular.ptdisp();
                             timelineEditFieldChange(); },
@@ -531,8 +533,10 @@ app.tabular = (function () {
         jt.log("saveTimeline parameters:");
         Object.keys(currtl).forEach(function (field) {
             jt.log("    " + field + ": " + currtl[field]); });
-        jt.call("POST", "updtl?" + app.auth(), jt.objdata(currtl),
+        jt.call("POST", "updtl?" + app.auth(), app.db.postdata("Timeline", 
+                                                               currtl),
                 function (result) {
+                    app.db.deserialize("Timeline", result[0]);
                     setStateToDatabaseTimeline(result[0]);
                     app.user.acc = result[1];
                     editTimeline(); },  //redraw reflecting new/updated name
@@ -606,10 +610,7 @@ app.tabular = (function () {
     function updateTimelinesDisplay () {
         var tls = [], accflds = ["remtls", "built", "completed"], html = [];
         accflds.forEach(function (fld) {
-            var arr = app.user.acc[fld] || "[]";
-            if(typeof arr === "string") {
-                arr = JSON.parse(arr); }
-            arr.forEach(function (tl) {
+            app.user.acc[fld].forEach(function (tl) {
                 if(tl.tlid !== currtl.instid) {
                     tls.push({tlid:tl.tlid, name:tl.name}); } }); });
         tls.sort(function (a, b) {

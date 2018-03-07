@@ -11,5 +11,3 @@ Accepted date formats:
 - point: Y[YYY][ BCE], YYYY-MM, YYYY-MM-DD
 - range: YYYY's, YYYY's-YYYY's, YYYY+, YYYY-YYYY, YYYY-MM[-DD]-YYYY-MM[-DD],
 
-
-
