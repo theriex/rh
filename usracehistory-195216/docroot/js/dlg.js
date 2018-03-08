@@ -29,7 +29,8 @@ app.dlg = (function () {
         cookname = "userauth",
         cookdelim = "..usracehistory..",
         lnfidx = 0,
-        tl = null;
+        tl = null,
+        dlgstack = [];
 
 
     function nextColorTheme () {
@@ -530,11 +531,12 @@ app.dlg = (function () {
 
     function inputsToParams (obj) {
         var co = {};
-        Object.keys(obj).forEach(function (field) {
-            if(field.endsWith("in")) {
-                co[field.slice(0, -2)] = obj[field]; }
-            else {
-                co[field] = obj[field]; } });
+        if(obj) {
+            Object.keys(obj).forEach(function (field) {
+                if(field.endsWith("in")) {
+                    co[field.slice(0, -2)] = obj[field]; }
+                else {
+                    co[field] = obj[field]; } }); }
         return jt.objdata(co);
     }
 
@@ -608,6 +610,15 @@ app.dlg = (function () {
     }
 
 
+    function popBack (dfunc) {
+        if(dlgstack.length > 0) {
+            return (dlgstack.pop())(); }
+        if(dfunc) {
+            return dfunc(); }
+        app.mode.chmode();
+    }
+
+
     function updateAccount () {
         var data = readInputFieldValues(["namein", "titlein", "webin"],
                                         ["none",   "none",    "none"]);
@@ -618,7 +629,7 @@ app.dlg = (function () {
                         app.db.deserialize("AppUser", result[0]);
                         app.user.acc = result[0];
                         app.dlg.close();
-                        app.mode.chmode(); },
+                        popBack(app.db.displayNextTimeline); },
                     function (code, errtxt) {
                         jt.log("updateAccount " + code + ": " + errtxt);
                         jt.lut("loginstatdiv", errtxt); },
@@ -626,10 +637,10 @@ app.dlg = (function () {
     }
 
 
-    function processSignIn (cred) {
+    function processSignIn (cred, bg) {
         //PENDING: Go with localStorage user instance if found, then redisplay
         //if any significant changes found after db retrieval.
-        var params;
+        var params, asif;
         cred = cred || readInputFieldValues(["emailin", "passwordin"]);
         params = inputsToParams(cred);
         jt.log("processSignIn params: " + params);
@@ -638,11 +649,13 @@ app.dlg = (function () {
                     function (result) {
                         app.db.deserialize("AppUser", result[0])
                         setAuthentication(cred.emailin, result)
+                        if(bg) {  //Background mode, leave UI/flow alone.
+                            return; }
                         app.dlg.close();
                         //TEST: Uncomment to launch menu command post login
                         // setTimeout(function () { 
                         //     app.mode.menu(0, 'newtl'); }, 200);
-                        app.mode.chmode(); },
+                        popBack(app.db.displayNextTimeline); },
                     function (code, errtxt) {
                         jt.log("processSignIn: " + code + " " + errtxt);
                         jt.out("loginstatdiv", errtxt); },
@@ -657,13 +670,13 @@ app.dlg = (function () {
     }
 
 
-    function checkCookieSignIn () {
+    function checkCookieSignIn (bg) {
         var cval = jt.cookie(cookname);
         jt.log("cookie " + cookname + ": " + cval);
         if(cval) {
             cval = cval.split(cookdelim);
             processSignIn({emailin:cval[0].replace("%40", "@"),
-                           authtok:cval[1]}); }
+                           authtok:cval[1]}, bg); }
     }
 
 
@@ -691,16 +704,18 @@ app.dlg = (function () {
                    [["label", {fo:"passwordin", cla:"liflab", 
                                id:"labpasswordin"}, 
                      "Password"],
+                    //being able to hit return to login is nice but having
+                    //an onchange for the password also causes a login attempt
+                    //when clicking to sign up, which looks buggy. Not worth it.
                     ["input", {type:"password", cla:"lifin",
-                               name:"passwordin", id:"passwordin",
-                               onchange:jt.fs("app.dlg.login()")}]]]]],
+                               name:"passwordin", id:"passwordin"}]]]]],
                 ["div", {id:"loginstatdiv"}],
                 ["div", {id:"dlgbuttondiv"},
                  [["button", {type:"button", id:"newaccbutton",
                               onclick:jt.fs("app.dlg.newacc()")},
                    "Sign Up"],
                   "&nbsp;or&nbsp;",
-                  ["button", {type:"button", id:"signinbutton",
+                  ["button", {type:"submit", id:"signinbutton",
                               onclick:jt.fs("app.dlg.login()")},
                    "Sign In"]]],
                 ["div", {id:"forgotpassdiv"},
@@ -712,16 +727,87 @@ app.dlg = (function () {
     }
 
 
+    function showSignInToSaveDialog () {
+        var html;
+        html = [["div", {id:"dlgtitlediv"}, "Save Progress"],
+                ["div", {cla:"dlgsignindiv"},
+                 ["div", {cla:"dlgformline"},
+                  "Sign in to save your progress"]],
+                ["div", {id:"dlgbuttondiv"},
+                 [["button", {type:"button", id:"skipbutton",
+                              onclick:jt.fs("app.dlg.contnosave()")},
+                   "Skip"],
+                  " &nbsp; ",
+                  ["button", {type:"button", id:"signinbutton",
+                              onclick:jt.fs("app.dlg.signin()")},
+                   "Sign In"]]]];
+        displayDialog(null, jt.tac2html(html));
+        dlgstack.push(app.dlg.saveprog);
+    }
+
+
+    //If saving to the db was successful, then rebuild all progress from the
+    //account to handle the case where they restarted a timeline and then
+    //logged in.  That way they will pick up where they left off.  If save
+    //failed or was skipped, then continue with the current progress.
+    function continueToNext (readFromAccount) {
+        if(jt.byId("savestatspan")) {
+            jt.out("savestatspan", "Continuing..."); }
+        tl.pendingSaves = 0;
+        nextColorTheme();
+        if(readFromAccount) {
+            app.db.displayNextTimeline(); }
+        else {
+            app.mode.updlev();
+            app.mode.showNext(); }
+    }
+
+
+    function buttons (bs) {
+        var html = "";
+        bs.forEach(function (bspec) {
+            if(html) {
+                html += " &nbsp; "; }
+            html += jt.tac2html(
+                ["button", {type:"button", id:bspec[0],
+                            onclick:jt.fs(bspec[2])},
+                 bspec[1]]); });
+        return html;
+    }
+
+
     function saveProgress () {
-        //- Prompt to sign in if no account yet.  Need an account to save.
-        //- Progress is saved in app.db.displayContext().prog which needs to
-        //  be merged into the account before calling to save.
-        //- Reset tl.pendingSaves to zero if saved or continuing past error..
-        //- After saving:
-        //  - move to next color theme
-        //  - call mode.updateLevelDisplay
-        //  - call app.mode.next()
-        jt.err("dlg.saveProgress not implemented yet");
+        var html, prog, i, data,
+            savestat = "Saving your progress...";
+        if(!app.user.email) {
+            return showSignInToSaveDialog(); }
+        //jt.log("saving progress");
+        html = [["div", {id:"dlgtitlediv"}, "Save Progress"],
+                ["div", {cla:"dlgsignindiv"},
+                 ["div", {cla:"dlgformline"},
+                  ["span", {id:"savestatspan"}, savestat]]],
+                ["div", {id:"dlgbuttondiv"},
+                 buttons([["skipbutton", "Skip", "app.dlg.contnosave()"],
+                          ["contbutton", "Continue", "app.dlg.signin()"]])]];
+        displayDialog(null, jt.tac2html(html));
+        jt.byId("contbutton").disabled = true;
+        app.db.mergeProgToAccount();  //normalize current prog with db state
+        data = app.db.postdata("AppUser", app.user.acc);
+        jt.call("POST", "updacc?" + authparams(), data,
+                function (result) {
+                    jt.byId("contbutton").disabled = false;
+                    jt.log("progress saved");
+                    app.db.deserialize("AppUser", result[0]);
+                    app.user.acc = result[0];
+                    if(jt.byId("savestatspan") && 
+                       jt.byId("savestatspan").innerHTML === savestat) {
+                        continueToNext("readFromAccount"); } },
+                function (code, errtxt) {
+                    jt.out("savstat", "Save failed. " + code + " " + errtxt);
+                    jt.out("dlgbuttondiv", buttons([
+                        ["skipbutton", "Skip", "app.dlg.contnosave()"],
+                        ["retrybutton", "Retry", "app.dlg.saveprog()"]])); },
+                jt.semaphore("dlg.saveProgress"));
     }
 
 
@@ -751,11 +837,12 @@ app.dlg = (function () {
         newacc: function () { createAccount(); },
         myacc: function () { myAccount(); },
         updacc: function () { updateAccount(); },
-        back: function () { closeDialog(); app.mode.chmode(); },
+        back: function () { closeDialog(); popBack(); },
         login: function () { processSignIn(); },
         logout: function () { processSignOut(); },
-        chkcook: function () { checkCookieSignIn(); },
+        chkcook: function (bg) { checkCookieSignIn(bg); },
         forgotpw: function () { forgotPassword(); },
-        saveProgress: function () { saveProgress(); }
+        saveprog: function () { saveProgress(); },
+        contnosave: function () { continueToNext(); }
     };
 }());

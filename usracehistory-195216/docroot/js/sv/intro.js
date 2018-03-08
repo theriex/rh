@@ -4,9 +4,8 @@
 app.intro = (function () {
     "use strict";
 
-    var sv = null,       //decorated suppvis from data.js 
-        tl = null,       //linear timeline settings and data
-        endf = null,     //callback for after visualization has finished
+    var tstat = null,    //duration timing stats container
+        tl = null,       //grab useful geometry from linear timeline display
         chart = {},      //container for svg references
         plat = {
             type:"unknown",
@@ -258,17 +257,11 @@ app.intro = (function () {
 
 
     function close () {
-        var date, nowiso;
-        date = new Date();
-        sv.startstamp = app.db.wallClockTimeStamp(sv.startDate);
-        sv.duration = app.db.getElapsedTime(date, sv.startDate);
-        nowiso = date.toISOString();
-        sv.pts.forEach(function (pt) {
-            pt.visited = nowiso; });
-        sv.visited = nowiso;
         d3.select("#suppvisdiv")
             .style("visibility", "hidden");
-        endf();
+        tstat.end = new Date();
+        app.db.svdone("intro", tstat.start, tstat.end);
+        app.dlg.saveprog();
     }
 
 
@@ -373,17 +366,15 @@ app.intro = (function () {
     }
 
 
-    function display (suppvis, timeline, endfunc) {
-        sv = suppvis || app.lev.suppVisByCode("sl");
-        tl = timeline || app.linear.tldata();
-        endf = endfunc || app.dlg.close;
-        sv.startDate = new Date();
+    function display () {
+        tstat = {start: new Date()};
+        tl = app.linear.timeline();
         initDisplayElements();
     }
 
 
     return {
-        display: function (sv, tl, endf) { display(sv, tl, endf); },
+        display: function () { display(); },
         actlink: function (action) { displayActionText(action); },
         close: function () { close(); },
         hidetxtdiv: function () { jt.byId("sv0txtdiv").style.opacity = 0; }

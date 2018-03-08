@@ -253,6 +253,8 @@ app.db = (function () {
     function prepData () {
         var ctx = {yr: 0, dy: 0, maxy: 0},
             ny = new Date().getFullYear();
+        if(dcon.tl.dataPrepared) {
+            return jt.log("data already prepared for " + dcon.tl.name); }
         jt.out("rhcontentdiv", "Preparing data...");
         dcon.tl.points.forEach(function (pt, idx) {
             notePointCounts(pt);
@@ -267,6 +269,7 @@ app.db = (function () {
         dcon.tl.points.forEach(function (pt) {
             centerYCoordinates(pt, ctx); });
         describePoints();
+        dcon.tl.dataPrepared = true;
     }
 
 
@@ -288,12 +291,22 @@ app.db = (function () {
 
 
     function getTimelineProgressRecord (tl) {
-        var prog = {tlid:tl.instid, st:new Date().toISOString(), sv:"", pts:""};
+        var prog = {tlid:tl.instid, st:new Date().toISOString(), 
+                    svs:"", pts:""};
         if(app.user && app.user.acc && app.user.acc.started) {
             app.user.acc.started.forEach(function (st) {
                 if(st.tlid === tl.instid) {
                     prog = st; } }); }
         return prog;
+    }
+
+
+    function pointIndexForId (ptid, points) {
+        var i;
+        for(i = 0; i < points.length; i += 1) {
+            if(points[i].ptid === ptid) {
+                return i; } }
+        return -1;
     }
 
 
@@ -317,7 +330,7 @@ app.db = (function () {
                 //move all visited points from unused into randpts
                 prog = getTimelineProgressRecord(tl);
                 prog.pts.csvarray().forEach(function (pp) {
-                    var idx = findPointForId(pp.split(":")[0], tl.unused);
+                    var idx = pointIndexForId(pp.split(":")[0], tl.unused);
                     if(idx >= 0) {
                         tl.randpts.push(tl.unused[idx]);
                         tl.unused.splice(idx, 1); } });
@@ -347,9 +360,9 @@ app.db = (function () {
                 prog.cmplpts += 1; }
             prog.ttlpts += 1; });
         if(prog.cmplpts === prog.ttlpts) {
-            if(prog.sv) {
+            if(prog.svs) {
                 tl.svs.csvarray().forEach(function (sv) {
-                    if(!prog.sv.csvcontains(sv)) {
+                    if(prog.svs.indexOf(sv) < 0) {
                         svsdone = false; } }); }
             if(svsdone) {
                 return true; } }
@@ -389,6 +402,22 @@ app.db = (function () {
     }
 
 
+    function mergeProgToAccount () {
+        var prog = dcon.prog, i, stp, update = false;
+        app.user.acc.started = app.user.acc.started || [];
+        for(i = 0; i < app.user.acc.started.length; i += 1) {
+            stp = app.user.acc.started[i];
+            if(stp.tlid === prog.tlid) {
+                update = true;
+                //if the current progress is more substantial then use it,
+                //otherwise they probably just signed in and want to continue.
+                if(prog.pts.length > stp.pts.length) {  //str len close enough
+                    app.user.acc.started[i] = prog; } } }
+        if(!update) {
+            app.user.acc.started.push(prog); }
+    }
+
+
     function fetchDisplayTimeline () {
         var slug = "demo",
             url = window.location.href,
@@ -413,6 +442,22 @@ app.db = (function () {
                         ["a", {href:"https://usracehistory.org"},
                          "Load default timeline"]])); },
                 jt.semaphore("db.fetchDisplayTimeline"));
+    }
+
+
+    function noteSuppvizDone (svid, start, end) {
+        var svs = dcon.prog.svs, upd = "";
+        if(!svs || !svs.csvcontains(svid)) {
+            svs = svs.csvappend(svid + ";" + start.toISOString() + ";" +
+                                end.toISOString() + ";0") }
+        svs.csvarray().forEach(function (sv) {
+            if(upd) {
+                upd += ","; }
+            sv = sv.split(";");
+            if(sv[0] === svid) {
+                sv[3] = String(Number(sv[3]) + 1); }
+            upd += sv.join(";"); })
+        dcon.prog.svs = upd;
     }
 
 
@@ -478,8 +523,11 @@ app.db = (function () {
         fetchDisplayTimeline: function () { fetchDisplayTimeline(); },
         serialize: function (dbc, dbo) { serialize(dbc, dbo); },
         deserialize: function (dbc, dbo) { deserialize(dbc, dbo); },
-        postdata: function (dbc, dbo) { postdata(dbc, dbo); },
+        postdata: function (dbc, dbo) { return postdata(dbc, dbo); },
         displayContext: function () { return dcon; },
-        nextPoint: function (ptc) { return nextUnvisitedPoint(ptc); }
+        nextPoint: function (ptc) { return nextUnvisitedPoint(ptc); },
+        svdone: function (svid, sta, end) { noteSuppvizDone(svid, sta, end) },
+        displayNextTimeline: function () { displayNextTimeline(); },
+        mergeProgToAccount: function () { mergeProgToAccount(); }
     };
 }());

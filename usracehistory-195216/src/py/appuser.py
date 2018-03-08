@@ -24,7 +24,7 @@ import string
 # A timeline progress instance:
 #      tlid: id of timeline
 #      st: ISO when the timeline was started (ISO, not wallclock)
-#      sv*: zero or more sv code fields, each with ISOStart;durationSeconds
+#      svs*: CSV of svid;isoShown;isoClosed;dispcount
 #      pts: CSV of ptid;isoShown;isoClosed;dispcount;tagcodes
 #         tagcodes: 'r' (remembered) point noted to revisit later
 #                   'k' (known) knew this before

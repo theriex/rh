@@ -201,6 +201,9 @@ app.linear = (function () {
 
     function zoomToPoint (d) {
         var et = {fs:Math.round(0.3 * tl.height2), bpad:2};
+        if(!d) {
+            jt.log("linear.zoomToPoint given null");
+            return; }
         if(!tl.elevator) {
             et.g = d3.select(".brush");
             et.g.insert("text", "rect")
@@ -421,6 +424,7 @@ app.linear = (function () {
         levelCompleted: function (levpi) { app.levelup.display(tl, levpi); },
         search: function () { search(); },
         tldata: function () { return tl; },
-        unzoom: function () { unzoom(); }
+        unzoom: function () { unzoom(); },
+        timeline: function () { return tl; }
     };
 }());
