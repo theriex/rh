@@ -658,7 +658,8 @@ app.dlg = (function () {
                         popBack(app.db.displayNextTimeline); },
                     function (code, errtxt) {
                         jt.log("processSignIn: " + code + " " + errtxt);
-                        jt.out("loginstatdiv", errtxt); },
+                        if(!elementFieldValue("cbnewacc", "checked")) {
+                            jt.out("loginstatdiv", errtxt); } },
                     jt.semaphore("dlg.processSignIn")); }
     }
 
@@ -687,8 +688,25 @@ app.dlg = (function () {
     }
 
 
+    function elementFieldValue (id, field) {
+        var val = "";
+        if(jt.byId(id)) {
+            val = jt.byId(id)[field] || ""; }
+        return val;
+    }
+
+
     function showSignInDialog () {
-        var html;
+        var html, newacc, hd, cbi, fpd;
+        cbi = {type:"checkbox", id:"cbnewacc", value:"na",
+               onclick:jt.fs("app.dlg.signin()")};
+        fpd = {id:"forgotpassdiv"};
+        if(elementFieldValue("cbnewacc", "checked")) {
+            hd = {f:jt.fs("app.dlg.newacc()"), b:"Sign Up"};
+            cbi.checked = "checked";
+            fpd.style = "visibility:hidden;" }
+        else {
+            hd = {f:jt.fs("app.dlg.login()"), b:"Sign In"}; }
         html = [["div", {id:"dlgtitlediv"},
                  [["a", {href:"#back", onclick:jt.fs("app.dlg.back()")},
                    ["img", {src:"img/backward.png", cla:"dlgbackimg"}]],
@@ -698,27 +716,28 @@ app.dlg = (function () {
                    [["label", {fo:"emailin", cla:"liflab", id:"labemailin"}, 
                      "Email"],
                     ["input", {type:"email", cla:"lifin", 
-                               name:"emailin", id:"emailin",
+                               name:"emailin", id:"emailin", 
+                               value:elementFieldValue("emailin", "value"),
                                placeholder:"nospam@example.com"}]]],
                   ["div", {cla:"dlgformline"},
                    [["label", {fo:"passwordin", cla:"liflab", 
                                id:"labpasswordin"}, 
                      "Password"],
-                    //being able to hit return to login is nice but having
-                    //an onchange for the password also causes a login attempt
-                    //when clicking to sign up, which looks buggy. Not worth it.
                     ["input", {type:"password", cla:"lifin",
-                               name:"passwordin", id:"passwordin"}]]]]],
+                               name:"passwordin", id:"passwordin",
+                               value:elementFieldValue("passwordin", "value"),
+                               onchange:hd.f}]]]]],
                 ["div", {id:"loginstatdiv"}],
                 ["div", {id:"dlgbuttondiv"},
-                 [["button", {type:"button", id:"newaccbutton",
-                              onclick:jt.fs("app.dlg.newacc()")},
-                   "Sign Up"],
-                  "&nbsp;or&nbsp;",
-                  ["button", {type:"submit", id:"signinbutton",
-                              onclick:jt.fs("app.dlg.login()")},
-                   "Sign In"]]],
-                ["div", {id:"forgotpassdiv"},
+                 [["div", {cla:"checkboxdiv"},
+                   [["input", cbi],
+                    ["label", {fo:"cbnewacc", id:"cbnewacclabel"},
+                     "New Account"]]],
+                  " &nbsp ",
+                  ["button", {type:"button", id:"signinbutton",
+                              onclick:hd.f},
+                   hd.b]]],
+                ["div", fpd,
                  ["a", {href:"#forgotpassword",
                         onclick:jt.fs("app.dlg.forgotpw()")},
                   "forgot password"]]];
@@ -843,6 +862,6 @@ app.dlg = (function () {
         chkcook: function (bg) { checkCookieSignIn(bg); },
         forgotpw: function () { forgotPassword(); },
         saveprog: function () { saveProgress(); },
-        contnosave: function () { continueToNext(); }
+        contnosave: function () { continueToNext(); },
     };
 }());

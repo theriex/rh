@@ -146,6 +146,7 @@ circle { clip-path: url(../#clip); }
 #forgotpassdiv { text-align:center; font-size:medium; padding:6px 0px 0px 0px; }
 .dlgbackimg { max-height:27px; opacity:0.5; }
 #loginstatdiv { padding:5px 0 0 0; }
+#cbnewacclabel { font-size:medium; }
 
 /* -------------------- */
 /* tabular */
