@@ -39,4 +39,12 @@ var app = {},  //Global container for application level funcs and values
         jt.loadAppModules(app, modules, href, app.init2, "?cbp=161223");
     };
 
+
+    app.domfield = function (id, field) {
+        var val = "";
+        if(jt.byId(id)) {
+            val = jt.byId(id)[field] || ""; }
+        return val;
+    };
+
 }());

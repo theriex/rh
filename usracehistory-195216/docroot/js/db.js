@@ -440,7 +440,8 @@ app.db = (function () {
                         "Could not load " + slug + ": " + code + " " + errtxt,
                         ["br"],
                         ["a", {href:"https://usracehistory.org"},
-                         "Load default timeline"]])); },
+                         "Click here to load the default timeline"]]));
+                    app.dlg.signin(); },
                 jt.semaphore("db.fetchDisplayTimeline"));
     }
 
@@ -494,6 +495,7 @@ app.db = (function () {
             break;
         case "Timeline":
             dbo.preb = JSON.parse(dbo.preb || "[]");
+            break;
         case "Point":
             dbo.refs = JSON.parse(dbo.refs || "[]");
             dbo.translations = JSON.parse(dbo.translations || "[]");

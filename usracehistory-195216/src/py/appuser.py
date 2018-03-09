@@ -269,7 +269,10 @@ def dbo2json(dbo):
             props[prop] = str(props[prop])
     jsontxt = json.dumps(props, True)
     # Include instance id as a field for reference in JavaScript
-    jsontxt = "{\"instid\":\"" + str(dbo.key().id()) + "\", " + jsontxt[1:]
+    instid = "1234567890"
+    if dbo.is_saved():
+        instid = str(dbo.key().id())
+    jsontxt = "{\"instid\":\"" + instid + "\", " + jsontxt[1:]
     return jsontxt
 
 

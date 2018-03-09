@@ -658,8 +658,9 @@ app.dlg = (function () {
                         popBack(app.db.displayNextTimeline); },
                     function (code, errtxt) {
                         jt.log("processSignIn: " + code + " " + errtxt);
-                        if(!elementFieldValue("cbnewacc", "checked")) {
-                            jt.out("loginstatdiv", errtxt); } },
+                        setTimeout(function () {
+                            if(!app.domfield("cbnewacc", "checked")) {
+                                jt.out("loginstatdiv", errtxt); } }, 200); },
                     jt.semaphore("dlg.processSignIn")); }
     }
 
@@ -688,20 +689,12 @@ app.dlg = (function () {
     }
 
 
-    function elementFieldValue (id, field) {
-        var val = "";
-        if(jt.byId(id)) {
-            val = jt.byId(id)[field] || ""; }
-        return val;
-    }
-
-
     function showSignInDialog () {
         var html, newacc, hd, cbi, fpd;
         cbi = {type:"checkbox", id:"cbnewacc", value:"na",
                onclick:jt.fs("app.dlg.signin()")};
         fpd = {id:"forgotpassdiv"};
-        if(elementFieldValue("cbnewacc", "checked")) {
+        if(app.domfield("cbnewacc", "checked")) {
             hd = {f:jt.fs("app.dlg.newacc()"), b:"Sign Up"};
             cbi.checked = "checked";
             fpd.style = "visibility:hidden;" }
@@ -717,7 +710,7 @@ app.dlg = (function () {
                      "Email"],
                     ["input", {type:"email", cla:"lifin", 
                                name:"emailin", id:"emailin", 
-                               value:elementFieldValue("emailin", "value"),
+                               value:app.domfield("emailin", "value"),
                                placeholder:"nospam@example.com"}]]],
                   ["div", {cla:"dlgformline"},
                    [["label", {fo:"passwordin", cla:"liflab", 
@@ -725,7 +718,7 @@ app.dlg = (function () {
                      "Password"],
                     ["input", {type:"password", cla:"lifin",
                                name:"passwordin", id:"passwordin",
-                               value:elementFieldValue("passwordin", "value"),
+                               value:app.domfield("passwordin", "value"),
                                onchange:hd.f}]]]]],
                 ["div", {id:"loginstatdiv"}],
                 ["div", {id:"dlgbuttondiv"},
@@ -775,6 +768,8 @@ app.dlg = (function () {
         tl.pendingSaves = 0;
         nextColorTheme();
         if(readFromAccount) {
+            //PENDING: Rebuilding from scratch has advantages, but something
+            //less heavy handed would help with a smoother display.
             app.db.displayNextTimeline(); }
         else {
             app.mode.updlev();

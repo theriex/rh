@@ -77,7 +77,7 @@ def canonize(cankey):
 
 
 def rebuild_prebuilt_timeline_points(tl):
-    if tl.ctype.startswith("Timelines"):
+    if tl.ctype.startswith("Timelines") or not tl.cids:
         tl.preb = ""
         return
     jtxt = ""
@@ -175,6 +175,20 @@ def fetch_timeline_by_slug (slug):
     return None
 
 
+def make_bootstrap_demo ():
+    # When no demo timeline exists, make something to boot the system with.
+    tl = Timeline(name="Bootstrap Demo", orgid=1, ctype="Points:6", svs="")
+    ptids = []
+    pts = point.Point.all()
+    for pt in pts:
+        ptids.append(str(pt.key().id()))
+        if len(ptids) > 24:
+            break
+    tl.cids = ",".join(ptids)
+    tl.preb = rebuild_prebuilt_timeline_points(tl)
+    return tl
+
+
 def contained_timelines (tl):
     result = [tl]
     if tl.ctype.startswith("Timelines"):
@@ -212,6 +226,8 @@ class FetchTimeline(webapp2.RequestHandler):
                 slug = "demo"
             slug = slug.lower()  # just in case someone camel cases a url..
             tl = fetch_timeline_by_slug(slug)
+        if not tl and slug == "demo":
+            tl = make_bootstrap_demo()
         if not tl:
             return appuser.srverr(self, 404, "No Timeline " + tlid)
         tls = contained_timelines(tl);

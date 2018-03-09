@@ -296,8 +296,9 @@ app.tabular = (function () {
 
 
     function emptyTimeline () {
+        //Do not set a default value here or it short circuits creation flow.
         return {instid:"", name:"", slug:"", comment:"", 
-                ctype:"Points:6", cids:"", svs:""};
+                ctype:"", cids:"", svs:""};
     }
 
 
@@ -428,10 +429,7 @@ app.tabular = (function () {
 
 
     function setDisplayInputFieldsFromTimeline (tl) {
-        var elems;
-        if(!tl || !tl.ctype) {
-            return; }
-        elems = tl.ctype.split(":");
+        var elems = (tl.ctype || "Points:6").split(":");
         if(elems[0] === "Timelines") {
             tlflds.seltype.setValue("Timelines"); }
         else {
@@ -442,8 +440,11 @@ app.tabular = (function () {
                 jt.byId("tlrndmaxin").value = elems[2] || 18; }
             else {
                 tlflds.selseq.setValue("Sequential"); } }
+        if(jt.byId("idin")) {
+            jt.byId("idin").value = tl.instid || ""; }
         jt.byId("namein").value = tl.name;
-        jt.byId("slugin").value = tl.slug;
+        if(jt.byId("slugin")) {
+            jt.byId("slugin").value = tl.slug; }
         jt.byId("commentin").value = tl.comment;
     }
             
@@ -538,6 +539,7 @@ app.tabular = (function () {
                 function (result) {
                     app.db.deserialize("Timeline", result[0]);
                     setStateToDatabaseTimeline(result[0]);
+                    app.db.deserialize("AppUser", result[1]);
                     app.user.acc = result[1];
                     editTimeline(); },  //redraw reflecting new/updated name
                 function (code, errtxt) {
