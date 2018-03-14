@@ -106,8 +106,9 @@ class VizQuery(object):
 # If param not found in input then it is set to "". Simpler value testing.
 def read_params(handler, params):
     pd = {}
-    logging.info("read_params: " + str(params));
-    logging.info("  request: " + str(handler.request.GET.items()))
+    # logging.info("read_params: " + str(params));
+    # logging.info("  request GET: " + str(handler.request.GET.items()))
+    # logging.info("  request POST: " + str(handler.request.GET.items()))
     for param in params:
         val = handler.request.get(param) or ""
         if param == "email":

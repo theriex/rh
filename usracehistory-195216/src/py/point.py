@@ -65,7 +65,8 @@ def point_codes():
 def update_or_create_point(handler, acc, params):
     if not acc.lev:
         return appuser.srverr(handler, 403, "Not a contributor account")
-    if acc.orgid != int(params["orgid"]) and acc.orgid != 1:
+    pointorg = int(params["orgid"] or acc.orgid)
+    if acc.orgid != pointorg and acc.orgid != 1:
         return appuser.srverr(handler, 403, "Data does not match organization")
     vq = appuser.VizQuery(Point, "WHERE source=:1 LIMIT 1", params["source"])
     pts = vq.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
@@ -77,18 +78,19 @@ def update_or_create_point(handler, acc, params):
         pt.modified = tstamp
     else:
         pt = Point(date=params["date"],
-                   text=params["text"],
-                   codes=params["codes"],
-                   orgid=int(params["orgid"]),
-                   keywords=params["keywords"],
-                   refs=params["refs"],
-                   source=params["source"],
-                   srclang=params["srclang"] or "en-US",
-                   translations=params["translations"],
-                   endorsed="",
-                   stats="",
+                   orgid=pointorg,
+                   endorsed="",  # not updated from client
+                   stats="",     # not updated from client
                    created=tstamp,
                    modified=tstamp)
+    pt.date = params["date"] or pt.date
+    pt.text = params["text"] or pt.text or ""
+    pt.codes = params["codes"] or pt.codes or ""
+    pt.keywords = params["keywords"] or pt.keywords or ""
+    pt.refs = params["refs"] or pt.refs or ""
+    pt.source = params["source"] or pt.source or ""
+    pt.srclang = params["srclang"] or pt.srclang or "en-US"
+    pt.translations = params["translations"] or pt.translations or ""
     if params["pic"]:
         pt.pic = db.Blob(params["pic"])
         pt.pic = images.resize(pt.pic, 160, 160)

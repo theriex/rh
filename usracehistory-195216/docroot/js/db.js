@@ -444,6 +444,27 @@ app.db = (function () {
     }
 
 
+    function mergePointDataToPoint (pt, updpt) {
+        //updpt may be incomplete
+        Object.keys(updpt).forEach(function (field) {
+            pt[field] = updpt[field]; });
+    }
+
+
+    function mergeUpdatedPointData (updpt) {
+        var ptid = updpt.instid || updpt.ptid;
+        if(app.allpts) {
+            app.allpts.forEach(function (pt) {
+                if(pt.instid === ptid) {
+                    mergePointDataToPoint(pt, updpt); } }); }
+        if(app.user.tls) {
+            Object.keys(app.user.tls).forEach(function (tlid) {
+                app.user.tls[tlid].points.forEach(function (pt) {
+                    if(pt.instid === ptid || pt.ptid === ptid) {
+                        mergePointDataToPoint(pt, updpt); } }); }); }
+    }
+
+
     function fetchDisplayTimeline () {
         var slug = "demo",
             url = window.location.href,
@@ -558,6 +579,7 @@ app.db = (function () {
         svdone: function (svid, sta, end) { noteSuppvizDone(svid, sta, end) },
         displayNextTimeline: function () { displayNextTimeline(); },
         mergeProgToAccount: function () { mergeProgToAccount(); },
-        pt4id: function (ptid) { return findPointById(ptid); }
+        pt4id: function (ptid) { return findPointById(ptid); },
+        mergeUpdatedPointData: function (pt) { mergeUpdatedPointData(pt); }
     };
 }());

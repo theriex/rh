@@ -30,7 +30,7 @@ app.dlg = (function () {
             {field:"date", type:"text", descf:"app.db.describeDateFormat", 
              place:"YYYY-MM-DD"},
             {field:"text", type:"bigtext", place:"Point Description Text"},
-            {field:"codes", type:"select", multiple:true, options:[
+            {field:"codes", type:"codesel", multiple:true, options:[
                 {value:"N", text:"Native American"},
                 {value:"B", text:"African American"},
                 {value:"L", text:"Latino/as"},
@@ -871,7 +871,7 @@ app.dlg = (function () {
                 [["div", {cla:"fieldhelpdiv", id:"fhdiv" + fs.field}],
                  ["label", {fo:inid, cla:"liflab", 
                             id:"lab" + inid}, label],
-                 ["input", {type:fs.type, cla:"lifin", name:inid, id:inid,
+                 ["input", {type:fs.type, cla:"lifin", name:fs.field, id:inid,
                             value:(vo && vo[fs.field]) || "",
                             placeholder:fs.place || ""}]]];
         return html;
@@ -883,6 +883,7 @@ app.dlg = (function () {
         html = ["div", {cla:"dlgformline"},
                 ["div", {cla:"textareacontainerdiv"},
                  ["textarea", {id:fs.field + "ta",
+                               name:fs.field,
                                cols:fs.cols || 40,
                                style:"width:95%;",  //override cols value
                                rows:fs.rows || 8,
@@ -893,10 +894,18 @@ app.dlg = (function () {
     }
 
 
-    function selectInputTAC (fs, vo) {
+    function codeselchg () {
+        var pt;
+        if(jt.byId("codeshin")) {
+            pt = formValuesToObject(editPointFields);
+            jt.byId("codeshin").value = pt.codes; }
+    }
+
+
+    function codeselInputTAC (fs, vo) {
         var inid, selopts, html = [];
         inid = fs.field + "sel";
-        selopts = {id:inid};
+        selopts = {id:inid, onchange:jt.fs("app.dlg.codeselchg()")};
         if(fs.multiple) {
             selopts.multiple = true; }
         fs.options.forEach(function (opt, idx) {
@@ -920,7 +929,7 @@ app.dlg = (function () {
         else {
             src = "/img/picplaceholder.png"; }
         html = ["div", {cla:"dlgformline", style:"text-align:center;"},
-                [["input", {type:"file", id:fs.field + "in"}],
+                [["input", {type:"file", id:fs.field + "in", name:fs.field}],
                  ["img", {src:src, cla:"txtpicimg"}]]];
         return html;
     }
@@ -932,7 +941,7 @@ app.dlg = (function () {
             switch(fspec.type) {
             case "text": html.push(textInputTAC(fspec, vo)); break;
             case "bigtext": html.push(largeTextInputTAC(fspec, vo)); break;
-            case "select": html.push(selectInputTAC(fspec, vo)); break;
+            case "codesel": html.push(codeselInputTAC(fspec, vo)); break;
             case "image": html.push(imageInputTAC(fspec, vo)); break;
             default: jt.err("inputFieldTAC unknown fspec " + fspec); } });
         return html;
@@ -940,7 +949,9 @@ app.dlg = (function () {
 
 
     function editPoint (ptid) {
-        var html = inputFieldTAC(editPointFields, app.db.pt4id(ptid));
+        var pt, html;
+        pt = app.db.pt4id(ptid);
+        html = inputFieldTAC(editPointFields, pt);
         html = [["div", {id:"dlgtitlediv"}, "Edit Point"],
                 ["div", {cla:"dlgsignindiv"},
                  ["form", {action:"/updpt", method:"post",
@@ -950,6 +961,8 @@ app.dlg = (function () {
                               value:app.user.email}],
                    ["input", {type:"hidden", name:"authtok",
                               value:app.user.tok}],
+                   ["input", {type:"hidden", id:"codeshin", name:"codes",
+                              value:pt.codes}],
                    html,
                    ["div", {id:"updatestatdiv"}],
                    ["iframe", {id:"subframe", name:"subframe",
@@ -967,19 +980,19 @@ app.dlg = (function () {
 
 
     function formValuesToObject (fields, ptid) {
-        obj = {};
+        var obj = {};
         if(ptid) {
             obj.instid = ptid;
             obj.ptid = ptid; }
         fields.forEach(function (fspec) {
             switch(fspec.type) {
             case "text": 
-                pt[fspec.field] = jt.byId(fs.field + "in").value;
+                obj[fspec.field] = jt.byId(fspec.field + "in").value;
                 break;
             case "bigtext": 
-                pt[fspec.field] = jt.byId(fs.field + "ta").innerHTML;
+                obj[fspec.field] = jt.byId(fspec.field + "ta").innerHTML;
                 break;
-            case "select":
+            case "codesel":
                 obj[fspec.field] = "";
                 fspec.options.forEach(function (opt, idx) {
                     if(jt.byId(fspec.field + "opt" + idx).selected) {
@@ -1023,6 +1036,7 @@ app.dlg = (function () {
 
 
     function ptsubclick () {
+        var pto;
         jt.byId("savebutton").disabled = true;  //prevent multiple uploads
         jt.out("savebutton", "Saving...");
         upldmon = {count:0};
@@ -1066,6 +1080,7 @@ app.dlg = (function () {
         contnosave: function () { continueToNext(); },
         ptedit: function (ptid) { editPoint(ptid); },
         ptsubclick: function () { ptsubclick(); },
-        togfdesc: function (field, desc) { toggleFieldDesc(field, desc); }
+        togfdesc: function (field, desc) { toggleFieldDesc(field, desc); },
+        codeselchg: function () { codeselchg(); }
     };
 }());
