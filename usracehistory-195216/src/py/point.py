@@ -93,6 +93,7 @@ def update_or_create_point(handler, acc, params):
         pt.pic = db.Blob(params["pic"])
         pt.pic = images.resize(pt.pic, 160, 160)
     pt.put()  # individual points are not cached
+    return pt
 
 
 class RecentPoints(webapp2.RequestHandler):
@@ -121,6 +122,9 @@ class AllPoints(webapp2.RequestHandler):
 
 
 class UpdatePoint(webapp2.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'text/html'
+        self.response.write('Ready')
     def post(self):
         # ptupld could be sending password in params so refuse if not secured
         if not appuser.verify_secure_comms(self):
@@ -131,7 +135,13 @@ class UpdatePoint(webapp2.RequestHandler):
         params = appuser.read_params(self, ["date", "text", "codes", "orgid",
                                             "keywords", "refs", "source", 
                                             "srclang", "translations", "pic"]);
-        update_or_create_point(self, acc, params)
+        try:
+            pt = update_or_create_point(self, acc, params)
+        except Exception as e:
+            # Client looks for text containing "failed: " + for error reporting
+            return appuser.srverr(self, 409, "Point update failed: " + str(e))
+        self.response.headers['Content-Type'] = 'text/html'
+        self.response.out.write("ptid: " + str(pt.key().id()))
 
 
 class GetPointPic(webapp2.RequestHandler):

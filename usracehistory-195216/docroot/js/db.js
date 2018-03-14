@@ -29,7 +29,22 @@ app.db = (function () {
     }
 
 
-    //See the project readme for allowable date form specfications.
+    function describeDateFormat () {
+        var descr = [
+            "Single Point In Time:",
+            "Y[YYY][ BCE] or YYYY-MM[-DD]",
+            "Time Range:",
+            "YYYY's or YYYY's-YYYY's or YYYY+ or " + 
+                "YYYY[-MM-DD]-YYYY[-MM-DD]"];
+        descr[0] = "<b>" + descr[0] + "</b>";
+        descr[2] = "<b>" + descr[2] + "</b>";
+        descr = descr.join("<br\>");
+        descr = descr.replace(/\sor\s/g, " <em>or</em> ");
+        descr = descr.replace(/'/g, "&apos;");
+        return descr;
+    }
+
+
     function parseDate (pt) {
         var date, mres;
         date = pt.date;
@@ -402,6 +417,17 @@ app.db = (function () {
     }
 
 
+    function findPointById (ptid) {
+        var points, i, pt;
+        points = app.allpts || dcon.tl.points;
+        for(i = 0; i < points.length; i += 1) {
+            pt = points[i];
+            if(pt.instid === ptid || pt.ptid === ptid) {
+                return pt; } }
+        return null;
+    }
+
+
     function mergeProgToAccount () {
         var prog = dcon.prog, i, stp, update = false;
         app.user.acc.started = app.user.acc.started || [];
@@ -522,6 +548,7 @@ app.db = (function () {
         getStateURLParams: function () { return getStateURLParams(); },
         saveState: function () { saveState(); },
         parseDate: function (pt) { parseDate(pt); },
+        describeDateFormat: function () { return describeDateFormat(); },
         fetchDisplayTimeline: function () { fetchDisplayTimeline(); },
         serialize: function (dbc, dbo) { serialize(dbc, dbo); },
         deserialize: function (dbc, dbo) { deserialize(dbc, dbo); },
@@ -530,6 +557,7 @@ app.db = (function () {
         nextPoint: function (ptc) { return nextUnvisitedPoint(ptc); },
         svdone: function (svid, sta, end) { noteSuppvizDone(svid, sta, end) },
         displayNextTimeline: function () { displayNextTimeline(); },
-        mergeProgToAccount: function () { mergeProgToAccount(); }
+        mergeProgToAccount: function () { mergeProgToAccount(); },
+        pt4id: function (ptid) { return findPointById(ptid); }
     };
 }());

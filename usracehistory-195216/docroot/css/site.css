@@ -147,6 +147,7 @@ circle { clip-path: url(../#clip); }
 .dlgbackimg { max-height:27px; opacity:0.5; }
 #loginstatdiv { padding:5px 0 0 0; }
 #cbnewacclabel { font-size:medium; }
+.fieldhelpdiv { font-size:small; }
 
 /* -------------------- */
 /* tabular */
@@ -159,6 +160,9 @@ circle { clip-path: url(../#clip); }
 .tdspan { font-size:small; }
 .tdspanyo { font-size:large; }
 .bcespan { font-size:x-small; font-style:italic; font-weight:bold; }
+.txtpicdiv { float:left; }
+.txtpicimg { max-width:80px; max-height:80px; }
+.editlink { font-size:x-small; }
 
 #downloadlinkdiv { padding:0px; font-size:small; display:inline-block; }
 .downloadlinkimg { margin:0px; }

@@ -26,6 +26,24 @@ app.dlg = (function () {
              year: 1000},
             {id:"geanc", abbr:"Ancients", name:"Ancient Ancestors", 
              year: -90000}]},
+        editPointFields = [
+            {field:"date", type:"text", descf:"app.db.describeDateFormat", 
+             place:"YYYY-MM-DD"},
+            {field:"text", type:"bigtext", place:"Point Description Text"},
+            {field:"codes", type:"select", multiple:true, options:[
+                {value:"N", text:"Native American"},
+                {value:"B", text:"African American"},
+                {value:"L", text:"Latino/as"},
+                {value:"A", text:"Asian American"},
+                {value:"M", text:"Middle East and North Africa"},
+                {value:"R", text:"Multiracial"},
+                {value:"U", text:"Did you know?"},
+                {value:"F", text:"Firsts"},
+                {value:"D", text:"What year?"}]},
+            {field:"keywords", type:"text", place:"tag1, tag2"},
+            {field:"source", type:"text", place:"optional source id"},
+            {field:"pic", type:"image"}],
+        upldmon = null,
         cookname = "userauth",
         cookdelim = "..usracehistory..",
         lnfidx = 0,
@@ -640,21 +658,21 @@ app.dlg = (function () {
     function processSignIn (cred, bg) {
         //PENDING: Go with localStorage user instance if found, then redisplay
         //if any significant changes found after db retrieval.
-        var params, asif;
+        var params;
         cred = cred || readInputFieldValues(["emailin", "passwordin"]);
         params = inputsToParams(cred);
         jt.log("processSignIn params: " + params);
         if(cred) {
             jt.call("GET", "acctok?" + params, null,
                     function (result) {
-                        app.db.deserialize("AppUser", result[0])
-                        setAuthentication(cred.emailin, result)
+                        app.db.deserialize("AppUser", result[0]);
+                        setAuthentication(cred.emailin, result);
+                        //TEST: Uncomment to launch menu command post login
+                        setTimeout(function () { 
+                            app.mode.menu(0, "newtl"); }, 200);
                         if(bg) {  //Background mode, leave UI/flow alone.
                             return; }
                         app.dlg.close();
-                        //TEST: Uncomment to launch menu command post login
-                        // setTimeout(function () { 
-                        //     app.mode.menu(0, 'newtl'); }, 200);
                         popBack(app.db.displayNextTimeline); },
                     function (code, errtxt) {
                         jt.log("processSignIn: " + code + " " + errtxt);
@@ -690,14 +708,14 @@ app.dlg = (function () {
 
 
     function showSignInDialog () {
-        var html, newacc, hd, cbi, fpd;
+        var html, hd, cbi, fpd;
         cbi = {type:"checkbox", id:"cbnewacc", value:"na",
                onclick:jt.fs("app.dlg.signin()")};
         fpd = {id:"forgotpassdiv"};
         if(app.domfield("cbnewacc", "checked")) {
             hd = {f:jt.fs("app.dlg.newacc()"), b:"Sign Up"};
             cbi.checked = "checked";
-            fpd.style = "visibility:hidden;" }
+            fpd.style = "visibility:hidden;"; }
         else {
             hd = {f:jt.fs("app.dlg.login()"), b:"Sign In"}; }
         html = [["div", {id:"dlgtitlediv"},
@@ -791,7 +809,7 @@ app.dlg = (function () {
 
 
     function saveProgress () {
-        var html, prog, i, data,
+        var html, data,
             savestat = "Saving your progress...";
         if(!app.user.email) {
             return showSignInToSaveDialog(); }
@@ -822,6 +840,194 @@ app.dlg = (function () {
                         ["skipbutton", "Skip", "app.dlg.contnosave()"],
                         ["retrybutton", "Retry", "app.dlg.saveprog()"]])); },
                 jt.semaphore("dlg.saveProgress"));
+    }
+
+
+    function toggleFieldDesc (divid, descf) {
+        var div = jt.byId(divid);
+        if(!div) {
+            jt.log("toggleFieldDesc " + divid + " div not found");
+            return; }
+        if(div.innerHTML) {
+            div.innerHTML = ""; }
+        else {
+            div.innerHTML = descf(); }
+    }
+
+
+    function textInputTAC (fs, vo) {
+        var inid, label, html;
+        inid = fs.field + "in";
+        label = fs.label || fs.field.capitalize();
+        if(fs.descf) {
+            label = ["a", {href:"#describe_" + label,
+                           onclick:jt.fs("app.dlg.togfdesc('" +
+                                         "fhdiv" + fs.field + "'," +
+                                         fs.descf + ")")},
+                     [label + "&nbsp;",
+                      ["img", {src:"img/info.png"}],
+                      "&nbsp;"]]; }
+        html = ["div", {cla:"dlgformline"},
+                [["div", {cla:"fieldhelpdiv", id:"fhdiv" + fs.field}],
+                 ["label", {fo:inid, cla:"liflab", 
+                            id:"lab" + inid}, label],
+                 ["input", {type:fs.type, cla:"lifin", name:inid, id:inid,
+                            value:(vo && vo[fs.field]) || "",
+                            placeholder:fs.place || ""}]]];
+        return html;
+    }
+
+
+    function largeTextInputTAC (fs, vo) {
+        var html;
+        html = ["div", {cla:"dlgformline"},
+                ["div", {cla:"textareacontainerdiv"},
+                 ["textarea", {id:fs.field + "ta",
+                               cols:fs.cols || 40,
+                               style:"width:95%;",  //override cols value
+                               rows:fs.rows || 8,
+                               maxlength:1200,
+                               placeholder:fs.place || ""},
+                  ((vo && vo[fs.field]) || "")]]];
+        return html;
+    }
+
+
+    function selectInputTAC (fs, vo) {
+        var inid, selopts, html = [];
+        inid = fs.field + "sel";
+        selopts = {id:inid};
+        if(fs.multiple) {
+            selopts.multiple = true; }
+        fs.options.forEach(function (opt, idx) {
+            var oao = {value:opt.value, id:fs.field + "opt" + idx};
+            if(vo && vo[fs.field].indexOf(opt.value) >= 0) {
+                oao.selected = "selected"; }
+            html.push(["option", oao, opt.text]); });
+        html = ["div", {cla:"dlgformline"},
+                [["label", {fo:inid, cla:"liflab", id:"lab" + inid},
+                  fs.label || fs.field.capitalize()],
+                 ["select", selopts, html]]];
+        return html;
+    }
+
+
+    function imageInputTAC (fs, vo) {
+        var src, html;
+        src = (vo && vo[fs.field]) || "";
+        if(src) {
+            src = "/ptpic?pointid=" + src; }
+        else {
+            src = "/img/picplaceholder.png"; }
+        html = ["div", {cla:"dlgformline", style:"text-align:center;"},
+                [["input", {type:"file", id:fs.field + "in"}],
+                 ["img", {src:src, cla:"txtpicimg"}]]];
+        return html;
+    }
+
+
+    function inputFieldTAC (fields, vo) {
+        var html = [];
+        fields.forEach(function (fspec) {
+            switch(fspec.type) {
+            case "text": html.push(textInputTAC(fspec, vo)); break;
+            case "bigtext": html.push(largeTextInputTAC(fspec, vo)); break;
+            case "select": html.push(selectInputTAC(fspec, vo)); break;
+            case "image": html.push(imageInputTAC(fspec, vo)); break;
+            default: jt.err("inputFieldTAC unknown fspec " + fspec); } });
+        return html;
+    }
+
+
+    function editPoint (ptid) {
+        var html = inputFieldTAC(editPointFields, app.db.pt4id(ptid));
+        html = [["div", {id:"dlgtitlediv"}, "Edit Point"],
+                ["div", {cla:"dlgsignindiv"},
+                 ["form", {action:"/updpt", method:"post",
+                           id:"editpointform", target: "subframe",
+                           enctype: "multipart/form-data"},
+                  [["input", {type:"hidden", name:"email", 
+                              value:app.user.email}],
+                   ["input", {type:"hidden", name:"authtok",
+                              value:app.user.tok}],
+                   html,
+                   ["div", {id:"updatestatdiv"}],
+                   ["iframe", {id:"subframe", name:"subframe",
+                               src:"/updpt"}],  //, style:"display:none"
+                   ["div", {id:"dlgbuttondiv"},
+                    [["button", {type:"button", id:"cancelbutton",
+                                 onclick:jt.fs("app.dlg.close()")}, 
+                      "Cancel"],
+                     " &nbsp; ",
+                     ["button", {type:"submit", id:"savebutton",
+                                 onclick:jt.fs("app.dlg.ptsubclick()")},
+                      "Save"]]]]]]];
+        displayDialog(null, jt.tac2html(html));
+    }
+
+
+    function formValuesToObject (fields, ptid) {
+        obj = {};
+        if(ptid) {
+            obj.instid = ptid;
+            obj.ptid = ptid; }
+        fields.forEach(function (fspec) {
+            switch(fspec.type) {
+            case "text": 
+                pt[fspec.field] = jt.byId(fs.field + "in").value;
+                break;
+            case "bigtext": 
+                pt[fspec.field] = jt.byId(fs.field + "ta").innerHTML;
+                break;
+            case "select":
+                obj[fspec.field] = "";
+                fspec.options.forEach(function (opt, idx) {
+                    if(jt.byId(fspec.field + "opt" + idx).selected) {
+                        obj[fspec.field] += opt.value; } });
+                break;
+            case "image":
+                if(ptid && jt.byId(fspec.field + "in").files.length) {
+                    obj[fspec.field] = "/ptpic?pointid=" + ptid; }
+                break;
+            default: jt.err("formValuesToObject unknown fspec " + fspec); } });
+        return obj;
+    }
+
+
+    function monitorPointUpdateSubmit () {
+        var seconds, subframe, fc, txt, ptid, pt, 
+            okpre = "ptid: ", errpre = "failed: ";
+        seconds = Math.round(upldmon.count / 10);
+        if(upldmon.count > 20) {
+            jt.out("updatestatdiv", "Waiting for server response " + seconds); }
+        subframe = jt.byId("subframe");
+        if(subframe) {
+            fc = subframe.contentDocument || subframe.contentWindow.document;
+            if(fc && fc.body) {  //body unavailable if error write in progress
+                txt = fc.body.innerHTML;
+                if(txt.indexOf(okpre) === 0) {  //successful update
+                    jt.out("savebutton", "Saved.");
+                    ptid = txt.slice(okpre.length);
+                    pt = formValuesToObject(editPointFields, ptid);
+                    app.db.mergeUpdatedPointData(pt);
+                    return app.dlg.close(); }
+                if(txt.indexOf(errpre) >= 0) {
+                    txt = txt.slice(txt.indexOf(errpre) + errpre.length);
+                    jt.out("updatestatdiv", txt);  //display error
+                    fc.body.innerHTML = "Reset.";  //reset status iframe
+                    jt.byId("savebutton").disabled = false;
+                    jt.out("savebutton", "Save");
+                    return } } }
+        setTimeout(monitorPointUpdateSubmit, 100);
+    }
+
+
+    function ptsubclick () {
+        jt.byId("savebutton").disabled = true;  //prevent multiple uploads
+        jt.out("savebutton", "Saving...");
+        upldmon = {count:0};
+        setTimeout(monitorPointUpdateSubmit, 100);
+        jt.byId("editpointform").submit();
     }
 
 
@@ -858,5 +1064,8 @@ app.dlg = (function () {
         forgotpw: function () { forgotPassword(); },
         saveprog: function () { saveProgress(); },
         contnosave: function () { continueToNext(); },
+        ptedit: function (ptid) { editPoint(ptid); },
+        ptsubclick: function () { ptsubclick(); },
+        togfdesc: function (field, desc) { toggleFieldDesc(field, desc); }
     };
 }());

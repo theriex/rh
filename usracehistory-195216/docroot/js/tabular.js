@@ -66,8 +66,31 @@ app.tabular = (function () {
     }
 
 
+    function mayEditPoint (pt) {  //if pt is null, returns may create
+        if(!app.user.acc || !app.user.acc.lev) {
+            return false; }
+        if(pt && app.user.acc.orgid !== pt.orgid && app.user.acc.orgid !== 1) {
+            return false; } 
+        if(app.user.acc.lev > 1 || !pt) {
+            return true; }
+        if(pt.created.split(";")[1] === app.user.acc.instid) {
+            return true; }
+        return false;
+    }
+
+
     function pointTAC (pt) {
-        var html = "", si;
+        var ph = "", eh = "", html = "", si;
+        if(pt.pic) {
+            ph = ["div", {cla:"txtpicdiv"},
+                  ["img", {src:"/ptpic?pointid=" + pt.instid, 
+                           cla:"txtpicimg"}]]; }
+        if(mayEditPoint(pt)) {
+            eh = [" &nbsp;",
+                  ["a", {href:"#edit", cla:"editlink",
+                         onclick:jt.fs("app.dlg.ptedit('" + 
+                                       ((pt && pt.instid) || "") + "')")},
+                   "[edit]"]]; }
         if(mode === "tledit") {
             si = {type:"checkbox", id:"cb" + pt.instid,
                   onchange:jt.fs("app.tabular.togptsel('" + 
@@ -84,7 +107,7 @@ app.tabular = (function () {
                    dateSpan(pt.end, "-"),
                    ["span", {cla:"tcspan"}, " (" + pt.codes + ") "],
                    html]],
-                 ["div", {cla:"trowdescdiv"}, pt.text]]];
+                 ["div", {cla:"trowdescdiv"}, [ph, pt.text, eh]]]];
         return html;
     }
 
@@ -704,6 +727,7 @@ app.tabular = (function () {
         if(!app.allpts) {
             jt.call("GET", "docs/allpts.json", null,
                     function (result) {
+                        //PENDING: fetch recent updates and integrate
                         app.allpts = result;
                         preparePointsData();
                         updatePointsDisplay(); },
