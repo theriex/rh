@@ -4,7 +4,7 @@
 app.lynching = (function () {
     "use strict";
 
-    var sv = null,
+    var stats = null,
         tl = null,
         endf = null,
         chart = {colors:{bg: "#fef6d7",
@@ -153,7 +153,24 @@ app.lynching = (function () {
                 ["Washington", 25, 1, 26],
                 ["West Virginia", 20, 28, 48],
                 ["Wisconsin", 6, 0, 6],
-                ["Wyoming", 30, 5, 35]];
+                ["Wyoming", 30, 5, 35]],
+        tlpts = [
+            {date:"1922",
+             text:"Republicans in the Senate vote to abandon the Dyer Anti-Lynching Bill, which imposes severe penalties and fines on “any state or municipal officer convicted of negligence in affording protection to individuals in custody who are attacked by a mob bent on lynching, torture, or physical intimidation.” The bill, which was approved by the House of Representatives, also provided for compensation to the families of victims. A Southern Democratic filibuster in the Senate halts the bill's passage.",
+             codes:"B", orgid:"1", source:"ksep: B120"},
+            {date:"1926",
+             text:"President Coolidge tells Congress the country must provide “for the amelioration of race prejudice and the extension to all of the elements of equal opportunity and equal protection under the laws, which are guaranteed by the Constitution.”",
+             codes:"B", orgid:"1", source:"ksep: B126"},
+            {date:"1934",
+             text:"A bill that prohibits lynching fails, as President Roosevelt refuses to support it.",
+             codes:"B", orgid:"1", source:"ksep: B127"}];
+
+
+    function datapoints () {
+        tlpts.forEach(function (pt, idx) {
+            pt.instid = "lynching" + idx; });
+        return tlpts;
+    }
 
 
     function makeRowObject (keyrow, datarow) {
@@ -165,7 +182,7 @@ app.lynching = (function () {
 
 
     function groupDataYears (dat, gc, limit) {
-        var grps = [], i, cgc = gc, cs = null, rem;
+        var grps = [], i, j, key, cgc = gc, cs = null, rem;
         limit = limit || dat.length;
         rem = dat.length - limit;
         for(i = dat.length - 1; i >= 0 && limit > 0; i -= 1) {
@@ -175,9 +192,9 @@ app.lynching = (function () {
                 cs.date = String(cs.year);  //used for sorting with data points
                 cs.year = cs.date.slice(-2); }
             else {  //add current year data to accumulator
-                ldty[0].forEach(function (key, idx) {
-                    if(idx) {  //skip year field
-                        cs[key] += dat[i][key]; } }); }
+                for(j = 1; j < ldty[0].length; j += 1) {
+                    key = ldty[0][j];
+                    cs[key] += dat[i][key]; } }
             limit -= 1;
             cgc -= 1;
             if(cgc <= 0 || limit <= 0 || i === 0) {
@@ -235,7 +252,7 @@ app.lynching = (function () {
             if(chart.pct[state.name]) {
                 stob = chart.pct[state.name];
                 pt = state.pinpt.split(",");
-                pt = {x:+(pt[0]), y:+(pt[1])};
+                pt = {x:Number(pt[0]), y:Number(pt[1])};
                 stob.center = pt;
                 // console.log(state.id + " opc: " + stob.opc + 
                 //             ", bpc: " + stob.bpc);
@@ -268,14 +285,15 @@ app.lynching = (function () {
         ani.pts.push({date:1, text:lynchingDefHTML(1), delay:6000});
         ani.pts.push({date:2, text:lynchingDefHTML(2), delay:6000});
         ani.pts.push({date:3, text:lynchingDefHTML(3), delay:6000});
-        sv.pts.forEach(function (pt) {
+        datapoints().forEach(function (pt) {
             ani.pts.push(
                 {date:pt.date, delay:Math.round(38 * pt.text.length),
                  text:jt.tac2html(
                      [["div", {cla:"lynchcrittdiv"}, pt.date],
                       ["div", {cla:"lynchcrititemdiv"}, pt.text]])}); });
         ani.pts = ani.pts.concat(chart.dat);
-        ani.pts.sort(function (a, b) { return (+(a.date)) - (+(b.date)); });
+        ani.pts.sort(function (a, b) { 
+            return (Number(a.date)) - (Number(b.date)); });
         ani.pts.push({date:"", delay:6000, text:jt.tac2html(
             [["div", {cla:"lynchcrittdiv"}, ""],
              ["div", {cla:"lynchcrititemdiv"},
@@ -359,8 +377,8 @@ app.lynching = (function () {
 
     function rectclick (rid) {
         rid = rid || this.id;
-        chart.bs.selidx = +(rid.match(/bar(\d+)column/)[1]);
-        console.log("rectclick selidx: " + chart.bs.selidx);
+        chart.bs.selidx = Number(rid.match(/bar(\d+)column/)[1]);
+        //console.log("rectclick selidx: " + chart.bs.selidx);
         chart.dat.forEach(function (bd, idx) {
             var opa = 0.0;
             if(idx < chart.bs.selidx) {
@@ -428,23 +446,23 @@ app.lynching = (function () {
     }
 
 
-    function mapdebug () {
-        // d3.select("#mapsvg").on("mousemove", function () {
-        //     var coords = d3.mouse(this);
-        //     d3.select("#coordtxt").text(Math.round(coords[0]) + "," + 
-        //                                 Math.round(coords[1])); });
-        // Show the path vertices for a given state
-        // app.svcommon.usmap().forEach(function (state) {
-        //     var vs;
-        //     if(state.id === "KS") {
-        //         vs = app.svcommon.pathToVertices(state.d);
-        //         vs.forEach(function (pt) {
-        //             chart.ms.circg.append("circle")
-        //                 .style("fill", "blue")
-        //                 .attr("cx", pt.x)
-        //                 .attr("cy", pt.y)
-        //                 .attr("r", 2); }); } });
-    }
+    // function mapdebug () {
+    //     d3.select("#mapsvg").on("mousemove", function () {
+    //         var coords = d3.mouse(this);
+    //         d3.select("#coordtxt").text(Math.round(coords[0]) + "," + 
+    //                                     Math.round(coords[1])); });
+    //     Show the path vertices for a given state
+    //     app.svcommon.usmap().forEach(function (state) {
+    //         var vs;
+    //         if(state.id === "KS") {
+    //             vs = app.svcommon.pathToVertices(state.d);
+    //             vs.forEach(function (pt) {
+    //                 chart.ms.circg.append("circle")
+    //                     .style("fill", "blue")
+    //                     .attr("cx", pt.x)
+    //                     .attr("cy", pt.y)
+    //                     .attr("r", 2); }); } });
+    // }
 
 
     function circInit () {
@@ -488,7 +506,7 @@ app.lynching = (function () {
             //     .attr("font-weight", "bold")
             //     .text(stob.id);
         });
-        mapdebug();
+        //mapdebug();
     }
 
 
@@ -584,27 +602,23 @@ app.lynching = (function () {
     }
 
 
-    function display (suppvis, timeline, endfunc) {
-        sv = suppvis || app.lev.suppVisByCode("ly");
+    function display (timeline, endfunc) {
+        stats = {startDate:new Date()};
         tl = timeline || app.linear.tldata();
         endf = endfunc || app.dlg.close;
-        sv.startDate = new Date();
         initData();
         initDisplayElements();
     }
 
 
     function finish () {
-        var date, nowiso;
+        var date;
         if(!ani.finished) {
             ani.finished = true;
             date = new Date();
-            sv.startstamp = app.db.wallClockTimeStamp(sv.startDate);
-            sv.duration = app.db.getElapsedTime(date, sv.startDate);
-            nowiso = date.toISOString();
-            sv.pts.forEach(function (pt) {
-                pt.visited = nowiso; });
-            sv.visited = nowiso;
+            stats.startstamp = app.db.wallClockTimeStamp(stats.startDate);
+            stats.duration = app.db.getElapsedTime(date, stats.startDate);
+            stats.visited = date.toISOString();
             d3.select("#suppvisdiv")
                 .style("visibility", "hidden");
             endf(); }
@@ -612,10 +626,9 @@ app.lynching = (function () {
 
 
     return {
-        //TODO: need to init data points for each year so they show up in
-        //the main display at start.
-        display: function (sv, tl, endf) { display(sv, tl, endf); },
-        finish: function () { finish(); }
+        display: function (tl, endf) { display(tl, endf); },
+        finish: function () { finish(); },
+        datapoints: function () { return datapoints(); }
     };
 }());
 

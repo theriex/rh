@@ -96,7 +96,7 @@ def rebuild_prebuilt_timeline_points(tl):
         if jtxt:
             jtxt += ","
         # PENDING: match tl lang to appropriate point translation
-        jtxt += json.dumps({"ptid": ptid,
+        jtxt += json.dumps({"instid": ptid,
                             "date": pt.date,
                             "text": pt.text,
                             "codes": pt.codes,

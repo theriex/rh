@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge */
+/*jslint browser, multivar, white, fudge, for */
 /*global app, window, jt, d3 */
 
 app.db = (function () {
@@ -38,7 +38,7 @@ app.db = (function () {
                 "YYYY[-MM-DD]-YYYY[-MM-DD]"];
         descr[0] = "<b>" + descr[0] + "</b>";
         descr[2] = "<b>" + descr[2] + "</b>";
-        descr = descr.join("<br\>");
+        descr = descr.join("<br/>");
         descr = descr.replace(/\sor\s/g, " <em>or</em> ");
         descr = descr.replace(/'/g, "&apos;");
         return descr;
@@ -52,7 +52,7 @@ app.db = (function () {
         //start year
         pt.start.year = date.match(/^\d\d?\d?\d?/)[0];
         date = date.slice(pt.start.year.length);
-        pt.start.year = +(pt.start.year);
+        pt.start.year = Number(pt.start.year);
         if(date.indexOf(" BCE") >= 0) {
             date = date.slice(date.indexOf(" BCE") + 4);
             pt.start.year *= -1; }
@@ -60,12 +60,12 @@ app.db = (function () {
         mres = date.match(/^\-\d\d(\-|$)/);
         if(mres) {
             date = date.slice(3);
-            pt.start.month = +(mres[0].slice(1,3)); }
+            pt.start.month = Number(mres[0].slice(1,3)); }
         //start day
         mres = date.match(/^\-\d\d(\-|$)/);
         if(mres) {
             date = date.slice(3);
-            pt.start.day = +(mres[0].slice(1,3)); }
+            pt.start.day = Number(mres[0].slice(1,3)); }
         //end year
         if(date.indexOf("-") >= 0) {
             date = date.slice(date.indexOf("-") + 1); }
@@ -73,17 +73,17 @@ app.db = (function () {
         if(mres) {
             date = date.slice(mres[0].length);
             pt.end = {};
-            pt.end.year = +(mres[0]); }
+            pt.end.year = Number(mres[0]); }
         //end month
         mres = date.match(/^\-\d\d(\-|$)/);
         if(mres) {
             date = date.slice(3);
-            pt.end.month = +(mres[0].slice(1,3)); }
+            pt.end.month = Number(mres[0].slice(1,3)); }
         //end day
         mres = date.match(/^\-\d\d/);
         if(mres) {
             date = date.slice(3);
-            pt.end.day = +(mres[0].slice(1,3)); }
+            pt.end.day = Number(mres[0].slice(1,3)); }
         makeDisplayDate(pt);
     }
 
@@ -216,6 +216,7 @@ app.db = (function () {
 
 
     function notePointCounts (pt) {
+        var i;
         dcon.stat = dcon.stat || {
             N: {count:0, name:"Native American"},
             B: {count:0, name:"African American"},
@@ -223,7 +224,7 @@ app.db = (function () {
             A: {count:0, name:"Asian American"},
             M: {count:0, name:"Middle East and North Africa"},
             R: {count:0, name:"Multiracial"}};
-        for(var i = 0; i < pt.codes.length; i += 1) {
+        for(i = 0; i < pt.codes.length; i += 1) {
             if(dcon.stat[pt.codes.charAt(i)]) {
                 dcon.stat[pt.codes.charAt(i)].count += 1; } }
     }
@@ -247,14 +248,14 @@ app.db = (function () {
 
     //The preb data points in the timeline are a subset of the database
     //fields (see timeline.py rebuild_prebuilt_timeline_points):
-    //    ptid: The database point instance id.  Aka "citation id"
+    //    instid: The database point instance id.  Aka "citation id"
     //    date: Date or range.  See README.md for allowed formats.
     //    text: Description of the point (max 1200 chars)
     //    codes: NBLAMRUFD (see point.py point_codes)
     //    orgid: Organization id, 1 is public
     //    keywords: CSV of org defined keywords (regions, categories, tags)
     //    source: Arbitrary source tag used when the point was loaded.
-    //    pic: ptid if an image exists, empty string otherwise
+    //    pic: instid if an image exists, empty string otherwise
     //    modified: ISO when the point was last updated
     //These fields added from calculations and user data:
     //    start: {year: number, month?, day?}
@@ -319,7 +320,7 @@ app.db = (function () {
     function pointIndexForId (ptid, points) {
         var i;
         for(i = 0; i < points.length; i += 1) {
-            if(points[i].ptid === ptid) {
+            if(points[i].instid === ptid) {
                 return i; } }
         return -1;
     }
@@ -345,7 +346,7 @@ app.db = (function () {
                 //move all visited points from unused into randpts
                 prog = getTimelineProgressRecord(tl);
                 prog.pts.csvarray().forEach(function (pp) {
-                    var idx = pointIndexForId(pp.split(":")[0], tl.unused);
+                    idx = pointIndexForId(pp.split(":")[0], tl.unused);
                     if(idx >= 0) {
                         tl.randpts.push(tl.unused[idx]);
                         tl.unused.splice(idx, 1); } });
@@ -407,7 +408,7 @@ app.db = (function () {
         if(!dcon.prog || !dcon.tl) {
             return jt.log("db.nextUnvisitedPoint called without tl or prog"); }
         dcon.tl.points.forEach(function (pt) {
-            if(res.length < numpoints && dcon.prog.pts.indexOf(pt.ptid) < 0) {
+            if(res.length < numpoints && dcon.prog.pts.indexOf(pt.instid) < 0) {
                 res.push(pt); } });
         if(!res.length) {
             return null; }
@@ -422,7 +423,7 @@ app.db = (function () {
         points = app.allpts || dcon.tl.points;
         for(i = 0; i < points.length; i += 1) {
             pt = points[i];
-            if(pt.instid === ptid || pt.ptid === ptid) {
+            if(pt.instid === ptid) {
                 return pt; } }
         return null;
     }
@@ -452,15 +453,14 @@ app.db = (function () {
 
 
     function mergeUpdatedPointData (updpt) {
-        var ptid = updpt.instid || updpt.ptid;
         if(app.allpts) {
             app.allpts.forEach(function (pt) {
-                if(pt.instid === ptid) {
+                if(pt.instid === updpt.instid) {
                     mergePointDataToPoint(pt, updpt); } }); }
         if(app.user.tls) {
             Object.keys(app.user.tls).forEach(function (tlid) {
                 app.user.tls[tlid].points.forEach(function (pt) {
-                    if(pt.instid === ptid || pt.ptid === ptid) {
+                    if(pt.instid === updpt.instid) {
                         mergePointDataToPoint(pt, updpt); } }); }); }
     }
 
@@ -468,9 +468,10 @@ app.db = (function () {
     function fetchDisplayTimeline () {
         var slug = "demo",
             url = window.location.href,
-            idx = url.indexOf("/timeline/")
+            tlmarker = "/timeline/",
+            idx = url.indexOf(tlmarker);
         if(idx >= 0) {
-            slug = url.slice(idx + "/timeline/".length); }
+            slug = url.slice(idx + tlmarker.length); }
         jt.log("fetchDisplayTimeline: " + slug);
         jt.out("rhcontentdiv", "Loading " + slug + "...");
         app.user.tls = app.user.tls || {};
@@ -497,14 +498,14 @@ app.db = (function () {
         var svs = dcon.prog.svs, upd = "";
         if(!svs || !svs.csvcontains(svid)) {
             svs = svs.csvappend(svid + ";" + start.toISOString() + ";" +
-                                end.toISOString() + ";0") }
+                                end.toISOString() + ";0"); }
         svs.csvarray().forEach(function (sv) {
             if(upd) {
                 upd += ","; }
             sv = sv.split(";");
             if(sv[0] === svid) {
                 sv[3] = String(Number(sv[3]) + 1); }
-            upd += sv.join(";"); })
+            upd += sv.join(";"); });
         dcon.prog.svs = upd;
     }
 
@@ -535,10 +536,10 @@ app.db = (function () {
         switch(dbc) {
         case "AppUser":
             dbo.settings = JSON.parse(dbo.settings || "{}");
-            dbo.remtls = JSON.parse(dbo.remtls || "[]")
-            dbo.completed = JSON.parse(dbo.completed || "[]")
-            dbo.started = JSON.parse(dbo.started || "[]")
-            dbo.built = JSON.parse(dbo.built || "[]")
+            dbo.remtls = JSON.parse(dbo.remtls || "[]");
+            dbo.completed = JSON.parse(dbo.completed || "[]");
+            dbo.started = JSON.parse(dbo.started || "[]");
+            dbo.built = JSON.parse(dbo.built || "[]");
             break;
         case "Timeline":
             dbo.preb = JSON.parse(dbo.preb || "[]");
@@ -569,6 +570,7 @@ app.db = (function () {
         getStateURLParams: function () { return getStateURLParams(); },
         saveState: function () { saveState(); },
         parseDate: function (pt) { parseDate(pt); },
+        makeCoordinates: function (pt, ctx) { makeCoordinates(pt, ctx); },
         describeDateFormat: function () { return describeDateFormat(); },
         fetchDisplayTimeline: function () { fetchDisplayTimeline(); },
         serialize: function (dbc, dbo) { serialize(dbc, dbo); },
@@ -576,7 +578,7 @@ app.db = (function () {
         postdata: function (dbc, dbo) { return postdata(dbc, dbo); },
         displayContext: function () { return dcon; },
         nextPoint: function (ptc) { return nextUnvisitedPoint(ptc); },
-        svdone: function (svid, sta, end) { noteSuppvizDone(svid, sta, end) },
+        svdone: function (svid, sta, end) { noteSuppvizDone(svid, sta, end); },
         displayNextTimeline: function () { displayNextTimeline(); },
         mergeProgToAccount: function () { mergeProgToAccount(); },
         pt4id: function (ptid) { return findPointById(ptid); },

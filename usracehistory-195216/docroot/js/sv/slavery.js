@@ -4,7 +4,7 @@
 app.slavery = (function () {
     "use strict";
 
-    var sv = null,
+    var stats = null,
         tl = null,
         endf = null,
         chart = {colors: {bg: "#fef6d7", 
@@ -113,7 +113,98 @@ app.slavery = (function () {
                {state:"WV", name:"West Virginia", start:1748, end:1865,
                 notes:"The area that became West Virginia was settled both from north to south and from east to west with slave presence recorded from 1748.  West Virginia separated from Virginia to become a union state in 1863 with a gradual emancipation clause, but slavery is actually abolished on ratification on 13th amendment."},
                {state:"WY", name:"Wyoming", start:0, end:0,
-                notes:"By the time the Spanish took over parts of Wyoming in 1764, they had outlawed slavery of Native Americans. Lewis and Clark brought their slave York with them when they passed through.  Wyoming becomes a state in 1890 after slavery is illegal."}];
+                notes:"By the time the Spanish took over parts of Wyoming in 1764, they had outlawed slavery of Native Americans. Lewis and Clark brought their slave York with them when they passed through.  Wyoming becomes a state in 1890 after slavery is illegal."}],
+        tlpts = [
+            {date:"1501",
+             text:"The Spanish throne officially approves the use of African slaves in the New World. The Portugese, following exploration of the Brazilian coast in 1500, bring their first shipload of African slaves to the Western Hemisphere in 1502, selling them in what is now Latin America.",
+             codes:"BLD", orgid:"1", source:"ksep: B2"},
+            {date:"1526", states:["SC"],
+             text:"First documented slave rebellion in North America. Lucas Vázquez de Ayllón lands near what will later be Georgetown, South Carolina and establishes a settlement (San Miguel de Gualdape) which fails after about 3 months. During that time the Africans he brought with him as laborers escape to the interior and settle with Native Americans.",
+             codes:"BND", orgid:"1", source:"ksep: B3"},
+            {date:"1562",
+             text:"Britain enters the slave trade when John Hawkins sells a large cargo of African slaves to Spanish planters.",
+             codes:"B", orgid:"1", source:"ksep: B4"},
+            {date:"1581", states:["FL"],
+             text:"Spanish residents in St. Augustine, the first permanent settlement in Florida, import African slaves.",
+             codes:"B", orgid:"1", source:"ksep: B274"},
+            {date:"1619", states:["FL","VA"],
+             text:"20 Africans brought to Jamestown are the first slaves imported into Britain’s North American colonies.",
+             codes:"B", orgid:"1", source:"ksep: B275"},
+            {date:"1626", states:["FL","VA","NY"],
+             text:"The Dutch West India Company imports 11 black male slaves into the New Netherlands.",
+             codes:"B", orgid:"1", source:"ksep: B276"},
+            {date:"1629-1637", states:["FL","VA","NY","MD","CT"],
+             text:"Expanding from Virginia, African slaves are imported into Maryland, Connecticut, and New Amsterdam (modern New York).",
+             codes:"B", orgid:"1", source:"ksep: B264"},
+            {date:"1640",
+             text:"Beginning of large-scale sugar planting in the Caribbean islands. Slave labor plantations steadily grow in size. By 1832 many plantations in Jamaica have over 250 slaves.",
+             codes:"LBD", orgid:"1", source:"ksep: B8"},
+            {date:"1641", states:["FL","VA","NY","MD","CT","MA","RI"],
+             text:"Massachusetts becomes the first colony to legalize slavery.",
+             codes:"B", orgid:"1", source:"ksep: B9"},
+            {date:"1663",
+             text:"Maryland settlers pass a law stipulating that all imported Africans are to be given the status of slaves. Free White women who marry Black slaves are also considered slaves during the lives of their spouses; children of such unions are also to be classified as slaves. In 1681, an amending law is passed stipulating that children born from a union of a White servant woman and African are free citizens.",
+             codes:"BR", orgid:"1", source:"ksep: R4"},
+            {date:"1774", states:["FL","VA","NY","MD","CT","MA"],
+             //The RI law doesn't really end slavery, but unmarking the
+             //state on the map to indicate progress.
+             text:"The Continental Congress demands elimination of the trans-Atlantic slave trade and economic embargoes on all countries participating in it. Rhode Island enacts a law prohibiting slavery (non-retroactively).",
+             codes:"B", orgid:"1", source:"ksep: B23"},
+            {date:"1777",
+             text:"Vermont becomes the first colony to abolish slavery.",
+             codes:"B", orgid:"1", source:"ksep: B277"},
+            {date:"1780-03-01",
+             text:"The Pennsylvania legislature passes \"An Act for the Gradual Abolition of Slavery\" prohibiting further import of slaves and declaring all newborn children free. Existing slaves are not freed, and members of Congress are exempt. The \"gradual abolition\" approach becomes a model for emancipation of slaves in other northern states.",
+             codes:"B", orgid:"1", source:"ksep: B26"},
+            {date:"1781",
+             text:"Slaves in Massachusetts begin to sue for manumission with the court ruling that perpetual servitude is unconstitutional. Slavery fades rapidly with only isolated cases remaining. Blacks in taxable categories are granted suffrage.",
+             code:"B", orgid:"1", source:"ksep: B27"},
+            {date:"1787",
+             text:"Congress passes the Northwest Ordinance, which forbids slavery in the area between the Appalachian Mountains, the Mississippi River, and the Ohio River. It provides the basis for white settlement, and stipulates that Native Americans’ land should never be taken from them without their consent.",
+             codes:"BN", orgid:"1", source:"ksep: B28"},
+            {date:"1803",
+             text:"The South Carolina state legislature, which had been trying limit importation of slaves, reopens the slave trade with Latin America and the West Indies.",
+             codes:"B", orgid:"1", source:"ksep: B36"},
+            {date:"1804",
+             text:"New Jersey passes an emancipation law. All states north of the Mason-Dixon Line now have laws forbidding slavery or providing for its gradual elimination.",
+             codes:"B", orgid:"1", source:"ksep: B37"},
+            {date:"1817",
+             text:"Mississippi enters the union as a slave state. New York passes a gradual slavery abolition act.",
+             codes:"B", orgid:"1", source:"ksep: B42"},
+            {date:"1819",
+             text:"Alabama enters the Union as a slave state.",
+             codes:"B", orgid:"1", source:"ksep: B43"},
+            {date:"1820",
+             text:"The Missouri Compromise is enacted. It provides for Missouri’s entry into the Union as a slave state and Maine’s entry as a free state, making 12 of each in the U.S. All territory north of 36 30’ latitude declared free, and south of that latitude is open to slavery.",
+             codes:"B", orgid:"1", source:"ksep: B44"},
+            {date:"1829",
+             text:"Slavery in Mexico is abolished",
+             codes:"BL", orgid:"1", source:"ksep: L11"},
+            {date:"1834",
+             text:"Parliament abolishes slavery in the British empire. 700,000 slaves are liberated at a cost of 20 million British pounds sterling.",
+             codes:"B", orgid:"1", source:"ksep: B52"},
+            {date:"1836",
+             text:"The U.S. House of Representatives adopts the “gag rule,” which prevents congressional action on anti-slavery resolutions of legislation.",
+             codes:"BD", orgid:"1", source:"ksep: B53"},
+            {date:"1845",
+             text:"U.S. Congress overturns the “gag rule”. Texas is admitted to the Union as a slave state.",
+             codes:"B", orgid:"1", source:"ksep: B57"},
+            {date:"1859",
+             text:"The last ship to bring slaves to the U.S., the Clothilde, arrives in Mobile Bay, Alabama.",
+             codes:"BD", orgid:"1", source:"ksep: B63"},
+            {date:"1865-12-06",
+             text:"The 13th amendment is ratified, abolishing slavery in the United States.",
+             codes:"B", orgid:"1", source:"ksep: B278"},
+            {date:"1866-06-14",
+             text:"The last treaty of a new round of treaties ending slavery in Indian Territory is signed by the Creek.",
+             codes:"B", orgid:"1", source:"ksep: B279"}];
+
+
+    function datapoints () {
+        tlpts.forEach(function (pt, idx) {
+            pt.instid = "slavery" + idx; });
+        return tlpts;
+    }
 
 
     function usmapTAC () {
@@ -139,8 +230,8 @@ app.slavery = (function () {
                      svg: {h:20}};
         chart.key.svg.w = chart.key.svg.w || chart.key.w;
         k = chart.key;
-        k.yr = {start: sv.pts[0].start.year, 
-                end: sv.pts[sv.pts.length - 1].start.year};
+        k.yr = {start: tlpts[0].start.year, 
+                end: tlpts[tlpts.length - 1].start.year};
         k.styles = {mdiv:"width:" + k.w + "px;margin:auto;text-align:center;",
                     ctrl:"display:inline-block;width:56px;height:40px;",
                     tspan:"line-height:40px;font-size:large;cursor:pointer;"};
@@ -218,7 +309,7 @@ app.slavery = (function () {
         ks = chart.key.svg;
         displayTitle();
         ks.x = d3.scaleLinear()
-            .domain(d3.extent(sv.pts, function (d) { return d.tc; }))
+            .domain(d3.extent(tlpts, function (d) { return d.tc; }))
             .range([0, ks.w]);
         ks.g = d3.select("#keysvg").append("g");
         ks.g.append("rect")
@@ -238,7 +329,7 @@ app.slavery = (function () {
             .style("fill", chart.colors.map.hover)
             .style("opacity", 0.8);
         ks.g.selectAll(".ksbar")
-            .data(sv.pts)
+            .data(tlpts)
             .enter().append("rect")
             .attr("class", "ksbar")
             .attr("id", function (d) { return "kb" + d.cid; })
@@ -280,7 +371,7 @@ app.slavery = (function () {
                 byy[sp.end] = {text:""}; } });
         //add the display points from the suppvis, overwriting the default
         //state toggle point to include display text.
-        sv.pts.forEach(function (pt) {
+        tlpts.forEach(function (pt) {
             byy[pt.start.year] = {text:pt.text, cid:pt.cid}; });
         //make a sorted array out of that to use as a sequence
         Object.keys(byy).forEach(function (year) {
@@ -381,11 +472,14 @@ app.slavery = (function () {
     }
 
 
-    function display (suppvis, timeline, endfunc) {
-        sv = suppvis || app.lev.suppVisByCode("sl");
+    function display (timeline, endfunc) {
+        var ctx = {yr: 0, dy: 0, maxy: 0};
+        stats = {startDate: new Date()};
         tl = timeline || app.linear.tldata();
         endf = endfunc || app.dlg.close;
-        sv.startDate = new Date();
+        tlpts.forEach(function (pt) {
+            app.db.parseDate(pt);
+            app.db.makeCoordinates(pt, ctx); });
         initDisplayElements();
         initAnimationSequence();
     }
@@ -474,18 +568,15 @@ app.slavery = (function () {
 
 
     function finish () {
-        //TODO: ask some kind of a question to complete the viz.
+        //PENDING: ask some kind of a question to complete the viz.
         //possibly how long the longest status quo period was
-        var date, nowiso;
+        var date;
         if(!ani.finished) {
             ani.finished = true;
             date = new Date();
-            sv.startstamp = app.db.wallClockTimeStamp(sv.startDate);
-            sv.duration = app.db.getElapsedTime(date, sv.startDate);
-            nowiso = date.toISOString();
-            sv.pts.forEach(function (pt) {
-                pt.visited = nowiso; });
-            sv.visited = nowiso;
+            stats.startstamp = app.db.wallClockTimeStamp(stats.startDate);
+            stats.duration = app.db.getElapsedTime(date, stats.startDate);
+            stats.visited = date.toISOString();
             d3.select("#suppvisdiv")
                 .style("visibility", "hidden");
             endf(); }
@@ -493,7 +584,7 @@ app.slavery = (function () {
 
 
     return {
-        display: function (sv, tl, endf) { display(sv, tl, endf); },
+        display: function (tl, endf) { display(tl, endf); },
         transport: function (command) { transport(command); },
         selcid: function (cid) { displayPointById(cid); },
         selyear: function (year) { displayPointByYear(year); },
@@ -501,7 +592,8 @@ app.slavery = (function () {
         stunclick: function (stid) { stateUnclick(stid); },
         stmsover: function (stid) { stateMouseOver(stid); },
         stmsout: function (stid) { stateMouseOut(stid); },
-        finish: function () { finish(); }
+        finish: function () { finish(); },
+        datapoints: function () { return datapoints(); }
     };
 }());
 

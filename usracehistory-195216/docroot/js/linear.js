@@ -1,10 +1,11 @@
-/*jslint browser, multivar, white, fudge, this */
+/*jslint browser, multivar, white, fudge, this, for */
 /*global app, window, jt, d3 */
 
 app.linear = (function () {
     "use strict";
 
-    var tl; //timeline data object
+    var tl, //timeline data object
+        wall; //pic wallpaper variables
 
     function setChartWidthAndHeight () {
         var over, minw = 320,      //full width of a standard phone
@@ -236,6 +237,16 @@ app.linear = (function () {
     }
 
 
+    function handlePicMouseClick (mouseinfo) {
+        var mx = mouseinfo[0],
+            my = mouseinfo[1],
+            pb = {x: Math.floor(wall.grid.x * (mx / wall.dd.w)),
+                  y: Math.floor(wall.grid.y * (my / wall.dd.h))},
+            pt = wall.selpts[(pb.y * wall.grid.x) + pb.x];
+        app.dlg.info(pt);
+    }
+
+
     function bindDataAndDrawChart () {
         var dcon = app.db.displayContext();
         tl.x.domain([tl.pts[0].tc - 20,  //avoid half dots at edges
@@ -274,7 +285,7 @@ app.linear = (function () {
             .on("mouseout", function(d) { overCircle(d, false); })
             .on("click", function(d) { clickCircle(d); });
         d3.select(".zoom").on("click", function () {
-            app.picbg.click(d3.mouse(this)); });
+            handlePicMouseClick(d3.mouse(this)); });
         addFocusInteractiveElements();
         addContextDecorativeElements();
         adjustTickTextVisibility();
@@ -359,7 +370,8 @@ app.linear = (function () {
 
 
     function paintWallpaper (divid) {
-        var picpts = [], selpts = [], grid, idx, div, dd, sd, cs, i, j;
+        var html, picpts = [], grid, idx, div, sd, cs, i, j;
+        wall = {selpts:[]};
         tl.pts.forEach(function (pt) {
             if(pt.pic) {
                 picpts.push(pt); } });
@@ -369,16 +381,17 @@ app.linear = (function () {
         else if(picpts.length >= 12) { grid = {x:4, y:3}; }
         else { jt.log("Not enough pic points to display. " + picpts.length +
                      " of " + tl.pts.length + "."); return; }
-        while(selpts.length < (grid.x * grid.y)) {
+        while(wall.selpts.length < (grid.x * grid.y)) {
             idx = Math.floor(Math.random() * picpts.length);
-            selpts.push(picpts.splice(idx, 1)[0]); }
+            wall.selpts.push(picpts.splice(idx, 1)[0]); }
         div = jt.byId(divid);
-        dd = {w:div.offsetWidth, h:div.offsetHeight};
-        if(dd.h > dd.w) {  //invert the drid to be tall instead of wide
+        wall.dd = {w:div.offsetWidth, h:div.offsetHeight};
+        if(wall.dd.h > wall.dd.w) {  //invert grid to be tall instead of wide
             grid = {x:grid.y, y:grid.x}; }
-        sd = {w: Math.floor(dd.w / grid.x), wm: (dd.w % grid.x) - 1,
-              h: Math.floor(dd.h / grid.y), hm: (dd.h % grid.y) - 1};
+        sd = {w: Math.floor(wall.dd.w / grid.x), wm: (wall.dd.w % grid.x) - 1,
+              h: Math.floor(wall.dd.h / grid.y), hm: (wall.dd.h % grid.y) - 1};
         cs = {w: 0, h: 0};
+        html = [];
         for(i = 0; i < grid.y; i += 1) {
             for(j = 0; j < grid.x; j += 1) {
                 cs.w = sd.w;
@@ -392,11 +405,12 @@ app.linear = (function () {
                     ["div", {id:"pdx" + j + "y" + i, cla:"bgpicdiv",
                              style:"width:" + cs.w + "px;" +
                                    "height:" + cs.h + "px;"},
-                     ["img", {src: "/ptpic?pointid=" + picpts[idx].instid,
+                     ["img", {src: "/ptpic?pointid=" + wall.selpts[idx].instid,
                               cla: "bgpicimg",
                               style: "max-width:" + cs.w + "px;" +
                                      "max-height:" + cs.h + "px;"}]]); } }
         jt.out(divid, jt.tac2html(html));
+        wall.grid = grid;
     }
 
 

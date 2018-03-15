@@ -19,9 +19,7 @@ var app = {},  //Global container for application level funcs and values
         var href = window.location.href,
             modules = ["js/data",     //all the points for display
                        "js/db",       //data access and state
-                       "js/lev",      //traversal levels
                        "js/dlg",      //dialog interaction
-                       "js/picbg",    //background pictures
                        "js/linear",   //linear timeline display
                        "js/tabular",  //text timeline display
                        "js/mode",     //interactive or reference

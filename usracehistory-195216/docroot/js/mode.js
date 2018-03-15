@@ -7,7 +7,6 @@ app.mode = (function () {
 
     var mode = "interactive",  //linear only. "reference" is linear or text
         fetchpoints = null,
-        series = null,
         ms = null,  //mode state detail variables
         srchst = null;
 
@@ -130,6 +129,121 @@ app.mode = (function () {
     }
 
 
+    function toggleDisplay () {
+        if(ms.disp === "linear") {
+            // jt.byId("disptoggle").href = "#linearmode";
+            // jt.byId("disptoggleimg").src = "img/displinear.png";
+            jt.byId("abgdiv").style.display = "none";
+            jt.byId("lcontdiv").style.display = "none";
+            jt.byId("tcontdiv").style.display = "block";
+            jt.byId("itemdispdiv").style.visibility = "hidden";
+            ms.disp = "text";
+            app.tabular.display(); }  //rebuild contents each time
+        else {
+            // jt.byId("disptoggle").href = "#textmode";
+            // jt.byId("disptoggleimg").src = "img/disptext.png";
+            jt.byId("abgdiv").style.display = "block";
+            jt.byId("lcontdiv").style.display = "block";
+            jt.byId("tcontdiv").style.display = "none";
+            ms.disp = "linear"; }
+    }
+
+
+    function next () {
+        var level = ms.levinf.level, 
+            dcon = app.db.displayContext();
+        if(ms.tl.pendingSaves >= ms.pointsPerSave) {
+            return app.dlg.saveprog(); }
+        if(level.levpts > level.ptscmp) {
+            ms.currpt = app.db.nextPoint();
+            return app.linear.clickCircle(ms.currpt); }
+        if(!level.svcmp) {
+            level.svcmp = true;
+            return app[level.svn].display(); }
+        //moving to the next level would have already been handled
+        if(dcon.tlidx < dcon.ds.length) {
+            return app.db.displayNextTimeline(); }
+        //if nothing else to do, display the finale with no continuation func
+        app.finale.display();
+    }
+
+
+    function changeMode (chmode) {
+        chmode = chmode || mode;
+        showModeElements(chmode);
+        if(mode === "interactive") {
+            if(ms.disp === "text") {
+                toggleDisplay(); }
+            clearSearchState();
+            next(); }  //picks up at the appropriate point
+        else { //"reference"
+            if(ms.disp !== "text") {
+                toggleDisplay(); } }
+    }
+
+
+    function displayMenu (expand, select) {
+        var html, mdiv, leftx;
+        html = ["a", {href:"#menu", onclick:jt.fs("app.mode.menu(" + 
+                                                  !expand + ")")},
+                ["img", {src:"img/menuicon.png", //50x38
+                         style:"max-height:20px;max-width:30px;"}]];
+        if(expand) {
+            html = [["div", {cla:"menuline", style:"text-align:right"}, html]];
+            if(mode === "interactive") {
+                html.push(["div", {cla:"menulinemain"},
+                           ["a", {href:"#refmode",
+                                  onclick:jt.fs("app.mode.menu(0,'refmode')")},
+                            "Reference&nbsp;Mode"]]); }
+            else { //in reference mode
+                html.push(["div", {cla:"menulinemain"},
+                           ["a", {href:"#visual", 
+                                  onclick:jt.fs("app.mode.menu(0,'visual')")},
+                            "Interactive&nbsp;Mode"]]); }
+            if(app.user && app.user.tok) {
+                html.push(["div", {cla:"menulinemain"},
+                           ["a", {href:"#profile",
+                                  onclick:jt.fs("app.mode.menu(0, 'myacc')")},
+                            "My&nbsp;Account"]]);
+                html.push(["div", {cla:"menulinemain"},
+                           ["a", {href:"#create",
+                                  onclick:jt.fs("app.mode.menu(0, 'newtl')")},
+                            "Create&nbsp;Timeline"]]);
+                html.push(["div", {cla:"menulinemain"},
+                           ["a", {href:"#SignOut",
+                                  onclick:jt.fs("app.mode.menu(0, 'signout')")},
+                            "Sign&nbsp;Out"]]); }
+            else { //not signed in
+                html.push(["div", {cla:"menulinemain"},
+                           ["a", {href:"#SignIn",
+                                  onclick:jt.fs("app.mode.menu(0,'signin')")},
+                            "Sign&nbsp;In"]]); }
+            html.push(["div", {cla:"menulinemain"},
+                       ["a", {href:"#about",
+                              onclick:jt.fs("app.mode.menu(0,'about')")},
+                        "About"]]); }
+        jt.out("menudiv", jt.tac2html(html));
+        mdiv = jt.byId("menudiv");
+        //mdiv.offsetWidth may be zero until all the images load.
+        leftx = window.innerWidth - (Math.max(mdiv.offsetWidth, 30) + 10);
+        mdiv.style.left = leftx + "px";
+        if(select) {
+            jt.byId("itemdispdiv").style.visibility = "hidden";
+            jt.byId("suppvisdiv").style.visibility = "hidden";
+            switch(select) {  //update title if needed
+            case "refmode": jt.out("refdiv", "Reference Mode"); break;
+            case "newtl": jt.out("refdiv", "Create Timeline"); break; }
+            switch(select) {  //next action
+            case "visual": changeMode("interactive"); break;
+            case "refmode": changeMode("reference"); break;
+            case "about": app.about.display(ms); break; 
+            case "signin": app.dlg.signin(); break;
+            case "myacc": app.dlg.myacc(); break;
+            case "newtl": app.tabular.tledit(); break;
+            case "signout": app.dlg.logout(); break; } }
+    }
+
+
     function start (tl) {
         ms = {divid:tl.divid, tl:tl, w:tl.width, h:30};  //reset mode state
         jt.byId("tcontdiv").style.top = String(ms.h) + "px";
@@ -143,25 +257,6 @@ app.mode = (function () {
             app.dlg.start(jt.fs("app.mode.showNext()")); }
         else {
             app.mode.next(); }
-    }
-
-
-    function next (quiet) {
-        var level = ms.levinf.level, 
-            dcon = app.db.displayContext();
-        if(ms.tl.pendingSaves >= ms.pointsPerSave) {
-            return app.dlg.saveprog(); }
-        if(level.levpts > level.ptscmp) {
-            ms.currpt = app.db.nextPoint();
-            return app.linear.clickCircle(ms.currpt); }
-        if(!level.svcmp) {
-            level.svcmp = true;
-            return app[level.svn].display(); }
-        //moving to the next level would have already been handled
-        else if(dcon.tlidx < dcon.ds.length) {
-            app.db.displayNextTimeline(); }
-        //if nothing else to do, display the finale with no continuation func
-        app.finale.display();
     }
 
 
@@ -244,17 +339,6 @@ app.mode = (function () {
     }
 
 
-    function interject (pt) {
-        if(ms.currpt) {  //have previously auto-selected point for display
-            series.push(ms.currpt);  //put it back on the queue for next
-            ms.currpt = null; }
-        if(!pt.visited && !pt.sv) {  //count interject point in traversal
-            if(series.length) {  //not interjecting from start dialog..
-                series = series.slice(1); } }  //remove lastmost series point
-        app.linear.clickCircle(pt);
-    }
-
-
     function isMatchingPoint (pt) {
         if(srchst) {
             if(srchst.qstr) {
@@ -267,111 +351,13 @@ app.mode = (function () {
     }
 
 
-    function toggleDisplay () {
-        if(ms.disp === "linear") {
-            // jt.byId("disptoggle").href = "#linearmode";
-            // jt.byId("disptoggleimg").src = "img/displinear.png";
-            jt.byId("abgdiv").style.display = "none";
-            jt.byId("lcontdiv").style.display = "none";
-            jt.byId("tcontdiv").style.display = "block";
-            jt.byId("itemdispdiv").style.visibility = "hidden";
-            ms.disp = "text";
-            app.tabular.display(); }  //rebuild contents each time
-        else {
-            // jt.byId("disptoggle").href = "#textmode";
-            // jt.byId("disptoggleimg").src = "img/disptext.png";
-            jt.byId("abgdiv").style.display = "block";
-            jt.byId("lcontdiv").style.display = "block";
-            jt.byId("tcontdiv").style.display = "none";
-            ms.disp = "linear"; }
-    }
-
-
-    function changeMode (chmode) {
-        chmode = chmode || mode;
-        showModeElements(chmode);
-        if(mode === "interactive") {
-            if(ms.disp === "text") {
-                toggleDisplay(); }
-            clearSearchState();
-            next(); }  //picks up at the appropriate point
-        else { //"reference"
-            if(ms.disp !== "text") {
-                toggleDisplay(); } }
-    }
-
-
-    function displayMenu (expand, select) {
-        var html, mdiv, leftx;
-        html = ["a", {href:"#menu", onclick:jt.fs("app.mode.menu(" + 
-                                                  !expand + ")")},
-                ["img", {src:"img/menuicon.png", //50x38
-                         style:"max-height:20px;max-width:30px;"}]];
-        if(expand) {
-            html = [["div", {cla:"menuline", style:"text-align:right"}, html]];
-            if(mode === "interactive") {
-                html.push(["div", {cla:"menulinemain"},
-                           ["a", {href:"#refmode",
-                                  onclick:jt.fs("app.mode.menu(0,'refmode')")},
-                            "Reference&nbsp;Mode"]]); }
-            else { //in reference mode
-                html.push(["div", {cla:"menulinemain"},
-                           ["a", {href:"#visual", 
-                                  onclick:jt.fs("app.mode.menu(0,'visual')")},
-                            "Interactive&nbsp;Mode"]]); }
-            if(app.user && app.user.tok) {
-                html.push(["div", {cla:"menulinemain"},
-                           ["a", {href:"#profile",
-                                  onclick:jt.fs("app.mode.menu(0, 'myacc')")},
-                            "My&nbsp;Account"]]);
-                html.push(["div", {cla:"menulinemain"},
-                           ["a", {href:"#create",
-                                  onclick:jt.fs("app.mode.menu(0, 'newtl')")},
-                            "Create&nbsp;Timeline"]]);
-                html.push(["div", {cla:"menulinemain"},
-                           ["a", {href:"#SignOut",
-                                  onclick:jt.fs("app.mode.menu(0, 'signout')")},
-                            "Sign&nbsp;Out"]]); }
-            else { //not signed in
-                html.push(["div", {cla:"menulinemain"},
-                           ["a", {href:"#SignIn",
-                                  onclick:jt.fs("app.mode.menu(0,'signin')")},
-                            "Sign&nbsp;In"]]); }
-            html.push(["div", {cla:"menulinemain"},
-                       ["a", {href:"#about",
-                              onclick:jt.fs("app.mode.menu(0,'about')")},
-                        "About"]]); }
-        jt.out("menudiv", jt.tac2html(html));
-        mdiv = jt.byId("menudiv");
-        //mdiv.offsetWidth may be zero until all the images load.
-        leftx = window.innerWidth - (Math.max(mdiv.offsetWidth, 30) + 10);
-        mdiv.style.left = leftx + "px";
-        if(select) {
-            jt.byId("itemdispdiv").style.visibility = "hidden";
-            jt.byId("suppvisdiv").style.visibility = "hidden";
-            switch(select) {  //update title if needed
-            case "refmode": jt.out("refdiv", "Reference Mode"); break;
-            case "newtl": jt.out("refdiv", "Create Timeline"); break; }
-            switch(select) {  //next action
-            case "visual": changeMode("interactive"); break;
-            case "refmode": changeMode("reference"); break;
-            case "about": app.about.display(ms); break; 
-            case "signin": app.dlg.signin(); break;
-            case "myacc": app.dlg.myacc(); break;
-            case "newtl": app.tabular.tledit(); break;
-            case "signout": app.dlg.logout(); break; } }
-    }
-
-
     return {
         start: function (tl) { start(tl); },
         next: function () { next(); },
         nextPass: function () { nextPass(); },
-        nextQuiet: function () { next(true); },
         chmode: function (mode) { changeMode(mode); },
         togdisp: function () { toggleDisplay(); },
         ptmatch: function (pt) { return isMatchingPoint(pt); },
-        interject: function (pt) { interject(pt); },
         menu: function (expand, select) { displayMenu(expand, select); },
         showNext: function () { showNextPoints(); },
         searchstate: function () { return srchst; },

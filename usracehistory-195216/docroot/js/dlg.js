@@ -149,31 +149,6 @@ app.dlg = (function () {
     }
 
 
-    function infoPicHTML (d) {
-        var html = "", name = "", i, ch;
-        if(d.pic) {
-            for(i = 0; i < d.pic.length - 4; i += 1) {
-                ch = d.pic.charAt(i);
-                if(ch === "-") {
-                    name += "-"; }
-                else if(ch === ch.toUpperCase()) {
-                    name += " " + ch.toUpperCase(); }
-                else {
-                    name += ch; } }
-            //PENDING: Find a way to deal with this kind of formatting issue
-            name = name.replace(/De\sBakey/g, "DeBakey");
-            name = name.split(" ");
-            name.forEach(function (na, idx) {
-                if(na.length === 1) {
-                    name[idx] = na + "."; } });
-            name = name.join(" ");
-            html = jt.tac2html(
-                [["img", {cla:"infopic", src:"img/datapics/" + d.pic}],
-                 ["div", {cla:"picnamediv"}, name]]); }
-        return html;
-    }
-
-
     function rememberCheckboxTAC (checked) {
         var html;
         html = ["div", {cla:"checkboxdiv"},
@@ -367,7 +342,8 @@ app.dlg = (function () {
                   ["span", {id:"genindspan"}, generationIndicator(d)]]],
                 ["div", {id:"dlgcontentdiv"},
                  ["div", {cla:"dlgtextdiv", id:"dlgtextdiv"},
-                  [["div", {cla:"dlgpicdiv", id:"dlgpicdiv"}, infoPicHTML(d)],
+                  [["div", {cla:"dlgpicdiv", id:"dlgpicdiv"},
+                    ["img", {cla:"infopic", src:"/ptpic?pointid=" + d.instid}]],
                    d.text]]],
                 ["div", {id:"dlgbuttondiv"}, buttons.tac]];
         displayDialog(d, jt.tac2html(html));
@@ -382,7 +358,7 @@ app.dlg = (function () {
     function closeInteractionTimeTracking () {
         var pt = tl.dlgdat,
             inter = pt.interact,
-            ptid = pt.ptid,
+            ptid = pt.instid,
             prog = app.db.displayContext().prog,
             pstr = "";
         inter.end = new Date();
@@ -452,75 +428,6 @@ app.dlg = (function () {
                    jt.byId("dlgdatequestion").innerHTML + "?");
             pt.yearmisscount = pt.yearmisscount || 0;
             pt.yearmisscount += 1; }
-    }
-
-
-    function levelDetailText (levinf) {
-        var idx = 0, offset, trav = {}, pts = app.data.pts;
-        if(levinf.level <= 1) {
-            return "Intro Level: Lesser Known Facts"; }
-        //Which points, and how many, can vary from one save to the next due
-        //to extracurricular clicking, and/or changes to the data itself.
-        //The years covered can vary depending on which usrace group is
-        //providing the points for the current pass.  Not exact.  Pretty
-        //much has to be guessed each time using heuristic traversal.
-        while(!pts[idx].sv || pts[idx].visited) {
-            idx += 1; }
-        trav.firstnewidx = idx;
-        offset = levinf.levPtsVis;
-        while(idx > 0) {
-            idx -= 1;
-            if(!pts[idx].sv && pts[idx].visited) {
-                offset -= 1; }
-            if(!offset) {
-                break; } }
-        trav.startidx = idx;
-        idx = trav.firstnewidx;
-        offset = levinf.levPtsAvail;
-        while(idx < pts.length) {
-            idx += 1;
-            if(!pts[idx].sv && !pts[idx].visited) {
-                offset -= 1; }
-            if(!offset) {
-                break; } }
-        trav.endidx = idx;
-        trav.start = pts[trav.startidx].start.year;
-        if(trav.start < 0) {
-            trav.start = Math.abs(trav.start) + " BCE"; }
-        return "Level " + levinf.level + ": " + trav.start +
-            " to " + pts[trav.endidx].start.year;
-    }
-
-
-    function showSaveConfirmationDialog (nextfstr) {
-        var html, subj, body, levinf = app.lev.progInfo();
-        levinf.savenum = Math.floor(levinf.levPtsVis / levinf.savelen);
-        subj = "Race History restore link";
-        body = "Click this link to restore your browser state:\n" +
-            "http://localhost:8080?" + app.db.getStateURLParams();
-        html = [["div", {cla: "dlgsavediv"},
-                 [["div", {id: "dlgsavelevinfdiv"}, 
-                   "Level " + levinf.level + " Save " + levinf.savenum],
-                  ["div", {id:"dlgsavelevdetdiv"}, levelDetailText(levinf)],
-                  // ["div", {id: "dlgsavebrowserdiv"}, 
-                  //  "Progress saved in browser."],
-                  ["div", {id:"dlgsaveservermsgdiv"},
-                   ["a", {href:"#signin", onclick:jt.fs("app.dlg.login()")},
-                    "Sign in to save progress"]],
-                  ["div", {id: "dlgsavelinkdiv"}, "building restore link..."]]],
-                ["div", {id: "dlgbuttondiv"},
-                 ["button", {type: "button", id: "nextbutton",
-                             onclick: nextfstr},
-                  "Ok"]]];
-        displayDialog(null, jt.tac2html(html));
-        //The mail href can sometimes take a long time to render leading
-        //to the dialog looking like it has crashed.  So dump out the 
-        //contents in a separate step.
-        setTimeout(function () {
-            jt.out("dlgsavelinkdiv", jt.tac2html(
-                ["a", {href: "mailto:?subject=" + jt.dquotenc(subj) + 
-                                    "&body=" + jt.dquotenc(body)},
-                 "Mail a Progress link"])); }, 100);
     }
 
 
@@ -668,8 +575,8 @@ app.dlg = (function () {
                         app.db.deserialize("AppUser", result[0]);
                         setAuthentication(cred.emailin, result);
                         //TEST: Uncomment to launch menu command post login
-                        setTimeout(function () { 
-                            app.mode.menu(0, "newtl"); }, 200);
+                        // setTimeout(function () { 
+                        //     app.mode.menu(0, "newtl"); }, 200);
                         if(bg) {  //Background mode, leave UI/flow alone.
                             return; }
                         app.dlg.close();
@@ -894,6 +801,33 @@ app.dlg = (function () {
     }
 
 
+    function formValuesToObject (fields, ptid) {
+        var obj = {};
+        if(ptid) {
+            obj.instid = ptid; }
+        fields.forEach(function (fspec) {
+            switch(fspec.type) {
+            case "text": 
+                obj[fspec.field] = jt.byId(fspec.field + "in").value;
+                break;
+            case "bigtext": 
+                obj[fspec.field] = jt.byId(fspec.field + "ta").innerHTML;
+                break;
+            case "codesel":
+                obj[fspec.field] = "";
+                fspec.options.forEach(function (opt, idx) {
+                    if(jt.byId(fspec.field + "opt" + idx).selected) {
+                        obj[fspec.field] += opt.value; } });
+                break;
+            case "image":
+                if(ptid && jt.byId(fspec.field + "in").files.length) {
+                    obj[fspec.field] = "/ptpic?pointid=" + ptid; }
+                break;
+            default: jt.err("formValuesToObject unknown fspec " + fspec); } });
+        return obj;
+    }
+
+
     function codeselchg () {
         var pt;
         if(jt.byId("codeshin")) {
@@ -979,34 +913,6 @@ app.dlg = (function () {
     }
 
 
-    function formValuesToObject (fields, ptid) {
-        var obj = {};
-        if(ptid) {
-            obj.instid = ptid;
-            obj.ptid = ptid; }
-        fields.forEach(function (fspec) {
-            switch(fspec.type) {
-            case "text": 
-                obj[fspec.field] = jt.byId(fspec.field + "in").value;
-                break;
-            case "bigtext": 
-                obj[fspec.field] = jt.byId(fspec.field + "ta").innerHTML;
-                break;
-            case "codesel":
-                obj[fspec.field] = "";
-                fspec.options.forEach(function (opt, idx) {
-                    if(jt.byId(fspec.field + "opt" + idx).selected) {
-                        obj[fspec.field] += opt.value; } });
-                break;
-            case "image":
-                if(ptid && jt.byId(fspec.field + "in").files.length) {
-                    obj[fspec.field] = "/ptpic?pointid=" + ptid; }
-                break;
-            default: jt.err("formValuesToObject unknown fspec " + fspec); } });
-        return obj;
-    }
-
-
     function monitorPointUpdateSubmit () {
         var seconds, subframe, fc, txt, ptid, pt, 
             okpre = "ptid: ", errpre = "failed: ";
@@ -1030,13 +936,12 @@ app.dlg = (function () {
                     fc.body.innerHTML = "Reset.";  //reset status iframe
                     jt.byId("savebutton").disabled = false;
                     jt.out("savebutton", "Save");
-                    return } } }
+                    return; } } }
         setTimeout(monitorPointUpdateSubmit, 100);
     }
 
 
     function ptsubclick () {
-        var pto;
         jt.byId("savebutton").disabled = true;  //prevent multiple uploads
         jt.out("savebutton", "Saving...");
         upldmon = {count:0};
@@ -1061,7 +966,6 @@ app.dlg = (function () {
         close: function (mode) { closeDialog(mode); },
         button: function (answer) { buttonPress(answer); },
         guessyear: function (year) { yearGuessButtonPress(year); },
-        save: function (nextfstr) { showSaveConfirmationDialog(nextfstr); },
         nextColorTheme: function () { nextColorTheme(); },
         signin: function () { showSignInDialog(); },
         genentry: function () { showGenerationEntryForm(); },
