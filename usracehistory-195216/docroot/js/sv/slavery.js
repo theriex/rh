@@ -158,7 +158,7 @@ app.slavery = (function () {
              codes:"B", orgid:"1", source:"ksep: B26"},
             {date:"1781",
              text:"Slaves in Massachusetts begin to sue for manumission with the court ruling that perpetual servitude is unconstitutional. Slavery fades rapidly with only isolated cases remaining. Blacks in taxable categories are granted suffrage.",
-             code:"B", orgid:"1", source:"ksep: B27"},
+             codes:"B", orgid:"1", source:"ksep: B27"},
             {date:"1787",
              text:"Congress passes the Northwest Ordinance, which forbids slavery in the area between the Appalachian Mountains, the Mississippi River, and the Ohio River. It provides the basis for white settlement, and stipulates that Native Americans’ land should never be taken from them without their consent.",
              codes:"BN", orgid:"1", source:"ksep: B28"},
@@ -332,7 +332,7 @@ app.slavery = (function () {
             .data(tlpts)
             .enter().append("rect")
             .attr("class", "ksbar")
-            .attr("id", function (d) { return "kb" + d.cid; })
+            .attr("id", function (d) { return "kb" + d.instid; })
             .attr("x", function (d) { return ks.x(d.tc); })
             .attr("y", 6)  //unstick from top of div to make things balance
             .attr("width", 3)
@@ -341,7 +341,7 @@ app.slavery = (function () {
             .style("opacity", 0.2)
             .on("mouseover", function () { this.style.opacity = 1.0; })
             .on("mouseout", function () { this.style.opacity = 0.2; })
-            .on("click", function (d) { app.slavery.selcid(d.cid); });
+            .on("click", function (d) { app.slavery.selinstid(d.instid); });
         mid = {x: Math.round(tl.width2 / 2) + tl.margin.left,
                y: Math.round(tl.height / 2) + tl.margin.top};
         d3.select("#suppvisdiv")
@@ -372,11 +372,11 @@ app.slavery = (function () {
         //add the display points from the suppvis, overwriting the default
         //state toggle point to include display text.
         tlpts.forEach(function (pt) {
-            byy[pt.start.year] = {text:pt.text, cid:pt.cid}; });
+            byy[pt.start.year] = {text:pt.text, instid:pt.instid}; });
         //make a sorted array out of that to use as a sequence
         Object.keys(byy).forEach(function (year) {
             ani.tes.push({year:year, text:byy[year].text, 
-                          cid:byy[year].cid}); });
+                          instid:byy[year].instid}); });
         ani.tes.sort(function (a, b) {
             return a.year - b.year; });
         ani.idx = 0;
@@ -485,13 +485,13 @@ app.slavery = (function () {
     }
 
 
-    function displayPointById (cid) {
+    function displayPointById (instid) {
         var teindex = -1;
         ani.tes.forEach(function (te, idx) {
-            if(cid === te.cid) {
+            if(instid === te.instid) {
                 teindex = idx; } });
         if(teindex < 0) {
-            jt.log("displayPointById: " + cid + " not found.");
+            jt.log("displayPointById: " + instid + " not found.");
             return; }
         ani.idx = teindex;
         displayPoint();
@@ -586,7 +586,7 @@ app.slavery = (function () {
     return {
         display: function (tl, endf) { display(tl, endf); },
         transport: function (command) { transport(command); },
-        selcid: function (cid) { displayPointById(cid); },
+        selinstid: function (instid) { displayPointById(instid); },
         selyear: function (year) { displayPointByYear(year); },
         stclick: function (stid) { stateClick(stid); },
         stunclick: function (stid) { stateUnclick(stid); },

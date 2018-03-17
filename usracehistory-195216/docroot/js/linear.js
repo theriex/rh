@@ -167,8 +167,8 @@ app.linear = (function () {
             }
         if(!app.mode.ptmatch(pt)) {
             return "#ccc"; }
-        if(pt.visited) {
-            return tl.heat(jt.isoString2Time(pt.visited)); }
+        if(pt.isoShown) {
+            return tl.heat(jt.isoString2Time(pt.isoShown)); }
         return "#000";
     }
 
@@ -194,7 +194,7 @@ app.linear = (function () {
 
 
     function markPointVisited (d) {
-        d.visited = (new Date()).toISOString();
+        d.isoShown = (new Date()).toISOString();
         tl.focus.select("#" + d.id)
             .style("fill", fillColorForPoint(d));
     }

@@ -345,7 +345,7 @@ app.mode = (function () {
                 if(pt.text.toLowerCase().indexOf(srchst.qstr) < 0) {
                     return false; } }
             if(srchst.tlcode) {
-                if(pt.code.indexOf(srchst.tlcode) < 0) {
+                if(pt.codes.indexOf(srchst.tlcode) < 0) {
                     return false; } } }
         return true;
     }

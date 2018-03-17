@@ -283,10 +283,10 @@ app.levelup = (function () {
         var range = {spt:null, ept:null};
         tl.pts.forEach(function (pt) {
             if(!range.spt) {
-                if(!pt.visited) {
+                if(!pt.isoShown) {
                     range.spt = pt; } }
             else if(rangelimit > 0) {
-                if(!pt.visited) {
+                if(!pt.isoShown) {
                     range.ept = pt;
                     rangelimit -= 1; } } });
         return range;

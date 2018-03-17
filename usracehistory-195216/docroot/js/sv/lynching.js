@@ -618,7 +618,7 @@ app.lynching = (function () {
             date = new Date();
             stats.startstamp = app.db.wallClockTimeStamp(stats.startDate);
             stats.duration = app.db.getElapsedTime(date, stats.startDate);
-            stats.visited = date.toISOString();
+            stats.isoShown = date.toISOString();
             d3.select("#suppvisdiv")
                 .style("visibility", "hidden");
             endf(); }
