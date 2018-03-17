@@ -333,12 +333,6 @@ app.mode = (function () {
     }
 
 
-    function nextPass () {
-        app.dlg.nextColorTheme();
-        showNextPoints();
-    }
-
-
     function isMatchingPoint (pt) {
         if(srchst) {
             if(srchst.qstr) {
@@ -354,9 +348,7 @@ app.mode = (function () {
     return {
         start: function (tl) { start(tl); },
         next: function () { next(); },
-        nextPass: function () { nextPass(); },
         chmode: function (mode) { changeMode(mode); },
-        togdisp: function () { toggleDisplay(); },
         ptmatch: function (pt) { return isMatchingPoint(pt); },
         menu: function (expand, select) { displayMenu(expand, select); },
         showNext: function () { showNextPoints(); },

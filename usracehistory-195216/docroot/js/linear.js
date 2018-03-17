@@ -426,17 +426,10 @@ app.linear = (function () {
     }
 
 
-    function search () {
-        tl.focus.selectAll("circle")
-            .attr("fill", function(d) { return fillColorForPoint(d); });
-    }
-
-
     return {
         display: function () { display(); },
         clickCircle: function (pt) { clickCircle(pt); },
         levelCompleted: function (levpi) { app.levelup.display(tl, levpi); },
-        search: function () { search(); },
         tldata: function () { return tl; },
         unzoom: function () { unzoom(); },
         timeline: function () { return tl; }

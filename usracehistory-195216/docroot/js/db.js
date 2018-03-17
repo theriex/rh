@@ -530,7 +530,6 @@ app.db = (function () {
             
         
     return {
-        noteStartTime: function () { noteStartTime(); },
         wallClockTimeStamp: function (d) { return wallClockTimeStamp(d); },
         getElapsedTime: function (sd, ed) { return getElapsedTime(sd, ed); },
         parseDate: function (pt) { parseDate(pt); },
