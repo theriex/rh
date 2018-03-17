@@ -179,33 +179,6 @@ app.db = (function () {
     }
 
 
-    function getStateURLParams () {
-        var pstr = "", pb = "", pc = 0, pidx = 0, pbm = 100;
-        pstr += "id=" + (app.userId || 0);
-        pstr += "&st=" + app.startTime;
-        app.data.suppvis.forEach(function (sv) {
-            if(sv.visited) {
-                pstr += "&" + sv.code + "=" + sv.startstamp + ":" + 
-                    sv.duration; } });
-        app.data.pts.forEach(function (pt) {
-            if(pt.visited && !pt.sv) {
-                if(pb) {
-                    pb += ":"; }
-                pb += String(pt.duration) + pt.cid;
-                if(pt.remembered) {
-                    pb += "r"; }
-                pc += 1;
-                if(pc >= pbm) {
-                    pstr += "&pb" + pidx + "=" + pb;
-                    pb = "";
-                    pc = 0;
-                    pidx += 1; } } });
-        if(pb) {  //append partially filled points block
-            pstr += "&pb" + pidx + "=" + pb; }
-        return pstr;
-    }
-
-
     function describePoints () {
         jt.log("Point distributions for " + dcon.tl.name + 
                " (" + dcon.tl.points.length + " for display)");
@@ -217,7 +190,7 @@ app.db = (function () {
 
     function notePointCounts (pt) {
         var i;
-        dcon.stat = dcon.stat || {
+        dcon.stat = {
             N: {count:0, name:"Native American"},
             B: {count:0, name:"African American"},
             L: {count:0, name:"Latino/as"},
@@ -286,13 +259,6 @@ app.db = (function () {
             centerYCoordinates(pt, ctx); });
         describePoints();
         dcon.tl.dataPrepared = true;
-    }
-
-
-    function saveState () {
-        var state = getStateURLParams();
-        jt.log("db.saveState: " + state);
-        window.localStorage.setItem("savestatestr", state);
     }
 
 
@@ -567,8 +533,6 @@ app.db = (function () {
         noteStartTime: function () { noteStartTime(); },
         wallClockTimeStamp: function (d) { return wallClockTimeStamp(d); },
         getElapsedTime: function (sd, ed) { return getElapsedTime(sd, ed); },
-        getStateURLParams: function () { return getStateURLParams(); },
-        saveState: function () { saveState(); },
         parseDate: function (pt) { parseDate(pt); },
         makeCoordinates: function (pt, ctx) { makeCoordinates(pt, ctx); },
         describeDateFormat: function () { return describeDateFormat(); },

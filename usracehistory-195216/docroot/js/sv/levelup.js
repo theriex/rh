@@ -39,12 +39,13 @@ app.levelup = (function () {
 
 
     function makeStackData (yg) {
-        var rd = [], xg, gd = [], cg = null;
+        var rd = [], xg, gd = [], cg = null, stat;
         yg = yg || 10;  //by default group years into decades
-        app.data.pts.forEach(function (pt) {
+        stat = app.db.displayContext().stat;
+        tl.pts.forEach(function (pt) {
             var dp = {tc:pt.tc};
-            app.data.timelines.forEach(function (tl) {
-                dp[tl.code] = (pt.code.indexOf(tl.code) >= 0)? 1 : 0; });
+            Object.keys(stat).forEach(function (code) {
+                dp[code] = (pt.codes.indexOf(code) >= 0)? 1 : 0; });
             rd.push(dp); });
         rd.sort(function (a, b) { return a.tc - b.tc; });
         xg = 1600;  //everything before this year is lumped together
@@ -55,24 +56,26 @@ app.levelup = (function () {
                 xg = Math.floor(dat.tc) + yg; }
             if(!cg) {
                 cg = {tc:xg};
-                app.data.timelines.forEach(function (tl) {
-                    cg[tl.code] = dat[tl.code]; }); }
+                Object.keys(stat).forEach(function (code) {
+                    cg[code] = dat[code]; }); }
             else {
-                app.data.timelines.forEach(function (tl) {
-                    cg[tl.code] += dat[tl.code]; }); } });
+                Object.keys(stat).forEach(function (code) {
+                    cg[code] += dat[code]; }); } });
         //convert data to percentages
         gd.forEach(function (dat) {
             var ttl = 0;
-            app.data.timelines.forEach(function (tl) {
-                ttl += dat[tl.code]; });
-            app.data.timelines.forEach(function (tl) {
-                var val = dat[tl.code];
+            Object.keys(stat).forEach(function (code) {
+                ttl += dat[code]; });
+            Object.keys(stat).forEach(function (code) {
+                var val = dat[code];
                 val = Math.round((val / ttl) * 10000) / 10000;
-                dat[tl.code] = val; }); });
+                dat[code] = val; }); });
         return gd;
     }
 
 
+    //Background graphic is a stacked area chart covering the timeline point
+    //distributions across the race codes. Ambient info.
     function displayStacked () {
         sa.dat = makeStackData(5);
         sa.ks = ["N",      "B",      "L",      "A",      "M",      "R"];
@@ -278,12 +281,12 @@ app.levelup = (function () {
 
     function rangePoints (rangelimit) {
         var range = {spt:null, ept:null};
-        app.data.pts.forEach(function (pt) {
+        tl.pts.forEach(function (pt) {
             if(!range.spt) {
-                if(!pt.visited && !pt.sv) {
+                if(!pt.visited) {
                     range.spt = pt; } }
             else if(rangelimit > 0) {
-                if(!pt.visited && !pt.sv) {
+                if(!pt.visited) {
                     range.ept = pt;
                     rangelimit -= 1; } } });
         return range;

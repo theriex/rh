@@ -164,13 +164,13 @@ app.dlg = (function () {
         var idx, dp, off, years = [pt.start.year];
         idx = pt.currdataindex - 1;
         while(idx >= 0 && years.length < flank) {
-            dp = app.data.pts[idx];
+            dp = tl.pts[idx];
             if(dp.start.year !== years[0]) {
                 years.unshift(dp.start.year); }
             idx -= 1; }
         idx = pt.currdataindex + 1;
-        while(idx < app.data.pts.length && years.length <= 2 * flank) {
-            dp = app.data.pts[idx];
+        while(idx < tl.pts.length && years.length <= 2 * flank) {
+            dp = tl.pts[idx];
             if(dp.start.year !== years[years.length - 1]) {
                 years.push(dp.start.year); }
             idx += 1; }
@@ -194,16 +194,9 @@ app.dlg = (function () {
 
 
     function pointCodeNamesCSV (codes) {
-        var cidx, code, tidx, ptc, csv = "";
-        for(cidx = 0; cidx < codes.length; cidx += 1) {
-            code = codes.charAt(cidx);
-            for(tidx = 0; tidx < app.data.ptcs.length; tidx += 1) {
-                ptc = app.data.ptcs[tidx];
-                if(ptc.code === code) {
-                    if(csv) {
-                        csv += ", "; }
-                    csv += ptc.name;
-                    break; } } }
+        var csv = "", stat = app.db.displayContext().stat;
+        codes.split("").forEach(function (code) {
+            csv.csvappend(stat[code].name); });
         return csv;
     }
 

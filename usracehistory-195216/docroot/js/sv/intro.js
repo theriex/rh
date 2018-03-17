@@ -216,38 +216,6 @@ app.intro = (function () {
     }
 
 
-    function computeEstimatedCompletionTime () {
-        var t = 0;
-        app.data.pts.forEach(function (pt) {
-            if(!pt.visited && !pt.sv) {
-                //takes me avg 11 seconds/pt. Figure double if unfamiliar.
-                t += 22; } }); 
-        app.data.suppvis.forEach(function (sv) {
-            if(!sv.visited) {
-                //figure 5 minutes for each suppvis on average
-                t += 5 * 60; } });
-        chart.vu.avgct = t;   //count in seconds
-    }
-
-
-    function updateCompletionTimeDisplay () {
-        var t, hr, min, sec;
-        chart.vu.avgct -= 1;
-        t = Math.max(chart.vu.avgct, 0);
-        sec = t % 60;
-        if(sec < 10) {
-            sec = "0" + sec; }
-        t = Math.floor(t / 60);
-        min = t % 60;
-        if(min < 10) {
-            min = "0" + min; }
-        hr = Math.floor(t / 60);
-        jt.out("sv0timediv", "Estimated completion time " + 
-               hr + ":" + min + ":" + sec);
-        setTimeout(updateCompletionTimeDisplay, 1000);
-    }
-
-
     function showCloseButton () {
         jt.out("sv0closediv", jt.tac2html(
             ["button", {type:"button", cla:"ghostbutton",
@@ -300,7 +268,7 @@ app.intro = (function () {
                              onclick:jt.fs("app.intro.actlink('fav')")},
                        "Favorites"]); }
         jt.out("sv0linkdiv", jt.tac2html(html));
-        setTimeout(showCloseButton, 5000);
+        setTimeout(showCloseButton, 4000);
     }
 
 
@@ -330,9 +298,7 @@ app.intro = (function () {
 
 
     function initInteractiveText () {
-        computeEstimatedCompletionTime();
-        updateCompletionTimeDisplay();
-        setTimeout(initLinkText, 3200);
+        setTimeout(initLinkText, 800);
     }
 
 

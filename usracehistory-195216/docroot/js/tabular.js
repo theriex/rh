@@ -45,27 +45,6 @@ app.tabular = (function () {
     }
 
 
-    function textIntroHTML () {
-        var html = "";
-        app.data.suppvis.forEach(function (sv) {
-            var sm = sv.module;
-            if(sv.menuselect) {
-                if(app[sm]) {
-                    sm = jt.tac2html(
-                        ["a", {href:"#" + sm,
-                               onclick:jt.fs("app." + sm + ".display()")},
-                         sv.name]); }
-                else {
-                    sm = "<i>" + sv.name + "</i>"; }
-                if(html) {
-                    html += ", "; }
-                html += sm; } });
-        html = "Supplemental visualizations: " + html + ".";
-        html = "<b><i>Reference mode</i></b>: To filter the display, enter text to match. You can also select a point grouping. " + html;
-        return html;
-    }
-
-
     function mayEditPoint (pt) {  //if pt is null, returns may create
         if(!app.user.acc || !app.user.acc.lev) {
             return false; }
@@ -131,7 +110,7 @@ app.tabular = (function () {
             "  font-weight:bold; }\n" +
             "</style>\n" +
             "</head><body>";
-        app.data.pts.forEach(function (pt, idx) {
+        app.allpts.forEach(function (pt, idx) {
             if(idx && (!dnld.srchst || app.mode.ptmatch(pt))) {
                 txt += "\n" + jt.tac2html(pointTAC(pt, idx)); } });
         txt += "</body></html>\n";
@@ -141,7 +120,7 @@ app.tabular = (function () {
 
     function getTSVDataURI () {
         var txt = "Date\tText\n";
-        app.data.pts.forEach(function (pt, idx) {
+        app.allpts.forEach(function (pt, idx) {
             if(idx && (!dnld.srchst || app.mode.ptmatch(pt))) {
                 txt += pt.date + "\t" + cleanTDValue(pt.text) + "\n"; } });
         return "data:text/plain;charset=utf-8," + encodeURIComponent(txt);
@@ -150,7 +129,7 @@ app.tabular = (function () {
 
     function getJSONDataURI () {
         var txt, pts = [];
-        app.data.pts.forEach(function (pt, idx) {
+        app.allpts.forEach(function (pt, idx) {
             if(idx && (!dnld.srchst || app.mode.ptmatch(pt))) {
                 pts.push(pt); } });
         txt = JSON.stringify(pts);

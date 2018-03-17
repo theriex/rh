@@ -17,8 +17,7 @@ var app = {},  //Global container for application level funcs and values
 
     app.init = function () {
         var href = window.location.href,
-            modules = ["js/data",     //all the points for display
-                       "js/db",       //data access and state
+            modules = ["js/db",       //data access and state
                        "js/dlg",      //dialog interaction
                        "js/linear",   //linear timeline display
                        "js/tabular",  //text timeline display
