@@ -109,6 +109,7 @@ class RecentPoints(webapp2.RequestHandler):
         appuser.srverr(self, 500, "Not implemented yet")
 
 
+## PENDING: change to pubpts and retrieve all points where access == "public".
 class AllPoints(webapp2.RequestHandler):
     def get(self):
         acc = appuser.get_authenticated_account(self, False)
