@@ -312,7 +312,7 @@ app.db = (function () {
                 //move all visited points from unused into randpts
                 prog = getTimelineProgressRecord(tl);
                 prog.pts.csvarray().forEach(function (pp) {
-                    idx = pointIndexForId(pp.split(":")[0], tl.unused);
+                    idx = pointIndexForId(pp.split(";")[0], tl.unused);
                     if(idx >= 0) {
                         tl.randpts.push(tl.unused[idx]);
                         tl.unused.splice(idx, 1); } });
@@ -337,8 +337,8 @@ app.db = (function () {
         var svsdone = true, prog = getTimelineProgressRecord(tl);
         prog.ttlpts = 0;
         prog.cmplpts = 0;
-        tl.cids.csvarray().forEach(function (cid) {
-            if(prog.pts.csvcontains(cid)) {
+        tl.points.forEach(function (pt) {
+            if(prog.pts.indexOf(pt.instid) >= 0) {
                 prog.cmplpts += 1; }
             prog.ttlpts += 1; });
         if(prog.cmplpts === prog.ttlpts) {
@@ -355,12 +355,14 @@ app.db = (function () {
 
 
     function displayNextTimeline () {
+        var st;
         dcon.tl = null;
         dcon.prog = null;
         dcon.tlidx = 0;
-        while(dcon.ds[dcon.tlidx].ctype.startsWith("Timelines") ||
-              timelineCompleted(dcon.ds[dcon.tlidx])) {
-            dcon.tlidx += 1; }
+        st = dcon.ds[dcon.tlidx];
+        while(st.ctype.startsWith("Timelines") || timelineCompleted(st)) {
+            dcon.tlidx += 1;
+            st = dcon.ds[dcon.tlidx]; }
         if(dcon.tlidx < dcon.ds.length) {
             dcon.tl = dcon.ds[dcon.tlidx];
             prepData(); }

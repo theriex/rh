@@ -48,7 +48,6 @@ class AppUser(db.Model):
     # app working values
     lang = db.StringProperty()      # preferred lang code for data points
     settings = db.TextProperty()    # JSON object (age, parent's age etc)
-    rempts = db.TextProperty()      # CSV of remembered point ids
     remtls = db.TextProperty()      # JSON [] remembered timeline ids/names
     completed = db.TextProperty()   # JSON [] id, name, firstCompl, latestComp
     started = db.TextProperty()     # JSON [] timeline progress instances
@@ -236,9 +235,8 @@ def get_authenticated_account(handler, create):
             acc = AppUser(email=params["email"], password=params["password"],
                           status="Pending", actsends="", actcode="", name="",
                           title="", web="", lang="en-US", settings="",
-                          remtls="", rempts="", completed="", started="",
-                          build="", orgid=0, lev=0, created=now, 
-                          accessed=now + ";1")
+                          remtls="", completed="", started="", built="", 
+                          orgid=0, lev=0, created=now, accessed=now + ";1")
         else:
             return srverr(handler, 404, "Account not found.")
     else: # have acc
@@ -305,8 +303,8 @@ class UpdateAccount(webapp2.RequestHandler):
             if params["actcode"] == acc.actcode:
                 acc.status = "Active"
         params = read_params(self, ["updemail", "updpassword", "name", "url",
-                                    "shoutout", "lang", "settings", "remtls",
-                                    "rempts", "completed", "started", "built"])
+                                    "shoutout", "lang", "settings", 
+                                    "remtls", "completed", "started", "built"])
         for fieldname in params:
             attr = fieldname
             val = params[fieldname]
