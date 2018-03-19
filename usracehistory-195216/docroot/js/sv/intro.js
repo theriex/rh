@@ -292,7 +292,7 @@ app.intro = (function () {
         else {
             plat.type = "pc"; }
         //Removed "You might be speedier or more thorough" chatter.
-        jt.out("sv0textdiv", "This will take more than one visit.");
+        jt.out("sv0textdiv", "Completion will take more than one visit.");
         setTimeout(displayActionLink, 1200);
     }
 

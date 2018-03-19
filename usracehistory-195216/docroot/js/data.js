@@ -224,7 +224,7 @@ app.data = {
       text:"By this time, over 900,000 slaves have been brought to Latin America. In the next century, 2,750,000 are added to that total. " },
     { code:"N", cid:"N17",
       date:"1600’s",
-      text:"Genocide of Native Americans begins, resulting in the death of over nine million Native Americans by 1700. Methods used to kill Native Americans during this genocidal period included lynching and the deliberate and inadvertent introduction of diseases by the colonists, forced migration and other tactics. This treatment of Native Americans continued into the 1700s, when many were captured and made to work on plantations with African American slaves." },
+      text:"Genocide of Native Americans begins, resulting in the death of over nine million Native Americans by 1700. Methods used to kill Native Americans during this genocidal period included lynching, deliberate and inadvertent introduction of diseases, forced migration and other tactics. This treatment of Native Americans continued into the 1700s, when many were captured and made to work on plantations with African American slaves." },
     { code:"B", cid:"B7",
       date:"1601",
       text:"A law protecting Black slaves from abusive owners is passed in Massachusetts." },

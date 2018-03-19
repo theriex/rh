@@ -279,6 +279,9 @@ app.db = (function () {
             app.user.acc.started.forEach(function (st) {
                 if(st.tlid === tl.instid) {
                     prog = st; } }); }
+        prog.st = prog.st || new Date().toISOString();
+        prog.svs = prog.svs || "";
+        prog.pts = prog.pts || "";
         return prog;
     }
 
@@ -334,20 +337,21 @@ app.db = (function () {
 
 
     function timelineCompleted (tl) {
-        var svsdone = true, prog = getTimelineProgressRecord(tl);
-        prog.ttlpts = 0;
-        prog.cmplpts = 0;
+        var prog = getTimelineProgressRecord(tl);
+        prog.ptsttl = 0;
+        prog.ptscmp = 0;
         tl.points.forEach(function (pt) {
             if(prog.pts.indexOf(pt.instid) >= 0) {
-                prog.cmplpts += 1; }
-            prog.ttlpts += 1; });
-        if(prog.cmplpts === prog.ttlpts) {
-            if(prog.svs) {
-                tl.svs.csvarray().forEach(function (sv) {
-                    if(prog.svs.indexOf(sv) < 0) {
-                        svsdone = false; } }); }
-            if(svsdone) {
-                return true; } }
+                prog.ptscmp += 1; }
+            prog.ptsttl += 1; });
+        prog.svsttl = 0;
+        prog.svscmp = 0;
+        tl.svs.csvarray().forEach(function (sv) {
+            if(prog.svs.indexOf(sv) >= 0) {
+                prog.svscmp += 1; }
+            prog.svsttl += 1; });
+        if(prog.ptscmp >= prog.ptsttl && prog.svscmp >= prog.svsttl) {
+            return true; }
         dcon.tl = tl;
         dcon.prog = prog;
         return false;

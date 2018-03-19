@@ -326,8 +326,12 @@ app.dlg = (function () {
 
 
     function showInfoDialog (d) {
-        var buttons, html;
+        var buttons, pichtml = "", html;
         tl.dlgdat = d;
+        if(d.pic) {
+            pichtml = ["div", {cla:"dlgpicdiv", id:"dlgpicdiv"},
+                       ["img", {cla:"infopic", 
+                                src:"/ptpic?pointid=" + d.instid}]]; }
         buttons = infoButtons(d);
         html = [["div", {id:"genentrydiv"}],
                 ["div", {id:"dlgdatediv"}, 
@@ -335,8 +339,7 @@ app.dlg = (function () {
                   ["span", {id:"genindspan"}, generationIndicator(d)]]],
                 ["div", {id:"dlgcontentdiv"},
                  ["div", {cla:"dlgtextdiv", id:"dlgtextdiv"},
-                  [["div", {cla:"dlgpicdiv", id:"dlgpicdiv"},
-                    ["img", {cla:"infopic", src:"/ptpic?pointid=" + d.instid}]],
+                  [pichtml,
                    d.text]]],
                 ["div", {id:"dlgbuttondiv"}, buttons.tac]];
         displayDialog(d, jt.tac2html(html));

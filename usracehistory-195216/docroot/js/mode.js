@@ -253,7 +253,8 @@ app.mode = (function () {
         displayMenu();
         ms.pointsPerSave = app.db.displayContext().tl.pointsPerSave;
         app.dlg.init(tl);
-        if(ms.levinf.levnum === 1 && ms.levinf.levpcnt === 0) {
+        if(ms.levinf.levnum === 1 && ms.levinf.levpcnt === 0 &&
+           app.db.displayContext().tlidx === 0) {
             app.dlg.start(jt.fs("app.mode.showNext()")); }
         else {
             app.mode.next(); }

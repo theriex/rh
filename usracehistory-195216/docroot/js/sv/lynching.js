@@ -6,7 +6,6 @@ app.lynching = (function () {
 
     var stats = null,
         tl = null,
-        endf = null,
         chart = {colors:{bg: "#fef6d7",
                          other: "red",
                          black: "brown",
@@ -602,10 +601,13 @@ app.lynching = (function () {
     }
 
 
-    function display (timeline, endfunc) {
-        stats = {startDate:new Date()};
-        tl = timeline || app.linear.tldata();
-        endf = endfunc || app.dlg.close;
+    function display () {
+        var ctx = {yr: 0, dy: 0, maxy: 0};
+        stats = {start:new Date()};
+        tl = app.linear.timeline();
+        tlpts.forEach(function (pt) {
+            app.db.parseDate(pt);
+            app.db.makeCoordinates(pt, ctx); });
         initData();
         initDisplayElements();
     }
@@ -615,18 +617,16 @@ app.lynching = (function () {
         var date;
         if(!ani.finished) {
             ani.finished = true;
-            date = new Date();
-            stats.startstamp = app.db.wallClockTimeStamp(stats.startDate);
-            stats.duration = app.db.getElapsedTime(date, stats.startDate);
-            stats.isoShown = date.toISOString();
+            stats.end = new Date();
+            app.db.svdone("lynching", stats.start, stats.end);
+            app.dlg.saveprog();
             d3.select("#suppvisdiv")
-                .style("visibility", "hidden");
-            endf(); }
+                .style("visibility", "hidden"); }
     }
 
 
     return {
-        display: function (tl, endf) { display(tl, endf); },
+        display: function () { display(); },
         finish: function () { finish(); },
         datapoints: function () { return datapoints(); }
     };

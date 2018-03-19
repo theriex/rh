@@ -6,7 +6,6 @@ app.slavery = (function () {
 
     var stats = null,
         tl = null,
-        endf = null,
         chart = {colors: {bg: "#fef6d7", 
                           map: {neutral:"#fadb66",
                                 slavery:"#cc6c6c",
@@ -472,11 +471,10 @@ app.slavery = (function () {
     }
 
 
-    function display (timeline, endfunc) {
+    function display () {
         var ctx = {yr: 0, dy: 0, maxy: 0};
-        stats = {startDate: new Date()};
-        tl = timeline || app.linear.tldata();
-        endf = endfunc || app.dlg.close;
+        stats = {start: new Date()};
+        tl = app.linear.timeline();
         tlpts.forEach(function (pt) {
             app.db.parseDate(pt);
             app.db.makeCoordinates(pt, ctx); });
@@ -573,18 +571,16 @@ app.slavery = (function () {
         var date;
         if(!ani.finished) {
             ani.finished = true;
-            date = new Date();
-            stats.startstamp = app.db.wallClockTimeStamp(stats.startDate);
-            stats.duration = app.db.getElapsedTime(date, stats.startDate);
-            stats.visited = date.toISOString();
+            stats.end = new Date();
+            app.db.svdone("slavery", stats.start, stats.end);
+            app.dlg.saveprog();
             d3.select("#suppvisdiv")
-                .style("visibility", "hidden");
-            endf(); }
+                .style("visibility", "hidden"); }
     }
 
 
     return {
-        display: function (tl, endf) { display(tl, endf); },
+        display: function () { display(); },
         transport: function (command) { transport(command); },
         selinstid: function (instid) { displayPointById(instid); },
         selyear: function (year) { displayPointByYear(year); },
