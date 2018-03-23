@@ -179,18 +179,20 @@ app.db = (function () {
     }
 
 
-    function describePoints () {
-        jt.log("Point distributions for " + dcon.tl.name + 
-               " (" + dcon.tl.points.length + " for display)");
-        Object.keys(dcon.stat).forEach(function (key) {
-            var stat = dcon.stat[key];
+    function describePoints (tl) {
+        if(!tl.points || !tl.points.length) {
+            return jt.log(tl.name + " has no points"); }
+        jt.log("Point distributions for " + tl.name + 
+               " (" + tl.points.length + " total)");
+        Object.keys(tl.stat).forEach(function (key) {
+            var stat = tl.stat[key];
             jt.log(("    " + stat.count).slice(-4) + " " + stat.name); });
     }
 
 
-    function notePointCounts (pt) {
+    function notePointCounts (tl, pt) {
         var i;
-        dcon.stat = {
+        tl.stat = tl.stat || {
             N: {count:0, name:"Native American"},
             B: {count:0, name:"African American"},
             L: {count:0, name:"Latino/as"},
@@ -198,8 +200,8 @@ app.db = (function () {
             M: {count:0, name:"Middle East and North Africa"},
             R: {count:0, name:"Multiracial"}};
         for(i = 0; i < pt.codes.length; i += 1) {
-            if(dcon.stat[pt.codes.charAt(i)]) {
-                dcon.stat[pt.codes.charAt(i)].count += 1; } }
+            if(tl.stat[pt.codes.charAt(i)]) {
+                tl.stat[pt.codes.charAt(i)].count += 1; } }
     }
 
 
@@ -239,26 +241,25 @@ app.db = (function () {
     //    isoShown: ISO date when last shown
     //    isoClosed: ISO date when last completed (ok, right date, etc)
     //    tagCodes: rku1234 (see appuser.py AppUser class def comment)
-    function prepData () {
+    function prepData (tl) {
         var ctx = {yr: 0, dy: 0, maxy: 0},
             ny = new Date().getFullYear();
-        if(dcon.tl.dataPrepared) {
-            return jt.log("data already prepared for " + dcon.tl.name); }
-        jt.out("rhcontentdiv", "Preparing data...");
-        dcon.tl.points.forEach(function (pt, idx) {
-            notePointCounts(pt);
+        jt.log("Preparing data for " + tl.name + "...");
+        tl.points = tl.preb || [];
+        tl.points.forEach(function (pt, idx) {
+            notePointCounts(tl, pt);
             pt.currdataindex = idx;
             parseDate(pt);
             makeCoordinates(pt, ctx);
             makePointIdent(pt, ny); });
         dcon.maxy = ctx.maxy;
         ctx = {yr: 0, grp: null};
-        dcon.tl.points.sort(function (a, b) {  //verify in chrono order
+        tl.points.sort(function (a, b) {  //verify in chrono order
             return compareStartDate(a, b); });
-        dcon.tl.points.forEach(function (pt) {
+        tl.points.forEach(function (pt) {
             centerYCoordinates(pt, ctx); });
-        describePoints();
-        dcon.tl.dataPrepared = true;
+        describePoints(tl);
+        tl.dataPrepared = true;
     }
 
 
@@ -272,12 +273,129 @@ app.db = (function () {
     }
 
 
-    function getTimelineProgressRecord (tl) {
-        var prog = {tlid:tl.instid, st:new Date().toISOString(), 
+    function lastShown (csv, id) {
+        //return the ISO time stamp when the point was last shown, or ""
+        var idx, str, pes;
+        idx = csv.indexOf(id);
+        if(idx < 0) {
+            return ""; }
+        str = csv.slice(idx);
+        idx = str.indexOf(",");
+        if(idx >= 0) {
+            str = csv.slice(0, idx); }
+        pes = str.split(";");
+        return pes[1];
+    }
+
+
+    function pcntComplete (rempts, points) {
+        if(!points || !points.length) {
+            return 1; }
+        return (points.length - rempts.length) / points.length;
+    }
+
+
+    function verifyProgressInfo () {
+        if(!dcon.prog) {
+            dcon.prog = {tlid:dcon.ds[dcon.ds.length - 1].instid,
+                         st:new Date().toISOString(),
+                         svs:"", pts:""}; }
+        if(app.user && app.user.acc && app.user.acc.started) {
+            app.user.acc.started.forEach(function (st) {
+                if(st.tlid === dcon.prog.tlid) {
+                    dcon.prog = st; } }); }
+        //verify all fields just in case
+        dcon.prog.st = dcon.prog.st || new Date().toISOString();
+        dcon.prog.svs = dcon.prog.svs || "";
+        dcon.prog.pts = dcon.prog.pts || "";
+    }            
+
+
+    function clearVisited () {
+        dcon.ds.forEach(function (tl) {
+            tl.visited = "";
+            tl.levs.forEach(function (lev) {
+                lev.visited = "";
+                lev.points.forEach(function (pt) {
+                    pt.visited = ""; }); }); });
+    }
+
+
+    function recalcProgress (init) {
+        //init should be true when the state is first built from loading a
+        //timeline, or after the user first logs in and their progress info
+        //is merged.  init should be false for interim progress tracking.
+        //dlg closeInteractionTimeTracking fills dcon.prog.pts
+        //noteSuppvizDone fills dcon.prog.svs
+        //levelup sets lev.levelupShown
+        var currlev = null;
+        if(init) { clearVisited(); }
+        verifyProgressInfo();  //creates dcon.prog as needed
+        //Mark visited to minimize churn and make the state easier to read.
+        dcon.ds.forEach(function (tl, idx) {
+            if(!tl.visited) {
+                tl.visited = true;
+                tl.levs.forEach(function (lev, idx) {
+                    if(!lev.visited) {
+                        lev.rempts = [];
+                        lev.points.forEach(function (pt, idx) {
+                            if(!pt.visited) {
+                                pt.visited = lastShown(dcon.prog.pts, 
+                                                       pt.instid); }
+                            if(!pt.visited) {
+                                lev.rempts.push(pt); } });
+                        lev.levpcnt = pcntComplete(lev.rempts, lev.points);
+                        if(!lev.svShown) {
+                            lev.svShown = lastShown(dcon.prog.svs,
+                                                    lev.svname); }
+                        if(lev.rempts.length === 0) {
+                            if(init && lev.svShown) {
+                                lev.levelupShown = lev.svShown;
+                                lev.visited = lev.svShown; }
+                            //levelup display sets levelupShown.  Last lev
+                            //calls finale instead which sets nothing.  So
+                            //loading a completed timeline shows the finale.
+                            else if(lev.svShown && lev.levelupShown) {
+                                lev.visited = lev.levelupShown; } }
+                        if(!currlev && !lev.visited) {
+                            currlev = {tl:tl, lev:lev}; } }
+                    tl.visited = tl.visited && lev.visited; }); } });
+        return currlev;
+    }
+
+
+    function makeTimelineLevels () {
+        var levnum = 1;
+        dcon.ds.forEach(function (tl, idx) {
+            var levs = [], ppl;
+            tl.svs.csvarray().forEach(function (svn) {
+                levs.push({svname:svn,
+                           svShown:"",       //suppviz not displayed yet
+                           levelupShown:"",  //levelup viz not displayed yet
+                           num:levnum});
+                levnum += 1; });
+            if(!levs.length) {
+                levs.push({svname:"none", num:levnum}); }
+            ppl = Math.floor(tl.points.length / levs.length);
+            levs.forEach(function (lev, idx) {
+                if(idx < levs.length - 1) {
+                    lev.points = tl.points.slice(0, (idx + 1) * ppl); }
+                else {  //any remainder points go in last level
+                    lev.points = tl.points.slice(idx * ppl); } });
+            tl.levs = levs; });
+        dcon.ds.forEach(function (tl) {
+            tl.levs.forEach(function (lev) {
+                lev.maxnum = levnum; }); });
+        recalcProgress("init");
+    }
+
+
+    function getTimelineProgressRecord () {
+        var prog = {tlid:dcon.tlid, st:new Date().toISOString(), 
                     svs:"", pts:""};
         if(app.user && app.user.acc && app.user.acc.started) {
             app.user.acc.started.forEach(function (st) {
-                if(st.tlid === tl.instid) {
+                if(st.tlid === dcon.tlid) {
                     prog = st; } }); }
         prog.st = prog.st || new Date().toISOString();
         prog.svs = prog.svs || "";
@@ -295,25 +413,21 @@ app.db = (function () {
     }
 
 
-    function makeTimelineDisplaySeries (tls) {
-        var prog, serstr = "", idx;
-        tls.forEach(function (tl) {
-            jt.log("caching timeline " + tl.instid + " " + tl.name);
-            app.user.tls[tl.instid] = tl; });
-        dcon = {ds:[], tl:null, prog:null};  //reset display context
-        stackTimeline(tls[0]);  //recursive walk to build display series 
-        dcon.ds.forEach(function (tl) {
-            var ctc;
+    function initTimelinesContent () {
+        if(!dcon || !dcon.ds) { return; }  //timelines not loaded yet
+        dcon.ds.forEach(function (tl, ix) {
+            var ctc, prog, idx;
             ctc = tl.ctype.split(":");
             ctc = {type:ctc[0], levcnt:ctc[1] || 6, rndmax:ctc[2] || 18};
             tl.pointsPerSave = Number(ctc.levcnt);
-            tl.points = tl.preb;
+            tl.dsindex = ix;
+            prepData(tl);  //sets tl.points
             if(ctc.type === "Random") {
                 ctc.rndmax = Number(ctc.rndmax);
                 tl.randpts = [];
                 tl.unused = tl.preb.slice();
                 //move all visited points from unused into randpts
-                prog = getTimelineProgressRecord(tl);
+                prog = getTimelineProgressRecord();
                 prog.pts.csvarray().forEach(function (pp) {
                     idx = pointIndexForId(pp.split(";")[0], tl.unused);
                     if(idx >= 0) {
@@ -323,11 +437,24 @@ app.db = (function () {
                 while(tl.randpts.length < ctc.rndmax) {
                     idx = Math.floor(Math.random() * tl.unused.length);
                     tl.randpts.push(tl.unused.splice(idx, 1)[0]); }
-                jt.log("Random points for " + tl.name);
-                tl.randpts.forEach(function (pt, idx) {
-                    jt.log(("    " + idx).slice(-4) + " " + pt.date + " " +
-                           pt.text.slice(0, 40) + "..."); });
+                jt.log("Selected " + tl.randpts.length + 
+                       " random points for " + tl.name);
+                // tl.randpts.forEach(function (pt, jx) {
+                //     jt.log(("    " + jx).slice(-4) + " " + pt.date + " " +
+                //            pt.text.slice(0, 40) + "..."); });
                 tl.points = tl.randpts; } });
+        makeTimelineLevels();
+    }
+
+
+    function makeTimelineDisplaySeries (tls) {
+        var serstr = "";
+        tls.forEach(function (tl) {
+            jt.log("caching timeline " + tl.instid + " " + tl.name);
+            app.user.tls[tl.instid] = tl; });
+        dcon = {ds:[], tlid:tls[0].instid, prog:null};  //reset display context
+        stackTimeline(tls[0]);   //recursive walk to build display series 
+        initTimelinesContent();  //points for random, levels
         dcon.ds.forEach(function (tl) {
             if(serstr) {
                 serstr += ", "; }
@@ -336,63 +463,34 @@ app.db = (function () {
     }
 
 
-    function timelineCompleted (tl) {
-        var prog = getTimelineProgressRecord(tl);
-        prog.ptsttl = 0;
-        prog.ptscmp = 0;
-        tl.points.forEach(function (pt) {
-            if(prog.pts.indexOf(pt.instid) >= 0) {
-                prog.ptscmp += 1; }
-            prog.ptsttl += 1; });
-        prog.svsttl = 0;
-        prog.svscmp = 0;
-        tl.svs.csvarray().forEach(function (sv) {
-            if(prog.svs.indexOf(sv) >= 0) {
-                prog.svscmp += 1; }
-            prog.svsttl += 1; });
-        if(prog.ptscmp >= prog.ptsttl && prog.svscmp >= prog.svsttl) {
-            return true; }
-        dcon.tl = tl;
-        dcon.prog = prog;
-        return false;
+    function noteVisitedPSVs(pt, ct) {
+        jt.log("noteVisitedPSVs not implemented yet");
     }
 
 
-    function displayNextTimeline () {
-        var st;
-        dcon.tl = null;
-        dcon.prog = null;
-        dcon.tlidx = 0;
-        st = dcon.ds[dcon.tlidx];
-        while(st.ctype.startsWith("Timelines") || timelineCompleted(st)) {
-            dcon.tlidx += 1;
-            st = dcon.ds[dcon.tlidx]; }
-        if(dcon.tlidx < dcon.ds.length) {
-            dcon.tl = dcon.ds[dcon.tlidx];
-            prepData(); }
-        app.linear.display();  //displays finale if dcon.tl is null
-    }
-
-
-    function nextUnvisitedPoint (numpoints) {
-        var res = [];
-        numpoints = numpoints || 1;
-        if(!dcon.prog || !dcon.tl) {
-            return jt.log("db.nextUnvisitedPoint called without tl or prog"); }
-        dcon.tl.points.forEach(function (pt) {
-            if(res.length < numpoints && dcon.prog.pts.indexOf(pt.instid) < 0) {
-                res.push(pt); } });
-        if(!res.length) {
-            return null; }
-        if(numpoints === 1) {
-            return res[0]; }
-        return res;
+    function nextInteraction () {
+        var currlev = recalcProgress(),
+            points = currlev.lev.rempts.slice(0, currlev.tl.pointsPerSave);
+        if(currlev.tl.dsindex === 0 && currlev.lev.num === 1 &&
+           currlev.lev.levpcnt === 0 && !currlev.lev.startbuttonshown) {
+            currlev.lev.startbuttonshown = true;
+            return app.dlg.start(jt.fs("app.db.nextInteraction()")); }
+        app.mode.updlev(currlev);
+        if(points.length > 0) {
+            return app.mode.showNextPoints(points); }
+        if(!currlev.lev.svShown) {
+            return app[currlev.lev.svname].display(); }
+        if(!currlev.lev.levelupShown) {
+            if(currlev.lev.num === currlev.lev.maxnum) {
+                return app.finale.display(); }
+            return app.levelup.display(); }
+        jt.log("db.nextInteraction fell through. Should never happen. ");
     }
 
 
     function findPointById (ptid) {
         var points, i, pt;
-        points = app.allpts || dcon.tl.points;
+        points = app.allpts;
         for(i = 0; i < points.length; i += 1) {
             pt = points[i];
             if(pt.instid === ptid) {
@@ -444,7 +542,7 @@ app.db = (function () {
             idx = url.indexOf(tlmarker);
         if(idx >= 0) {
             slug = url.slice(idx + tlmarker.length); }
-        jt.log("fetchDisplayTimeline: " + slug);
+        jt.log("fetchDisplayTimeline slug: " + slug);
         jt.out("rhcontentdiv", "Loading " + slug + "...");
         app.user.tls = app.user.tls || {};
         //PENDING: Go with localStorage timeline if available, then redisplay
@@ -454,7 +552,7 @@ app.db = (function () {
                     result.forEach(function (tl) {
                         app.db.deserialize("Timeline", tl); });
                     makeTimelineDisplaySeries(result);
-                    displayNextTimeline();},
+                    app.linear.display(recalcProgress()); },
                 function (code, errtxt) {
                     jt.out("rhcontentdiv", jt.tac2html([
                         "Could not load " + slug + ": " + code + " " + errtxt,
@@ -546,11 +644,11 @@ app.db = (function () {
         deserialize: function (dbc, dbo) { deserialize(dbc, dbo); },
         postdata: function (dbc, dbo) { return postdata(dbc, dbo); },
         displayContext: function () { return dcon; },
-        nextPoint: function (ptc) { return nextUnvisitedPoint(ptc); },
         svdone: function (svid, sta, end) { noteSuppvizDone(svid, sta, end); },
-        displayNextTimeline: function () { displayNextTimeline(); },
+        nextInteraction: function () { nextInteraction(); },
         mergeProgToAccount: function () { mergeProgToAccount(); },
         pt4id: function (ptid) { return findPointById(ptid); },
-        mergeUpdatedPointData: function (pt) { mergeUpdatedPointData(pt); }
+        mergeUpdatedPointData: function (pt) { mergeUpdatedPointData(pt); },
+        initTimelines: function () { initTimelinesContent(); }
     };
 }());

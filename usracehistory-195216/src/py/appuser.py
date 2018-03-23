@@ -22,7 +22,7 @@ import string
 # Administrator isa Contributor isa User
 #
 # A timeline progress instance:
-#      tlid: id of timeline
+#      tlid: id of top-level timeline (aggregated timelines not separated)
 #      st: ISO when the timeline was started (ISO, not wallclock)
 #      svs*: CSV of svid;isoShown;isoClosed;dispcount
 #      pts: CSV of ptid;isoShown;isoClosed;dispcount;tagcodes

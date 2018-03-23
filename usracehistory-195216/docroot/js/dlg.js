@@ -483,6 +483,7 @@ app.dlg = (function () {
                         app.db.deserialize("AppUser", result[0]);
                         setAuthentication(cred.emailin, result);
                         app.dlg.close();
+                        app.db.initTimelines();  //reset for user
                         app.dlg.myacc(); },
                     function (code, errtxt) {
                         jt.log("createAccount " + code + " " + errtxt);
@@ -550,7 +551,7 @@ app.dlg = (function () {
                         app.db.deserialize("AppUser", result[0]);
                         app.user.acc = result[0];
                         app.dlg.close();
-                        popBack(app.db.displayNextTimeline); },
+                        popBack(app.db.nextInteraction); },
                     function (code, errtxt) {
                         jt.log("updateAccount " + code + ": " + errtxt);
                         jt.lut("loginstatdiv", errtxt); },
@@ -570,13 +571,14 @@ app.dlg = (function () {
                     function (result) {
                         app.db.deserialize("AppUser", result[0]);
                         setAuthentication(cred.emailin, result);
+                        app.db.initTimelines();  //reset for user
                         //TEST: Uncomment to launch menu command post login
                         // setTimeout(function () { 
                         //     app.mode.menu(0, "newtl"); }, 200);
                         if(bg) {  //Background mode, leave UI/flow alone.
                             return; }
                         app.dlg.close();
-                        popBack(app.db.displayNextTimeline); },
+                        popBack(app.db.nextInteraction); },
                     function (code, errtxt) {
                         jt.log("processSignIn: " + code + " " + errtxt);
                         setTimeout(function () {
@@ -679,22 +681,12 @@ app.dlg = (function () {
     }
 
 
-    //If saving to the db was successful, then rebuild all progress from the
-    //account to handle the case where they restarted a timeline and then
-    //logged in.  That way they will pick up where they left off.  If save
-    //failed or was skipped, then continue with the current progress.
-    function continueToNext (readFromAccount) {
+    function continueToNext () {
         if(jt.byId("savestatspan")) {
             jt.out("savestatspan", "Continuing..."); }
         tl.pendingSaves = 0;
         nextColorTheme();
-        if(readFromAccount) {
-            //PENDING: Rebuilding from scratch has advantages, but something
-            //less heavy handed would help with a smoother display.
-            app.db.displayNextTimeline(); }
-        else {
-            app.mode.updlev();
-            app.mode.showNext(); }
+        app.db.nextInteraction();
     }
 
 
@@ -734,9 +726,9 @@ app.dlg = (function () {
                     jt.log("progress saved");
                     app.db.deserialize("AppUser", result[0]);
                     app.user.acc = result[0];
-                    if(jt.byId("savestatspan") && 
+                    if(jt.byId("savestatspan") &&
                        jt.byId("savestatspan").innerHTML === savestat) {
-                        continueToNext("readFromAccount"); } },
+                        continueToNext(); } },
                 function (code, errtxt) {
                     jt.out("savstat", "Save failed. " + code + " " + errtxt);
                     jt.out("dlgbuttondiv", buttons([

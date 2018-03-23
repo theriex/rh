@@ -414,20 +414,20 @@ app.linear = (function () {
     }
 
 
-    function display () {
-        var dcon = app.db.displayContext();
-        tl = {divid:"navdiv", offset:{x:10,y:10}, pts:dcon.tl.points, zscale:1};
+    function display (currlev) {
+        tl = {divid:"navdiv", offset:{x:10,y:10}, zscale:1,
+              pts:currlev.tl.points};
         setChartWidthAndHeight();
         initDisplayVariableValues();
         initMainDisplayElements();
         paintWallpaper("abgdiv");
         bindDataAndDrawChart();
-        app.mode.start(tl);
+        app.mode.start(tl, currlev);
     }
 
 
     return {
-        display: function () { display(); },
+        display: function (currlev) { display(currlev); },
         clickCircle: function (pt) { clickCircle(pt); },
         levelCompleted: function (levpi) { app.levelup.display(tl, levpi); },
         tldata: function () { return tl; },

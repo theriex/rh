@@ -21,14 +21,14 @@ var app = {},  //Global container for application level funcs and values
                        "js/dlg",      //dialog interaction
                        "js/linear",   //linear timeline display
                        "js/tabular",  //text timeline display
-                       "js/mode",     //interactive or reference
+                       "js/mode",     //menu and topnav display
                        "js/sv/svcommon",
                        "js/sv/about",
                        "js/sv/levelup",
                        "js/sv/intro",
                        "js/sv/slavery",
-                       "js/sv/lynching"
-                      ];
+                       "js/sv/lynching",
+                       "js/sv/finale"];
         jtminjsDecorateWithUtilities(jt);
         jt.out("rhcontentdiv", "Loading app modules...");
         app.amdtimer = {};
