@@ -254,7 +254,7 @@ app.mode = (function () {
             jt.log("mode.showNextPoints call ignored (not in linear mode)");
             return;}
         if(!points || !points.length) {
-            jt.log("mode.showNextPoint received no points");
+            jt.log("mode.showNextPoints received no points");
             return; }
         if(!tasks) {
             tasks = [{cmd:"unzoom", dur:100},

@@ -29,7 +29,7 @@ app.linear = (function () {
         tl.focus.select(".axis--x").call(tl.xAxis);
         tl.focus.selectAll("circle")
             .attr("cx", function(d) { return tl.x(d.tc); })
-            .attr("cy", function(d) { return tl.y(d.oc); });
+            .attr("cy", function(d) { return tl.y(d.vc); });
     }
 
 
@@ -177,11 +177,11 @@ app.linear = (function () {
         if(over) {
             tl.focus.select("#" + d.id)
                 .style("fill", "#f00");
-            //jt.log("overCircle x: " + tl.x(d.tc) + ", y: " + tl.y(d.oc + 1));
-            jt.log("overCircle d.oc: " + d.oc);
+            //jt.log("overCircle x: " + tl.x(d.tc) + ", y: " + tl.y(d.vc + 1));
+            //jt.log("overCircle d.vc: " + d.vc);
             tl.focus.select("#mouseoverLabel")
                 .attr("x", tl.x2(d.tc) + 10)  //x2 for left right pad, adjust
-                .attr("y", tl.y(d.oc) - 14)  //above circle
+                .attr("y", tl.y(d.vc) - 14)  //above circle
                 .text(d.id); }
         else {
             tl.focus.select("#" + d.id)
@@ -249,9 +249,11 @@ app.linear = (function () {
 
     function bindDataAndDrawChart () {
         var dcon = app.db.displayContext();
-        tl.x.domain([tl.pts[0].tc - 20,  //avoid half dots at edges
-                     tl.pts[tl.pts.length - 1].tc + 1]);
-        tl.y.domain([0, dcon.maxy + 2]);  //avoid half dots at top
+        tl.x.domain([tl.pts[0].tc, tl.pts[tl.pts.length - 1].tc]);
+        tl.y.domain([0, 2 * dcon.ctx.maxy]);
+        // jt.log("chart: " + tl.width + " x " + tl.height);
+        // tl.pts.forEach(function (pt) {
+        //     jt.log("    x: " + tl.x(pt.tc) + ", y: " + tl.y(pt.vc)); });
         tl.x2.domain(tl.x.domain());
         tl.y2.domain(tl.y.domain());
         tl.focus.append("g")
@@ -264,7 +266,7 @@ app.linear = (function () {
             .attr("class", "contextCircle")
             .attr("r", 3)
             .attr("cx", function(d) { return tl.x2(d.tc); })
-            .attr("cy", function(d) { return tl.y2(d.oc); });
+            .attr("cy", function(d) { return tl.y2(d.vc); });
         tl.context.append("g")
             .attr("class", "brush")
             .call(tl.brush)
@@ -277,7 +279,7 @@ app.linear = (function () {
             .enter().append("circle")
             .attr("r", 5)
             .attr("cx", function(d) { return tl.x(d.tc); })
-            .attr("cy", function(d) { return tl.y(d.oc); })
+            .attr("cy", function(d) { return tl.y(d.vc); })
             .attr("id", function(d) { return d.id; })
             .attr("fill", function(d) { return fillColorForPoint(d); })
             .attr("class", "focusCircle")
@@ -326,9 +328,11 @@ app.linear = (function () {
 
 
     function initMainDisplayElements () {
-        tl.x = d3.scalePow().exponent(10).range([0, tl.width]);
-        tl.x2 = d3.scalePow().exponent(10).range([0, tl.width2]);
-        tl.y = d3.scaleLinear().range([tl.height, 0]);
+        // tl.x = d3.scalePow().exponent(10).range([5, tl.width - 10]);
+        // tl.x2 = d3.scalePow().exponent(10).range([0, tl.width2]);
+        tl.x = d3.scaleLinear().range([8, tl.width - 16]);
+        tl.x2 = d3.scaleLinear().range([0, tl.width2]);
+        tl.y = d3.scaleLinear().range([tl.height - 16, 8]);
         tl.y2 = d3.scaleLinear().range([tl.height2, 0]);
         tl.xAxis = d3.axisBottom(tl.x).tickFormat(d3.format("d"));
         tl.xAxis2 = d3.axisBottom(tl.x2);
@@ -416,7 +420,7 @@ app.linear = (function () {
 
     function display (currlev) {
         tl = {divid:"navdiv", offset:{x:10,y:10}, zscale:1,
-              pts:currlev.tl.points};
+              pts:app.db.displayContext().points};
         setChartWidthAndHeight();
         initDisplayVariableValues();
         initMainDisplayElements();

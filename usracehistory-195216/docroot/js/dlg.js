@@ -155,7 +155,7 @@ app.dlg = (function () {
                 [["input", {type:"checkbox", id:"cbremember",
                             value:"remembered", checked:jt.toru(checked)}],
                  ["label", {fo:"cbremember", id:"remcblabel"},
-                  "Browse later"]]];
+                  "Remember"]]];
         return html;
     }
 
@@ -194,9 +194,9 @@ app.dlg = (function () {
 
 
     function pointCodeNamesCSV (codes) {
-        var csv = "", stat = app.db.displayContext().stat;
+        var csv = "", stat = app.db.displayContext().mrcl.tl.stat;
         codes.split("").forEach(function (code) {
-            csv.csvappend(stat[code].name); });
+            csv = csv.csvappend(stat[code].name); });
         return csv;
     }
 
@@ -686,6 +686,7 @@ app.dlg = (function () {
             jt.out("savestatspan", "Continuing..."); }
         tl.pendingSaves = 0;
         nextColorTheme();
+        app.dlg.close();
         app.db.nextInteraction();
     }
 

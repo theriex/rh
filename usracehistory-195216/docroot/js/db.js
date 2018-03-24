@@ -88,53 +88,50 @@ app.db = (function () {
     }
 
 
-    //D3 has very good support for dates, but that level of precision
-    //is more than the data specifies in many instances so using a
-    //fractional year rounded to two decimal places instead.  The y
-    //coordinate is the one-based point count within the year.
+    function makeCoordinateContext (pts) {
+        //X coordinates are start times. Y coordinates start at zero (the
+        //center line) and are adjusted up or down to avoid overlap with
+        //adjacent points.  If the previous point was adjusted above the
+        //center line, then the next is adjusted below for visual balance.
+        var xbs = 32,  //x bands, how many columns to divide the x-axis into
+            sy = pts.length? pts[0].start.year : 0,
+            ey = pts.length? pts[pts.length - 1].start.year : 0,
+            iw = Math.ceil((ey - sy) / xbs),
+            ctx = {iw:iw,    //horizontal interaction width (in years)
+                   lq:[],    //LIFO queue of pts within iw (most recent first)
+                   zz:1,     //zigzag direction (alternates 1/-1)
+                   maxy:0};  //max vertical (either up or down)
+        jt.log("coordinate context iw: " + iw);
+        return ctx;
+    }
+
+
     function makeCoordinates (pt, ctx) {
-        var y, m, d;
+        //D3 has very good support for dates, but that level of precision is
+        //frequently more than the data specifies, so using a "time code"
+        //consisting of a fractional year rounded to two decimal places.
+        var y, m, d, vm;
         y = pt.start.year;
         m = pt.start.month || 0;
         d = pt.start.day || 0;
         pt.tc = Math.round((y + m/12 + d/365) * 100) / 100;
-        if(ctx.yr === pt.start.year) {
-            ctx.dy += 1;   //next y coordinate value within year
-            if(ctx.dy > ctx.maxy) {
-                //alert("Increasing maxy to " + ctx.dy + " year: " + ctx.yr);
-                ctx.maxy = ctx.dy; } }
-        else {
-            ctx.yr = pt.start.year;  //reset year context
-            ctx.dy = 1; }            //first y coordinate value within year
-        pt.oc = ctx.dy;
-    }
-
-
-    //vertically center all points for a year
-    function centerPointGroup(pts) {
-        if(!pts) {
-            return; }
-        // if(pts.length >= 4) {
-        //     jt.log("centerPointGroup " + pts[0].start.year); }
-        pts.forEach(function (pt) {
-            var mx = dcon.maxy,
-                mid = Math.round(mx / 2),
-                off = mid - Math.round(pts.length / 2);
-            pt.oc = (mx + 1) - pt.oc;   //invert so first point in series is top
-            pt.oc -= off;  //cluster points around center line
-        });
-    }
-
-
-    //Organize the points so they start in the middle and extend both
-    //upwards and downwards to an equal degree.
-    function centerYCoordinates (pt, ctx) {
-        if(ctx.yr === pt.start.year) {
-            ctx.grp.push(pt); }
-        else {
-            centerPointGroup(ctx.grp);
-            ctx.yr = pt.start.year;
-            ctx.grp = [pt]; }
+        //vertical code defaults to zero, representing the center line
+        pt.vc = 0;
+        vm = true;
+        while(ctx.lq.length && pt.tc - ctx.lq[ctx.lq.length - 1].tc > ctx.iw) {
+            ctx.lq.pop(); }  //remove any point not within interaction width
+        while(vm) {  //moved vertically, recheck for conflicts
+            vm = false;
+            ctx.lq.forEach(function (pp) {
+                if(pp.vc === pt.vc) {
+                    pt.vc += ctx.zz;
+                    vm = true; } }); }
+        if(pt.vc) {  //zigged or zagged to place the point, switch direction
+            ctx.zz *= -1; }
+        else {  //point fit on the center line, reset zigzag to base value
+            ctx.zz = 1; }
+        ctx.lq.unshift(pt);  //prepend this latest point.
+        ctx.maxy = Math.max(ctx.maxy, Math.abs(pt.vc));
     }
 
 
@@ -242,22 +239,17 @@ app.db = (function () {
     //    isoClosed: ISO date when last completed (ok, right date, etc)
     //    tagCodes: rku1234 (see appuser.py AppUser class def comment)
     function prepData (tl) {
-        var ctx = {yr: 0, dy: 0, maxy: 0},
-            ny = new Date().getFullYear();
+        var ny = new Date().getFullYear();
         jt.log("Preparing data for " + tl.name + "...");
         tl.points = tl.preb || [];
+        tl.points.forEach(function (pt) {
+            parseDate(pt); });
+        tl.points.sort(function (a, b) {  //verify in chrono order
+            return compareStartDate(a, b); });
         tl.points.forEach(function (pt, idx) {
             notePointCounts(tl, pt);
             pt.currdataindex = idx;
-            parseDate(pt);
-            makeCoordinates(pt, ctx);
             makePointIdent(pt, ny); });
-        dcon.maxy = ctx.maxy;
-        ctx = {yr: 0, grp: null};
-        tl.points.sort(function (a, b) {  //verify in chrono order
-            return compareStartDate(a, b); });
-        tl.points.forEach(function (pt) {
-            centerYCoordinates(pt, ctx); });
         describePoints(tl);
         tl.dataPrepared = true;
     }
@@ -413,36 +405,54 @@ app.db = (function () {
     }
 
 
+    function rebuildRandomPointsSelection(tl, ctc) {
+        var idx, prog = getTimelineProgressRecord();
+        ctc.rndmax = Number(ctc.rndmax);
+        tl.randpts = [];
+        tl.unused = tl.preb.slice();
+        //move all visited points from unused into randpts
+        prog.pts.csvarray().forEach(function (pp) {
+            idx = pointIndexForId(pp.split(";")[0], tl.unused);
+            if(idx >= 0) {
+                tl.randpts.push(tl.unused[idx]);
+                tl.unused.splice(idx, 1); } });
+        //randomly select remaining points from unused
+        while(tl.randpts.length < ctc.rndmax) {
+            idx = Math.floor(Math.random() * tl.unused.length);
+            tl.randpts.push(tl.unused.splice(idx, 1)[0]); }
+        tl.randpts.sort(function (a, b) { 
+            return compareStartDate(a, b); });
+        jt.log("Selected " + tl.randpts.length + 
+               " random points for " + tl.name);
+        // tl.randpts.forEach(function (pt, jx) {
+        //     jt.log(("    " + jx).slice(-4) + " " + pt.date + " " +
+        //            pt.text.slice(0, 40) + "..."); });
+        tl.points = tl.randpts;
+    }
+
+
     function initTimelinesContent () {
         if(!dcon || !dcon.ds) { return; }  //timelines not loaded yet
+        dcon.points = [];  //all points for all timelines in series
         dcon.ds.forEach(function (tl, ix) {
-            var ctc, prog, idx;
+            var ctc, idx;
             ctc = tl.ctype.split(":");
             ctc = {type:ctc[0], levcnt:ctc[1] || 6, rndmax:ctc[2] || 18};
             tl.pointsPerSave = Number(ctc.levcnt);
             tl.dsindex = ix;
             prepData(tl);  //sets tl.points
             if(ctc.type === "Random") {
-                ctc.rndmax = Number(ctc.rndmax);
-                tl.randpts = [];
-                tl.unused = tl.preb.slice();
-                //move all visited points from unused into randpts
-                prog = getTimelineProgressRecord();
-                prog.pts.csvarray().forEach(function (pp) {
-                    idx = pointIndexForId(pp.split(";")[0], tl.unused);
-                    if(idx >= 0) {
-                        tl.randpts.push(tl.unused[idx]);
-                        tl.unused.splice(idx, 1); } });
-                //randomly select remaining points from unused
-                while(tl.randpts.length < ctc.rndmax) {
-                    idx = Math.floor(Math.random() * tl.unused.length);
-                    tl.randpts.push(tl.unused.splice(idx, 1)[0]); }
-                jt.log("Selected " + tl.randpts.length + 
-                       " random points for " + tl.name);
-                // tl.randpts.forEach(function (pt, jx) {
-                //     jt.log(("    " + jx).slice(-4) + " " + pt.date + " " +
-                //            pt.text.slice(0, 40) + "..."); });
-                tl.points = tl.randpts; } });
+                rebuildRandomPointsSelection(tl, ctc); }
+            dcon.points = dcon.points.concat(tl.points); });
+        dcon.points.sort(function (a, b) {
+            return compareStartDate(a, b); });
+        dcon.ctx = makeCoordinateContext(dcon.points);
+        dcon.points.forEach(function (pt) {
+            makeCoordinates(pt, dcon.ctx); });
+        dcon.points.forEach(function (pt) {     //convert from -maxy|maxy
+            pt.vc = pt.vc + dcon.ctx.maxy; });  //to 0|2*maxy for chart
+        // dcon.points.forEach(function (pt) {
+        //     jt.log("    x: " + pt.tc + ", y: " + pt.vc); });
         makeTimelineLevels();
     }
 
@@ -471,19 +481,21 @@ app.db = (function () {
     function nextInteraction () {
         var currlev = recalcProgress(),
             points = currlev.lev.rempts.slice(0, currlev.tl.pointsPerSave);
+        dcon.mrcl = currlev;  //most recent currlev, non-critical reference
         if(currlev.tl.dsindex === 0 && currlev.lev.num === 1 &&
            currlev.lev.levpcnt === 0 && !currlev.lev.startbuttonshown) {
             currlev.lev.startbuttonshown = true;
             return app.dlg.start(jt.fs("app.db.nextInteraction()")); }
         app.mode.updlev(currlev);
         if(points.length > 0) {
+            points.reverse();  //so they can be popped off in order...
             return app.mode.showNextPoints(points); }
         if(!currlev.lev.svShown) {
             return app[currlev.lev.svname].display(); }
         if(!currlev.lev.levelupShown) {
             if(currlev.lev.num === currlev.lev.maxnum) {
                 return app.finale.display(); }
-            return app.levelup.display(); }
+            return app.levelup.display(currlev); }
         jt.log("db.nextInteraction fell through. Should never happen. ");
     }
 

@@ -4,7 +4,7 @@
 app.levelup = (function () {
     "use strict";
 
-    var tl = null,
+    var tl = null,  //grab useful geometry from linear timeline display
         levinf = null,
         chart = {colors: {bg: "#fff5ce", bbg: "#fdd53a", bb: "#7d6a22"},
                  exited:false},
@@ -41,26 +41,27 @@ app.levelup = (function () {
     function makeStackData (yg) {
         var rd = [], xg, gd = [], cg = null, stat;
         yg = yg || 10;  //by default group years into decades
-        stat = app.db.displayContext().stat;
-        tl.pts.forEach(function (pt) {
+        stat = levinf.tl.stat;
+        levinf.tl.points.forEach(function (pt) {
             var dp = {tc:pt.tc};
+            rd.push(dp);
             Object.keys(stat).forEach(function (code) {
-                dp[code] = (pt.codes.indexOf(code) >= 0)? 1 : 0; });
-            rd.push(dp); });
+                dp[code] = (pt.codes.indexOf(code) >= 0)? 1 : 0; }); });
         rd.sort(function (a, b) { return a.tc - b.tc; });
         xg = 1600;  //everything before this year is lumped together
         rd.forEach(function (dat) {
-            if(dat.tc > xg) {
-                gd.push(cg);
-                cg = null;
-                xg = Math.floor(dat.tc) + yg; }
+            var push = dat.tc > xg;
             if(!cg) {
                 cg = {tc:xg};
                 Object.keys(stat).forEach(function (code) {
                     cg[code] = dat[code]; }); }
             else {
                 Object.keys(stat).forEach(function (code) {
-                    cg[code] += dat[code]; }); } });
+                    cg[code] += dat[code]; }); } 
+            if(push) {
+                gd.push(cg);
+                cg = null;
+                xg = Math.floor(dat.tc) + yg; } });
         //convert data to percentages
         gd.forEach(function (dat) {
             var ttl = 0;
@@ -116,7 +117,8 @@ app.levelup = (function () {
             setTimeout(function () {
                 d3.select("#suppvisdiv")
                     .style("visibility", "hidden"); }, timing);
-            app.mode.next(); }
+            levinf.lev.levelupShown = new Date().toISOString();
+            app.db.nextInteraction(); }
     }
 
 
@@ -232,9 +234,7 @@ app.levelup = (function () {
 
 
     function displayCompletionText () {
-        var words = ["Level " + levinf.level, "Completed"];
-        if(levinf.level === 1) {
-            words[0] = "Intro"; }
+        var words = ["Level " + levinf.lev.num, "Completed"];
         words.forEach(function (word, idx) {
             chart.vg.append("text")
                 .attr("x", chart.tp.xc)
@@ -279,32 +279,19 @@ app.levelup = (function () {
     }
 
 
-    function rangePoints (rangelimit) {
-        var range = {spt:null, ept:null};
-        tl.pts.forEach(function (pt) {
-            if(!range.spt) {
-                if(!pt.isoShown) {
-                    range.spt = pt; } }
-            else if(rangelimit > 0) {
-                if(!pt.isoShown) {
-                    range.ept = pt;
-                    rangelimit -= 1; } } });
-        return range;
-    }
-
-
     function displayLevText () {
         var lines = [],
-            nextlev = levinf.levels[levinf.level],
-            rng = rangePoints(nextlev.pa),
-            txty = Math.round(0.4 * pc.y),
-            ys = rng.spt.start.year,
-            ye = rng.ept.start.year;
+            nextlev = levinf.levs[levinf.lev.num],  //last level calls finale
+            txty = Math.round(0.4 * pc.y), ys, ye;
+        if(!nextlev.points || !nextlev.points.length) {
+            return jt.log("Next level has no points, not showing date range"); }
+        ys = nextlev.points[0].start.year;
+        ye = nextlev.points[nextlev.points.length - 1].start.year;
         if(ys < 0) {
             ys = String(Math.abs(ys)) + " BCE"; }
         if(ye < 0) {
             ye = String(Math.abs(ye)) + " BCE"; }
-        lines.push("Level " + (levinf.level + 1));
+        lines.push("Level " + nextlev.num);
         lines.push(ys + " - " + ye);
         lines.forEach(function (line, idx) {
             chart.vg.append("text")
@@ -325,12 +312,12 @@ app.levelup = (function () {
         var ttl = 0, 
             pcttl = 0, 
             data = [];
-        levinf.levels.forEach(function (lev) {
-            ttl += lev.pttl; });
-        levinf.levels.forEach(function (lev, idx) {
-            var datum = {label:"Level " + (idx + 1),
-                         stat:idx - levinf.level,
-                         count:Math.floor((lev.pttl / ttl) * 100)};
+        levinf.levs.forEach(function (lev) {
+            ttl += lev.points.length; });
+        levinf.levs.forEach(function (lev, idx) {
+            var datum = {label:"Level " + lev.num,
+                         stat:idx - levinf.lev.num,
+                         count:Math.floor((lev.points.length / ttl) * 100)};
             pcttl += datum.count;
             data.push(datum); });
         if(pcttl < 100) {
@@ -378,10 +365,18 @@ app.levelup = (function () {
     }
 
 
-    function display (timeline, levelinfo) {
+    function initLevelInfo (currlev) {
+        levinf = {tl:currlev.tl, lev:currlev.lev, levs:[]};
+        app.db.displayContext().ds.forEach(function (tl) {
+            tl.levs.forEach(function (lev) {
+                levinf.levs.push(lev); }); });
+    }
+
+
+    function display (currlev) {
         var delay = 0;
-        levinf = levelinfo;
-        tl = timeline;
+        tl = app.linear.timeline();
+        initLevelInfo(currlev);
         chart.exited = false;
         initDisplayElements();
         displayStacked();
@@ -392,6 +387,6 @@ app.levelup = (function () {
 
 
     return {
-        display: function (tl, levinf) { display(tl, levinf); }
+        display: function (currlev) { display(currlev); }
     };
 }());
