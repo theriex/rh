@@ -279,20 +279,34 @@ app.levelup = (function () {
     }
 
 
+    function autodone () {
+        var tt = 1400;
+        pc.g.transition().duration(tt)
+            .attr("opacity", 1.0)
+            .attr("transform", "translate(" + pc.x + "," + pc.y + ")" +
+                              ",scale(10)");
+        setTimeout(closeAndReturn, tt);
+    }
+
+
     function displayLevText () {
         var lines = [],
             nextlev = levinf.levs[levinf.lev.num],  //last level calls finale
-            txty = Math.round(0.4 * pc.y), ys, ye;
+            txty = Math.round(0.4 * pc.y), ys, ye,
+            nextf = displayStartButton;
         if(!nextlev.points || !nextlev.points.length) {
-            return jt.log("Next level has no points, not showing date range"); }
-        ys = nextlev.points[0].start.year;
-        ye = nextlev.points[nextlev.points.length - 1].start.year;
-        if(ys < 0) {
-            ys = String(Math.abs(ys)) + " BCE"; }
-        if(ye < 0) {
-            ye = String(Math.abs(ye)) + " BCE"; }
-        lines.push("Level " + nextlev.num);
-        lines.push(ys + " - " + ye);
+            lines.push("");
+            lines.push("All points completed!");
+            nextf = autodone; }
+        else {
+            ys = nextlev.points[0].start.year;
+            ye = nextlev.points[nextlev.points.length - 1].start.year;
+            if(ys < 0) {
+                ys = String(Math.abs(ys)) + " BCE"; }
+            if(ye < 0) {
+                ye = String(Math.abs(ye)) + " BCE"; }
+            lines.push("Level " + nextlev.num);
+            lines.push(ys + " - " + ye); }
         lines.forEach(function (line, idx) {
             chart.vg.append("text")
                 .attr("x", chart.tp.xc)
@@ -304,7 +318,7 @@ app.levelup = (function () {
                 .attr("opacity", 0)
                 .transition().delay(idx * 500).duration(1000)
                 .attr("opacity", 1); });
-        setTimeout(displayStartButton, 2000);
+        setTimeout(nextf, 2000);
     }
 
 

@@ -9,6 +9,7 @@ app.finale = (function () {
 
 
     function display () {
+        app.dlg.close();  //in case left open
         //display elements:
         //  - link to reference view the timeline they just completed so 
         //    they can revisit points or suppviz.
