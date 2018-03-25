@@ -88,7 +88,7 @@ app.db = (function () {
     }
 
 
-    function makeCoordinateContext (pts) {
+    function makeCoordContext (pts) {
         //X coordinates are start times. Y coordinates start at zero (the
         //center line) and are adjusted up or down to avoid overlap with
         //adjacent points.  If the previous point was adjusted above the
@@ -232,11 +232,12 @@ app.db = (function () {
     //These fields added from calculations and user data:
     //    start: {year: number, month?, day?}
     //    end?: {year: number, month?, day?}
-    //    tc: time coordinate number (start year + percentage) * 100
-    //    oc: offset coordinate number (one-based start year event count val)
+    //    tc: time coordinate number (fractional start year)
+    //    vc: vertical coordinate (calculated for point overlap avoidance)
     //    id: text years ago + sep + offset (used for dom elements)
     //    isoShown: ISO date when last shown
     //    isoClosed: ISO date when last completed (ok, right date, etc)
+    //    viewCount: integer count how many times viewed
     //    tagCodes: rku1234 (see appuser.py AppUser class def comment)
     function prepData (tl) {
         var ny = new Date().getFullYear();
@@ -265,18 +266,24 @@ app.db = (function () {
     }
 
 
-    function lastShown (csv, id) {
-        //return the ISO time stamp when the point was last shown, or ""
-        var idx, str, pes;
+    function getProgressElements (csv, id) {
+        var idx, str, ces,
+            pes = {isoShown:"", isoClosed:"", viewCount:0, tagCodes:""};
         idx = csv.indexOf(id);
         if(idx < 0) {
-            return ""; }
+            return pes; }
         str = csv.slice(idx);
         idx = str.indexOf(",");
         if(idx >= 0) {
-            str = csv.slice(0, idx); }
-        pes = str.split(";");
-        return pes[1];
+            str = str.slice(0, idx); }
+        ces = str.split(";");
+        pes.isoShown = ces[1];
+        pes.isoClosed = ces[2];
+        if(ces.length > 3) {
+            pes.viewCount = Number(ces[3]); }
+        if(ces.length > 4) {
+            pes.tagCodes = ces[4]; }
+        return pes;
     }
 
 
@@ -303,12 +310,31 @@ app.db = (function () {
     }            
 
 
+    function isPointVisited (pt) {
+        var pes;
+        if(pt.visited) {
+            return pt.visited; }
+        if(pt.isoShown) {
+            pt.visited = pt.isoShown;
+            return pt.visited; }
+        pes = getProgressElements(dcon.prog.pts, pt.instid);
+        Object.keys(pes).forEach(function (key) {
+            pt[key] = pes[key]; });
+        pt.visited = pt.isoShown;
+        return pt.visited;
+    }
+
+
     function clearVisited () {
         dcon.ds.forEach(function (tl) {
             tl.visited = "";
             tl.levs.forEach(function (lev) {
                 lev.visited = "";
                 lev.points.forEach(function (pt) {
+                    pt.isoShown = "";
+                    pt.isoClosed = "";
+                    pt.viewCount = 0;
+                    pt.tagCodes = "";
                     pt.visited = ""; }); }); });
     }
 
@@ -331,15 +357,12 @@ app.db = (function () {
                     if(!lev.visited) {
                         lev.rempts = [];
                         lev.points.forEach(function (pt, idx) {
-                            if(!pt.visited) {
-                                pt.visited = lastShown(dcon.prog.pts, 
-                                                       pt.instid); }
-                            if(!pt.visited) {
+                            if(!isPointVisited(pt)) {
                                 lev.rempts.push(pt); } });
                         lev.levpcnt = pcntComplete(lev.rempts, lev.points);
                         if(!lev.svShown) {
-                            lev.svShown = lastShown(dcon.prog.svs,
-                                                    lev.svname); }
+                            lev.svShown = getProgressElements(
+                                dcon.prog.svs, lev.svname).isoShown; }
                         if(lev.rempts.length === 0) {
                             if(init && lev.svShown) {
                                 lev.levelupShown = lev.svShown;
@@ -446,13 +469,11 @@ app.db = (function () {
             dcon.points = dcon.points.concat(tl.points); });
         dcon.points.sort(function (a, b) {
             return compareStartDate(a, b); });
-        dcon.ctx = makeCoordinateContext(dcon.points);
+        dcon.ctx = makeCoordContext(dcon.points);
         dcon.points.forEach(function (pt) {
             makeCoordinates(pt, dcon.ctx); });
         dcon.points.forEach(function (pt) {     //convert from -maxy|maxy
             pt.vc = pt.vc + dcon.ctx.maxy; });  //to 0|2*maxy for chart
-        // dcon.points.forEach(function (pt) {
-        //     jt.log("    x: " + pt.tc + ", y: " + pt.vc); });
         makeTimelineLevels();
     }
 
@@ -649,6 +670,7 @@ app.db = (function () {
         wallClockTimeStamp: function (d) { return wallClockTimeStamp(d); },
         getElapsedTime: function (sd, ed) { return getElapsedTime(sd, ed); },
         parseDate: function (pt) { parseDate(pt); },
+        makeCoordContext: function (pts) { return makeCoordContext(pts); },
         makeCoordinates: function (pt, ctx) { makeCoordinates(pt, ctx); },
         describeDateFormat: function () { return describeDateFormat(); },
         fetchDisplayTimeline: function () { fetchDisplayTimeline(); },

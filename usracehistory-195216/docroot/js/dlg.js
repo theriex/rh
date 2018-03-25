@@ -227,7 +227,7 @@ app.dlg = (function () {
             ret.date = ["span", {id:"dlgdatespan"}, 
                         ["span", {id:"dlgdatequestion"}, "When?"]]; }
         else {
-            ret.tac = [["div", {cla:"buttonptcodessdiv"},
+            ret.tac = [["div", {cla:"buttonptcodesdiv"},
                         [["span", {cla:"buttonptcodeslabelspan"}, 
                           "Groups: "],
                          pointCodeNamesCSV(d.codes)]],

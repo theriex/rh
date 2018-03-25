@@ -472,11 +472,13 @@ app.slavery = (function () {
 
 
     function display () {
-        var ctx = {yr: 0, dy: 0, maxy: 0};
+        var ctx;
         stats = {start: new Date()};
         tl = app.linear.timeline();
         tlpts.forEach(function (pt) {
-            app.db.parseDate(pt);
+            app.db.parseDate(pt); });
+        ctx = app.db.makeCoordContext(tlpts);
+        tlpts.forEach(function (pt) {
             app.db.makeCoordinates(pt, ctx); });
         initDisplayElements();
         initAnimationSequence();

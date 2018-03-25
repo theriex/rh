@@ -154,21 +154,32 @@ app.linear = (function () {
 
 
     function fillColorForPoint (pt) {
-        var oldest, now;
+        var fc, now = jt.isoString2Time();  //use ISO Z time (no time zone)
+        if(!tl.vrng) {
+            tl.vrng = {start:now, end:0};
+            tl.pts.forEach(function (pt) {
+                var dt;
+                if(pt.isoShown) {
+                    dt = jt.isoString2Time(pt.isoShown);
+                    if(dt < tl.vrng.start) {
+                        tl.vrng.start = dt; }
+                    if(!tl.vrng.end || dt > tl.vrng.end) {
+                        tl.vrng.end = dt; } } });
+            jt.log("tl.vrng: " + tl.vrng.start + " to " + tl.vrng.end); }
         if(!tl.heat) {
-            oldest = jt.isoString2Time(app.oldestVisit);
-            now = jt.isoString2Time();
+            tl.test = d3.scaleTime()
+                .domain([tl.vrng.start, tl.vrng.end])
+                .range([0, 100]);
             tl.heat = d3.scaleTime()
-                .domain([oldest, now])
-                .range([d3.rgb("#0000FF"), d3.rgb("#FF0000")])
-                .interpolate(d3.interpolateHcl);
-            // console.log("oldest: " + oldest + ": " + tl.heat(oldest));
-            // console.log("   now: " + now + ": " + tl.heat(now));
-            }
-        if(!app.mode.ptmatch(pt)) {
-            return "#ccc"; }
+                .domain([tl.vrng.start, tl.vrng.end])
+                .range([d3.rgb("#005eff"), d3.rgb("#FF7200")])
+                .interpolate(d3.interpolateRgb);
+            jt.log("tl.heat: " + tl.heat(tl.vrng.start) + " to " + 
+                   tl.heat(tl.vrng.end)); }
         if(pt.isoShown) {
-            return tl.heat(jt.isoString2Time(pt.isoShown)); }
+            fc = tl.heat(jt.isoString2Time(pt.isoShown));
+            //jt.log("pt " + pt.instid + " " + fc);
+            return fc; }
         return "#000";
     }
 
@@ -180,7 +191,7 @@ app.linear = (function () {
             //jt.log("overCircle x: " + tl.x(d.tc) + ", y: " + tl.y(d.vc + 1));
             //jt.log("overCircle d.vc: " + d.vc);
             tl.focus.select("#mouseoverLabel")
-                .attr("x", tl.x2(d.tc) + 10)  //x2 for left right pad, adjust
+                .attr("x", tl.x(d.tc))
                 .attr("y", tl.y(d.vc) - 14)  //above circle
                 .text(d.id); }
         else {
@@ -251,9 +262,6 @@ app.linear = (function () {
         var dcon = app.db.displayContext();
         tl.x.domain([tl.pts[0].tc, tl.pts[tl.pts.length - 1].tc]);
         tl.y.domain([0, 2 * dcon.ctx.maxy]);
-        // jt.log("chart: " + tl.width + " x " + tl.height);
-        // tl.pts.forEach(function (pt) {
-        //     jt.log("    x: " + tl.x(pt.tc) + ", y: " + tl.y(pt.vc)); });
         tl.x2.domain(tl.x.domain());
         tl.y2.domain(tl.y.domain());
         tl.focus.append("g")
