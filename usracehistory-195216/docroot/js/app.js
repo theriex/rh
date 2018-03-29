@@ -9,6 +9,7 @@ var app = {},  //Global container for application level funcs and values
 
     app.init2 = function () {
         app.amdtimer.load.end = new Date();
+        jt.log("window.innerWidth: " + window.innerWidth);
         app.user = {};  //used for general reference
         app.dlg.chkcook("background");
         app.db.fetchDisplayTimeline();

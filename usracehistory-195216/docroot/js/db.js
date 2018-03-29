@@ -490,6 +490,7 @@ app.db = (function () {
             if(serstr) {
                 serstr += ", "; }
             serstr += tl.name; });
+        dcon.lastTL = dcon.ds[dcon.ds.length - 1];
         jt.log("Timeline display series: " + serstr);
     }
 
