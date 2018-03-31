@@ -172,9 +172,9 @@ app.mode = (function () {
                                   onclick:jt.fs("app.mode.menu(0,'signin')")},
                             "Sign&nbsp;In"]]); }
             html.push(["div", {cla:"menulinemain"},
-                       ["a", {href:"#about",
-                              onclick:jt.fs("app.mode.menu(0,'about')")},
-                        "About"]]); }
+                       ["a", {href:"#support",
+                              onclick:jt.fs("app.mode.menu(0,'support')")},
+                        "Support"]]); }
         jt.out("menudiv", jt.tac2html(html));
         mdiv = jt.byId("menudiv");
         //mdiv.offsetWidth may be zero until all the images load.
@@ -189,7 +189,7 @@ app.mode = (function () {
             switch(select) {  //next action
             case "visual": changeMode("interactive"); break;
             case "refmode": changeMode("reference"); break;
-            case "about": app.about.display(ms); break; 
+            case "support": app.support.display(ms); break; 
             case "signin": app.dlg.signin(); break;
             case "myacc": app.dlg.myacc(); break;
             case "newtl": app.tabular.tledit(); break;

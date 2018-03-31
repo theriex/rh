@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge */
+/*jslint browser, multivar, white, fudge, for */
 /*global app, window, jt, d3 */
 
 app.finale = (function () {
@@ -6,7 +6,9 @@ app.finale = (function () {
 
     var tl = null,       //grab useful geometry from linear timeline display
         chart = {},      //container for svg references
-        hr = {};         //honor roll working variables
+        hr = {},         //honor roll working variables
+        hrto = null,     //honor roll timeout reference
+        slto = null;     //searchlights timeout reference
 
 
     function moveSearchlights () {
@@ -24,7 +26,8 @@ app.finale = (function () {
             co.circle.transition().duration(dur)
                 .attr("cx", co.cx)
                 .attr("cy", co.cy); });
-        setTimeout(moveSearchlights, dur);
+        if(slto) { clearTimeout(slto); }
+        slto = setTimeout(moveSearchlights, dur);
     }
 
 
@@ -33,7 +36,7 @@ app.finale = (function () {
         chart.lights = [{cx:chart.cx + 50, cy:chart.cx - 50}, 
                         {cx:chart.cx - 50, cy:chart.cx - 50}, 
                         {cx:chart.cx - 50, cy:chart.cx + 50},
-                        {cx:chart.cx + 50, cy:chart.cx + 50}]
+                        {cx:chart.cx + 50, cy:chart.cx + 50}];
         chart.lights.forEach(function (co) {
             co.circle = chart.btg.append("circle")
                 .attr("cx", co.cx)
@@ -42,7 +45,8 @@ app.finale = (function () {
                 .style("opacity", 0.0)
                 .attr("stroke", "none")
                 .attr("fill", "#fff"); });
-        setTimeout(moveSearchlights, 8000);
+        if(slto) { clearTimeout(slto); }
+        slto = setTimeout(moveSearchlights, 8000);
     }
 
 
@@ -55,7 +59,7 @@ app.finale = (function () {
             .attr("height", tl.height)
             .attr("preserveAspectRatio", "none")
             .attr("href", "img/rhlogoFilled.png")
-            .style("opacity", 0.2)
+            .style("opacity", 0.2);
     }
 
 
@@ -73,7 +77,7 @@ app.finale = (function () {
             .transition().delay(1000).duration(2000)
             .style("opacity", 1.0)
             .transition().delay(3000).duration(3000)
-            .style("opacity", 0.6)
+            .style("opacity", 0.6);
         //PENDING: Detect TL name overflow and switch to text-anchor left
         //with ellipsis so it is readable.
         chart.tg.append("text")
@@ -87,15 +91,15 @@ app.finale = (function () {
             .text(app.db.displayContext().lastTL.name)
             .style("opacity", 0.0)
             .transition().delay(1500).duration(2000)
-            .style("opacity", 1.0)
+            .style("opacity", 1.0);
     }
 
 
     function toggleHonorScrolling () {
         if(!hr.paused) {
             hr.paused = true;
-            if(hr.timeout) {
-                clearTimeout(hr.timeout); } }
+            if(hrto) {
+                clearTimeout(hrto); } }
         else {
             hr.paused = false;
             updateHonorRoll(); }  //update immediately
@@ -114,7 +118,7 @@ app.finale = (function () {
             .attr("fill", "#000")
             .text(txt)
             .style("opacity", linedef.opa)
-            .on("click", toggleHonorScrolling)
+            .on("click", toggleHonorScrolling);
         return te;
     }
 
@@ -132,13 +136,14 @@ app.finale = (function () {
             te = createHonorRollText(hr.ldefs[i], i, txt);
             te.transition().duration(hr.trt)
                 .style("opacity", transdef.opa)
-                .attr("y", transdef.y) }
+                .attr("y", transdef.y); }
         hr.nidx = (hr.nidx + 1) % hr.names.length;  //update circular queue idx
         if(!hr.placeholderTextCleared && hr.nidx > hr.ldefs.length) {
             hr.names = hr.names.slice(3);
             hr.nidx -= 3;
             hr.placeholderTextCleared = true; }
-        hr.timeout = setTimeout(updateHonorRoll, hr.trt);
+        if(hrto) { clearTimeout(hrto); }
+        hrto = setTimeout(updateHonorRoll, hr.trt);
     }
 
 
@@ -160,15 +165,16 @@ app.finale = (function () {
         hr.names = ["", "", hr.temptitle, hr.username];
         for(i = 1; i < 14; i += 1) {
             hr.names.push("Generated Name " + i); }
-        chart.hrg = d3.select("#svgf").append("g")
+        chart.hrg = d3.select("#svgf").append("g");
         hr.ldefs.forEach(function (linedef, idx) {
             createHonorRollText(linedef, idx, hr.names[idx]); });
-        hr.timeout = setTimeout(updateHonorRoll, 6000 + hr.trt);
+        if(hrto) { clearTimeout(hrto); }
+        hrto = setTimeout(updateHonorRoll, 6000 + hr.trt);
     }
 
 
     function openDonationPage () {
-        jt.err("The donations page isn't set up yet.  Please try back in a couple of weeks.");
+        window.open("docs/interimdonation.html");
     }
 
 

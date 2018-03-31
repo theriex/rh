@@ -24,7 +24,7 @@ var app = {},  //Global container for application level funcs and values
                        "js/tabular",  //text timeline display
                        "js/mode",     //menu and topnav display
                        "js/sv/svcommon",
-                       "js/sv/about",
+                       "js/sv/support",
                        "js/sv/levelup",
                        "js/sv/intro",
                        "js/sv/slavery",
