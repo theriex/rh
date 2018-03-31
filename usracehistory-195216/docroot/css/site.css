@@ -234,3 +234,5 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 .finct { font-weight:bold; }
 .finctln { font-style:italic; }
 .finhrn { font-weight:bold; }
+.findonate { font-style:italic; }
+#findontxt { font-weight:bold; cursor:pointer; }

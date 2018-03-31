@@ -9,18 +9,58 @@ app.finale = (function () {
         hr = {};         //honor roll working variables
 
 
+    function moveSearchlights () {
+        var dur = 3000;
+        chart.lights.forEach(function (co) {
+            co.circle.remove();  //previous duration is spent
+            co.circle = chart.btg.append("circle")
+                .attr("cx", co.cx)
+                .attr("cy", co.cy)
+                .attr("r", 40)
+                .attr("stroke", "none")
+                .attr("fill", "#fff");
+            co.cx = Math.round(Math.random() * tl.width2);
+            co.cy = Math.round(Math.random() * tl.height);
+            co.circle.transition().duration(dur)
+                .attr("cx", co.cx)
+                .attr("cy", co.cy); });
+        setTimeout(moveSearchlights, dur);
+    }
+
+
+    function initBackgroundLights () {
+        chart.btg = d3.select("#svgf").append("g");
+        chart.lights = [{cx:chart.cx + 50, cy:chart.cx - 50}, 
+                        {cx:chart.cx - 50, cy:chart.cx - 50}, 
+                        {cx:chart.cx - 50, cy:chart.cx + 50},
+                        {cx:chart.cx + 50, cy:chart.cx + 50}]
+        chart.lights.forEach(function (co) {
+            co.circle = chart.btg.append("circle")
+                .attr("cx", co.cx)
+                .attr("cy", co.cy)
+                .attr("r", 40)
+                .style("opacity", 0.0)
+                .attr("stroke", "none")
+                .attr("fill", "#fff"); });
+        setTimeout(moveSearchlights, 8000);
+    }
+
+
     function appendBackgroundImage () {
         d3.select("#svgf").append("g")
             .append("image")
+            .attr("x", 0)
+            .attr("y", 0)
             .attr("width", tl.width2)
             .attr("height", tl.height)
+            .attr("preserveAspectRatio", "none")
             .attr("href", "img/rhlogoFilled.png")
             .style("opacity", 0.2)
     }
 
 
     function appendCompletionText () {
-        chart.tg = d3.select("#svgf").append("g")
+        chart.tg = d3.select("#svgf").append("g");
         chart.tg.append("text")
             .attr("class", "finct")
             .attr("id", "finctitle")
@@ -32,6 +72,8 @@ app.finale = (function () {
             .style("opacity", 0.0)
             .transition().delay(1000).duration(2000)
             .style("opacity", 1.0)
+            .transition().delay(3000).duration(3000)
+            .style("opacity", 0.6)
         //PENDING: Detect TL name overflow and switch to text-anchor left
         //with ellipsis so it is readable.
         chart.tg.append("text")
@@ -49,6 +91,17 @@ app.finale = (function () {
     }
 
 
+    function toggleHonorScrolling () {
+        if(!hr.paused) {
+            hr.paused = true;
+            if(hr.timeout) {
+                clearTimeout(hr.timeout); } }
+        else {
+            hr.paused = false;
+            updateHonorRoll(); }  //update immediately
+    }
+
+
     function createHonorRollText(linedef, idx, txt) {
         var te = chart.hrg.append("text")
             .attr("id", "hrnte" + idx)
@@ -60,21 +113,20 @@ app.finale = (function () {
             .attr("stroke", "none")
             .attr("fill", "#000")
             .text(txt)
-            .style("opacity", linedef.opa);
+            .style("opacity", linedef.opa)
+            .on("click", toggleHonorScrolling)
         return te;
     }
 
 
     function updateHonorRoll () {
         var i, te, txt, transdef;
-        //jt.log("--------- nidx: " + hr.nidx + " -------------------");
         for(i = 0; i < hr.ldefs.length; i += 1) {
             txt = hr.names[(hr.nidx + i) % hr.names.length];
             if(i === 0) {
                 transdef = hr.ldefs[hr.ldefs.length - 1]; }
             else {
                 transdef = hr.ldefs[i - 1]; }
-            //jt.log(txt + " -> y: " + transdef.y + ", opa: " + transdef.opa);
             te = d3.select("#hrnte" + i);
             te.remove();  //have to rebuild or transitions crap out
             te = createHonorRollText(hr.ldefs[i], i, txt);
@@ -86,13 +138,13 @@ app.finale = (function () {
             hr.names = hr.names.slice(3);
             hr.nidx -= 3;
             hr.placeholderTextCleared = true; }
-        setTimeout(updateHonorRoll, hr.trt);
+        hr.timeout = setTimeout(updateHonorRoll, hr.trt);
     }
 
 
     function initHonorRoll () {
         var i;
-        hr = {x:chart.cx - 120, y:30, lh:30, nidx:0, trt:1000};
+        hr = {x:chart.cx - 120, y:30, lh:30, nidx:0, trt:2400};
         hr.username = app.user.acc.name || "User " + app.user.instid + " (You)";
         hr.ldefs = [{y:hr.y + 0 * hr.lh, opa:0.0},
                     {y:hr.y + 1 * hr.lh, opa:0.1},
@@ -111,7 +163,87 @@ app.finale = (function () {
         chart.hrg = d3.select("#svgf").append("g")
         hr.ldefs.forEach(function (linedef, idx) {
             createHonorRollText(linedef, idx, hr.names[idx]); });
-        setTimeout(updateHonorRoll, hr.trt);
+        hr.timeout = setTimeout(updateHonorRoll, 6000 + hr.trt);
+    }
+
+
+    function openDonationPage () {
+        jt.err("The donations page isn't set up yet.  Please try back in a couple of weeks.");
+    }
+
+
+    function appendDonateButton () {
+        chart.cg.append("ellipse")
+            .attr("cx", chart.cx + 71)
+            .attr("cy", 281)
+            .attr("rx", 44)
+            .attr("ry", 20)
+            .attr("stroke", "none")
+            .attr("fill", "5656b7")
+            .style("opacity", 0.0)
+            .transition().delay(4000).duration(1800)
+            .style("opacity", 1.0);
+        chart.cg.append("ellipse")
+            .attr("cx", chart.cx + 70)
+            .attr("cy", 280)
+            .attr("rx", 40)
+            .attr("ry", 16)
+            .attr("stroke", "none")
+            .attr("fill", "#ffff75")  //yellow
+            .style("opacity", 0.0)
+            .transition().delay(4000).duration(1800)
+            .style("opacity", 1.0);
+        chart.cg.append("text")
+            .attr("id", "findontxt")
+            .attr("text-anchor", "middle")
+            .attr("x", chart.cx + 70)
+            .attr("y", 285)
+            .attr("font-size", 16)
+            .attr("stroke", "none")
+            .attr("fill", "#444")
+            .text("Donate")
+            .on("click", openDonationPage)
+            .style("opacity", 0.0)
+            .transition().delay(4000).duration(1800)
+            .style("opacity", 1.0);
+    }
+
+
+    function appendClosureText () {
+        chart.cg = d3.select("#svgf").append("g");
+        chart.cg.append("text")
+            .attr("class", "finexplore")
+            .attr("text-anchor", "left")
+            .attr("x", chart.cx - 120)
+            .attr("y", 220)
+            .attr("font-size", 18)
+            .text("Use the menu to see timeline")
+            .style("opacity", 0.0)
+            .transition().delay(1000).duration(4000)
+            .style("opacity", 1.0);
+        chart.cg.append("text")
+            .attr("class", "finexplore")
+            .attr("text-anchor", "left")
+            .attr("x", chart.cx - 120)
+            .attr("y", 240)
+            .attr("font-size", 18)
+            .text("points or create your own.")
+            .style("opacity", 0.0)
+            .transition().delay(1000).duration(4000)
+            .style("opacity", 1.0);
+        chart.cg.append("text")
+            .attr("class", "findonate")
+            .attr("text-anchor", "left")
+            .attr("x", chart.cx - 120)
+            .attr("y", 270)
+            .attr("font-size", 18)
+            .attr("stroke", "none")
+            .attr("fill", "#666")
+            .text("Support this site!")
+            .style("opacity", 0.0)
+            .transition().delay(3000).duration(4000)
+            .style("opacity", 1.0);
+        appendDonateButton();
     }
 
 
@@ -132,9 +264,11 @@ app.finale = (function () {
             .style("height", tl.height + "px");
         jt.out("suppvisdiv", jt.tac2html(
             ["svg", {id: "svgf", width: tl.width2, height: tl.height}]));
+        initBackgroundLights();
         appendBackgroundImage();
         appendCompletionText();
         initHonorRoll();
+        appendClosureText();
     }
 
 
@@ -143,11 +277,6 @@ app.finale = (function () {
         tl = app.linear.timeline();
         chart.colors = {bg:"#eefeff"};
         initDisplayElements();
-        //display elements:
-        //  - link to reference view the timeline they just completed so 
-        //    they can revisit points or suppviz.  Point to menu for 
-        //    finding timelines
-        //  - Support this work
     }
 
 
