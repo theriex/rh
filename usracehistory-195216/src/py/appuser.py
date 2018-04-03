@@ -49,7 +49,7 @@ class AppUser(db.Model):
     lang = db.StringProperty()      # preferred lang code for data points
     settings = db.TextProperty()    # JSON object (age, parent's age etc)
     remtls = db.TextProperty()      # JSON [] remembered timeline ids/names
-    completed = db.TextProperty()   # JSON [] id, name, firstCompl, latestComp
+    completed = db.TextProperty()   # JSON [] tlid, name, first, latest
     started = db.TextProperty()     # JSON [] timeline progress instances
     built = db.TextProperty()       # JSON [] created timeline ids/names
     # write privileges
@@ -291,6 +291,11 @@ def return_json(handler, data):
     response.out.write(jsontxt)
 
 
+def update_account(handler, acc):
+    cached_put(acc.email, acc)
+    return_json(handler, [acc, {"token": acctoken(acc.email, acc.password)}])
+
+
 class UpdateAccount(webapp2.RequestHandler):
     def post(self):
         if not verify_secure_comms(self):
@@ -314,8 +319,7 @@ class UpdateAccount(webapp2.RequestHandler):
                 if val.lower() == "none":
                     val = ""
                 setattr(acc, attr, val)
-        cached_put(acc.email, acc)
-        return_json(self, [acc, {"token": acctoken(acc.email, acc.password)}])
+        update_account(self, acc)
         
 
 class AccessAccount(webapp2.RequestHandler):
@@ -338,6 +342,4 @@ app = webapp2.WSGIApplication([('.*/updacc', UpdateAccount),
                                ('.*/acctok', AccessAccount),
                                ('.*/updatetls', UpdateMyTimelines)],
                               debug=True)
-
-
 

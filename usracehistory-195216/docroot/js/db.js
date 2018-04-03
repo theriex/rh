@@ -294,20 +294,14 @@ app.db = (function () {
     }
 
 
-    function verifyProgressInfo () {
-        if(!dcon.prog) {
-            dcon.prog = {tlid:dcon.ds[dcon.ds.length - 1].instid,
-                         st:new Date().toISOString(),
-                         svs:"", pts:""}; }
-        if(app.user && app.user.acc && app.user.acc.started) {
-            app.user.acc.started.forEach(function (st) {
-                if(st.tlid === dcon.prog.tlid) {
-                    dcon.prog = st; } }); }
-        //verify all fields just in case
-        dcon.prog.st = dcon.prog.st || new Date().toISOString();
-        dcon.prog.svs = dcon.prog.svs || "";
-        dcon.prog.pts = dcon.prog.pts || "";
-    }            
+    function findTimelineInfo (tlid, entries) {
+        var ret = null;
+        entries = entries || [];
+        entries.forEach(function (entry) {
+            if(entry.tlid === tlid) {
+                ret = entry; } });
+        return ret;
+    }
 
 
     function isPointVisited (pt) {
@@ -339,6 +333,45 @@ app.db = (function () {
     }
 
 
+    function verifyRestartOrNew (acc) {
+        var compinst = findTimelineInfo(dcon.prog.tlid, acc.completed);
+        if(!compinst) { return; }  //not previously completed, new tl start
+        if(!dcon.restart) {
+            if(confirm("You've already completed this timeline. Are you sure you want to start over from the beginning?")) {
+                jt.log("Restarting timeline after confirmation");
+                dcon.restart = "confirmed"; }
+            else {
+                dcon.restart = "norestart"; } }
+        if(dcon.restart === "confirmed") { return; }   //new tl start
+        //mark all timelines and levels visited
+        dcon.ds.forEach(function (tl) {
+            tl.visited = true;
+            tl.levs.forEach(function (lev) {
+                lev.visited = true; }); });
+        dcon.prog.st = jt.ISOString2Time(compinst.latest)
+    }
+
+
+    function verifyProgressInfo () {
+        var acc, proginst;
+        if(!dcon.prog) {
+            dcon.prog = {tlid:dcon.lastTL.instid,
+                         st:new Date().toISOString(),
+                         svs:"", pts:""}; }
+        if(app.user && app.user.acc) {
+            acc = app.user.acc;
+            proginst = findTimelineInfo(dcon.prog.tlid, acc.started);
+            if(proginst) {
+                dcon.prog = proginst; }
+            else {
+                verifyRestartOrNew(acc); } }  //updates dcon.prog
+        //verify all fields just in case
+        dcon.prog.st = dcon.prog.st || new Date().toISOString();
+        dcon.prog.svs = dcon.prog.svs || "";
+        dcon.prog.pts = dcon.prog.pts || "";
+    }            
+
+
     function recalcProgress (init) {
         //init should be true when the state is first built from loading a
         //timeline, or after the user first logs in and their progress info
@@ -348,7 +381,7 @@ app.db = (function () {
         //levelup sets lev.levelupShown
         var currlev = null;
         if(init) { clearVisited(); }
-        verifyProgressInfo();  //creates dcon.prog as needed
+        verifyProgressInfo();  //creates dcon.prog or reads it from account
         //Mark visited to minimize churn and make the state easier to read.
         dcon.ds.forEach(function (tl, idx) {
             if(!tl.visited) {
@@ -375,6 +408,10 @@ app.db = (function () {
                         if(!currlev && !lev.visited) {
                             currlev = {tl:tl, lev:lev}; } }
                     tl.visited = tl.visited && lev.visited; }); } });
+        if(!currlev) {  //return last level of final timeline for display
+            currlev = {tl:dcon.lastTL, lev:dcon.lastLev};
+            currlev.lev.levpcnt = 1;
+            currlev.lev.rempts = []; }
         return currlev;
     }
 
@@ -398,8 +435,11 @@ app.db = (function () {
                 else {  //any remainder points go in last level
                     lev.points = tl.points.slice(idx * ppl); } });
             tl.levs = levs; });
+        //calculate endpoint values (just avoiding cluttering up prev loop)
         dcon.ds.forEach(function (tl) {
+            dcon.lastTL = tl;
             tl.levs.forEach(function (lev) {
+                dcon.lastLev = lev;
                 lev.maxnum = levnum; }); });
         recalcProgress("init");
     }
@@ -490,7 +530,6 @@ app.db = (function () {
             if(serstr) {
                 serstr += ", "; }
             serstr += tl.name; });
-        dcon.lastTL = dcon.ds[dcon.ds.length - 1];
         jt.log("Timeline display series: " + serstr);
     }
 
@@ -516,7 +555,7 @@ app.db = (function () {
             return app[currlev.lev.svname].display(); }
         if(!currlev.lev.levelupShown) {
             if(currlev.lev.num === currlev.lev.maxnum) {
-                return app.finale.display(); }
+                return app.finale.display(true); }
             return app.levelup.display(currlev); }
         jt.log("db.nextInteraction fell through. Should never happen. ");
     }

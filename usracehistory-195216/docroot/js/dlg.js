@@ -527,11 +527,6 @@ app.dlg = (function () {
     }
 
 
-    function authparams () {
-        return "email=" + jt.enc(app.user.email) + "&authtok=" + app.user.tok;
-    }
-
-
     function popBack (dfunc) {
         if(dlgstack.length > 0) {
             return (dlgstack.pop())(); }
@@ -546,7 +541,7 @@ app.dlg = (function () {
                                         ["none",   "none",    "none"]);
         if(data) {
             jt.out("loginstatdiv", "Updating account...");
-            jt.call("POST", "updacc?" + authparams(), inputsToParams(data),
+            jt.call("POST", "updacc?" + app.auth(), inputsToParams(data),
                     function (result) {
                         app.db.deserialize("AppUser", result[0]);
                         app.user.acc = result[0];
@@ -554,7 +549,7 @@ app.dlg = (function () {
                         popBack(app.db.nextInteraction); },
                     function (code, errtxt) {
                         jt.log("updateAccount " + code + ": " + errtxt);
-                        jt.lut("loginstatdiv", errtxt); },
+                        jt.out("loginstatdiv", errtxt); },
                     jt.semaphore("dlg.updateAccount")); }
     }
 
@@ -721,7 +716,7 @@ app.dlg = (function () {
         jt.byId("contbutton").disabled = true;
         app.db.mergeProgToAccount();  //normalize current prog with db state
         data = app.db.postdata("AppUser", app.user.acc);
-        jt.call("POST", "updacc?" + authparams(), data,
+        jt.call("POST", "updacc?" + app.auth(), data,
                 function (result) {
                     jt.byId("contbutton").disabled = false;
                     jt.log("progress saved");

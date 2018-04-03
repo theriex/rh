@@ -64,6 +64,20 @@ handlers:
   script: src.py.timeline.app
 
 
+## -------------------- tlcomp --------------------
+
+## Note that a timeline has been completed and update the account data.
+## POST params: email, authtok, tlid, tlname
+- url: .*/notecomp.*
+  script: src.py.tlcomp.app
+
+## Find the most recent completions for the given timeline
+## GET params: email, authtok, tlid
+- url: .*/findcomps.*
+  script: src.py.tlcomp.app
+
+
+
 ######################################################################
 ##  General Config
 

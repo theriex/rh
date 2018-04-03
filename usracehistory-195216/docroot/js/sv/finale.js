@@ -7,6 +7,8 @@ app.finale = (function () {
     var tl = null,       //grab useful geometry from linear timeline display
         chart = {},      //container for svg references
         hr = {},         //honor roll working variables
+        //PENDING: stop running the dynamic stuff after 400 times or whatever
+        //just so you don't chew up batteries
         hrto = null,     //honor roll timeout reference
         slto = null;     //searchlights timeout reference
 
@@ -147,8 +149,23 @@ app.finale = (function () {
     }
 
 
+    function startHonorRoll (comps) {
+        hr.names = ["", "", "* Honor Roll *", hr.username]
+        comps.forEach(function (comp) {
+            if(hr.names.indexOf(comp.username) < 0) {
+                hr.names.push(comp.username); } });
+        while(hr.names.length < 13) {
+            hr.names.push(""); }
+        chart.hrg = d3.select("#svgf").append("g");
+        hr.ldefs.forEach(function (linedef, idx) {
+            createHonorRollText(linedef, idx, hr.names[idx]); });
+        if(hrto) { clearTimeout(hrto); }
+        hrto = setTimeout(updateHonorRoll, 6000 + hr.trt);
+    }
+
+
     function initHonorRoll () {
-        var i;
+        var i, tlid = app.db.displayContext().tlid;
         hr = {x:chart.cx - 120, y:30, lh:30, nidx:0, trt:2400};
         hr.username = app.user.acc.name || "User " + app.user.instid + " (You)";
         hr.ldefs = [{y:hr.y + 0 * hr.lh, opa:0.0},
@@ -159,17 +176,13 @@ app.finale = (function () {
                     {y:hr.y + 5 * hr.lh, opa:0.1},
                     {y:hr.y + 6 * hr.lh, opa:0.0}];
         //PENDING: When a static daily stats page becomes available, fetch
-        //the names from there rather than by query.
-        //STUB: This should call to query recent TLComp entries.
-        hr.temptitle = "* Honor Roll *";
-        hr.names = ["", "", hr.temptitle, hr.username];
-        for(i = 1; i < 14; i += 1) {
-            hr.names.push("Generated Name " + i); }
-        chart.hrg = d3.select("#svgf").append("g");
-        hr.ldefs.forEach(function (linedef, idx) {
-            createHonorRollText(linedef, idx, hr.names[idx]); });
-        if(hrto) { clearTimeout(hrto); }
-        hrto = setTimeout(updateHonorRoll, 6000 + hr.trt);
+        //the names from there rather than by general query.
+        jt.call("GET", "findcomps?" + app.auth() + "&tlid=" + tlid, null,
+                function (result) {
+                    startHonorRoll(result); },
+                function (code, errtxt) {
+                    jt.log("findcomps failed " + code + ": " + errtxt); },
+                jt.semaphore("finale.initHonorRoll"));
     }
 
 
@@ -278,15 +291,30 @@ app.finale = (function () {
     }
 
 
-    function display () {
+    function display (record) {
+        var ds, tinst, data;
         app.dlg.close();  //in case left open
         tl = app.linear.timeline();
         chart.colors = {bg:"#eefeff"};
         initDisplayElements();
+        if(record) {
+            d3.select("#finctitle").text = "Recording Completion...";
+            ds = app.db.displayContext().ds;
+            tinst = ds[ds.length - 1];
+            data = "tlid=" + tinst.instid + "&tlname=" + jt.enc(tinst.name);
+            jt.call("POST", "notecomp?" + app.auth(), data,
+                    function (result) {
+                        app.db.deserialize("AppUser", result[0]);
+                        app.user.acc = result[0];
+                        d3.select("#finctitle").text = "Timeline Completed!"; },
+                    function (code, errtxt) {
+                        jt.log("finale acc upd " + code + ": " + errtxt);
+                        d3.select("#finctitle").text = errtxt; },
+                    jt.semaphore("finale.display")); }
     }
 
 
     return {  //unlike regular suppviz, finale never returns to interactive
-        display: function () { display(); }
+        display: function (record) { display(record); }
     };
 }());
