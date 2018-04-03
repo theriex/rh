@@ -75,6 +75,9 @@ app.dlg = (function () {
             var elem = jt.byId(id);
             if(elem) {
                 cd.h -= elem.offsetHeight; } });
+        //going smaller than image height means you have to scroll to see
+        //the entire image.  Looks squished.
+        cd.h = Math.max(cd.h, 166);  //don't go smaller than image height
         d3.select("#dlgcontentdiv")
             .style("max-height", cd.h + "px");
     }
@@ -501,6 +504,9 @@ app.dlg = (function () {
                   app.user.email]],
                 ["div", {cla:"dlgsignindiv"},
                  [["div", {cla:"dlgformline"},
+                   ["em",
+                    "Public information:"]],
+                  ["div", {cla:"dlgformline"},
                    [["label", {fo:"namein", cla:"liflab", id:"labnamein"},
                      "Name"],
                     ["input", {type:"text", cla:"lifin",
