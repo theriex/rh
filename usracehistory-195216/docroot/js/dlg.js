@@ -82,6 +82,7 @@ app.dlg = (function () {
 
     function displayDialog (d, html) {
         var dim, elem, txtdiv, picdiv;
+        jt.log("displayDialog " + d);
         if(tl.width < 500) {  //use full space on small devices
             dim = {x: tl.margin.left + Math.round(0.02 * tl.width),
                    y: tl.margin.top + Math.round(0.04 * tl.height),
@@ -93,7 +94,7 @@ app.dlg = (function () {
                    y: tl.margin.top + Math.round(0.04 * tl.height),
                    w: Math.round(0.9 * tl.width)};
             if(d) {
-                dim.y = tl.margin.top + tl.y(d.oc);
+                dim.y = tl.margin.top + tl.y(d.vc);
                 dim.y = Math.min(dim.y, Math.round(0.7 * tl.height)); }
             dim.h = Math.round(0.9 * tl.height) - dim.y; }
         d3.select("#itemdispdiv")

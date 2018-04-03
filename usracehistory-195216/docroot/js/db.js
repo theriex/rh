@@ -142,8 +142,8 @@ app.db = (function () {
     //within the same year are distinguished by their y coordinate.
     function makePointIdent (pt, ny) {
         var ident = "y" + (ny - pt.start.year);
-        if(pt.oc > 1) {
-            ident += "_" + pt.oc; }
+        if(pt.vc > 1) {
+            ident += "_" + pt.vc; }
         pt.id = ident;
     }
 
