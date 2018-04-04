@@ -165,7 +165,7 @@ app.finale = (function () {
 
 
     function initHonorRoll () {
-        var i, tlid = app.db.displayContext().tlid;
+        var i, url, tlid = app.db.displayContext().tlid;
         hr = {x:chart.cx - 120, y:30, lh:30, nidx:0, trt:2400};
         hr.username = app.user.acc.name || "User " + app.user.instid + " (You)";
         hr.ldefs = [{y:hr.y + 0 * hr.lh, opa:0.0},
@@ -177,7 +177,9 @@ app.finale = (function () {
                     {y:hr.y + 6 * hr.lh, opa:0.0}];
         //PENDING: When a static daily stats page becomes available, fetch
         //the names from there rather than by general query.
-        jt.call("GET", "findcomps?" + app.auth() + "&tlid=" + tlid, null,
+        url = "findcomps?" + app.auth() + "&tlid=" + tlid +
+            jt.ts("&cb=", "second");
+        jt.call("GET", url, null,
                 function (result) {
                     startHonorRoll(result); },
                 function (code, errtxt) {

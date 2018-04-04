@@ -108,17 +108,17 @@ app.levelup = (function () {
         var timing = 1000;
         if(!chart.exited) {  //ignore stray double clicks or bubbling
             chart.exited = true;
+            levinf.lev.levelupShown = new Date().toISOString();
             d3.select("#suppvisdiv")
                 .transition().duration(timing)
                 .style("left", Math.round(0.5 * tl.width2) + "px")
                 .style("top", Math.round(0.5 * tl.height) + "px")
-                .style("width", "10px")
-                .style("height", "10px");
+                .style("width", "1px")
+                .style("height", "1px");
             setTimeout(function () {
                 d3.select("#suppvisdiv")
-                    .style("visibility", "hidden"); }, timing);
-            levinf.lev.levelupShown = new Date().toISOString();
-            app.db.nextInteraction(); }
+                    .style("visibility", "hidden"); 
+                app.db.nextInteraction(); }, timing); }
     }
 
 

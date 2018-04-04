@@ -62,7 +62,7 @@ class FindCompletions(webapp2.RequestHandler):
         if not acc:
             return
         params = appuser.read_params(self, ["tlid"]);
-        tlid = params["tlid"]
+        tlid = int(params["tlid"])
         vq = appuser.VizQuery(TLComp, "WHERE tlid=:1 LIMIT 50", tlid)
         res = vq.fetch(50, read_policy=db.EVENTUAL_CONSISTENCY, deadline=40)
         appuser.return_json(self, res)

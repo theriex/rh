@@ -98,7 +98,7 @@ app.dlg = (function () {
                    w: Math.round(0.9 * tl.width)};
             if(d) {
                 dim.y = tl.margin.top + tl.y(d.vc);
-                dim.y = Math.min(dim.y, Math.round(0.7 * tl.height)); }
+                dim.y = Math.min(dim.y, Math.round(0.6 * tl.height)); }
             dim.h = Math.round(0.9 * tl.height) - dim.y; }
         d3.select("#itemdispdiv")
             .style("left", dim.x + "px")
