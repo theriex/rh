@@ -219,6 +219,8 @@ app.slavery = (function () {
                         viewBox:"0 0 959 593", preserveAspectRatio:"none"},
                 ["g", {id:"outlines"},
                  html]];
+        chart.vbmid = {x: Math.round(0.5 * 959),   //calculate from viewbox
+                       y: Math.round(0.35 * 593)};
         return html;
     }
 
@@ -274,30 +276,58 @@ app.slavery = (function () {
     }
 
 
+    function autoplay (titletime) {
+        d3.select("#kcldiv").style("display", "none");
+        d3.select("#kcrdiv").style("display", "none");
+        d3.select("#kcplaydiv").style("display", "none");
+        setTimeout(function () {
+            //expanding the existing play button looks like crap, so draw..
+            var tg = d3.select("#svgin").append("g").attr("opacity", 1.0);
+            tg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("x", chart.vbmid.x + 50)
+                .attr("y", chart.vbmid.y + 140)
+                .attr("font-size", 400)
+                .text("\u25B6")
+                .style("opacity", 1.0)
+                .transition().delay(500).duration(2000)
+                .attr("font-size", 2)
+                .attr("x", chart.vbmid.x - 10)
+                .attr("y", 10)
+                .style("opacity", 0.0)
+                .remove();
+            setTimeout(function () {
+                d3.select("#kcldiv").style("display", "inline-block");
+                d3.select("#kcrdiv").style("display", "inline-block");
+                d3.select("#kcplaydiv").style("display", "inline-block"); },
+                       2000);
+        }, titletime - 500);
+        setTimeout(function () {
+            app.slavery.transport("play"); }, titletime + 2500);
+    }
+
+
     function displayTitle () {
         var mid, tg, delay = 3500, duration = 2000;
-        mid = {x: Math.round(0.5 * 959),   //calculate from viewbox
-               y: Math.round(0.35 * 593)};
         tg = d3.select("#svgin").append("g").attr("opacity", 1.0);
         tg.append("text")
             .attr("text-anchor", "middle")
-            .attr("x", mid.x)
-            .attr("y", mid.y)
+            .attr("x", chart.vbmid.x)
+            .attr("y", chart.vbmid.y)
             .attr("font-size", 78)
             .attr("font-weight", "bold")
             .text("Legalized Chattel Slavery");
         tg.append("text")
             .attr("text-anchor", "middle")
-            .attr("x", mid.x)
-            .attr("y", mid.y + 100)
+            .attr("x", chart.vbmid.x)
+            .attr("y", chart.vbmid.y + 100)
             .attr("font-size", 64)
             .attr("font-weight", "bold")
             .text("By Region/State");
         tg.transition().delay(delay).duration(duration)
             .attr("opacity", 0.0)
             .remove();
-        setTimeout(function () { app.slavery.transport("play"); },
-                   delay + duration - 500);
+        autoplay(delay + duration);
     }
 
 
@@ -340,7 +370,7 @@ app.slavery = (function () {
             .style("opacity", 0.2)
             .on("mouseover", function () { this.style.opacity = 1.0; })
             .on("mouseout", function () { this.style.opacity = 0.2; })
-            .on("click", function (d) { app.slavery.selinstid(d.instid); });
+            .on("click", function (d) { app.slavery.selyear(d.start.year); });
         mid = {x: Math.round(tl.width2 / 2) + tl.margin.left,
                y: Math.round(tl.height / 2) + tl.margin.top};
         d3.select("#suppvisdiv")
@@ -416,18 +446,25 @@ app.slavery = (function () {
         ani.idx = Math.max(ani.idx, 0);
         if(ani.idx < ani.tes.length) {
             te = ani.tes[ani.idx];
-            jt.out("kyrdiv", te.year);
-            d3.select("#kyrdiv")
-                .style("font-size", "10px")
-                .transition().duration(500)
-                .style("font-size", "24px");
-            jt.out("kytdiv", te.text || "");
-            d3.select("#kytdiv").transition().duration(500)
-                .style("opacity", 1.0);
-            markSlaveStates(te.year);
-            updateProgressBar(te.year);
-            if(te.text) {
-                wc += te.text.split(" ").length; } }
+            if(ani.dispyear && ani.dispyear < Number(te.year)) {
+                ani.dispyear += 1;
+                jt.out("kyrdiv", ani.dispyear);
+                ani.timeout = setTimeout(displayPoint, 100);
+                return; }  //don't go to next point yet
+            else {
+                ani.dispyear = Number(te.year);
+                jt.out("kyrdiv", te.year);
+                d3.select("#kyrdiv")
+                    .style("font-size", "10px")
+                    .transition().duration(500)
+                    .style("font-size", "24px");
+                jt.out("kytdiv", te.text || "");
+                d3.select("#kytdiv").transition().duration(500)
+                    .style("opacity", 1.0);
+                markSlaveStates(te.year);
+                updateProgressBar(te.year);
+                if(te.text) {
+                    wc += te.text.split(" ").length; } } }
         else {
             ani.styrtemp = jt.tac2html(
                 ["a", {href:"#done", onclick:jt.fs("app.slavery.finish()")},
@@ -456,6 +493,8 @@ app.slavery = (function () {
             break;
         case "pause":
             ani.playing = false;
+            if(ani.timeout) {
+                clearTimeout(ani.timeout); }
             jt.byId("playpause").src = "img/play.png";
             break;
         case "prev":
@@ -482,19 +521,6 @@ app.slavery = (function () {
             app.db.makeCoordinates(pt, ctx); });
         initDisplayElements();
         initAnimationSequence();
-    }
-
-
-    function displayPointById (instid) {
-        var teindex = -1;
-        ani.tes.forEach(function (te, idx) {
-            if(instid === te.instid) {
-                teindex = idx; } });
-        if(teindex < 0) {
-            jt.log("displayPointById: " + instid + " not found.");
-            return; }
-        ani.idx = teindex;
-        displayPoint();
     }
 
 
@@ -584,7 +610,6 @@ app.slavery = (function () {
     return {
         display: function () { display(); },
         transport: function (command) { transport(command); },
-        selinstid: function (instid) { displayPointById(instid); },
         selyear: function (year) { displayPointByYear(year); },
         stclick: function (stid) { stateClick(stid); },
         stunclick: function (stid) { stateUnclick(stid); },
