@@ -211,7 +211,10 @@ app.tabular = (function () {
             tac: function () {
                 var html = [];
                 spec.opts.forEach(function (opt) {
-                    html.push(["option", {value:opt.value},
+                    var attributes = {value:opt.value};
+                    if(opt.selected) {
+                        attributes.selected = "selected"; }
+                    html.push(["option", attributes,
                                opt.text || opt.value]); });
                 return ["select", {name:spec.id, id:spec.id,
                                    onchange:spec.chgstr},
@@ -231,7 +234,7 @@ app.tabular = (function () {
         ptflds.selpool = makeSelect(
             "ptdpsel", jt.fs("app.tabular.ptdisp()"),
             [{value:"All", text:"All Points"},
-             {value:"Timeline", text:"Timeline Points"},
+             {value:"Timeline", text:"Timeline Points", selected:"selected"},
              {value:"Suppviz", text:"Visualizations"}]);
         ptflds.selcode = makeSelect(
             "ptcodesel", jt.fs("app.tabular.ptdisp()"),
@@ -555,9 +558,17 @@ app.tabular = (function () {
         var crit = {code: ptflds.selcode.getValue(),
                     start: Number(jt.byId("yearstartin").value),
                     end: Number(jt.byId("yearendin").value),
-                    srch: jt.byId("srchin").value};
+                    srch: jt.byId("srchin").value}, dcon;
         if(ptflds.selpool.getValue() === "Timeline") {
-            crit.ids = currtl.cids; }
+            if(currtl) {
+                crit.ids = currtl.cids; }
+            else {
+                dcon = app.db.displayContext()
+                if(!dcon.cids) {
+                    dcon.cids = "";
+                    dcon.points.forEach(function (pt) {
+                        dcon.cids = dcon.cids.csvappend(pt.instid); }); }
+                crit.ids = dcon.cids; } }
         // jt.log("getPointMatchCriteria:");
         // Object.keys(crit).forEach(function (key) {
         //     jt.log("    " + key + ": " + crit[key]); });
@@ -582,9 +593,35 @@ app.tabular = (function () {
     }
 
 
+    //Merge the given sorted and prepared points into allpts.  Used to
+    //ensure any points referenced in a loaded timeline are available in
+    //reference mode.
+    function mergeTimelinePoints(points) {
+        var updpts = [], aps = app.allpts, apidx = 0, mps = points, mpidx = 0,
+            ap, mp;
+        while(apidx < aps.length || mpidx < mps.length) {
+            if(apidx < aps.length) { ap = aps[apidx]; } else { ap = null; }
+            if(mpidx < mps.length) { mp = mps[mpidx]; } else { mp = null; }
+            if(ap && !mp) { updpts.push(ap); apidx += 1; }
+            else if(!ap && mp) { updpts.push(mp); mpidx += 1; }
+            else if(ap.tc < mp.tc) { updpts.push(ap); apidx += 1; }
+            else if(ap.tc > mp.tc) { updpts.push(mp); mpidx += 1; }
+            else {  //ap.tc === mp.tc
+                updpts.push(ap);
+                apidx += 1;
+                if(ap.instid === mp.instid) {
+                    mpidx += 1; } } }
+        app.allpts = updpts;
+    }
+
+
     function preparePointsData () {
+        var ctx;
         app.allpts.forEach(function (pt) {
             app.db.parseDate(pt); });
+        ctx = app.db.makeCoordContext(app.allpts);
+        app.allpts.forEach(function (pt) {
+            app.db.makeCoordinates(pt, ctx); });
         app.allpts.sort(function (a, b) {
             var av, bv;
             if(a.start.year < b.start.year) { return -1; }
@@ -598,6 +635,7 @@ app.tabular = (function () {
             if(av < bv) { return -1; }
             if(av > bv) { return 1; }
             return 0; });
+        mergeTimelinePoints(app.db.displayContext().points);
     }
 
 
