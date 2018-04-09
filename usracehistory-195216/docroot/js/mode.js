@@ -34,7 +34,8 @@ app.mode = (function () {
         if(!ms.progsvg) {
             clearSearchState();  //init
             html = [["div", {id:"refdiv", style:"width:" + ms.w + "px;" +
-                                                "height:" + ms.h + "px;"},
+                             //reduce height by 10 to not overflow select box
+                             "height:" + (ms.h - 10) + "px;"},
                      "Reference Title"],
                     ["div", {id:"levdiv"},
                      ["svg", {id:"svgnav", width:ms.w, height:ms.h}]]];
@@ -296,6 +297,16 @@ app.mode = (function () {
     }
 
 
+    function endSuppViz(module, start, end) {
+        if(mode === "interactive") {
+            app.db.svdone("lynching", stats.start, stats.end);
+            app.dlg.saveprog(); }  //launches next interaction after save
+        //close the display
+        d3.select("#suppvisdiv")
+            .style("visibility", "hidden");
+    }
+
+
     return {
         start: function (tl, currlev) { start(tl, currlev); },
         next: function () { next(); },
@@ -304,6 +315,7 @@ app.mode = (function () {
         menu: function (expand, select) { displayMenu(expand, select); },
         showNextPoints: function (points) { showNextPoints(points); },
         searchstate: function () { return srchst; },
-        updlev: function (currlev) { updateLevelDisplay(currlev); }
+        updlev: function (currlev) { updateLevelDisplay(currlev); },
+        svdone: function (m, s, e) { endSuppViz(m, s, e); }
     };
 }());

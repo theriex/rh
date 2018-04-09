@@ -692,14 +692,6 @@ app.tabular = (function () {
                 // sv/about is a suppviz but not for timelines
                 // sv/levelup runs automatically as part of leveling
                 // discussion: https://github.com/theriex/rh/issues/2
-                // - Finale: Fireworks, donation, build your own..
-                // - Population Composition: Census categories/numbers over time
-                // - Immigration Flows: Who from where over time
-                // - Citizenship: Residency/Citizenship availability over time
-                // - Monetary Loss: Monetary loss from systemic racism
-                // - Worldwide ancient cities (Teotihuacán context)
-                // - Officials of color by state (first and cumulative)
-                // - Indigenous nations territories over time
                 {module:"intro", name:"Intro Completion",
                  descr:"Chronology Unlocked, please bookmark"},
                 {module:"slavery", name:"Slavery",
@@ -718,10 +710,13 @@ app.tabular = (function () {
                       [["label", {fo:"cb" + sv.module}, "Include"],
                        ["input", si]]]; }
             html.push(["div", {cla:"svlistdiv"},
-                       [["div", {cla:"svlistnamediv"}, 
-                         [si, 
-                          ["span", {cla:"svlistnamespan"}, sv.name]]],
-                        //PENDING: "Run" and "About" buttons
+                       [["div", {cla:"svlistnamediv"},
+                         [si,
+                          ["a", {href:"#run" + sv.module,
+                                 onclick:jt.fs("app.tabular.runsv('" + 
+                                               sv.module + "')")},
+                           ["span", {cla:"svlistnamespan"}, sv.name]]]],
+                        //PENDING: "more..." link to sv about text.
                         ["div", {cla:"svlistdescdiv"}, sv.descr]]]); });
         html = ["div", {id:"svsdispdiv"}, html]; 
         jt.out("pointsdispdiv", jt.tac2html(html));
@@ -800,6 +795,7 @@ app.tabular = (function () {
         togptsel: function (ptid) { togglePointInclude(ptid); },
         togsvsel: function (svmn) { toggleSuppvizInclude(svmn); },
         togtlsel: function (tlid) { togglePointInclude(tlid); },
-        canctl: function () { cancelTimelineEdit(); }
+        canctl: function () { cancelTimelineEdit(); },
+        runsv: function (svmodule) { app[svmodule].display(); }
     };
 }());

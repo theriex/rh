@@ -596,14 +596,10 @@ app.slavery = (function () {
     function finish () {
         //PENDING: ask some kind of a question to complete the viz.
         //possibly how long the longest status quo period was
-        var date;
         if(!ani.finished) {
             ani.finished = true;
             stats.end = new Date();
-            app.db.svdone("slavery", stats.start, stats.end);
-            app.dlg.saveprog();
-            d3.select("#suppvisdiv")
-                .style("visibility", "hidden"); }
+            app.mode.svdone("slavery", stats.start, stats.end); }
     }
 
 

@@ -225,11 +225,8 @@ app.intro = (function () {
 
 
     function close () {
-        d3.select("#suppvisdiv")
-            .style("visibility", "hidden");
         tstat.end = new Date();
-        app.db.svdone("intro", tstat.start, tstat.end);
-        app.dlg.saveprog();
+        app.mode.svdone("intro", tstat.start, tstat.end);
     }
 
 

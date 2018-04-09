@@ -616,14 +616,10 @@ app.lynching = (function () {
 
 
     function finish () {
-        var date;
         if(!ani.finished) {
             ani.finished = true;
             stats.end = new Date();
-            app.db.svdone("lynching", stats.start, stats.end);
-            app.dlg.saveprog();
-            d3.select("#suppvisdiv")
-                .style("visibility", "hidden"); }
+            app.mode.svdone("lynching", stats.start, stats.end); }
     }
 
 
