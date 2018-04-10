@@ -288,7 +288,7 @@ app.slavery = (function () {
                 .attr("x", chart.vbmid.x + 50)
                 .attr("y", chart.vbmid.y + 140)
                 .attr("font-size", 400)
-                .text("\u25B6")
+                .text("\u25B6")  //black right-pointing triangle
                 .style("opacity", 1.0)
                 .transition().delay(500).duration(2000)
                 .attr("font-size", 2)

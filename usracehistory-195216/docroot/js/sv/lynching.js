@@ -280,10 +280,11 @@ app.lynching = (function () {
 
 
     function initShowPoints () {
-        ani.pts.push({date:0, text:lynchingDefHTML(0), delay:6000});
-        ani.pts.push({date:1, text:lynchingDefHTML(1), delay:6000});
-        ani.pts.push({date:2, text:lynchingDefHTML(2), delay:6000});
-        ani.pts.push({date:3, text:lynchingDefHTML(3), delay:6000});
+        var cdel = 6000
+        ani.pts.push({date:0, text:lynchingDefHTML(0), delay:cdel});
+        ani.pts.push({date:1, text:lynchingDefHTML(1), delay:cdel});
+        ani.pts.push({date:2, text:lynchingDefHTML(2), delay:cdel});
+        ani.pts.push({date:3, text:lynchingDefHTML(3), delay:cdel});
         datapoints().forEach(function (pt) {
             ani.pts.push(
                 {date:pt.date, delay:Math.round(38 * pt.text.length),
@@ -293,7 +294,7 @@ app.lynching = (function () {
         ani.pts = ani.pts.concat(chart.dat);
         ani.pts.sort(function (a, b) { 
             return (Number(a.date)) - (Number(b.date)); });
-        ani.pts.push({date:"", delay:6000, text:jt.tac2html(
+        ani.pts.push({date:"", delay:cdel, text:jt.tac2html(
             [["div", {cla:"lynchcrittdiv"}, ""],
              ["div", {cla:"lynchcrititemdiv"},
               "Lynchings have occurred beyond the timeframe of this dataset."
@@ -374,10 +375,24 @@ app.lynching = (function () {
     }
 
 
+    function playMatchingPointForBar (baridx) {
+        var i;
+        ani.idx = 0;
+        for(i = 0; i < ani.pts.length; i += 1) {
+            if(ani.pts[i].baridx === baridx) {
+                ani.idx = i;
+                break; } }
+        showNextPoint();
+    }
+
+
     function rectclick (rid) {
+        var clicked = !rid;
         rid = rid || this.id;
         chart.bs.selidx = Number(rid.match(/bar(\d+)column/)[1]);
         //console.log("rectclick selidx: " + chart.bs.selidx);
+        if(clicked) {
+            return playMatchingPointForBar(chart.bs.selidx); }
         chart.dat.forEach(function (bd, idx) {
             var opa = 0.0;
             if(idx < chart.bs.selidx) {
@@ -546,15 +561,18 @@ app.lynching = (function () {
             jt.byId("lytdiv").style.display = "block";
             //have to center after displayed, otherwise lytdiv may be 0x0
             centerAbsoluteDiv("suppvisdiv", "lytdiv"); }
-        if(ani.idx <= ani.pts.length) {
-            ani.shto = setTimeout(showNextPoint, pt.delay || 2500); }
+        if(ani.transport === "playing") {
+            if(ani.idx <= ani.pts.length) {
+                ani.shto = setTimeout(showNextPoint, pt.delay || 2500); }
+            else {
+                playpause();      //switch to paused
+                ani.idx = 0; } }  //restart from beginning on play
     }
 
 
     function displayTitle () {
-        var mid, tg, delay = 3500, duration = 2000;
-        mid = {x: Math.round(0.5 * chart.ms.vbw),
-               y: Math.round(0.35 * chart.ms.vbh)};
+        var tg, mid = {x: Math.round(0.5 * chart.ms.vbw),
+                       y: Math.round(0.35 * chart.ms.vbh)};
         tg = d3.select("#mapsvg").append("g").attr("opacity", 1.0);
         tg.append("text")
             .attr("text-anchor", "middle")
@@ -563,10 +581,48 @@ app.lynching = (function () {
             .attr("font-size", 78)
             .attr("font-weight", "bold")
             .text("Lynching");
-        tg.transition().delay(delay).duration(duration)
+        tg.transition().delay(3500).duration(2000)
             .attr("opacity", 0.0)
             .remove();
-        setTimeout(showNextPoint, delay + duration - 500);
+    }
+
+
+    function autoplay () {
+        var apg = d3.select("#mapsvg").append("g").attr("opacity", 1.0);
+        apg.append("text")
+            .attr("text-anchor", "middle")
+            .attr("x", 840)
+            .attr("y", 300)
+            .attr("font-size", 140)
+            .text("\u25B6")  //black right-pointing triangle
+            .style("opacity", 1.0)
+            .transition().delay(2500).duration(2000)
+            .attr("font-size", 12)
+            .attr("x", 950)
+            .attr("y", 140)
+            .style("opacity", 0.0)
+            .remove();
+        setTimeout(function () {
+            jt.out("lyppdiv", jt.tac2html(
+                ["a", {href:"#playpause",
+                       onclick:jt.fs("app.lynching.playpause()")},
+                 ["img", {id:"lyppimg", src:"img/pause.png"}]])); }, 4600);
+        ani.shto = setTimeout(showNextPoint, 4600);
+        ani.transport = "playing";
+    }
+
+
+    function playpause () {
+        if(ani.transport === "playing") {
+            if(ani.shto) {
+                clearTimeout(ani.shto);
+                ani.shto = null; }
+            ani.transport = "paused";
+            jt.byId("lyppimg").src = "img/play.png"; }
+        else { //paused
+            ani.transport = "playing";
+            jt.byId("lyppimg").src = "img/pause.png";
+            showNextPoint(); }
     }
 
 
@@ -580,10 +636,12 @@ app.lynching = (function () {
             [["div", {id:"mapdiv"}, usmapTAC()],
              ["div", {id:"bardiv"}, barTAC()],
              ["div", {id:"lytdiv"}],
-             ["div", {id:"lyxdiv"}]]));
+             ["div", {id:"lyxdiv"}],
+             ["div", {id:"lyppdiv"}]]));
         barInit();
         circInit();
         displayTitle();
+        autoplay();
         mid = {x: Math.round(tl.width2 / 2) + tl.margin.left,
                y: Math.round(tl.height / 2) + tl.margin.top};
         d3.select("#suppvisdiv")
@@ -626,7 +684,8 @@ app.lynching = (function () {
     return {
         display: function () { display(); },
         finish: function () { finish(); },
-        datapoints: function () { return datapoints(); }
+        datapoints: function () { return datapoints(); },
+        playpause: function () { playpause(); }
     };
 }());
 
