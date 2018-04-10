@@ -38,9 +38,16 @@ app.mode = (function () {
                              "height:" + (ms.h - 10) + "px;"},
                      "Reference Title"],
                     ["div", {id:"levdiv"},
-                     ["svg", {id:"svgnav", width:ms.w, height:ms.h}]]];
+                     ["svg", {id:"svgnav", width:ms.w, height:ms.h}]],
+                    ["div", {id:"noticediv",
+                             style:"width:" + (ms.w - 60) + "px;" +
+                                   "opacity:1.0"},
+                     ["Please help report any bugs ",
+                      ["img", {cla:"noticeimg", src:"img/forward.png"}]]]];
             jt.out(ms.divid, jt.tac2html(html));
-            ms.progsvg = d3.select("#svgnav"); }
+            ms.progsvg = d3.select("#svgnav");
+            d3.select("#noticediv").transition().delay(800).duration(5000)
+                .style("opacity", 0.0); }
         showModeElements();
     }
 

@@ -134,6 +134,9 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
   margin:2px 5px 2px 5px; }
 #disptoggleimg { margin:0px 5px 2px 5px; }
 #aboutdiv { float:right; font-size:medium; margin:3px 3px 0px 0px; }
+#noticediv { position:absolute; left:34px; top:0px; font-size:medium;
+  text-align:right; font-style:italic; }
+.noticeimg { max-height:30px; }
 
 #dlgtitlediv { padding:5px 20px; text-align:center; font-weight:bold; 
   font-size:x-large; font-family: "Open Sans", "Helvetica", sans-serif; }
