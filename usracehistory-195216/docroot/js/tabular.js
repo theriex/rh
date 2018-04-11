@@ -302,7 +302,7 @@ app.tabular = (function () {
 
     function emptyTimeline () {
         //Do not set a default value here or it short circuits creation flow.
-        return {instid:"", name:"", slug:"", comment:"", 
+        return {instid:"", name:"", slug:"", title:"", subtitle:"", comment:"", 
                 ctype:"", cids:"", svs:""};
     }
 
@@ -312,6 +312,8 @@ app.tabular = (function () {
             return true; }
         if(currtl.name !== dbtl.name ||
            currtl.slug !== dbtl.slug ||
+           currtl.title !== dbtl.title ||
+           currtl.subtitle !== dbtl.subtitle ||
            currtl.lang !== dbtl.lang ||
            currtl.comment !== dbtl.comment ||
            currtl.ctype !== dbtl.ctype ||
@@ -347,6 +349,18 @@ app.tabular = (function () {
                         ["input", {type:"text", cla:"wfin",
                                    name:"slugin", id:"slugin",
                                    value:currtl.slug}]]]); }
+        html.push(["div", {cla:"dlgformline"},
+                   [["label", {fo:"titlein", cla:"wlab", id:"labtitlein"},
+                     "Title"],
+                    ["input", {type:"text", cla:"wfin",
+                               name:"titlein", id:"titlein",
+                               value:currtl.title}]]]);
+        html.push(["div", {cla:"dlgformline"},
+                   [["label", {fo:"subtitlein", cla:"wlab", id:"labsubtitlein"},
+                     "Subtitle"],
+                    ["input", {type:"text", cla:"wfin",
+                               name:"subtitlein", id:"subtitlein",
+                               value:currtl.subtitle}]]]);
         html.push(["div", {cla:"dlgformline"},
                    [["label", {fo:"commentin", cla:"wlab", id:"labcommentin"},
                      "Comment"],
@@ -450,6 +464,8 @@ app.tabular = (function () {
         jt.byId("namein").value = tl.name;
         if(jt.byId("slugin")) {
             jt.byId("slugin").value = tl.slug; }
+        jt.byId("titlein").value = tl.title;
+        jt.byId("subtitlein").value = tl.subtitle;
         jt.byId("commentin").value = tl.comment;
     }
             
@@ -518,6 +534,8 @@ app.tabular = (function () {
         tlflds.name = jt.byId("namein").value || "";
         if(jt.byId("slugin")) {
             jt.byId("slugin").value = slugify(tlflds.name); }
+        tlflds.title = jt.byId("titlein").value || "";
+        tlflds.subtitle = jt.byId("subtitlein").value || "";
         app.tabular.ptdisp();  //might need to switch points/timelines
     }
 
@@ -526,6 +544,8 @@ app.tabular = (function () {
         currtl.name = jt.byId("namein").value;
         if(jt.byId("slugin")) {
             currtl.slug = jt.byId("slugin").value; }
+        currtl.title = jt.byId("titlein").value;
+        currtl.subtitle = jt.byId("subtitlein").value;
         currtl.comment = jt.byId("commentin").value;
         currtl.ctype = tlflds.seltype.getValue();
         if(currtl.ctype === "Points") {

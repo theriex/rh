@@ -36,6 +36,8 @@ class Timeline(db.Model):
     name = db.StringProperty(required=True)  # unique search results value
     cname = db.StringProperty()    # canonical name for more robust query match
     slug = db.StringProperty()     # unique permalink label, Contributors only
+    title = db.StringProperty()    # title for start dialog, not unique
+    subtitle = db.StringProperty(indexed=False)  # text for start dialog
     lang = db.StringProperty(indexed=False)  # e.g. en-US, en-US-x-grade etc
     comment = db.TextProperty()    # optional credit, short descrip, whatever
     orgid = db.IntegerProperty()   # Organization id (if accepted by org)
@@ -129,6 +131,8 @@ def update_or_create_timeline(handler, acc, params):
     timeline.name = params["name"]
     timeline.cname = canonize(timeline.name)
     timeline.slug = params["slug"] or ""
+    timeline.title = params["title"] or ""
+    timeline.subtitle = params["subtitle"] or ""
     timeline.lang = params["lang"] or "en-US"
     timeline.comment = params["comment"] or ""
     timeline.orgid = acc.orgid
@@ -205,7 +209,8 @@ class UpdateTimeline(webapp2.RequestHandler):
         if not acc:
             return
         params = appuser.read_params(self, ["instid", "name", "ctype", "cids", 
-                                            "svs", "slug", "lang", "comment"]);
+                                            "svs", "slug", "title", "subtitle",
+                                            "lang", "comment"]);
         timeline = update_or_create_timeline(self, acc, params)
         if timeline:
             updated = update_timeline_list(acc.built, timeline)

@@ -130,17 +130,32 @@ app.dlg = (function () {
     }
 
 
-    function showStartDialog (clickfstr) {
-        var html;
-        html = "An introduction<br/>" +
-            " to the history<br/>" +
-            " of race and racism<br/>" +
-            " in the United States<br/>";
+    function wrapText (txt, cc) {
+        var line = "", res = [], words = txt.split(/\s/);
+        words.forEach(function (word) {
+            if(line.length + word.length < cc) {
+                line += " " + word; }
+            else {
+                if(line) {  //have previously appended words
+                    res.push(line); }
+                line = word; } });
+        if(line) {  //append any remainder
+            res.push(line); }
+        return res.join("<br/> ").trim();
+    }
+        // html = "An introduction<br/>" +
+        //     " to the history<br/>" +
+        //     " of race and racism<br/>" +
+        //     " in the United States<br/>";
+
+
+    function showStartDialog (title, subtitle, clickfstr) {
+        var html = wrapText(subtitle || "", 18);
         if(window.innerWidth < 400) {
             html = html.replace("<br/>", ""); }
         //no dialog dismissal option.  Use menu select to do something else.
         html = ["div", {id:"introdlgdiv"},
-                [["div", {id:"introtitlediv"}, "U.S. Race History"],
+                [["div", {id:"introtitlediv"}, title],
                  ["table",
                   ["tr",
                    [["td",
@@ -951,7 +966,7 @@ app.dlg = (function () {
 
     return {
         init: function (timeline) { tl = timeline; },
-        start: function (clickfstr) { showStartDialog(clickfstr); },
+        start: function (t, s, f) { showStartDialog(t, s, f); },
         info: function (d, nextfstr) { showInfoDialog(d, nextfstr); },
         show: function (html) { displayDialog(null, html); },
         close: function (mode) { closeDialog(mode); },

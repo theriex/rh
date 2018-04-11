@@ -546,7 +546,8 @@ app.db = (function () {
         if(currlev.tl.dsindex === 0 && currlev.lev.num === 1 &&
            currlev.lev.levpcnt === 0 && !currlev.lev.startbuttonshown) {
             currlev.lev.startbuttonshown = true;
-            return app.dlg.start(jt.fs("app.db.nextInteraction()")); }
+            return app.dlg.start(dcon.lastTL.title, dcon.lastTL.subtitle,
+                                 jt.fs("app.db.nextInteraction()")); }
         app.mode.updlev(currlev);
         if(points.length > 0) {
             points.reverse();  //so they can be popped off in order...
