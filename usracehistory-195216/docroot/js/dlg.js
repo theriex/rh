@@ -511,14 +511,136 @@ app.dlg = (function () {
     }
 
 
+    function disableFieldsIfNotOrgAdmin () {
+        var disids = ["namein", "codein", "contacturlin", "projecturlin", 
+                      "regionsin", "categoriesin", "tagsin", "updorgbutton"];
+        if(app.user.acc.lev !== 2) {
+            disids.forEach(function (id) {
+                jt.byId(id).disabled = true; }); }
+    }
+
+
+    function editOrganization () {
+        var html;
+        html = [["div", {id:"dlgtitlediv"},
+                 [["a", {href:"#back", onclick:jt.fs("app.dlg.back()")},
+                   ["img", {src:"img/backward.png", cla:"dlgbackimg"}]],
+                  "Organization"]],
+                ["div", {cla:"dlgsignindiv", id:"orgecdiv"},
+                 [["div", {cla:"dlgformline"},
+                   [["label", {fo:"namein", cla:"liflab", id:"labnamein"},
+                     "Name"],
+                    ["input", {type:"text", cla:"lifin",
+                               name:"namein", id:"namein",
+                               value:app.user.org.name}]]],
+                  ["div", {cla:"dlgformline"},
+                   [["label", {fo:"codein", cla:"liflab", id:"codein"},
+                     "Code"],
+                    ["input", {type:"text", cla:"lifin",
+                               name:"codein", id:"codein",
+                               placeholder:"Initials or short name",
+                               value:app.user.org.code}]]],
+                  ["div", {cla:"dlgformline"},
+                   [["label", {fo:"contacturlin", cla:"liflab", 
+                               id:"contacturlin"},
+                     "Contact"],
+                    ["input", {type:"text", cla:"lifin",
+                               name:"contacturlin", id:"contacturlin",
+                               placeholder:"https://yoursite.org",
+                               value:app.user.org.contacturl}]]],
+                  ["div", {cla:"dlgformline"},
+                   [["label", {fo:"projecturlin", cla:"liflab", 
+                               id:"projecturlin"},
+                     "Project"],
+                    ["input", {type:"text", cla:"lifin",
+                               name:"projecturlin", id:"projecturlin",
+                               placeholder:"https://.../projectpage",
+                               value:app.user.org.projecturl}]]],
+                  ["div", {cla:"dlgformline"},
+                   [["label", {fo:"regionsin", cla:"liflab", id:"regionsin"},
+                     "Regions"],
+                    ["input", {type:"text", cla:"lifin",
+                               name:"regionsin", id:"regionsin",
+                               placeholder:"Boston, West Coast, ...",
+                               value:app.user.org.regions}]]],
+                  ["div", {cla:"dlgformline"},
+                   [["label", {fo:"categoriesin", cla:"liflab", 
+                               id:"categoriesin"},
+                     "Categories"],
+                    ["input", {type:"text", cla:"lifin",
+                               name:"categoriesin", id:"categoriesin",
+                               placeholder:"Core, Stats, Awards, ...",
+                               value:app.user.org.categories}]]],
+                  ["div", {cla:"dlgformline"},
+                   [["label", {fo:"tagsin", cla:"liflab", id:"tagsin"},
+                     "Tags"],
+                    ["input", {type:"text", cla:"lifin",
+                               name:"tagsin", id:"tagsin",
+                               placeholder:"Keyword1, Keyword2, ...",
+                               value:app.user.org.tags}]]]]],
+                ["div", {id:"loginstatdiv"}],
+                ["div", {id:"dlgbuttondiv"},
+                 [["button", {type:"button", id:"updorgbutton",
+                              onclick:jt.fs("app.dlg.updorg()")},
+                   "Ok"]]]];
+        displayDialog(null, jt.tac2html(html));
+        dlgstack.push(app.dlg.myacc);
+        disableFieldsIfNotOrgAdmin();
+    }
+
+
+    function updateOrganization () {
+        jt.err("Not implemented yet");
+    }
+
+
+    function showOrgLink () {
+        var url;
+        if(app.user.org) {
+            jt.out("orglinkdiv", jt.tac2html(
+                [["label", {fo:"orglinka", cla:"liflab"}, "Org:"],
+                 ["a", {href:"#editorg", cla:"lifin", id:"orglinka",
+                        onclick:jt.fs("app.dlg.editorg()")},
+                  app.user.org.name]]));
+            return; }
+        url = "getorg?" + app.auth() + "&orgid=" + app.user.acc.orgid +
+            jt.ts("&cb=", "second");
+        jt.call("GET", url, null,
+                function (orgs) {
+                    if(orgs.length && orgs[0]) {
+                        app.user.org = orgs[0];
+                        showOrgLink(); } },
+                function (code, errtxt) {
+                    jt.log("showOrgLink failed " + code + ": " + errtxt); },
+                jt.semaphore("dlg.showOrgLink"));
+    }
+
+
     function myAccount () {
         var html;
         html = [["div", {id:"dlgtitlediv"},
                  [["a", {href:"#back", onclick:jt.fs("app.dlg.back()")},
                    ["img", {src:"img/backward.png", cla:"dlgbackimg"}]],
-                  app.user.email]],
+                  "Account"]],
                 ["div", {cla:"dlgsignindiv"},
                  [["div", {cla:"dlgformline"},
+                   ["em",
+                    "Private information:"]],
+                  ["div", {cla:"dlgformline"},
+                   [["label", {fo:"updemailin", cla:"liflab", 
+                               id:"labupdemailin"},
+                     "Email"],
+                    ["input", {type:"text", cla:"lifin",
+                               name:"updemailin", id:"updemailin",
+                               value:app.user.email}]]],
+                  ["div", {cla:"dlgformline"},
+                   [["label", {fo:"updpasswordin", cla:"liflab", 
+                               id:"labupdpasswordin"},
+                     "Password"],
+                    ["input", {type:"password", cla:"lifin",
+                               name:"updpasswordin", id:"updpasswordin"}]]],
+                  ["div", {cla:"dlgformline", id:"orglinkdiv"}],
+                  ["div", {cla:"dlgformline"},
                    ["em",
                     "Public information:"]],
                   ["div", {cla:"dlgformline"},
@@ -546,6 +668,8 @@ app.dlg = (function () {
                    "Ok"]]]];
         displayDialog(null, jt.tac2html(html));
         jt.byId("namein").focus();
+        if(app.user.acc.orgid) {
+            showOrgLink(); }
     }
 
 
@@ -590,8 +714,8 @@ app.dlg = (function () {
                         setAuthentication(cred.emailin, result);
                         app.db.initTimelines();  //reset for user
                         //TEST: Uncomment to launch menu command post login
-                        // setTimeout(function () { 
-                        //     app.mode.menu(0, "newtl"); }, 200);
+                        setTimeout(function () { 
+                            app.mode.menu(0, "myacc"); }, 200);
                         if(bg) {  //Background mode, leave UI/flow alone.
                             return; }
                         app.dlg.close();
@@ -991,6 +1115,8 @@ app.dlg = (function () {
         ptedit: function (ptid) { editPoint(ptid); },
         ptsubclick: function () { ptsubclick(); },
         togfdesc: function (field, desc) { toggleFieldDesc(field, desc); },
-        codeselchg: function () { codeselchg(); }
+        codeselchg: function () { codeselchg(); },
+        editorg: function () { editOrganization(); },
+        updorg: function () { updateOrganization(); }
     };
 }());

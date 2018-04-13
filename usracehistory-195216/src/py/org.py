@@ -36,7 +36,7 @@ class GetOrgById(webapp2.RequestHandler):
         acc = appuser.get_authenticated_account(self, True)
         if not acc:
             return
-        params = read_params(self, ["orgid"])
+        params = appuser.read_params(self, ["orgid"])
         orgid = params["orgid"]  # str
         org = appuser.cached_get(orgid, {"dboc": Organization, "byid": orgid})
         appuser.return_json(self, [org])
@@ -51,7 +51,7 @@ class UpdateOrg(webapp2.RequestHandler):
             return
         fields = ["orgid", "name", "code", "contacturl", "projecturl", 
                   "regions", "categories", "tags"]
-        params = read_params(self, fields)
+        params = appuser.read_params(self, fields)
         orgid = int(params["orgid"])
         org = Organization.get_by_id(orgid)
         if acc.orgid != orgid or acc.lev != 2:
