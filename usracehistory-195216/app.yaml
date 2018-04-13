@@ -77,6 +77,24 @@ handlers:
   script: src.py.tlcomp.app
 
 
+## -------------------- organization --------------------
+
+## Fetch the specified Organization
+## GET params: email, authtok, orgid
+- url: .*/getorg.*
+  script: src.py.org.app
+
+## Update an existing org (org administrator only)
+## POST params: email, authtok, orgid, name, code, contacturl, projecturl, 
+##              regions, categories, tags
+- url: .*/updorg.*
+  script: src.py.org.app
+
+## Verify placeholder org (sys admin only)
+## GET params: email, authtok
+- url: .*/placeorg.*
+  script: src.py.org.app
+
 
 ######################################################################
 ##  General Config

@@ -53,7 +53,7 @@ class AppUser(db.Model):
     started = db.TextProperty()     # JSON [] timeline progress instances
     built = db.TextProperty()       # JSON [] created timeline ids/names
     # write privileges
-    orgid = db.IntegerProperty()    # Organization id (if any). 1 is global.
+    orgid = db.IntegerProperty()    # Organization id (if any).
     lev = db.IntegerProperty()      # 0:User, 1:Contributor, 2:Administrator
     # activity sorting
     created = db.StringProperty()   # ISO datetime
