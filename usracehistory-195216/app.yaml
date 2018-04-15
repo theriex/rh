@@ -111,6 +111,14 @@ handlers:
   script: src.py.org.app
 
 
+## -------------------- service --------------------
+
+## Get a CSV of the point Ids currently used for public timeline creation.
+## GET params: 
+- url: .*/pubptids.*
+  script: src.py.service.app
+
+
 ######################################################################
 ##  General Config
 
