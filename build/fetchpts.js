@@ -4,12 +4,13 @@
 */
 
 //////////////////////////////////////////////////
-// Build the allpts.json file by sucking down all the points off the server
+// Build the pubpts.json file by sucking down all the points off the server
 
 var fetchpts = (function () {
     "use strict";
 
     var geturl = "http://localhost:9080/dbqpts",
+        //https://usracehistory-195216.appspot.com/dbqpts
         email = "",
         password = "",
         ptsjson = null,
@@ -19,7 +20,7 @@ var fetchpts = (function () {
 
     function usage () {
         console.log("Usage:");
-        console.log("node fetchpts.js email password https://usracehistory-195216.appspot.com/dbqpts");
+        console.log("node fetchpts.js email password " + geturl);
         console.log("");
         //Reading a password interactively with asterisks is not simple yet.
         console.log("To avoid having your password hanging around in your console log, you might want to change it before starting the upload, then change it back after");
@@ -29,7 +30,7 @@ var fetchpts = (function () {
     function writePointsFile () {
         var jsfile = process.argv[1],
             path = jsfile.slice(0, -1 * "fetchpts.js".length);
-        path += "../usracehistory-195216/docroot/docs/allpts.json";
+        path += "../usracehistory-195216/docroot/docs/pubpts.json";
         fs.writeFile(path, ptsjson, {encoding:"utf8"},
                      function (err) {
                          if(err) {

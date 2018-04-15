@@ -43,8 +43,7 @@ handlers:
   script: src.py.point.app
 
 
-## Fetch all points (admin accounts only). Read docs/allpts.json to fetch
-## all the points, this endpoint exists to allow building that file.
+## Fetch public points (sys admin only). Public access: docs/pubpts.json
 ## GET params: email, authtok
 - url: .*/dbqpts.*
   script: src.py.point.app

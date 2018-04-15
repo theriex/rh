@@ -109,8 +109,7 @@ class RecentPoints(webapp2.RequestHandler):
         appuser.srverr(self, 500, "Not implemented yet")
 
 
-## PENDING: change to pubpts and retrieve all points where access == "public".
-class AllPoints(webapp2.RequestHandler):
+class FetchPublicPoints(webapp2.RequestHandler):
     def get(self):
         acc = appuser.get_authenticated_account(self, False)
         if not acc:
@@ -118,6 +117,7 @@ class AllPoints(webapp2.RequestHandler):
         if acc.orgid != 1 or acc.lev != 2:
             return appuser.srverr(self, 403, "Admin access only.")
         res = []
+        # PENDING: walk AppService pubpts ptid CSV to build result list
         pts = Point.all()
         for pt in pts:
             res.append(pt)
@@ -165,7 +165,7 @@ class GetPointPic(webapp2.RequestHandler):
 
 
 app = webapp2.WSGIApplication([('.*/recentpoints', RecentPoints),
-                               ('.*/dbqpts', AllPoints),
+                               ('.*/dbqpts', FetchPublicPoints),
                                ('.*/updpt', UpdatePoint),
                                ('.*/ptpic', GetPointPic)],
                               debug=True)

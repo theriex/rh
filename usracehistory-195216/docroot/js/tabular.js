@@ -757,14 +757,14 @@ app.tabular = (function () {
             return updateSuppvizDisplay(); }
         displayPointFilters("initial");
         if(!app.allpts) {
-            jt.call("GET", "docs/allpts.json", null,
+            jt.call("GET", "docs/pubpts.json", null,
                     function (result) {
                         //PENDING: fetch recent updates and integrate
                         app.allpts = result;
                         preparePointsData();
                         updatePointsDisplay(); },
                     function (code, errtxt) {
-                        jt.err("Fetch allpts failed " + code + " " + errtxt); },
+                        jt.err("Fetch pubpts failed " + code + " " + errtxt); },
                     jt.semaphore("tabular.updatePointsDisplay"));
             return; }  //nothing to do until points are available
         mcrit = getPointMatchCriteria();
