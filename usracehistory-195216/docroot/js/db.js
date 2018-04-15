@@ -671,6 +671,9 @@ app.db = (function () {
             dbo.translations = JSON.stringify(dbo.translations || []);
             dbo.stats = JSON.stringify(dbo.stats || {});
             break;
+        case "Organization":
+            dbo.pts = JSON.stringify(dbo.pts || []);
+            break;
         default:
             jt.log("Attempt to serialize unknown db class: " + dbc); }
     }
@@ -692,6 +695,9 @@ app.db = (function () {
             dbo.refs = JSON.parse(dbo.refs || "[]");
             dbo.translations = JSON.parse(dbo.translations || "[]");
             dbo.stats = JSON.parse(dbo.stats || "{}");
+            break;
+        case "Organization":
+            dbo.pts = JSON.parse(dbo.pts || "[]");
             break;
         default:
             jt.log("Attempt to deserialize unknown db class: " + dbc); }

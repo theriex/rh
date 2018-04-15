@@ -141,6 +141,7 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 #dlgtitlediv { padding:5px 20px; text-align:center; font-weight:bold; 
   font-size:x-large; font-family: "Open Sans", "Helvetica", sans-serif; }
 .dlgformline { padding:2px 0px; }
+.dlgsubline { padding:2px 0px 2px 5px; }
 .liflab { font-size:medium; font-weight:normal; text-align:right; 
   padding:0px 2px 0px 2px; display:block; float:left; width:80px; }
 .lifin { padding:0px; font-size:small; width:145px; }
@@ -151,6 +152,8 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 #cbnewacclabel { font-size:medium; }
 .fieldhelpdiv { font-size:small; }
 #orglinka { font-size:large; font-weight:bold; padding:0 0 0 5px; }
+#orgemodediv { text-align:right; font-weight:bold; font-size:small; 
+  padding:0px 10px 5px 0px; }
 
 /* -------------------- */
 /* tabular */

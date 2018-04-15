@@ -109,7 +109,10 @@ def read_params(handler, params):
     # logging.info("  request GET: " + str(handler.request.GET.items()))
     # logging.info("  request POST: " + str(handler.request.GET.items()))
     for param in params:
-        val = handler.request.get(param) or ""
+        val = handler.request.get(param)
+        # logging.info("read_params " + param + ": " + str(val))
+        if val != 0:
+            val = val or ""
         if param == "email":
             # normalize to lower case and undo extra encoding if needed
             val = val.lower()

@@ -84,10 +84,25 @@ handlers:
 - url: .*/getorg.*
   script: src.py.org.app
 
+## Fetch Organization members
+## GET params: email, authtok, orgid
+- url: .*/orgmembers.*
+  script: src.py.org.app
+
 ## Update an existing org (org administrator only)
 ## POST params: email, authtok, orgid, name, code, contacturl, projecturl, 
 ##              regions, categories, tags
 - url: .*/updorg.*
+  script: src.py.org.app
+
+## Update organization membership (org administrator only)
+## POST params: email, authtok, orgid, userid, lev
+- url: .*/updmembership.*
+  script: src.py.org.app
+
+## Add a new member to the organization (org administrator only)
+## POST params: email, authtok, membermail
+- url: .*/addmember.*
   script: src.py.org.app
 
 ## Verify placeholder org (sys admin only)
