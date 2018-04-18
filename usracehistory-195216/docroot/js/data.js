@@ -364,7 +364,7 @@ app.data = {
       date:"1763-10-07",
       text:"King George III proclaims a boundary line between British “civilization” and “Native American Territory” forbidding all settlement west of the Appalachian Mountains and declaring all future land purchases must be made by Crown officials \"at some public Meeting or Assembly of the said Indians\". British colonists and land speculators with existing land grants lobby the government and the boundary is adjusted westward in a series of treaties.  By 1840, the U.S. Permanent Boundary separating white controlled “civilized” lands from the “Great American Desert” runs approximately from the Gulf of Mexico to Lake Michigan via the Mississippi River." },
     { code:"AU", cid:"A1",
-      date:"1763", pics:"StMalo.png",
+      date:"1763", pic:"StMalo.png",
       text:"Filipinos impressed into the Manila Galleon Trade (1565-1815) between Mexico and the Philippines settle in Louisiana after jumping ship" },
     { code:"N", cid:"N37",
       date:"1766-07-25",
