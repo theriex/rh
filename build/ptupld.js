@@ -29,12 +29,12 @@ var ptupld = (function () {
         var formdat, imgdir = "../usracehistory-195216/docroot/img/datapics/";
         if(!pt) {
             console.log("uploadDataPoint null pt. Quitting");
-            return;
+            return; }
         if(!pt.code) {
             console.log("Skipping uncoded " + pt.text);
             return uploadNextPoint(); }
         formdat = {email:email, password:password, date:pt.date, text:pt.text,
-                   codes:pt.code, orgid:orgid, source:"ksep: " + pt.cid}
+                   codes:pt.code, orgid:orgid, source:"ksep: " + pt.cid};
         if(pt.pic && ((posturl.indexOf("localhost") < 0) || 
                       (pt.pic.indexOf(".png") >= 0))) {
             console.log("createReadStream: " + imgdir + pt.pic);

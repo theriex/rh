@@ -9,8 +9,8 @@
 var fetchpts = (function () {
     "use strict";
 
-    var geturl = "http://localhost:9080/dbqpts",
-        //https://usracehistory-195216.appspot.com/dbqpts
+    var //geturl = "http://localhost:9080/dbqpts",
+        geturl = "https://usracehistory-195216.appspot.com/dbqpts",
         email = "",
         password = "",
         ptsjson = null,
