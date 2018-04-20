@@ -421,8 +421,15 @@ app.tabular = (function () {
     }
 
 
+    function adjustPointsAreaDisplayHeight () {
+        var ptsh = 
+        ptsh = window.innerHeight - (jt.byId("tcontheaddiv").offsetHeight + 30);
+        jt.byId("pointsdispdiv").style.height = String(ptsh) + "px";
+    }
+
+
     function timelineSettings (spec) {
-        var div, ptsh, st = {};
+        var div, st = {};
         div = jt.byId("etlsetdiv");
         st.prev = div.style.display;
         if(spec === "required") {
@@ -438,11 +445,10 @@ app.tabular = (function () {
             else {
                 div.style.display = "none"; } }
         st.now = div.style.display;
-        ptsh = window.innerHeight - (jt.byId("tcontheaddiv").offsetHeight + 30);
         //jt.log("st.prev: " + st.prev + ", st.now: " + st.now);
         if(st.prev !== st.now) {
             jt.log("timelineSettings changing pointsdispdiv height");
-            jt.byId("pointsdispdiv").style.height = String(ptsh) + "px"; }
+            adjustPointsAreaDisplayHeight(); }
     }
 
 
@@ -562,9 +568,9 @@ app.tabular = (function () {
                 currtl.ctype += ":" + jt.byId("tlrndmaxin").value; } }
         //cids already updated
         currtl.preb = "";  //rebuilt by server
-        jt.log("saveTimeline parameters:");
-        Object.keys(currtl).forEach(function (field) {
-            jt.log("    " + field + ": " + currtl[field]); });
+        // jt.log("saveTimeline parameters:");
+        // Object.keys(currtl).forEach(function (field) {
+        //     jt.log("    " + field + ": " + currtl[field]); });
         jt.call("POST", "updtl?" + app.auth(), app.db.postdata("Timeline", 
                                                                currtl),
                 function (result) {
@@ -572,7 +578,8 @@ app.tabular = (function () {
                     setStateToDatabaseTimeline(result[0]);
                     app.db.deserialize("AppUser", result[1]);
                     app.user.acc = result[1];
-                    editTimeline(); },  //redraw reflecting new/updated name
+                    editTimeline();  //redraw reflecting new/updated name
+                    adjustPointsAreaDisplayHeight(); },
                 function (code, errtxt) {
                     jt.log("saveTimeline " + code + " " + errtxt);
                     jt.out("tlsavestatdiv", errtxt); },

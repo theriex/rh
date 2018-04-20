@@ -188,7 +188,7 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
   padding:0px 2px 0px 2px; display:block; float:left; width:90px; }
 .wfin { padding:0px; font-size:small; width:200px; }
 #etlsetdiv { border:2px solid #666666; border-radius:5px; margin-bottom:10px;
-  padding:5px 0px; }
+  padding:5px 0px; max-width:305px; }
 .buttonsdiv { text-align:center; }
 .buttonsdiv button { background:white; margin-right:10px; }
 #tcontheaddiv { padding-left:10px; margin-top:-8px; }
