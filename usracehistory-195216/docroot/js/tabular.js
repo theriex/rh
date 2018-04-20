@@ -422,8 +422,9 @@ app.tabular = (function () {
 
 
     function timelineSettings (spec) {
-        var div, ptsh;
+        var div, ptsh, st = {};
         div = jt.byId("etlsetdiv");
+        st.prev = div.style.display;
         if(spec === "required") {
             div.style.display = "block"; }
         else if(spec === "ifchanged") {
@@ -436,8 +437,12 @@ app.tabular = (function () {
                 div.style.display = "block"; }
             else {
                 div.style.display = "none"; } }
+        st.now = div.style.display;
         ptsh = window.innerHeight - (jt.byId("tcontheaddiv").offsetHeight + 30);
-        jt.byId("pointsdispdiv").style.height = String(ptsh) + "px";
+        //jt.log("st.prev: " + st.prev + ", st.now: " + st.now);
+        if(st.prev !== st.now) {
+            jt.log("timelineSettings changing pointsdispdiv height");
+            jt.byId("pointsdispdiv").style.height = String(ptsh) + "px"; }
     }
 
 
@@ -486,7 +491,7 @@ app.tabular = (function () {
     }
 
 
-    function timelineEditFieldChange () {
+    function timelineEditFieldChange (showsave) {
         var tlid;
         tlflds.name = tlflds.selname.getValue();
         //hide all display inputs
@@ -536,7 +541,8 @@ app.tabular = (function () {
             jt.byId("slugin").value = slugify(tlflds.name); }
         tlflds.title = jt.byId("titlein").value || "";
         tlflds.subtitle = jt.byId("subtitlein").value || "";
-        app.tabular.ptdisp();  //might need to switch points/timelines
+        if(!showsave) {
+            app.tabular.ptdisp(); }  //might need to switch points/timelines
     }
 
 
@@ -789,7 +795,7 @@ app.tabular = (function () {
             currtl.cids = currtl.cids.csvremove(ptid); }
         else {
             currtl.cids = currtl.cids.csvappend(ptid); }
-        app.tabular.tledchg();
+        app.tabular.tledchg("showsave");
     }
 
 
@@ -799,7 +805,7 @@ app.tabular = (function () {
             currtl.svs = currtl.svs.csvremove(svmn); }
         else {
             currtl.svs = currtl.svs.csvappend(svmn); }
-        app.tabular.tledchg();
+        app.tabular.tledchg("showsave");
     }
 
 
@@ -809,7 +815,7 @@ app.tabular = (function () {
         dldrad: function (idx) { selectDownloadOption(idx); },
         tledit: function () { editTimeline(); },
         tlset: function () { timelineSettings(); },
-        tledchg: function () { timelineEditFieldChange(); },
+        tledchg: function (s) { timelineEditFieldChange(s); },
         savetl: function () { saveTimeline(); },
         ptdisp: function () { updatePointsDisplay(); },
         togptsel: function (ptid) { togglePointInclude(ptid); },
