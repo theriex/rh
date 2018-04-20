@@ -892,8 +892,8 @@ app.dlg = (function () {
                         setAuthentication(cred.emailin, result);
                         app.db.initTimelines();  //reset for user
                         //TEST: Uncomment to launch menu command post login
-                        setTimeout(function () { 
-                            app.mode.menu(0, "myacc"); }, 200);
+                        // setTimeout(function () { 
+                        //     app.mode.menu(0, "myacc"); }, 200);
                         if(bg) {  //Background mode, leave UI/flow alone.
                             return; }
                         app.dlg.close();
