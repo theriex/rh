@@ -497,8 +497,39 @@ app.tabular = (function () {
     }
 
 
+    function fetchTimeline (tlid) {
+        jt.call("GET", "fetchtl?tlid=" + tlid, null,
+                function (result) {
+                    app.db.deserialize("Timeline", result[0]);
+                    setStateToDatabaseTimeline(result[0]);
+                    app.tabular.ptdisp();
+                    app.tabular.tledchg(); },
+                function (code, errtxt) {
+                    jt.log("tlefc " + code + " " + errtxt);
+                    jt.err("Timeline fetch " + code + " " + errtxt); },
+                jt.semaphore("tabular.fetchTimeline"));
+    }
+
+
+    function notePointScrollPosition () {
+        var outdiv = jt.byId("pointsdispdiv");
+        if(!outdiv) {
+            return; }
+        ptflds.scrollpcnt = outdiv.scrollTop / outdiv.scrollHeight;
+    }
+
+
+    function restorePointScrollPosition () {
+        var outdiv = jt.byId("pointsdispdiv");
+        if(!outdiv) {
+            return; }
+        outdiv.scrollTop = Math.round(ptflds.scrollpcnt * outdiv.scrollHeight);
+    }
+
+
     function timelineEditFieldChange (showsave) {
         var tlid;
+        notePointScrollPosition();
         tlflds.name = tlflds.selname.getValue();
         //hide all display inputs
         jt.byId("tltypeseldiv").style.display = "none";
@@ -519,17 +550,7 @@ app.tabular = (function () {
             if((!currtl || currtl.instid !== tlid) && app.user.tls[tlid]) {
                 setStateToDatabaseTimeline(app.user.tls[tlid]); }
             if(!currtl || currtl.instid !== tlid) {
-                jt.call("GET", "fetchtl?tlid=" + tlid, null,
-                        function (result) {
-                            app.db.deserialize("Timeline", result[0]);
-                            setStateToDatabaseTimeline(result[0]);
-                            app.tabular.ptdisp();
-                            timelineEditFieldChange(); },
-                        function (code, errtxt) {
-                            jt.log("tlefc " + code + " " + errtxt);
-                            jt.err("Timeline fetch " + code + " " + errtxt); },
-                        jt.semaphore("tabular.timelineEditFieldChange"));
-                return; }  //don't unhide until data available
+                return fetchTimeline(tlid); } //don't unhide until data avail
             if(currtl) {
                 setDisplayInputFieldsFromTimeline(currtl); } }
         //unhide appropriate display inputs
@@ -547,6 +568,7 @@ app.tabular = (function () {
             jt.byId("slugin").value = slugify(tlflds.name); }
         tlflds.title = jt.byId("titlein").value || "";
         tlflds.subtitle = jt.byId("subtitlein").value || "";
+        restorePointScrollPosition();
         if(!showsave) {
             app.tabular.ptdisp(); }  //might need to switch points/timelines
     }
