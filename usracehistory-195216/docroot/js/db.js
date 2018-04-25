@@ -106,15 +106,37 @@ app.db = (function () {
     }
 
 
-    function makeCoordinates (pt, ctx) {
+    function getTimeCode (pt) {
         //D3 has very good support for dates, but that level of precision is
         //frequently more than the data specifies, so using a "time code"
-        //consisting of a fractional year rounded to two decimal places.
-        var y, m, d, vm;
-        y = pt.start.year;
-        m = pt.start.month || 0;
-        d = pt.start.day || 0;
-        pt.tc = Math.round((y + m/12 + d/365) * 100) / 100;
+        //consisting of the year and two decimal places showing the number
+        //of days out of 366 (leaps included).  Readable and sortable.
+        var mds = [0,  //Jan
+                   31, //Feb
+                   60, //Mar
+                   91, //Apr
+                   121, //May
+                   152, //Jun
+                   182, //Jul
+                   213, //Aug
+                   244, //Sep
+                   274, //Oct
+                   305, //Nov
+                   335], //Dec
+            y = pt.start.year,
+            m = pt.start.month || 0,
+            d = pt.start.day || 0,
+            tc;
+        if(m) {
+            m -= 1; }  //switch from one-based month to array index
+        tc = Math.round(((mds[m] + d) / 366) * 100) / 100;
+        return y + tc;
+    }
+
+
+    function makeCoordinates (pt, ctx) {
+        var vm;
+        pt.tc = getTimeCode(pt);
         //vertical code defaults to zero, representing the center line
         pt.vc = 0;
         vm = true;
@@ -203,18 +225,9 @@ app.db = (function () {
 
 
     function compareStartDate (a, b) {
-        var am, bm, ad, bd;
-        if(a.start.year < b.start.year) { return -1; }
-        if(a.start.year > b.start.year) { return 1; }
-        am = a.month || 0;
-        bm = b.month || 0;
-        if(am < bm) { return -1; }
-        if(am > bm) { return 1; }
-        ad = a.day || 0;
-        bd = b.day || 0;
-        if(ad < bd) { return -1; }
-        if(ad > bd) { return 1; }
-        return 0;
+        a.tc = a.tc || getTimeCode(a);
+        b.tc = b.tc || getTimeCode(b);
+        return a.tc - b.tc;
     }
 
 

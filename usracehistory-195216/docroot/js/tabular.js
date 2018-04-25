@@ -657,6 +657,7 @@ app.tabular = (function () {
         while(apidx < aps.length || mpidx < mps.length) {
             if(apidx < aps.length) { ap = aps[apidx]; } else { ap = null; }
             if(mpidx < mps.length) { mp = mps[mpidx]; } else { mp = null; }
+            //compare ap to mp, merge if same point
             if(ap && !mp) { updpts.push(ap); apidx += 1; }
             else if(!ap && mp) { updpts.push(mp); mpidx += 1; }
             else if(ap.tc < mp.tc) { updpts.push(ap); apidx += 1; }
