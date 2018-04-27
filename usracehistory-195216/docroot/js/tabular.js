@@ -273,10 +273,18 @@ app.tabular = (function () {
     }
 
 
+    function adjustPointsAreaDisplayHeight () {
+        var ptsh = window.innerHeight - 
+            (jt.byId("tcontheaddiv").offsetHeight + 30);
+        jt.byId("pointsdispdiv").style.height = String(ptsh) + "px";
+    }
+
+
     function display () {
         mode = "refdisp";
         verifyDisplayElements();
         jt.byId("tlctxdiv").style.display = "none";
+        adjustPointsAreaDisplayHeight();
         app.tabular.ptdisp();
     }
 
@@ -421,13 +429,6 @@ app.tabular = (function () {
     }
 
 
-    function adjustPointsAreaDisplayHeight () {
-        var ptsh = 
-        ptsh = window.innerHeight - (jt.byId("tcontheaddiv").offsetHeight + 30);
-        jt.byId("pointsdispdiv").style.height = String(ptsh) + "px";
-    }
-
-
     function timelineSettings (spec) {
         var div, st = {};
         div = jt.byId("etlsetdiv");
@@ -516,6 +517,7 @@ app.tabular = (function () {
         if(!outdiv) {
             return; }
         ptflds.scrollpcnt = outdiv.scrollTop / outdiv.scrollHeight;
+        jt.log("notePointScrollPosition " + ptflds.scrollpcnt);
     }
 
 
@@ -524,6 +526,7 @@ app.tabular = (function () {
         if(!outdiv) {
             return; }
         outdiv.scrollTop = Math.round(ptflds.scrollpcnt * outdiv.scrollHeight);
+        jt.log("restorePointScrollPosition " + outdiv.scrollTop);
     }
 
 
@@ -618,7 +621,7 @@ app.tabular = (function () {
             if(currtl) {
                 crit.ids = currtl.cids; }
             else {
-                dcon = app.db.displayContext()
+                dcon = app.db.displayContext();
                 if(!dcon.cids) {
                     dcon.cids = "";
                     dcon.points.forEach(function (pt) {
