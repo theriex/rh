@@ -1,5 +1,5 @@
 /*jslint browser, multivar, white, fudge, for */
-/*global app, window, jt, d3 */
+/*global app, window, jt, d3, confirm */
 
 app.db = (function () {
     "use strict";
@@ -101,7 +101,7 @@ app.db = (function () {
                    lq:[],    //LIFO queue of pts within iw (most recent first)
                    zz:1,     //zigzag direction (alternates 1/-1)
                    maxy:0};  //max vertical (either up or down)
-        jt.log("coordinate context iw: " + iw);
+        //jt.log("coordinate context iw: " + iw);
         return ctx;
     }
 
@@ -135,7 +135,7 @@ app.db = (function () {
 
 
     function makeCoordinates (pt, ctx) {
-        var vm;
+        var vm, i, pp;
         pt.tc = getTimeCode(pt);
         //vertical code defaults to zero, representing the center line
         pt.vc = 0;
@@ -144,10 +144,11 @@ app.db = (function () {
             ctx.lq.pop(); }  //remove any point not within interaction width
         while(vm) {  //moved vertically, recheck for conflicts
             vm = false;
-            ctx.lq.forEach(function (pp) {
+            for(i = 0; i < ctx.lq.length; i += 1) {
+                pp = ctx.lq[i];
                 if(pp.vc === pt.vc) {
                     pt.vc += ctx.zz;
-                    vm = true; } }); }
+                    vm = true; } } }
         if(pt.vc) {  //zigged or zagged to place the point, switch direction
             ctx.zz *= -1; }
         else {  //point fit on the center line, reset zigzag to base value
@@ -361,7 +362,7 @@ app.db = (function () {
             tl.visited = true;
             tl.levs.forEach(function (lev) {
                 lev.visited = true; }); });
-        dcon.prog.st = jt.ISOString2Time(compinst.latest)
+        dcon.prog.st = jt.isoString2Time(compinst.latest);
     }
 
 

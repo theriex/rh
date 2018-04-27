@@ -332,6 +332,17 @@ app.tabular = (function () {
     }
 
 
+    function tlsetButtonsHTML () {
+        return ["div", {cla:"buttonsdiv", id:"etlsetbuttonsdiv"},
+                [["button", {type:"button", id:"etlsetcancelbutton",
+                             onclick:jt.fs("app.tabular.canctl()")},
+                  "Cancel"],
+                 ["button", {type:"button", id:"etlsetokbutton",
+                             onclick:jt.fs("app.tabular.savetl()")},
+                  "Save"]]];
+    }
+
+
     function timelineSettingsHTML () {
         var html = [];
         currtl = currtl || emptyTimeline();
@@ -390,13 +401,7 @@ app.tabular = (function () {
                                min:3, max:50,
                                value:tlflds.pps || 6}]]]);
         html.push(["div", {id:"tlsavestatdiv"}]);
-        html.push(["div", {cla:"buttonsdiv"},
-                   [["button", {type:"button", id:"etlsetcancelbutton",
-                                onclick:jt.fs("app.tabular.canctl()")},
-                     "Cancel"],
-                    ["button", {type:"button", id:"etlsetokbutton",
-                                onclick:jt.fs("app.tabular.savetl()")},
-                     "Save"]]]);
+        html.push(tlsetButtonsHTML());
         return html;
     }
 
@@ -448,7 +453,7 @@ app.tabular = (function () {
         st.now = div.style.display;
         //jt.log("st.prev: " + st.prev + ", st.now: " + st.now);
         if(st.prev !== st.now) {
-            jt.log("timelineSettings changing pointsdispdiv height");
+            //jt.log("timelineSettings changing pointsdispdiv height");
             adjustPointsAreaDisplayHeight(); }
     }
 
@@ -491,10 +496,14 @@ app.tabular = (function () {
 
 
     function cancelTimelineEdit() {
-        if(dbtl) {
-            setStateToDatabaseTimeline (dbtl); }
-        timelineSettings();  //toggle closed
-        app.tabular.ptdisp();
+        jt.out("etlsetbuttonsdiv", "Canceling...");
+        setTimeout(function () {  //force display update to hide buttons
+            if(dbtl) {
+                setStateToDatabaseTimeline (dbtl); }
+            timelineSettings();  //toggle closed
+            app.tabular.ptdisp();
+            jt.out("etlsetbuttonsdiv", jt.tac2html(tlsetButtonsHTML())); },
+                   50);
     }
 
 
@@ -517,7 +526,7 @@ app.tabular = (function () {
         if(!outdiv) {
             return; }
         ptflds.scrollpcnt = outdiv.scrollTop / outdiv.scrollHeight;
-        jt.log("notePointScrollPosition " + ptflds.scrollpcnt);
+        //jt.log("notePointScrollPosition " + ptflds.scrollpcnt);
     }
 
 
@@ -526,7 +535,7 @@ app.tabular = (function () {
         if(!outdiv) {
             return; }
         outdiv.scrollTop = Math.round(ptflds.scrollpcnt * outdiv.scrollHeight);
-        jt.log("restorePointScrollPosition " + outdiv.scrollTop);
+        //jt.log("restorePointScrollPosition " + outdiv.scrollTop);
     }
 
 
@@ -578,6 +587,7 @@ app.tabular = (function () {
 
 
     function saveTimeline () {
+        jt.out("etlsetbuttonsdiv", "Saving...");
         currtl.name = jt.byId("namein").value;
         if(jt.byId("slugin")) {
             currtl.slug = jt.byId("slugin").value; }
@@ -604,9 +614,11 @@ app.tabular = (function () {
                     app.db.deserialize("AppUser", result[1]);
                     app.user.acc = result[1];
                     editTimeline();  //redraw reflecting new/updated name
+                    jt.out("etlsetbuttonsdiv", jt.tac2html(tlsetButtonsHTML()));
                     adjustPointsAreaDisplayHeight(); },
                 function (code, errtxt) {
                     jt.log("saveTimeline " + code + " " + errtxt);
+                    jt.out("etlsetbuttonsdiv", jt.tac2html(tlsetButtonsHTML()));
                     jt.out("tlsavestatdiv", errtxt); },
                 jt.semaphore("tabular.saveTimeline"));
     }

@@ -1,5 +1,5 @@
 /*jslint browser, multivar, white, fudge, for */
-/*global app, jt, d3 */
+/*global app, jt, d3, confirm */
 
 app.dlg = (function () {
     "use strict";
@@ -85,7 +85,8 @@ app.dlg = (function () {
 
     function displayDialog (d, html) {
         var dim, elem, txtdiv, picdiv;
-        jt.log("displayDialog " + d);
+        if(d) {
+            jt.log("displayDialog " + d); }
         if(tl.width < 500) {  //use full space on small devices
             dim = {x: tl.margin.left + Math.round(0.02 * tl.width),
                    y: tl.margin.top + Math.round(0.04 * tl.height),
@@ -522,61 +523,6 @@ app.dlg = (function () {
     }
 
 
-    function changeOrgMemberLevel (om, chg) {
-        var instid = om.instid;
-        om.lev = om.lev + chg;
-        jt.log("changeOrgMemberLevel " + om.instid + " -> " + om.lev);
-        if(om.lev < 0) {
-            jt.log("changeOrgMemberLevel removing member " + om.instid);
-            app.omids[instid] = null;
-            app.orgmembers = app.orgmembers.filter(m => m.instid !== instid); }
-        showOrgMembers();
-    }
-
-
-    function modifyMemberLevel (instid, chg) {
-        var om = app.omids[instid], verified = true, data;
-        if(chg === -1 && instid === app.user.acc.instid &&
-           !confirm("Are you sure you want to resign as an Administrator?")) {
-            verified = false; }
-        if(chg === -1 && om.lev === 0 &&
-           !confirm("Completely remove member from organization?")) {
-            verified = false; }
-        if(verified) {
-            app.dlg.omexp(instid);  //hide buttons so no double click.
-            jt.out("loginstatdiv", "Updating membership...");
-            data = jt.objdata({orgid:app.user.acc.orgid,
-                               userid:instid, lev:om.lev + chg});
-            jt.call("POST", "/updmembership?" + app.auth(), data,
-                    function () {  //nothing returned on success
-                        jt.out("loginstatdiv", "");
-                        changeOrgMemberLevel(om, chg); },
-                    function (code, errtxt) {
-                        jt.log("modifyMemberLevel " + code + ": " + errtxt);
-                        jt.out("loginstatdiv", errtxt); },
-                    jt.semaphore("dlg.modifyMemberLevel")); }
-    }
-
-
-    function expandOrganizationMember (instid) {
-        var div, user = app.omids[instid], html = [];
-        div = jt.byId("om" + instid + "detdiv");
-        if(!div) { return; }
-        if(div.innerHTML) {  //have content, toggle off
-            div.innerHTML = "";
-            return; }
-        if(user.lev < 2) {
-            html.push(["button", {type:"button",
-                                  onclick:jt.fs("app.dlg.modmem('" + instid + 
-                                                "',1)")}, "Promote"]); }
-        if(user.lev >= 0) {
-            html.push(["button", {type:"button",
-                                  onclick:jt.fs("app.dlg.modmem('" + instid + 
-                                                "',-1)")}, "Demote"]); }
-        div.innerHTML = jt.tac2html(html);
-    }
-
-
     function showOrgMembers () {
         var url, oms = app.orgmembers || [app.user.acc],
             labels = ["Members:", "Contributors:", "Administrators:"],
@@ -621,6 +567,62 @@ app.dlg = (function () {
                         jt.log("showOrgMembers " + code + ": " + errtxt);
                         jt.out("loginstatdiv", errtxt); },
                     jt.semaphore("dlg.showOrgMembers")); }
+    }
+
+
+    function changeOrgMemberLevel (om, chg) {
+        var instid = om.instid;
+        om.lev = om.lev + chg;
+        jt.log("changeOrgMemberLevel " + om.instid + " -> " + om.lev);
+        if(om.lev < 0) {
+            jt.log("changeOrgMemberLevel removing member " + om.instid);
+            app.omids[instid] = null;
+            app.orgmembers = 
+                app.orgmembers.filter((m) => m.instid !== instid); }
+        showOrgMembers();
+    }
+
+
+    function modifyMemberLevel (instid, chg) {
+        var om = app.omids[instid], verified = true, data;
+        if(chg === -1 && instid === app.user.acc.instid &&
+           !confirm("Are you sure you want to resign as an Administrator?")) {
+            verified = false; }
+        if(chg === -1 && om.lev === 0 &&
+           !confirm("Completely remove member from organization?")) {
+            verified = false; }
+        if(verified) {
+            app.dlg.omexp(instid);  //hide buttons so no double click.
+            jt.out("loginstatdiv", "Updating membership...");
+            data = jt.objdata({orgid:app.user.acc.orgid,
+                               userid:instid, lev:om.lev + chg});
+            jt.call("POST", "/updmembership?" + app.auth(), data,
+                    function () {  //nothing returned on success
+                        jt.out("loginstatdiv", "");
+                        changeOrgMemberLevel(om, chg); },
+                    function (code, errtxt) {
+                        jt.log("modifyMemberLevel " + code + ": " + errtxt);
+                        jt.out("loginstatdiv", errtxt); },
+                    jt.semaphore("dlg.modifyMemberLevel")); }
+    }
+
+
+    function expandOrganizationMember (instid) {
+        var div, user = app.omids[instid], html = [];
+        div = jt.byId("om" + instid + "detdiv");
+        if(!div) { return; }
+        if(div.innerHTML) {  //have content, toggle off
+            div.innerHTML = "";
+            return; }
+        if(user.lev < 2) {
+            html.push(["button", {type:"button",
+                                  onclick:jt.fs("app.dlg.modmem('" + instid + 
+                                                "',1)")}, "Promote"]); }
+        if(user.lev >= 0) {
+            html.push(["button", {type:"button",
+                                  onclick:jt.fs("app.dlg.modmem('" + instid + 
+                                                "',-1)")}, "Demote"]); }
+        div.innerHTML = jt.tac2html(html);
     }
 
 
