@@ -195,6 +195,8 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 .yearin { width:4em; }
 .ptseldiv { font-size:x-small; font-weight:normal; }
 #pointsdispdiv { overflow:scroll; }
+.ptxdiv { font-size:small; padding-left:10px; }
+.pxdattrspan { font-style:italic; }
 
 #svsdispdiv { padding-left:10px; font-size:medium; }
 .svlistnamediv { font-size:large; font-weight:bold; }

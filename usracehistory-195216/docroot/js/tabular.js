@@ -58,6 +58,28 @@ app.tabular = (function () {
     }
 
 
+    function pointExtendedAttrValHTML(attr, val) {
+        return ["div",
+                [["span", {cla:"pxdattrspan"}, attr],
+                 "&nbsp;",  //for double click select separation and visual
+                 val]];
+    }
+
+
+    function pointExtendedDataHTML (pt) {
+        var html = [];
+        html.push(pointExtendedAttrValHTML("id", pt.instid));
+        if(pt.source) {
+            html.push(pointExtendedAttrValHTML("source", pt.source)); }
+        if(pt.keywords) {
+            html.push(pointExtendedAttrValHTML("keywords", pt.keywords)); }
+        //PENDING: refs should be a ul with new tabs if URLs
+        //PENDING: stats should be displayed once available
+        //Not doing orgid or endorsed for general display.
+        return jt.tac2html(html);
+    }
+
+
     function pointTAC (pt) {
         var ph = "", eh = "", html = "", si;
         if(pt.pic) {
@@ -86,8 +108,29 @@ app.tabular = (function () {
                    dateSpan(pt.end, "-"),
                    ["span", {cla:"tcspan"}, " (" + pt.codes + ") "],
                    html]],
-                 ["div", {cla:"trowdescdiv"}, [ph, pt.text, eh]]]];
+                 ["div", {cla:"trowdescdiv"}, 
+                  [ph, 
+                   pt.text,
+                   " &nbsp;",
+                   ["a", {href:"#" + pt.instid, cla:"editlink",
+                          onclick:jt.fs("app.tabular.togptd('" + pt.instid + 
+                                        "')")},
+                    "[ptdata]"],
+                   eh,
+                   ["div", {id:"ptxdiv" + pt.instid, cla:"ptxdiv",
+                            style:"display:none"},
+                    pointExtendedDataHTML(pt)]]]]];
         return html;
+    }
+
+
+    function togglePointDataDisplay (id) {
+        var ptxdiv = jt.byId("ptxdiv" + id);
+        if(ptxdiv) {
+            if(ptxdiv.style.display === "none") {
+                ptxdiv.style.display = "block"; }
+            else {
+                ptxdiv.style.display = "none"; } }
     }
 
 
@@ -867,6 +910,7 @@ app.tabular = (function () {
         togsvsel: function (svmn) { toggleSuppvizInclude(svmn); },
         togtlsel: function (tlid) { togglePointInclude(tlid); },
         canctl: function () { cancelTimelineEdit(); },
-        runsv: function (svmodule) { app[svmodule].display(); }
+        runsv: function (svmodule) { app[svmodule].display(); },
+        togptd: function (id) { togglePointDataDisplay(id); }
     };
 }());
