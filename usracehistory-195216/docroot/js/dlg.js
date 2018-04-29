@@ -86,7 +86,8 @@ app.dlg = (function () {
     function displayDialog (d, html) {
         var dim, elem, txtdiv, picdiv;
         if(d) {
-            jt.log("displayDialog " + d); }
+            jt.log("displayDialog " + d.instid + " " + 
+                   d.text.slice(0, 50) + "..."); }
         if(tl.width < 500) {  //use full space on small devices
             dim = {x: tl.margin.left + Math.round(0.02 * tl.width),
                    y: tl.margin.top + Math.round(0.04 * tl.height),

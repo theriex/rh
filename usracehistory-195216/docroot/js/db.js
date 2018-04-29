@@ -587,6 +587,42 @@ app.db = (function () {
     }
 
 
+    function pointIdFromReference (point, points, ref) {
+        var src = "", i, pt;
+        if(point.orgid === "5757715179634688") {
+            src = "ksep: "; }  //legacy link reference mismatch
+        src += ref;
+        dcon.refs = dcon.refs || {};
+        if(dcon.refs[ref]) {
+            return dcon.refs[ref].instid; }
+        for(i = 0; i < points.length; i += 1) {
+            pt = points[i];
+            if(pt.instid === ref || pt.source === ref || pt.source === src) {
+                dcon.refs[ref] = pt;
+                return pt.instid; } }
+        return null;
+    }
+
+
+    function pointLinkedText (pt, pts, fname) {
+        var txt = pt.text;
+        txt = txt.replace(/<a\shref\s?=.*#([^"]+)">([^<]+)<\/a>/gi,
+            function (match, p1, p2) {
+                var refid, oc, link;
+                refid = pointIdFromReference(pt, pts, p1);
+                if(!refid) {
+                    jt.log(pt.instid + " bad link ref " + p1);
+                    return p2; } //remove link, return just text
+                //jt.log(pt.instid + " linked to " + refid);
+                oc = jt.fs(fname + "('" + refid + "')");
+                //standardize the link href to be #pt<id> for anchors
+                link = "<a href=\"" + p1 + "\"" +
+                    " onclick=\"" + oc + "\">" + p2 + "</a>";
+                return link; });
+        return txt;
+    }
+
+
     function mergeProgToAccount () {
         var prog = dcon.prog, i, stp, update = false;
         app.user.acc.started = app.user.acc.started || [];
@@ -744,6 +780,7 @@ app.db = (function () {
         mergeProgToAccount: function () { mergeProgToAccount(); },
         pt4id: function (ptid) { return findPointById(ptid); },
         mergeUpdatedPointData: function (pt) { mergeUpdatedPointData(pt); },
-        initTimelines: function () { initTimelinesContent(); }
+        initTimelines: function () { initTimelinesContent(); },
+        ptlinktxt: function (p, s, f) { return pointLinkedText(p, s, f); }
     };
 }());

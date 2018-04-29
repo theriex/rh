@@ -15,7 +15,8 @@ app.tabular = (function () {
         currtl = null,
         dbtl = null,
         ptflds = {},
-        mode = "refdisp";  //tledit
+        mode = "refdisp",  //tledit
+        currpts = null;
 
 
     function dateSpan (dobj, prefix) {
@@ -73,9 +74,10 @@ app.tabular = (function () {
             html.push(pointExtendedAttrValHTML("source", pt.source)); }
         if(pt.keywords) {
             html.push(pointExtendedAttrValHTML("keywords", pt.keywords)); }
+        html.push(pointExtendedAttrValHTML("orgid", pt.orgid));
         //PENDING: refs should be a ul with new tabs if URLs
         //PENDING: stats should be displayed once available
-        //Not doing orgid or endorsed for general display.
+        //Not doing endorsed for general display.
         return jt.tac2html(html);
     }
 
@@ -101,16 +103,17 @@ app.tabular = (function () {
             html = ["div", {cla:"ptseldiv"},
                     [["label", {fo:"cb" + pt.instid}, "Include"],
                      ["input", si]]]; }
-        html = ["div", {cla:"trowdiv"},
-                [["div", {cla:"trowdatediv"}, 
+        html = ["div", {cla:"trowdiv", id:"trowdiv" + pt.instid},
+                [["a", {id:"pt" + pt.instid}],  //static anchor for refs
+                 ["div", {cla:"trowdatediv"}, 
                   [dateSpan(pt.start),
                    ["br"],
                    dateSpan(pt.end, "-"),
                    ["span", {cla:"tcspan"}, " (" + pt.codes + ") "],
                    html]],
                  ["div", {cla:"trowdescdiv"}, 
-                  [ph, 
-                   pt.text,
+                  [ph,
+                   app.db.ptlinktxt(pt, currpts, "app.tabular.scr2pt"),
                    " &nbsp;",
                    ["a", {href:"#" + pt.instid, cla:"editlink",
                           onclick:jt.fs("app.tabular.togptd('" + pt.instid + 
@@ -121,6 +124,13 @@ app.tabular = (function () {
                             style:"display:none"},
                     pointExtendedDataHTML(pt)]]]]];
         return html;
+    }
+
+
+    function scrollToPointId (id) {
+        var trowdiv = jt.byId("trowdiv" + id);
+        if(trowdiv) {
+            trowdiv.scrollIntoView(); }
     }
 
 
@@ -155,7 +165,7 @@ app.tabular = (function () {
             "</head><body>";
         app.allpts.forEach(function (pt, idx) {
             if(idx && (!dnld.srchst || app.mode.ptmatch(pt))) {
-                txt += "\n" + jt.tac2html(pointTAC(pt, idx)); } });
+                txt += "\n" + jt.tac2html(pointTAC(pt)); } });
         txt += "</body></html>\n";
         return "data:text/html;charset=utf-8," + encodeURIComponent(txt);
     }
@@ -862,12 +872,14 @@ app.tabular = (function () {
                     jt.semaphore("tabular.updatePointsDisplay"));
             return; }  //nothing to do until points are available
         mcrit = getPointMatchCriteria();
-        app.allpts.forEach(function (pt, idx) {
-            var linediv;
+        currpts = [];
+        app.allpts.forEach(function (pt) {
             if(isMatchingPoint(mcrit, pt)) {
-                linediv = document.createElement("div");
-                linediv.innerHTML = jt.tac2html(pointTAC(pt, idx));
-                outdiv.appendChild(linediv); } });
+                currpts.push(pt); } });
+        currpts.forEach(function (pt) {
+            var linediv = document.createElement("div");
+            linediv.innerHTML = jt.tac2html(pointTAC(pt));
+            outdiv.appendChild(linediv); });
         jt.out("downloadlinkdiv", jt.tac2html(
             ["a", {href:"#Download", id:"downloadlink",
                    title:"Download the displayed points",
@@ -911,6 +923,7 @@ app.tabular = (function () {
         togtlsel: function (tlid) { togglePointInclude(tlid); },
         canctl: function () { cancelTimelineEdit(); },
         runsv: function (svmodule) { app[svmodule].display(); },
-        togptd: function (id) { togglePointDataDisplay(id); }
+        togptd: function (id) { togglePointDataDisplay(id); },
+        scr2pt: function (id) { scrollToPointId(id); }
     };
 }());

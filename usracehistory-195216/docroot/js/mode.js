@@ -306,7 +306,7 @@ app.mode = (function () {
 
     function endSuppViz(module, start, end) {
         if(mode === "interactive") {
-            app.db.svdone("lynching", start, end);
+            app.db.svdone(module, start, end);
             app.dlg.saveprog(); }  //launches next interaction after save
         //close the display
         d3.select("#suppvisdiv")
