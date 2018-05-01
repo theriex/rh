@@ -765,6 +765,14 @@ app.db = (function () {
         deserialize(dbc, dbo);
         return dat;
     }
+
+
+    function getOrgId (obj) {
+        //ids have to be strings because they overflow the javascript max int.
+        if(obj && obj.orgid && obj.orgid !== "0") {
+            return obj.orgid; }
+        return "";
+    }
             
         
     return {
@@ -785,6 +793,8 @@ app.db = (function () {
         pt4id: function (ptid) { return findPointById(ptid); },
         mergeUpdatedPointData: function (pt) { mergeUpdatedPointData(pt); },
         initTimelines: function () { initTimelinesContent(); },
-        ptlinktxt: function (p, s, f) { return pointLinkedText(p, s, f); }
+        ptlinktxt: function (p, s, f) { return pointLinkedText(p, s, f); },
+        getOrgId: function (obj) { return getOrgId(obj); }
+
     };
 }());

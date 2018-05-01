@@ -849,7 +849,7 @@ app.dlg = (function () {
                    "Ok"]]]];
         displayDialog(null, jt.tac2html(html));
         jt.byId("namein").focus();
-        if(app.user.acc.orgid) {
+        if(app.db.getOrgId(app.user.acc)) {
             showOrgLink(); }
     }
 

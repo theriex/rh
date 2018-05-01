@@ -433,7 +433,10 @@ app.linear = (function () {
         initDisplayVariableValues();
         initMainDisplayElements();
         paintWallpaper("abgdiv");
-        bindDataAndDrawChart();
+        if(!tl.pts || tl.pts.length < 2) {
+            jt.err("Timeline requires at least two points to display"); }
+        else {
+            bindDataAndDrawChart(); }
         app.mode.start(tl, currlev);
     }
 
