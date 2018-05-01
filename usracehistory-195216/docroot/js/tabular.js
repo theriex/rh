@@ -518,7 +518,8 @@ app.tabular = (function () {
 
 
     function setDisplayInputFieldsFromTimeline (tl) {
-        var elems = (tl.ctype || "Points:6").split(":");
+        var ctype = tl.ctype || "Points:6",
+            elems = ctype.split(":");
         if(elems[0] === "Timelines") {
             tlflds.seltype.setValue("Timelines"); }
         else {
@@ -847,6 +848,23 @@ app.tabular = (function () {
     }
 
 
+    function fetchPubPoints () {
+        var ptsfile = "docs/pubpts.json";
+        if(window.location.href.indexOf("localhost") >= 0) {
+            ptsfile = "docs/locpts.json"; }
+        jt.call("GET", ptsfile, null,
+                function (result) {
+                    //PENDING: fetch recent updates and integrate
+                    app.allpts = result;
+                    preparePointsData();
+                    app.tabular.ptdisp(); },
+                function (code, errtxt) {
+                    jt.err("Fetch pubpts failed " + code + " " + errtxt); },
+                jt.semaphore("tabular.fetchPubPoints"));
+        //no value to return and nothing to do until points are available.
+    }
+
+
     function updatePointsDisplay () {
         var mcrit, outdiv = jt.byId("pointsdispdiv");
         jt.out("downloadlinkdiv", jt.tac2html(
@@ -861,16 +879,7 @@ app.tabular = (function () {
             return updateSuppvizDisplay(); }
         displayPointFilters("initial");
         if(!app.allpts) {
-            jt.call("GET", "docs/pubpts.json", null,
-                    function (result) {
-                        //PENDING: fetch recent updates and integrate
-                        app.allpts = result;
-                        preparePointsData();
-                        updatePointsDisplay(); },
-                    function (code, errtxt) {
-                        jt.err("Fetch pubpts failed " + code + " " + errtxt); },
-                    jt.semaphore("tabular.updatePointsDisplay"));
-            return; }  //nothing to do until points are available
+            return fetchPubPoints(); }
         mcrit = getPointMatchCriteria();
         currpts = [];
         app.allpts.forEach(function (pt) {

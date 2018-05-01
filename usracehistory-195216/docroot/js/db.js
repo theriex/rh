@@ -57,6 +57,9 @@ app.db = (function () {
             date = date.slice(date.indexOf(" BCE") + 4);
             pt.start.year *= -1; }
         //start month
+        //01may2018 jslint complains "Expected 'm' flag on a multiline..."
+        //if it encounters an unescaped $ not at the end of the regex.
+        //This needs to match on a '-' or input end, so tolerating warning.
         mres = date.match(/^\-\d\d(\-|$)/);
         if(mres) {
             date = date.slice(3);
@@ -589,7 +592,8 @@ app.db = (function () {
 
     function pointIdFromReference (point, points, ref) {
         var src = "", i, pt;
-        if(point.orgid === "5757715179634688") {
+        if(point.orgid === "5757715179634688" ||
+           window.location.href.indexOf("localhost") >= 0) {
             src = "ksep: "; }  //legacy link reference mismatch
         src += ref;
         dcon.refs = dcon.refs || {};

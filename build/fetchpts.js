@@ -9,7 +9,7 @@
 var fetchpts = (function () {
     "use strict";
 
-    var //geturl = "http://localhost:9080/dbqpts",
+    var locurl = "http://localhost:9080/dbqpts",
         geturl = "https://usracehistory-195216.appspot.com/dbqpts",
         email = "",
         password = "",
@@ -19,19 +19,34 @@ var fetchpts = (function () {
 
 
     function usage () {
-        console.log("Usage:");
-        console.log("node fetchpts.js email password " + geturl);
+        console.log("    Usage:");
+        console.log("node fetchpts.js email password [URL]");
+        console.log("  URL defaults to " + geturl);
+        console.log("  To write locpts.json instead of pubpts.json, specify " + 
+                    locurl);
         console.log("");
         //Reading a password interactively with asterisks is not simple yet.
-        console.log("To avoid having your password hanging around in your console log, you might want to change it before starting the upload, then change it back after");
+        console.log("To avoid having your admin account password hanging around in your console log, you might want to change it before starting the upload, then change it back after.");
     }
 
 
     function writePointsFile () {
-        var jsfile = process.argv[1],
+        var pts, ptids = "", dbs = "pub",
+            jsfile = process.argv[1],
             path = jsfile.slice(0, -1 * "fetchpts.js".length);
-        path += "../usracehistory-195216/docroot/docs/pubpts.json";
+        if(geturl.indexOf("localhost") >= 0) {
+            dbs = "loc"; }
+        path += "../usracehistory-195216/docroot/docs/" + dbs + "pts.json";
         fs.writeFile(path, ptsjson, {encoding:"utf8"},
+                     function (err) {
+                         if(err) {
+                             throw err; } });
+        pts = JSON.parse(ptsjson);
+        pts.forEach(function (pt) {
+            if(ptids) { ptids += ","; }
+            ptids += pt.instid; });
+        path = "fetched" + dbs + "ptids.csv";
+        fs.writeFile(path, ptids, {encoding:"utf8"},
                      function (err) {
                          if(err) {
                              throw err; } });
