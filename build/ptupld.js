@@ -10,6 +10,7 @@ var ptupld = (function () {
     "use strict";
 
     var posturl = "http://localhost:9080/updpt",
+        imgdir = "",
         email = "",
         password = "",
         orgid = "0",
@@ -19,14 +20,18 @@ var ptupld = (function () {
         fs = require("fs");
 
     function usage () {
-        console.log("node ptupld.js ../usracehistory-195216/docroot/js/data.js myemail@example.com mypassword orgid https://usracehistory-195216.appspot.com/updpt");
+        console.log("    Usage:");
+        console.log("node ptupld.js ../ref/srcdat2/data.js email password orgid [URL]");
+        //Main server deploy https://usracehistory-195216.appspot.com/updpt
+        console.log("    URL defaults to " + posturl);
+        console.log("    user must be lev 2 for given orgid");
         //Reading a password interactively with asterisks is not simple yet.
         console.log("To avoid having your password hanging around in your console log, you might want to change it before starting the upload, then change it back after");
     }
 
 
     function uploadDataPoint (pt, createOnly) {
-        var formdat, imgdir = "../usracehistory-195216/docroot/img/datapics/";
+        var formdat;
         if(!pt) {
             console.log("uploadDataPoint null pt. Quitting");
             return; }
@@ -60,6 +65,8 @@ var ptupld = (function () {
             return usage(); }
         global.app = {}; 
         require(process.argv[2]);  //sets app.data
+        imgdir = process.argv[2];
+        imgdir = imgdir.slice(0, imgdir.lastIndexOf("/") + 1) + "datapics/";
         email = process.argv[3];
         password = process.argv[4];
         orgid = process.argv[5];
