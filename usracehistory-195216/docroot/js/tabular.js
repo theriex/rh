@@ -275,8 +275,10 @@ app.tabular = (function () {
             setValue: function (val) {
                 jt.byId(spec.id).value = val; },
             getValue: function () {
-                var sel = jt.byId(spec.id);
-                return sel.options[sel.selectedIndex].value; }};
+                var val = "", sel = jt.byId(spec.id);
+                if(sel) {  //display might not be ready yet
+                    val = sel.options[sel.selectedIndex].value; }
+                return val; }};
     }
 
 
@@ -355,7 +357,8 @@ app.tabular = (function () {
         btls.push({tlid:"new", name:"New&nbsp;Timeline"});
         btls.forEach(function (btl) {
             selopts.push({value:btl.tlid, text:btl.name}); });
-        tlflds.selname = makeSelect("tlselname", jt.fs("app.tabular.tledchg()"),
+        tlflds.selname = makeSelect("tlselname",
+                                    jt.fs("app.tabular.tledchg('namechg')"),
                                     selopts);
         return tlflds.selname.tac();
     }
@@ -396,21 +399,27 @@ app.tabular = (function () {
     }
 
 
+    function provideDefaultSlugValue () {
+        var slugin = jt.byId("slugin");
+        if(slugin && !currtl.slug) {
+            slugin.value = slugify(jt.byId("namein").value); }
+    }
+
+
     function timelineSettingsHTML () {
         var html = [];
         currtl = currtl || emptyTimeline();
-        if(currtl.instid) {
-            html.push(["div", {cla:"dlgformline"},
-                       [["label", {fo:"idin", cla:"wlab", id:"labidin"}, 
-                         "Id"],
-                        ["input", {type:"text", cla:"wfin",
-                                   name:"idin", id:"idin", 
-                                   value:currtl.instid, disabled:true}]]]); }
+        //Can't select the value from a disabled input field...
+        html.push(["div", {cla:"dlgformline", id:"tlidformline"},
+                   [["label", {fo:"idinspan", cla:"wlab", id:"labidin"}, 
+                     "Id"],
+                    ["span", {id:"idinspan"}, currtl.instid || ""]]]);
         html.push(["div", {cla:"dlgformline"},
                    [["label", {fo:"namein", cla:"wlab", id:"labnamein"},
                      "Name"],
                     ["input", {type:"text", cla:"wfin",
                                name:"namein", id:"namein",
+                               oninput:jt.fs("app.tabular.dfltslug()"),
                                //updates are reflected after save (new timeline)
                                //onchange:jt.fs("app.tabular.tledchg()"),
                                value:currtl.name}]]]);
@@ -459,6 +468,17 @@ app.tabular = (function () {
     }
 
 
+    function displayTimelineIdIfAvailable () {
+        if(currtl && currtl.instid) {
+            jt.byId("tlidformline").style.display = "block";
+            jt.out("idinspan", currtl.instid);
+            tlflds.selname.setValue(currtl.instid); }
+        else {
+            jt.byId("tlidformline").style.display = "none";
+            jt.out("idinspan", ""); }
+    }
+
+
     function editTimeline () {
         var html;
         app.mode.chmode("reference");  //verify correct display
@@ -480,9 +500,8 @@ app.tabular = (function () {
                 ["div", {id:"etlsetdiv", style:"display:none;"}, 
                  timelineSettingsHTML()]];
         jt.out("tlctxdiv", jt.tac2html(html));
-        if(currtl && currtl.instid) {
-            tlflds.selname.setValue(currtl.instid); }
-        app.tabular.tledchg();
+        displayTimelineIdIfAvailable();
+        app.tabular.tledchg("namechg");  //init dependent fields for name sel
         app.tabular.ptdisp();
     }
 
@@ -530,8 +549,7 @@ app.tabular = (function () {
                 jt.byId("tlrndmaxin").value = elems[2] || 18; }
             else {
                 tlflds.selseq.setValue("Sequential"); } }
-        if(jt.byId("idin")) {
-            jt.byId("idin").value = tl.instid || ""; }
+        displayTimelineIdIfAvailable();
         jt.byId("namein").value = tl.name;
         if(jt.byId("slugin")) {
             jt.byId("slugin").value = tl.slug; }
@@ -567,7 +585,7 @@ app.tabular = (function () {
                     app.db.deserialize("Timeline", result[0]);
                     setStateToDatabaseTimeline(result[0]);
                     app.tabular.ptdisp();
-                    app.tabular.tledchg(); },
+                    app.tabular.tledchg("namechg"); },
                 function (code, errtxt) {
                     jt.log("tlefc " + code + " " + errtxt);
                     jt.err("Timeline fetch " + code + " " + errtxt); },
@@ -593,17 +611,38 @@ app.tabular = (function () {
     }
 
 
-    function timelineEditFieldChange (showsave) {
-        var tlid;
-        notePointScrollPosition();
-        tlflds.name = tlflds.selname.getValue();
-        //hide all display inputs
+    function hideTLTypeFields () {
         jt.byId("tltypeseldiv").style.display = "none";
         jt.byId("tlseqseldiv").style.display = "none";
         jt.byId("tlrndmaxdiv").style.display = "none";
         jt.byId("ppsindiv").style.display = "none";
+    }
+
+
+    function unhideTLTypeFields () {
+        timelineSettings("ifchanged");  //show detail fields and save button
+        jt.byId("tltypeseldiv").style.display = "inline-block";
+        tlflds.type = tlflds.seltype.getValue();
+        if(tlflds.type === "Points") {
+            jt.byId("ppsindiv").style.display = "block";
+            jt.byId("tlseqseldiv").style.display = "inline-block";
+            if(tlflds.selseq.getValue() === "Random") {
+                jt.byId("tlrndmaxdiv").style.display = "block";
+                tlflds.rndmax = jt.byId("tlrndmaxin").value; } }
+        tlflds.name = jt.byId("namein").value || "";
+        if(jt.byId("slugin")) {
+            tlflds.slug = jt.byId("slugin").value || slugify(tlflds.name); }
+        tlflds.title = jt.byId("titlein").value || "";
+        tlflds.subtitle = jt.byId("subtitlein").value || "";
+    }
+
+
+    function timelineNameChangeReady () {
+        var tlid;
+        tlflds.name = tlflds.selname.getValue();
         if(tlflds.name === "none") {
-            return; }
+            currtl = null;
+            return false; } 
         if(tlflds.name === "new") {
             currtl = emptyTimeline();
             if(tlflds.seltype.getValue() === "Timelines") {
@@ -616,27 +655,23 @@ app.tabular = (function () {
             if((!currtl || currtl.instid !== tlid) && app.user.tls[tlid]) {
                 setStateToDatabaseTimeline(app.user.tls[tlid]); }
             if(!currtl || currtl.instid !== tlid) {
-                return fetchTimeline(tlid); } //don't unhide until data avail
+                fetchTimeline(tlid);
+                return false; }  //nothing to display until TL retrieved
             if(currtl) {
                 setDisplayInputFieldsFromTimeline(currtl); } }
-        //unhide appropriate display inputs
-        timelineSettings("ifchanged");
-        jt.byId("tltypeseldiv").style.display = "inline-block";
-        tlflds.type = tlflds.seltype.getValue();
-        if(tlflds.type === "Points") {
-            jt.byId("ppsindiv").style.display = "block";
-            jt.byId("tlseqseldiv").style.display = "inline-block";
-            if(tlflds.selseq.getValue() === "Random") {
-                jt.byId("tlrndmaxdiv").style.display = "block";
-                tlflds.rndmax = jt.byId("tlrndmaxin").value; } }
-        tlflds.name = jt.byId("namein").value || "";
-        if(jt.byId("slugin")) {
-            jt.byId("slugin").value = slugify(tlflds.name); }
-        tlflds.title = jt.byId("titlein").value || "";
-        tlflds.subtitle = jt.byId("subtitlein").value || "";
+        return true;
+    }
+
+
+    function timelineEditFieldChange (context) {
+        notePointScrollPosition();
+        hideTLTypeFields();  //hide all data dependent fields
+        if(context === "namechg" && !timelineNameChangeReady()) {
+            return; }  //fetching timeline, or "none", or otherwise done
+        unhideTLTypeFields();  //unhide appropriate data dependent fields
         restorePointScrollPosition();
-        if(!showsave) {
-            app.tabular.ptdisp(); }  //might need to switch points/timelines
+        if(context !== "showsave") {  //redraw the points area since it might
+            app.tabular.ptdisp(); }   //need to show suppviz or timelines now.
     }
 
 
@@ -933,6 +968,7 @@ app.tabular = (function () {
         canctl: function () { cancelTimelineEdit(); },
         runsv: function (svmodule) { app[svmodule].display(); },
         togptd: function (id) { togglePointDataDisplay(id); },
-        scr2pt: function (id) { scrollToPointId(id); }
+        scr2pt: function (id) { scrollToPointId(id); },
+        dfltslug: function () { provideDefaultSlugValue(); }
     };
 }());

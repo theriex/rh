@@ -215,6 +215,11 @@ app.mode = (function () {
         app.dlg.init(tl);
         jt.log("mode.start calling db.nextInteraction");
         app.db.nextInteraction();
+        //TEST: Uncomment to launch menu command after first interaction
+        setTimeout(function () {
+            var mc = "newtl";
+            jt.log("mode.start TEST menu: " + mc);
+            app.mode.menu(0, mc); }, 200);
     }
 
 
