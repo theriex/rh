@@ -84,10 +84,13 @@ def rebuild_prebuilt_timeline_points(tl):
         return
     jtxt = ""
     ptids = tl.cids.split(",")
-    # No need to cache individual points as they are never accessed by 
-    # themselves except in this case.
+    # The ptids may not be in chronological order.  They are just appended
+    # to the CSV based on the order the user added them.  There should not
+    # be any dupes.
     for ptid in ptids:
         pt = point.Point.get_by_id(int(ptid))
+        # No need to cache individual points post retrieval.  They are never
+        # accessed by themselves except for here.
         if not pt:
             logging.warn("timeline " + str(tl.key().id()) + 
                          " references non-existant point " + ptid)

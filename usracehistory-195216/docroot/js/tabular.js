@@ -752,53 +752,6 @@ app.tabular = (function () {
     }
 
 
-    //Merge the given sorted and prepared points into allpts.  Used to
-    //ensure any points referenced in a loaded timeline are available in
-    //reference mode.
-    function mergeTimelinePoints(points) {
-        var updpts = [], aps = app.allpts, apidx = 0, mps = points, mpidx = 0,
-            ap, mp;
-        while(apidx < aps.length || mpidx < mps.length) {
-            if(apidx < aps.length) { ap = aps[apidx]; } else { ap = null; }
-            if(mpidx < mps.length) { mp = mps[mpidx]; } else { mp = null; }
-            //compare ap to mp, merge if same point
-            if(ap && !mp) { updpts.push(ap); apidx += 1; }
-            else if(!ap && mp) { updpts.push(mp); mpidx += 1; }
-            else if(ap.tc < mp.tc) { updpts.push(ap); apidx += 1; }
-            else if(ap.tc > mp.tc) { updpts.push(mp); mpidx += 1; }
-            else {  //ap.tc === mp.tc
-                updpts.push(ap);
-                apidx += 1;
-                if(ap.instid === mp.instid) {
-                    mpidx += 1; } } }
-        app.allpts = updpts;
-    }
-
-
-    function preparePointsData () {
-        var ctx;
-        app.allpts.forEach(function (pt) {
-            app.db.parseDate(pt); });
-        ctx = app.db.makeCoordContext(app.allpts);
-        app.allpts.forEach(function (pt) {
-            app.db.makeCoordinates(pt, ctx); });
-        app.allpts.sort(function (a, b) {
-            var av, bv;
-            if(a.start.year < b.start.year) { return -1; }
-            if(a.start.year > b.start.year) { return 1; }
-            av = a.start.month || 0;
-            bv = b.start.month || 0;
-            if(av < bv) { return -1; }
-            if(av > bv) { return 1; }
-            av = a.start.day || 0;
-            bv = b.start.day || 0;
-            if(av < bv) { return -1; }
-            if(av > bv) { return 1; }
-            return 0; });
-        mergeTimelinePoints(app.db.displayContext().points);
-    }
-
-
     function displayPointFilters (val, all) {
         if(all && val === "none") {
             jt.byId("ptdpsel").style.display = val; }
@@ -889,9 +842,12 @@ app.tabular = (function () {
             ptsfile = "docs/locpts.json"; }
         jt.call("GET", ptsfile, null,
                 function (result) {
+                    var dcon = app.db.displayContext();
                     //PENDING: fetch recent updates and integrate
-                    app.allpts = result;
-                    preparePointsData();
+                    app.db.prepPointsArray(result);
+                    //make sure points from whatever timeline the app
+                    //launched with are included
+                    app.allpts = app.db.mergePoints(result, dcon.points);
                     app.tabular.ptdisp(); },
                 function (code, errtxt) {
                     jt.err("Fetch pubpts failed " + code + " " + errtxt); },

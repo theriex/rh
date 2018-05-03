@@ -235,6 +235,18 @@ app.db = (function () {
     }
 
 
+    //Important that all arrays of points be in chronological sorted order
+    //when processing.  This is what enables merging points from a randomly
+    //selected timeline with points from a chronological timeline.  Prebuilt
+    //timeline data for a timeline is saved in edit order not chronological.
+    function prepPointsArray (pts) {
+        pts.forEach(function (pt) {
+            parseDate(pt); });
+        pts.sort(function (a, b) {  //verify in chrono order
+            return compareStartDate(a, b); });
+    }
+
+
     //The preb data points in the timeline are a subset of the database
     //fields (see timeline.py rebuild_prebuilt_timeline_points):
     //    instid: The database point instance id.  Aka "citation id"
@@ -260,10 +272,7 @@ app.db = (function () {
         var ny = new Date().getFullYear();
         jt.log("Preparing data for " + tl.name + "...");
         tl.points = tl.preb || [];
-        tl.points.forEach(function (pt) {
-            parseDate(pt); });
-        tl.points.sort(function (a, b) {  //verify in chrono order
-            return compareStartDate(a, b); });
+        prepPointsArray(tl.points);
         tl.points.forEach(function (pt, idx) {
             notePointCounts(tl, pt);
             pt.currdataindex = idx;
@@ -511,6 +520,25 @@ app.db = (function () {
     }
 
 
+    function mergePoints (aps, bps) {
+        var mps = [], aidx = 0, bidx = 0, ap, bp;
+        while(aidx < aps.length || bidx < bps.length) {
+            if(aidx < aps.length) { ap = aps[aidx]; } else { ap = null; }
+            if(bidx < bps.length) { bp = bps[bidx]; } else { bp = null; }
+            //compare ap to bp, merge if same point
+            if     (ap && !bp) { mps.push(ap); aidx += 1; }
+            else if(!ap && bp) { mps.push(bp); bidx += 1; }
+            else if(ap.tc < bp.tc) { mps.push(ap); aidx += 1; }
+            else if(ap.tc > bp.tc) { mps.push(bp); bidx += 1; }
+            else {  //ap.tc === bp.tc
+                mps.push(ap);
+                aidx += 1;
+                if(ap.instid === bp.instid) {  //same point. merge.
+                    bidx += 1; } } }
+        return mps;
+    }
+
+
     function initTimelinesContent () {
         if(!dcon || !dcon.ds) { return; }  //timelines not loaded yet
         dcon.points = [];  //all points for all timelines in series
@@ -520,12 +548,10 @@ app.db = (function () {
             ctc = {type:ctc[0], levcnt:ctc[1] || 6, rndmax:ctc[2] || 18};
             tl.pointsPerSave = Number(ctc.levcnt);
             tl.dsindex = ix;
-            prepData(tl);  //sets tl.points
+            prepData(tl);  //parse dates, sort, set tl.points..
             if(ctc.type === "Random") {
                 rebuildRandomPointsSelection(tl, ctc); }
-            dcon.points = dcon.points.concat(tl.points); });
-        dcon.points.sort(function (a, b) {
-            return compareStartDate(a, b); });
+            dcon.points = mergePoints(dcon.points, tl.points); });
         dcon.ctx = makeCoordContext(dcon.points);
         dcon.points.forEach(function (pt) {
             makeCoordinates(pt, dcon.ctx); });
@@ -794,7 +820,8 @@ app.db = (function () {
         mergeUpdatedPointData: function (pt) { mergeUpdatedPointData(pt); },
         initTimelines: function () { initTimelinesContent(); },
         ptlinktxt: function (p, s, f) { return pointLinkedText(p, s, f); },
-        getOrgId: function (obj) { return getOrgId(obj); }
-
+        getOrgId: function (obj) { return getOrgId(obj); },
+        prepPointsArray: function (pts) { prepPointsArray(pts); },
+        mergePoints: function (a, b) { return mergePoints(a, b); }
     };
 }());
