@@ -399,6 +399,12 @@ app.tabular = (function () {
     }
 
 
+    function slugify (str) {
+        str = str.toLowerCase().replace(/\s/g, "");
+        return str;
+    }
+
+
     function provideDefaultSlugValue () {
         var slugin = jt.byId("slugin");
         if(slugin && !currtl.slug) {
@@ -527,12 +533,6 @@ app.tabular = (function () {
         if(st.prev !== st.now) {
             //jt.log("timelineSettings changing pointsdispdiv height");
             adjustPointsAreaDisplayHeight(); }
-    }
-
-
-    function slugify (str) {
-        str = str.toLowerCase().replace(/\s/g, "");
-        return str;
     }
 
 

@@ -248,6 +248,20 @@ app.linear = (function () {
     }
 
 
+    function byPtId (refid, srcid) {
+        var i;
+        for(i = 0; i < tl.pts.length; i += 1) {
+            if(tl.pts[i].instid === srcid) {
+                app.db.unvisitPoint(tl.pts[i]);
+                app.mode.requeue(tl.pts[i]);
+                break; } }
+        for(i = 0; i < tl.pts.length; i += 1) {
+            if(tl.pts[i].instid === refid) {
+                return clickCircle(tl.pts[i]); } }
+        jt.log("byPtId " + refid + " not found.");
+    }
+
+
     function handlePicMouseClick (mouseinfo) {
         var mx = mouseinfo[0],
             my = mouseinfo[1],
@@ -446,6 +460,7 @@ app.linear = (function () {
     return {
         display: function (currlev) { display(currlev); },
         clickCircle: function (pt) { clickCircle(pt); },
+        byPtId: function (refid, srcid) { byPtId(refid, srcid); },
         levelCompleted: function (levpi) { app.levelup.display(tl, levpi); },
         tldata: function () { return tl; },
         unzoom: function () { unzoom(); },

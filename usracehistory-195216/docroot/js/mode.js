@@ -328,6 +328,7 @@ app.mode = (function () {
         showNextPoints: function (points) { showNextPoints(points); },
         searchstate: function () { return srchst; },
         updlev: function (currlev) { updateLevelDisplay(currlev); },
-        svdone: function (m, s, e) { endSuppViz(m, s, e); }
+        svdone: function (m, s, e) { endSuppViz(m, s, e); },
+        requeue: function (pt) { ms.points.push(pt); }
     };
 }());

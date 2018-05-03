@@ -344,17 +344,22 @@ app.db = (function () {
     }
 
 
+    function unvisitPoint (pt) {
+        pt.isoShown = "";
+        pt.isoClosed = "";
+        pt.viewCount = 0;
+        pt.tagCodes = "";
+        pt.visited = "";
+    }
+
+
     function clearVisited () {
         dcon.ds.forEach(function (tl) {
             tl.visited = "";
             tl.levs.forEach(function (lev) {
                 lev.visited = "";
                 lev.points.forEach(function (pt) {
-                    pt.isoShown = "";
-                    pt.isoClosed = "";
-                    pt.viewCount = 0;
-                    pt.tagCodes = "";
-                    pt.visited = ""; }); }); });
+                    unvisitPoint(pt); }); }); });
     }
 
 
@@ -643,7 +648,7 @@ app.db = (function () {
                     jt.log(pt.instid + " bad link ref " + p1);
                     return p2; } //remove link, return just text
                 //jt.log(pt.instid + " linked to " + refid);
-                oc = jt.fs(fname + "('" + refid + "')");
+                oc = jt.fs(fname + "('" + refid + "','" + pt.instid + "')");
                 //standardize the link href to be #pt<id> for anchors
                 link = "<a href=\"" + p1 + "\"" +
                     " onclick=\"" + oc + "\">" + p2 + "</a>";
@@ -821,6 +826,7 @@ app.db = (function () {
         ptlinktxt: function (p, s, f) { return pointLinkedText(p, s, f); },
         getOrgId: function (obj) { return getOrgId(obj); },
         prepPointsArray: function (pts) { prepPointsArray(pts); },
-        mergePoints: function (a, b) { return mergePoints(a, b); }
+        mergePoints: function (a, b) { return mergePoints(a, b); },
+        unvisitPoint: function (pt) { unvisitPoint(pt); }
     };
 }());

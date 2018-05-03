@@ -190,14 +190,14 @@ app.dlg = (function () {
         while(idx >= 0 && years.length < flank) {
             dp = tl.pts[idx];
             if(dp.start.year !== years[0]) {
-                jt.log("yr guess unshift " + dp.start.year + ", idx: " + idx);
+                //jt.log("yr guess unshift " + dp.start.year + ", idx: " + idx);
                 years.unshift(dp.start.year); }
             idx -= 1; }
         idx = pti + 1;
         while(idx < tl.pts.length && years.length <= 2 * flank) {
             dp = tl.pts[idx];
             if(dp.start.year !== years[years.length - 1]) {
-                jt.log("yr guess push " + dp.start.year + ", idx: " + idx);
+                //jt.log("yr guess push " + dp.start.year + ", idx: " + idx);
                 years.push(dp.start.year); }
             idx += 1; }
         //find the original year again, array may not be balanced
@@ -366,7 +366,7 @@ app.dlg = (function () {
                 ["div", {id:"dlgcontentdiv"},
                  ["div", {cla:"dlgtextdiv", id:"dlgtextdiv"},
                   [pichtml,
-                   d.text]]],
+                   app.db.ptlinktxt(d, tl.pts, "app.linear.byPtId")]]],
                 ["div", {id:"dlgbuttondiv"}, buttons.tac]];
         displayDialog(d, jt.tac2html(html));
         d.interact = {start:new Date()};
