@@ -395,7 +395,9 @@ app.linear = (function () {
                      " of " + tl.pts.length + "."); return; }
         while(wall.selpts.length < (grid.x * grid.y)) {
             idx = Math.floor(Math.random() * picpts.length);
-            wall.selpts.push(picpts.splice(idx, 1)[0]); }
+            wall.cand = picpts.splice(idx, 1)[0];
+            if(wall.selpts.every(pt => pt.instid !== wall.cand.instid)) {
+                wall.selpts.push(wall.cand); } }
         div = jt.byId(divid);
         wall.dd = {w:div.offsetWidth, h:div.offsetHeight};
         if(wall.dd.h > wall.dd.w) {  //invert grid to be tall instead of wide
