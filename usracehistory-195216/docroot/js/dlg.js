@@ -182,17 +182,22 @@ app.dlg = (function () {
 
 
     function getYearGuessOptions (pt, flank) {
-        var idx, dp, off, years = [pt.start.year];
-        idx = pt.currdataindex - 1;
+        var pti, idx = 0, dp, off, years = [pt.start.year];
+        for(pti = 0; pti < tl.pts.length; pti += 1) {
+            if(tl.pts[pti].instid === pt.instid) {
+                break; } }
+        idx = pti - 1;
         while(idx >= 0 && years.length < flank) {
             dp = tl.pts[idx];
             if(dp.start.year !== years[0]) {
+                jt.log("yr guess unshift " + dp.start.year + ", idx: " + idx);
                 years.unshift(dp.start.year); }
             idx -= 1; }
-        idx = pt.currdataindex + 1;
+        idx = pti + 1;
         while(idx < tl.pts.length && years.length <= 2 * flank) {
             dp = tl.pts[idx];
             if(dp.start.year !== years[years.length - 1]) {
+                jt.log("yr guess push " + dp.start.year + ", idx: " + idx);
                 years.push(dp.start.year); }
             idx += 1; }
         //find the original year again, array may not be balanced

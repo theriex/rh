@@ -273,9 +273,8 @@ app.db = (function () {
         jt.log("Preparing data for " + tl.name + "...");
         tl.points = tl.preb || [];
         prepPointsArray(tl.points);
-        tl.points.forEach(function (pt, idx) {
+        tl.points.forEach(function (pt) {
             notePointCounts(tl, pt);
-            pt.currdataindex = idx;
             makePointIdent(pt, ny); });
         describePoints(tl);
         tl.dataPrepared = true;
