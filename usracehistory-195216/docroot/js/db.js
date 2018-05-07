@@ -110,10 +110,12 @@ app.db = (function () {
 
 
     function getTimeCode (pt) {
-        //D3 has very good support for dates, but that level of precision is
-        //frequently more than the data specifies, so using a "time code"
-        //consisting of the year and two decimal places showing the number
-        //of days out of 366 (leaps included).  Readable and sortable.
+        //D3 has very good support for dates, but a date value is more
+        //precision than the data specifies, and it is hard to read in raw
+        //form.  Using a "time code" instead consisting of the start year
+        //and a fractional portion indicating the number of days out of 366
+        //(leaps included).  The time code has 3 decimal places so 1994Nov8
+        //and 1994Nov9 have distinct values.
         var mds = [0,  //Jan
                    31, //Feb
                    60, //Mar
@@ -132,7 +134,7 @@ app.db = (function () {
             tc;
         if(m) {
             m -= 1; }  //switch from one-based month to array index
-        tc = Math.round(((mds[m] + d) / 366) * 100) / 100;
+        tc = Math.round(((mds[m] + d) / 366) * 1000) / 1000;
         return y + tc;
     }
 

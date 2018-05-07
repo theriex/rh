@@ -75,6 +75,7 @@ app.tabular = (function () {
         if(pt.keywords) {
             html.push(pointExtendedAttrValHTML("keywords", pt.keywords)); }
         html.push(pointExtendedAttrValHTML("orgid", pt.orgid));
+        html.push(pointExtendedAttrValHTML("timecode", pt.tc));
         //PENDING: refs should be a ul with new tabs if URLs
         //PENDING: stats should be displayed once available
         //Not doing endorsed for general display.
