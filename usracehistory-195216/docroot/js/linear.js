@@ -331,7 +331,9 @@ app.linear = (function () {
              ["div", {id:"suppvisdiv"}],
              ["div", {id:"itemdispdiv"}, "hello"],
              ["div", {id:"menudiv"}]]);
-        jt.makeDraggable("itemdispdiv");
+        //Making the div draggable disables selecting text, which is annoying
+        //when editing and copying text for search.
+        //jt.makeDraggable("itemdispdiv");
         tl.svg = d3.select("#svgmain");
         tl.margin = {top: 20, right: 10, bottom: 60, left: 10};
         tl.margin.hpad = tl.margin.top + tl.margin.bottom;
