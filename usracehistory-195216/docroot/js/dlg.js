@@ -68,61 +68,79 @@ app.dlg = (function () {
     }
 
 
-    function adjustContentHeight (dim) {
-        var cd = {x:dim.x, y:dim.y, w:dim.w, h:dim.h},
-            elids = ["dlgdatediv", "dlgxdiv", "dlgbuttondiv"];
-        elids.forEach(function (id) {
-            var elem = jt.byId(id);
-            if(elem) {
-                cd.h -= elem.offsetHeight; } });
-        //going smaller than image height means you have to scroll to see
-        //the entire image.  Looks squished.
-        cd.h = Math.max(cd.h, 166);  //don't go smaller than image height
-        d3.select("#dlgcontentdiv")
-            .style("max-height", cd.h + "px");
-    }
-
-
-    function displayDialog (d, html) {
-        var dim, elem, txtdiv, picdiv;
-        if(d) {
-            jt.log("displayDialog " + d.instid + " " + 
-                   d.text.slice(0, 50) + "..."); }
-        if(tl.width < 500) {  //use full space on small devices
-            dim = {x: tl.margin.left + Math.round(0.02 * tl.width),
-                   y: tl.margin.top + Math.round(0.04 * tl.height),
-                   w: Math.round(0.9 * tl.width),
-                   h: Math.round(0.8 * tl.height)}; }
-        else { //larger display tracks the point height for visual interest
-            dim = {tracked: true,
-                   x: tl.margin.left + Math.round(0.04 * tl.width),
-                   y: tl.margin.top + Math.round(0.04 * tl.height),
-                   w: Math.round(0.9 * tl.width)};
-            if(d) {
-                dim.y = tl.margin.top + tl.y(d.vc);
-                dim.y = Math.min(dim.y, Math.round(0.6 * tl.height)); }
-            dim.h = Math.round(0.9 * tl.height) - dim.y; }
+    function constrainDialogToChartDims () {
+        var dim = {mx:Math.round(0.02 * tl.width),
+                   myt:Math.round(0.15 * tl.height),
+                   myb:Math.round(0.9 * tl.height)};
+        if(tl.width > 500) {  //expand the x margin to appear less elongated
+            dim.mx = Math.round(0.04 * tl.width); }
+        dim.x = tl.margin.left + dim.mx;
+        dim.w = tl.width - (2 * dim.mx);
+        //Start the dialog near the bottom of the display so content
+        //adjustments can move it up rather than down. This is in case of
+        //visual artifacts due to timing hiccups or whatever.
+        dim.y = Math.round(0.9 * tl.height);
+        dim.h = dim.myb - dim.myt;
+        //verify width and height are not unworkably small.
+        dim.w = Math.max(dim.w, 100);
+        dim.h = Math.max(dim.h, 100);
         d3.select("#itemdispdiv")
             .style("left", dim.x + "px")
             .style("top", dim.y + "px")
             .style("max-width", dim.w + "px")
             .style("max-height", dim.h + "px");
+        return dim;
+    }
+
+
+    function constrainTextToDialogHeight (d, dlgdim) {
+        var ph = 166,  //default infopic max-height from css
+            resids = ["dlgdatediv", "dlgbuttondiv"],
+            img, mh;
+        if(!d) {  //Displays other than data should lay out reasonably already.
+            return; }
+        //Set min text area height equal img height so img not squished.
+        if(d.pic) {
+            img = jt.byId("dlgpicimg");
+            if(img && img.offsetHeight) {
+                ph = img.offsetHeight; }
+            d3.select("#dlgtextdiv")
+                .style("min-height", ph); }
+        //Set max text area height equal to max dlg height - header/footer
+        mh = dlgdim.h;
+        resids.forEach(function (id) {
+            var elem = jt.byId(id);
+            if(elem) {
+                mh -= elem.offsetHeight; } });
+        mh -= 10;  //avoid off-by-one calcs, default margins..
+        d3.select("#dlgcontentdiv")  //text and img areas together
+            .style("max-height", mh + "px");
+    }
+
+
+    function verticallyPositionDialog (d, dim) {
+        var y = dim.myt,
+            dd = jt.byId("itemdispdiv");
+        if(d && dd && ((dd.offsetHeight - 10) < dim.h)) {
+            y = tl.y(d.vc);
+            //top of dlg must be no higher than top margin
+            y = Math.max(y, dim.myt);
+            //bottom should not exceed bottom margin
+            y = Math.min(y, dim.myb - (dd.offsetHeight + 10)); }
+        d3.select("#itemdispdiv")
+            .style("top", y + "px");
+    }
+
+
+    function displayDialog (d, html) {
+        var dim;
+        if(d) {
+            jt.log("displayDialog " + d.instid + " " + 
+                   d.text.slice(0, 50) + "..."); }
+        dim = constrainDialogToChartDims();
         jt.out("itemdispdiv", html);
-        adjustContentHeight(dim);
-        if(dim.tracked) {
-            elem = jt.byId("itemdispdiv");
-            txtdiv = jt.byId("dlgtextdiv");
-            picdiv = jt.byId("dlgpicdiv");
-            if(elem && ((elem.scrollHeight > elem.clientHeight) ||
-                        (txtdiv && txtdiv.clientHeight > elem.clientHeight) ||
-                        (picdiv && picdiv.clientHeight > elem.clientHeight))) {
-                //readjust to full screen to accommodate overflow
-                dim.y = tl.margin.top + Math.round(0.04 * tl.height);
-                dim.h = Math.round(0.8 * tl.height);
-                adjustContentHeight(dim);
-                d3.select("#itemdispdiv")
-                    .style("top", dim.y + "px")
-                    .style("max-height", dim.h + "px"); } }
+        constrainTextToDialogHeight(d, dim);
+        verticallyPositionDialog(d, dim);
         setDialogColors();
         d3.select("#itemdispdiv")
             .style("visibility", "visible")
@@ -356,7 +374,7 @@ app.dlg = (function () {
         tl.dlgdat = d;
         if(d.pic) {
             pichtml = ["div", {cla:"dlgpicdiv", id:"dlgpicdiv"},
-                       ["img", {cla:"infopic", 
+                       ["img", {cla:"infopic", id:"dlgpicimg",
                                 src:"/ptpic?pointid=" + d.instid}]]; }
         buttons = infoButtons(d);
         html = [["div", {id:"genentrydiv"}],
