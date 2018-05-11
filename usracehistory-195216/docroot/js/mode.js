@@ -137,6 +137,7 @@ app.mode = (function () {
         var tl = app.linear.tldata();
         points.forEach(function (d) {
             tl.focus.select("#" + d.id)
+                .style("fill", app.linear.fillColorForPoint(d))
                 .transition().duration(0.8 * task.dur)
                 .attr("r", 5);   //original value
         });

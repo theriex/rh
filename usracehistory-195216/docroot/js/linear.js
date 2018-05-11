@@ -474,6 +474,7 @@ app.linear = (function () {
         levelCompleted: function (levpi) { app.levelup.display(tl, levpi); },
         tldata: function () { return tl; },
         unzoom: function () { unzoom(); },
-        timeline: function () { return tl; }
+        timeline: function () { return tl; },
+        fillColorForPoint: function (d) { return fillColorForPoint(d); }
     };
 }());
