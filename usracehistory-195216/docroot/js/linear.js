@@ -184,10 +184,19 @@ app.linear = (function () {
     }
 
 
+    function highlightPoint (d, highlight) {
+        if(highlight) {
+            tl.focus.select("#" + d.id)
+                .style("fill", "#f00"); }
+        else {
+            tl.focus.select("#" + d.id)
+                .style("fill", fillColorForPoint(d)); }
+    }
+
+
     function overCircle (d, over) {
         if(over) {
-            tl.focus.select("#" + d.id)
-                .style("fill", "#f00");
+            highlightPoint(d, true);
             //jt.log("overCircle x: " + tl.x(d.tc) + ", y: " + tl.y(d.vc + 1));
             //jt.log("overCircle d.vc: " + d.vc);
             tl.focus.select("#mouseoverLabel")
@@ -195,8 +204,7 @@ app.linear = (function () {
                 .attr("y", tl.y(d.vc) - 14)  //above circle
                 .text(d.id); }
         else {
-            tl.focus.select("#" + d.id)
-                .style("fill", fillColorForPoint(d));
+            highlightPoint(d, false);
             tl.focus.select("#mouseoverLabel")
                 .attr("x", 0)
                 .attr("y", 0)
@@ -206,8 +214,8 @@ app.linear = (function () {
 
     function markPointVisited (d) {
         d.isoShown = (new Date()).toISOString();
-        tl.focus.select("#" + d.id)
-            .style("fill", fillColorForPoint(d));
+        //let mode.next handle the highlighting
+        //highlightPoint(d, false);
     }
 
 

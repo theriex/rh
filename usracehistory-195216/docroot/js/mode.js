@@ -121,10 +121,35 @@ app.mode = (function () {
     }
 
 
+    function highlightCircles (points, task) {
+        var tl = app.linear.tldata();
+        points.forEach(function (d) {
+            tl.focus.select("#" + d.id)
+                //setting z-index has no effect, even if initialized.
+                .style("fill", "#FF0000")
+                .transition().duration(0.8 * task.dur)
+                .attr("r", 10);   //was 5
+        });
+    }
+
+
+    function normalizeCircles (points, task) {
+        var tl = app.linear.tldata();
+        points.forEach(function (d) {
+            tl.focus.select("#" + d.id)
+                .transition().duration(0.8 * task.dur)
+                .attr("r", 5);   //original value
+        });
+    }
+
+
     function next () {
+        if(ms.currpt) {
+            normalizeCircles([ms.currpt], {dur:250}); }
         if(!ms.points || !ms.points.length) {
             return app.dlg.saveprog(); }
         ms.currpt = ms.points.pop();
+        highlightCircles([ms.currpt], {dur:800});
         app.linear.clickCircle(ms.currpt);
     }
 
@@ -235,28 +260,6 @@ app.mode = (function () {
             .style("height", 5 + "px")  //squeeze into div padding
             .style("background", "#CCC")
             .style("visibility", "visible");
-    }
-
-
-    function highlightCircles (points, task) {
-        var tl = app.linear.tldata();
-        points.forEach(function (d) {
-            tl.focus.select("#" + d.id)
-                //setting z-index has no effect, even if initialized.
-                .style("fill", "#FF0000")
-                .transition().duration(0.8 * task.dur)
-                .attr("r", 10);   //was 5
-        });
-    }
-
-
-    function normalizeCircles (points, task) {
-        var tl = app.linear.tldata();
-        points.forEach(function (d) {
-            tl.focus.select("#" + d.id)
-                .transition().duration(0.8 * task.dur)
-                .attr("r", 5);   //original value
-        });
     }
 
 

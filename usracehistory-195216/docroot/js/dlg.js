@@ -120,9 +120,13 @@ app.dlg = (function () {
 
     function verticallyPositionDialog (d, dim) {
         var y = dim.myt,
-            dd = jt.byId("itemdispdiv");
+            dd = jt.byId("itemdispdiv"),
+            xa;
         if(d && dd && ((dd.offsetHeight - 10) < dim.h)) {
-            y = tl.y(d.vc);
+            xa = tl.y(tl.pts[0].vc);  //first point should be on x-axis
+            y = tl.y(d.vc) - xa;  //logical offset value
+            y *= -1;  //invert so more chance circle is visible
+            y = xa + y;
             //top of dlg must be no higher than top margin
             y = Math.max(y, dim.myt);
             //bottom should not exceed bottom margin
