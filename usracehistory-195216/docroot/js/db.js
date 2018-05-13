@@ -163,16 +163,24 @@ app.db = (function () {
     }
 
 
-    //The core of the point identifier is the number of years ago the
-    //event occurred.  That keeps more modern history entries more
-    //concise and generally reduces clutter.  D3 has problems with
-    //numeric ids, so a letter prefix is required.  Multiple entries
-    //within the same year are distinguished by their y coordinate.
-    function makePointIdent (pt, ny) {
-        var ident = "y" + (ny - pt.start.year);
-        if(pt.vc > 1) {
-            ident += "_" + pt.vc; }
+    //The id should not be interpretable as a number or D3 has issues.  For
+    //basic HTML, the id should start with a letter but may include periods,
+    //dashes and underscores.  For HTML5 it just needs to contain a letter
+    //and not have any spaces.  But periods and dashes make the id an
+    //invalid CSS selector which messes up mouseover processing.
+    //Providing the number of years ago an event occurred gives an
+    //additional level of approachability.
+    function makePointIdent (pt, ny, ptids) {
+        var ident = "t" + (ny - pt.start.year);
+        ident += "_x" + pt.tc + "_y" + pt.vc;
+        ident = ident.replace(".", "_");  //need valid CSS selector val
         pt.id = ident;
+        //log any point id duplicates. shouldn't happen, but worth verifying
+        if(ptids) {
+            if(ptids[pt.id]) {
+                jt.log("Duplicate point id: " + pt.id + " " + ptids[pt.id] +
+                       " and " + pt.instid); }
+            ptids[pt.id] = pt.instid; }
     }
 
 
@@ -271,13 +279,11 @@ app.db = (function () {
     //    viewCount: integer count how many times viewed
     //    tagCodes: rku1234 (see appuser.py AppUser class def comment)
     function prepData (tl) {
-        var ny = new Date().getFullYear();
         jt.log("Preparing data for " + tl.name + "...");
         tl.points = tl.preb || [];
         prepPointsArray(tl.points);
         tl.points.forEach(function (pt) {
-            notePointCounts(tl, pt);
-            makePointIdent(pt, ny); });
+            notePointCounts(tl, pt); });
         describePoints(tl);
         tl.dataPrepared = true;
     }
@@ -546,6 +552,7 @@ app.db = (function () {
 
 
     function initTimelinesContent () {
+        var ny = new Date().getFullYear(), ptids = {};
         if(!dcon || !dcon.ds) { return; }  //timelines not loaded yet
         dcon.points = [];  //all points for all timelines in series
         dcon.ds.forEach(function (tl, ix) {
@@ -561,6 +568,8 @@ app.db = (function () {
         dcon.ctx = makeCoordContext(dcon.points);
         dcon.points.forEach(function (pt) {
             makeCoordinates(pt, dcon.ctx); });
+        dcon.points.forEach(function (pt) {
+            makePointIdent(pt, ny, ptids); });  //id requires pt.vc calculated
         dcon.points.forEach(function (pt) {     //convert from -maxy|maxy
             pt.vc = pt.vc + dcon.ctx.maxy; });  //to 0|2*maxy for chart
         makeTimelineLevels();

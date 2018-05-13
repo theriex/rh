@@ -930,6 +930,7 @@ app.dlg = (function () {
                         app.db.deserialize("AppUser", result[0]);
                         setAuthentication(cred.emailin, result);
                         app.db.initTimelines();  //reset for user
+                        app.linear.repaintVisited();
                         //TEST: Uncomment to launch menu command post login
                         // setTimeout(function () { 
                         //     app.mode.menu(0, "myacc"); }, 200);

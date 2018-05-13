@@ -122,23 +122,29 @@ app.mode = (function () {
 
 
     function highlightCircles (points, task) {
-        var tl = app.linear.tldata();
+        var tl = app.linear.tldata(),
+            dur = Math.round(0.8 * task.dur);  //finish trans before task ends
+        points.forEach(function (d) {
+            jt.log("highlight " + d.id + ": " + jt.byId("d.id"));
+            tl.focus.select("#" + d.id)
+                .style("fill", "0f0"); });
         points.forEach(function (d) {
             tl.focus.select("#" + d.id)
                 //setting z-index has no effect, even if initialized.
                 .style("fill", "#FF0000")
-                .transition().duration(0.8 * task.dur)
+                .transition().duration(dur)
                 .attr("r", 10);   //was 5
         });
     }
 
 
     function normalizeCircles (points, task) {
-        var tl = app.linear.tldata();
+        var tl = app.linear.tldata(),
+            dur = Math.round(0.8 * task.dur);  //finish trans before task ends
         points.forEach(function (d) {
             tl.focus.select("#" + d.id)
                 .style("fill", app.linear.fillColorForPoint(d))
-                .transition().duration(0.8 * task.dur)
+                .transition().duration(dur)
                 .attr("r", 5);   //original value
         });
     }
