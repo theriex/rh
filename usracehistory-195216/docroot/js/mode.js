@@ -242,6 +242,7 @@ app.mode = (function () {
         jt.byId("tcontdiv").style.top = String(ms.h) + "px";
         ms.disp = "linear";  //other option is "text"
         verifyDisplayElements();
+        currlev = currlev || app.db.recalcProgress();
         updateLevelDisplay(currlev);
         displayMenu();
         app.dlg.init(tl);

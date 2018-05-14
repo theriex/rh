@@ -838,6 +838,7 @@ app.db = (function () {
         getOrgId: function (obj) { return getOrgId(obj); },
         prepPointsArray: function (pts) { prepPointsArray(pts); },
         mergePoints: function (a, b) { return mergePoints(a, b); },
-        unvisitPoint: function (pt) { unvisitPoint(pt); }
+        unvisitPoint: function (pt) { unvisitPoint(pt); },
+        recalcProgress: function () { return recalcProgress(); }
     };
 }());

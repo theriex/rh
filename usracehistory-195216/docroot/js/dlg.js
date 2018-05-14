@@ -930,14 +930,13 @@ app.dlg = (function () {
                         app.db.deserialize("AppUser", result[0]);
                         setAuthentication(cred.emailin, result);
                         app.db.initTimelines();  //reset for user
-                        app.linear.repaintVisited();
                         //TEST: Uncomment to launch menu command post login
                         // setTimeout(function () { 
                         //     app.mode.menu(0, "myacc"); }, 200);
                         if(bg) {  //Background mode, leave UI/flow alone.
                             return; }
                         app.dlg.close();
-                        popBack(app.db.nextInteraction); },
+                        app.linear.display(); },
                     function (code, errtxt) {
                         jt.log("processSignIn: " + code + " " + errtxt);
                         setTimeout(function () {

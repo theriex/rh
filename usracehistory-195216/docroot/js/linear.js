@@ -467,15 +467,6 @@ app.linear = (function () {
     }
 
 
-    function repaintVisited () {
-        if(tl && tl.pts) {
-            tl.pts.forEach(function (pt) {
-                var circle = jt.byId(pt.id);
-                if(circle) {
-                    circle.style.fill = fillColorForPoint(pt); } }); }
-    }
-
-
     return {
         display: function (currlev) { display(currlev); },
         clickCircle: function (pt) { clickCircle(pt); },
@@ -484,7 +475,6 @@ app.linear = (function () {
         tldata: function () { return tl; },
         unzoom: function () { unzoom(); },
         timeline: function () { return tl; },
-        fillColorForPoint: function (d) { return fillColorForPoint(d); },
-        repaintVisited: function () { repaintVisited(); }
+        fillColorForPoint: function (d) { return fillColorForPoint(d); }
     };
 }());
