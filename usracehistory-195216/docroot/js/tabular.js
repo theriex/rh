@@ -91,7 +91,8 @@ app.tabular = (function () {
                            cla:"txtpicimg"}]]; }
         if(mayEditPoint(pt)) {
             eh = [" &nbsp;",
-                  ["a", {href:"#edit", cla:"editlink",
+                  ["a", {href:"#edit", cla:"editlink", 
+                         id:"editlink" + pt.instid,
                          onclick:jt.fs("app.dlg.ptedit('" + 
                                        ((pt && pt.instid) || "") + "')")},
                    "[edit]"]]; }

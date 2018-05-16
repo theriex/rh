@@ -126,7 +126,7 @@ class FetchPublicPoints(webapp2.RequestHandler):
 
 class UpdatePoint(webapp2.RequestHandler):
     def get(self):
-        self.response.headers['Content-Type'] = 'text/html'
+        self.response.headers['Content-Type'] = 'text/html;charset=UTF-8'
         self.response.write('Ready')
     def post(self):
         # ptupld could be sending password in params so refuse if not secured
@@ -164,8 +164,26 @@ class GetPointPic(webapp2.RequestHandler):
         self.response.out.write(img)
 
 
+class FetchPoint(webapp2.RequestHandler):
+    def get(self):
+        # PENDING: verify caller is an org contributor
+        if not appuser.verify_secure_comms(self):
+            return
+        acc = appuser.get_authenticated_account(self, False)
+        if not acc:
+            return
+        ptid = self.request.get('pointid')
+        if not ptid:
+            return appuser.srverr(self, 400, "pointid required for lookup")
+        pt = Point.get_by_id(int(ptid))
+        if not pt:
+            return appuser.srverr(self, 404, "Point " + ptid + " not found")
+        appuser.return_json(self, [pt])
+
+
 app = webapp2.WSGIApplication([('.*/recentpoints', RecentPoints),
                                ('.*/dbqpts', FetchPublicPoints),
                                ('.*/updpt', UpdatePoint),
+                               ('.*/ptdat', FetchPoint),
                                ('.*/ptpic', GetPointPic)],
                               debug=True)

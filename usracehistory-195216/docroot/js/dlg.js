@@ -26,11 +26,13 @@ app.dlg = (function () {
              year: 1000},
             {id:"geanc", abbr:"Ancients", name:"Ancient Ancestors", 
              year: -90000}]},
-        editPointFields = [
-            {field:"date", type:"text", descf:"app.db.describeDateFormat", 
-             place:"YYYY-MM-DD"},
-            {field:"text", type:"bigtext", place:"Point Description Text"},
-            {field:"codes", type:"codesel", multiple:true, options:[
+        edptflds = [
+            {field:"date", layout:"main", type:"text", 
+             descf:"app.db.describeDateFormat", place:"YYYY-MM-DD"},
+            {field:"text", layout:"main", type:"bigtext", 
+             place:"Point Description Text"},
+            {field:"codes", layout:"detail", type:"codesel", hin:"codeshin",
+             multiple:true, options:[
                 {value:"N", text:"Native American"},
                 {value:"B", text:"African American"},
                 {value:"L", text:"Latino/as"},
@@ -40,9 +42,14 @@ app.dlg = (function () {
                 {value:"U", text:"Did you know?"},
                 {value:"F", text:"Firsts"},
                 {value:"D", text:"What year?"}]},
-            {field:"keywords", type:"text", place:"tag1, tag2"},
-            {field:"source", type:"text", place:"optional source id"},
-            {field:"pic", type:"image"}],
+            {field:"keywords", layout:"detail", type:"text", 
+             place:"tag1, tag2"},
+            {field:"source", layout:"detail", type:"text", 
+             place:"optional source id"},
+            {field:"pic", layout:"pic", type:"image"}],
+        ptflds = ["date", "text", "codes", "orgid", "keywords", "refs",
+                  "source", "srclang", "translations", "endorsed",
+                  "stats", "created", "modified"],
         upldmon = null,
         cookname = "userauth",
         cookdelim = "..usracehistory..",
@@ -930,9 +937,6 @@ app.dlg = (function () {
                         app.db.deserialize("AppUser", result[0]);
                         setAuthentication(cred.emailin, result);
                         app.db.initTimelines();  //reset for user
-                        //TEST: Uncomment to launch menu command post login
-                        // setTimeout(function () { 
-                        //     app.mode.menu(0, "myacc"); }, 200);
                         if(bg) {  //Background mode, leave UI/flow alone.
                             return; }
                         app.dlg.close();
@@ -1109,8 +1113,10 @@ app.dlg = (function () {
     }
 
 
-    function textInputTAC (fs, vo) {
+    function textInputTAC (fs, mode, vo) {
         var inid, label, html;
+        if(mode === "list") {
+            return ["div", {cla:"fldvaldiv"}, vo[fs.field]]; }
         inid = fs.field + "in";
         label = fs.label || fs.field.capitalize();
         if(fs.descf) {
@@ -1132,8 +1138,10 @@ app.dlg = (function () {
     }
 
 
-    function largeTextInputTAC (fs, vo) {
+    function largeTextInputTAC (fs, mode, vo) {
         var html;
+        if(mode === "list") {
+            return ["div", {cla:"fldvaldiv"}, vo[fs.field]]; }
         html = ["div", {cla:"dlgformline"},
                 ["div", {cla:"textareacontainerdiv"},
                  ["textarea", {id:fs.field + "ta",
@@ -1178,13 +1186,15 @@ app.dlg = (function () {
     function codeselchg () {
         var pt;
         if(jt.byId("codeshin")) {
-            pt = formValuesToObject(editPointFields);
+            pt = formValuesToObject(edptflds);
             jt.byId("codeshin").value = pt.codes; }
     }
 
 
-    function codeselInputTAC (fs, vo) {
+    function codeselInputTAC (fs, mode, vo) {
         var inid, selopts, html = [];
+        if(mode === "list") {
+            return ["div", {cla:"fldvaldiv"}, vo[fs.field]]; }
         inid = fs.field + "sel";
         selopts = {id:inid, onchange:jt.fs("app.dlg.codeselchg()")};
         if(fs.multiple) {
@@ -1194,21 +1204,26 @@ app.dlg = (function () {
             if(vo && vo[fs.field].indexOf(opt.value) >= 0) {
                 oao.selected = "selected"; }
             html.push(["option", oao, opt.text]); });
-        html = ["div", {cla:"dlgformline"},
-                [["label", {fo:inid, cla:"liflab", id:"lab" + inid},
-                  fs.label || fs.field.capitalize()],
-                 ["select", selopts, html]]];
+        html = [["div", {cla:"dlgformline"},
+                 [["label", {fo:inid, cla:"liflab", id:"lab" + inid},
+                   fs.label || fs.field.capitalize()],
+                  ["select", selopts, html]]],
+                ["input", {type:"hidden", id:"codeshin", name:"codes",
+                           value:vo.codes}]];  //updated in codeselchg
         return html;
     }
 
 
-    function imageInputTAC (fs, vo) {
+    function imageInputTAC (fs, mode, vo) {
         var src, html;
         src = (vo && vo[fs.field]) || "";
         if(src) {
             src = "/ptpic?pointid=" + src; }
         else {
             src = "/img/picplaceholder.png"; }
+        if(mode === "list") {
+            return ["div", {cla:"fldvaldiv"}, 
+                    ["img", {src:src, cla:"txtpicimg"}]]; }
         html = ["div", {cla:"dlgformline", style:"text-align:center;"},
                 [["input", {type:"file", id:fs.field + "in", name:fs.field}],
                  ["img", {src:src, cla:"txtpicimg"}]]];
@@ -1216,47 +1231,117 @@ app.dlg = (function () {
     }
 
 
-    function inputFieldTAC (fields, vo) {
+    function fieldTAC (fspec, mode, pt) {
+        switch(fspec.type) {
+        case "text": return textInputTAC(fspec, mode, pt);
+        case "bigtext": return largeTextInputTAC(fspec, mode, pt);
+        case "codesel": return codeselInputTAC(fspec, mode, pt);
+        case "image": return imageInputTAC(fspec, mode, pt);
+        default: jt.log("fieldTAC unknown fspec " + fspec); }
+        return "";
+    }
+
+
+    function inputFieldsTAC (fields, section, pt, mode) {
         var html = [];
+        mode = mode || "edit";
         fields.forEach(function (fspec) {
-            switch(fspec.type) {
-            case "text": html.push(textInputTAC(fspec, vo)); break;
-            case "bigtext": html.push(largeTextInputTAC(fspec, vo)); break;
-            case "codesel": html.push(codeselInputTAC(fspec, vo)); break;
-            case "image": html.push(imageInputTAC(fspec, vo)); break;
-            default: jt.err("inputFieldTAC unknown fspec " + fspec); } });
+            if(fspec.layout === section) {
+                html.push(fieldTAC(fspec, mode, pt)); } });
         return html;
     }
 
 
-    function editPoint (ptid) {
-        var pt, html;
-        pt = app.db.pt4id(ptid);
-        html = inputFieldTAC(editPointFields, pt);
-        html = [["div", {id:"dlgtitlediv"}, "Edit Point"],
-                ["div", {cla:"dlgsignindiv"},
-                 ["form", {action:"/updpt", method:"post",
-                           id:"editpointform", target: "subframe",
-                           enctype: "multipart/form-data"},
-                  [["input", {type:"hidden", name:"email", 
-                              value:app.user.email}],
-                   ["input", {type:"hidden", name:"authtok",
-                              value:app.user.tok}],
-                   ["input", {type:"hidden", id:"codeshin", name:"codes",
-                              value:pt.codes}],
-                   html,
-                   ["div", {id:"updatestatdiv"}],
-                   ["iframe", {id:"subframe", name:"subframe",
-                               src:"/updpt"}],  //, style:"display:none"
-                   ["div", {id:"dlgbuttondiv"},
-                    [["button", {type:"button", id:"cancelbutton",
-                                 onclick:jt.fs("app.dlg.close()")}, 
-                      "Cancel"],
-                     " &nbsp; ",
-                     ["button", {type:"submit", id:"savebutton",
-                                 onclick:jt.fs("app.dlg.ptsubclick()")},
-                      "Save"]]]]]]];
+    function editLoadedPoint (pt) {
+        var html;
+        jt.out("editlink" + pt.instid, "[edit]");  //restore original link
+        html = [
+            ["div", {id:"dlgtitlediv"}, "Edit Point"],
+            ["div", {cla:"dlgsignindiv"},
+             ["form", {action:"/updpt", method:"post", id:"editpointform", 
+                       target: "subframe", enctype: "multipart/form-data"},
+              [["input", {type:"hidden", name:"email", value:app.user.email}],
+               ["input", {type:"hidden", name:"authtok", value:app.user.tok}],
+               inputFieldsTAC(edptflds, "main", pt),
+               ["div", {id:"edptablediv"},
+                ["table", {style:"margin:auto;"},
+                 [["tr",
+                   [["th", ["a", {href:"#details", 
+                                  onclick:jt.fs("app.dlg.togptdet('detail')")},
+                            "details"]],
+                    ["th", ["a", {href:"#pic", 
+                                  onclick:jt.fs("app.dlg.togptdet('pic')")},
+                            "pic"]]]],
+                  ["tr", {id:"epdetsumtr"},
+                   [["td", inputFieldsTAC(edptflds, "detail", pt, "list")],
+                    ["td", inputFieldsTAC(edptflds, "pic", pt, "list")]]]]]],
+               ["div", {id:"epdetindiv" + "detail", style:"display:none;"},
+                inputFieldsTAC(edptflds, "detail", pt, "edit")],
+               ["div", {id:"epdetindiv" + "pic", style:"display:none;"},
+                inputFieldsTAC(edptflds, "pic", pt, "edit")],
+               ["div", {id:"updatestatdiv"}],
+               ["iframe", {id:"subframe", name:"subframe",
+                           src:"/updpt", style:"display:none"}],
+               ["div", {id:"dlgbuttondiv"},
+                [["button", {type:"button", id:"cancelbutton",
+                             onclick:jt.fs("app.dlg.close()")}, 
+                  "Cancel"],
+                 " &nbsp; ",
+                 ["button", {type:"submit", id:"savebutton",
+                             onclick:jt.fs("app.dlg.ptsubclick()")},
+                  "Save"]]]]]]];
         displayDialog(null, jt.tac2html(html));
+    }
+
+
+    function togglePointDetailSection (sect) {
+        var sectindiv, otherindiv, sumtr = jt.byId("epdetsumtr");
+        sectindiv = jt.byId("epdetindiv" + sect),
+        otherindiv = jt.byId("epdetindiv" + 
+                             (sect === "detail" ? "pic" : "detail"));
+        if(sectindiv.style.display === "none") {
+            sectindiv.style.display = "block";
+            otherindiv.style.display = "none";
+            sumtr.style.display = "none"; }
+        else {  //already displayed, toggle off
+            sectindiv.style.display = "none";
+            otherindiv.style.display = "none";
+            sumtr.style.display = "table-row"; }
+    }
+
+
+    function pointChanged (pt, dbpt) {
+        return !ptflds.every(function (fld) { return pt[fld] === dbpt[fld]; });
+    }
+
+
+    function copyPointData (from, to) {
+        ptflds.forEach(function (fld) { to[fld] = from[fld]; });
+    }
+
+
+    function editPoint (ptid) {
+        var url, pt;
+        if(!app.dbpts || !app.dbpts[ptid]) {
+            jt.out("editlink" + ptid, "fetching point data...");
+            app.dbpts = app.dbpts || {};
+            url = "ptdat?" + app.auth() + "&pointid=" + ptid + 
+                jt.ts("&cb=", "second");
+            jt.call("GET", url, null,
+                    function (points) {
+                        app.dbpts[ptid] = points[0];
+                        editPoint(ptid); },
+                    function (code, errtxt) {
+                        jt.log("editPoint failed " + code + ": " + errtxt);
+                        jt.out("editlink" + ptid, errtxt); },
+                    jt.semaphore("dlg.editPoint"));
+            return; }  //wait until database point data is available
+        pt = app.db.pt4id(ptid);
+        if(pointChanged(pt, app.dbpts[ptid])) {
+            copyPointData(app.dbpts[ptid], pt);
+            jt.out("editlink" + ptid, "[edit updated point]");
+            return; }  //click updated link to edit updated point
+        editLoadedPoint(pt);
     }
 
 
@@ -1274,7 +1359,7 @@ app.dlg = (function () {
                 if(txt.indexOf(okpre) === 0) {  //successful update
                     jt.out("savebutton", "Saved.");
                     ptid = txt.slice(okpre.length);
-                    pt = formValuesToObject(editPointFields, ptid);
+                    pt = formValuesToObject(edptflds, ptid);
                     app.db.mergeUpdatedPointData(pt);
                     return app.dlg.close(); }
                 if(txt.indexOf(errpre) >= 0) {
@@ -1337,6 +1422,7 @@ app.dlg = (function () {
         updorg: function () { updateOrganization(); },
         omexp: function (instid) { expandOrganizationMember(instid); },
         modmem: function (instid, chg) { modifyMemberLevel(instid, chg); },
-        addmem: function () { addOrgMemberByEmail(); }
+        addmem: function () { addOrgMemberByEmail(); },
+        togptdet: function (sect) { togglePointDetailSection(sect); }
     };
 }());

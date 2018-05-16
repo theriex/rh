@@ -37,6 +37,12 @@ handlers:
   script: src.py.point.app
 
 
+## Retrieve a point
+## GET params: email, authtok, pointid
+- url: .*/ptdat.*
+  script: src.py.point.app
+
+
 ## Retrieve a point pic
 ## GET params: pointid
 - url: .*/ptpic.*
