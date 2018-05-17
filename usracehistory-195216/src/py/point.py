@@ -95,6 +95,7 @@ def update_or_create_point(handler, acc, params):
         pt.pic = db.Blob(params["pic"])
         pt.pic = images.resize(pt.pic, 160, 160)
     pt.put()  # individual points are not cached
+    pt = Point.get_by_id(pt.key().id())  # force db retrieval of latest
     return pt
 
 

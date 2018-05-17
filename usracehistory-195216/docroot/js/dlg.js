@@ -47,9 +47,6 @@ app.dlg = (function () {
             {field:"source", layout:"detail", type:"text", 
              place:"optional source id"},
             {field:"pic", layout:"pic", type:"image"}],
-        ptflds = ["date", "text", "codes", "orgid", "keywords", "refs",
-                  "source", "srclang", "translations", "endorsed",
-                  "stats", "created", "modified"],
         upldmon = null,
         cookname = "userauth",
         cookdelim = "..usracehistory..",
@@ -1311,39 +1308,48 @@ app.dlg = (function () {
 
 
     function pointChanged (pt, dbpt) {
+        var ptflds = ["date", "text", "codes", "orgid", "keywords", "refs",
+                      "source", "srclang", "translations", "endorsed",
+                      "stats", "created", "modified"];
         return !ptflds.every(function (fld) { return pt[fld] === dbpt[fld]; });
     }
 
 
-    function copyPointData (from, to) {
-        ptflds.forEach(function (fld) { to[fld] = from[fld]; });
-        //the pic is uploaded separately and is not part of the field change
-        //logic, but it a new pic was uploaded the id should be copied over.
-        to.pic = from.pic;
+    function noteUpdatedPoint (pt) {
+        app.db.mergeUpdatedPointData(pt);
+        app.dbpts[pt.instid] = pt;
+        app.tabular.redispt(pt);
     }
 
 
-    function editPoint (ptid) {
-        var url, pt;
-        if(!app.dbpts || !app.dbpts[ptid]) {
-            jt.out("editlink" + ptid, "fetching point data...");
-            app.dbpts = app.dbpts || {};
-            url = "ptdat?" + app.auth() + "&pointid=" + ptid + 
-                jt.ts("&cb=", "second");
-            jt.call("GET", url, null,
-                    function (points) {
-                        app.dbpts[ptid] = points[0];
-                        editPoint(ptid); },
-                    function (code, errtxt) {
-                        jt.log("editPoint failed " + code + ": " + errtxt);
-                        jt.out("editlink" + ptid, errtxt); },
-                    jt.semaphore("dlg.editPoint"));
-            return; }  //wait until database point data is available
-        pt = app.db.pt4id(ptid);
-        if(pointChanged(pt, app.dbpts[ptid])) {
-            copyPointData(app.dbpts[ptid], pt);
-            app.tabular.redispt(pt);
-            jt.out("editlink" + ptid, "[edit updated point]");
+    function fetchPointFromServer (ptid, contf) {
+        var url;
+        jt.out("editlink" + ptid, "fetching point data...");
+        app.dbpts = app.dbpts || {};
+        url = "ptdat?" + app.auth() + "&pointid=" + ptid + 
+            jt.ts("&cb=", "second");
+        jt.call("GET", url, null,
+                function (points) {
+                    app.dbpts[ptid] = points[0];
+                    contf(points[0]); },
+                function (code, errtxt) {
+                    jt.log("fetch point failed " + code + ": " + errtxt);
+                    jt.out("editlink" + ptid, errtxt); },
+                jt.semaphore("dlg.fetchPoint"));
+    }
+
+
+    function editPoint (pt) {
+        var locp;
+        if(typeof pt === "string") {
+            if(app.dbpts && !app.dbpts[pt]) {
+                pt = app.dbpts[pt]; }
+            else {
+                return fetchPointFromServer(pt, editPoint); } }
+        locp = app.db.pt4id(pt.instid);
+        if(pointChanged(locp, pt)) {
+            noteUpdatedPoint(pt);
+            jt.out("editlink" + pt.instid, "[edit updated point]");
             return; }  //click updated link to edit updated point
         editLoadedPoint(pt);
     }
@@ -1363,11 +1369,9 @@ app.dlg = (function () {
                 if(txt.indexOf(okpre) === 0) {  //successful update
                     jt.out("savebutton", "Saved.");
                     ptid = txt.slice(okpre.length);
-                    pt = formValuesToObject(edptflds, ptid);
-                    app.db.mergeUpdatedPointData(pt);
-                    app.dbpts[pt.instid] = pt;
-                    app.tabular.redispt(pt);
-                    return app.dlg.close(); }
+                    app.dlg.close();
+                    fetchPointFromServer(ptid, noteUpdatedPoint);
+                    return; }
                 if(txt.indexOf(errpre) >= 0) {
                     txt = txt.slice(txt.indexOf(errpre) + errpre.length);
                     jt.out("updatestatdiv", txt);  //display error

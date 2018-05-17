@@ -543,9 +543,15 @@ app.db = (function () {
             else if(ap.tc < bp.tc) { mps.push(ap); aidx += 1; }
             else if(ap.tc > bp.tc) { mps.push(bp); bidx += 1; }
             else {  //ap.tc === bp.tc
-                mps.push(ap);
-                aidx += 1;
-                if(ap.instid === bp.instid) {  //same point. merge.
+                if(ap.instid !== bp.instid) {  //different points
+                    mps.push(ap);  //arbitrarily push ap
+                    aidx += 1; }
+                else {  //same point, push most recently modified
+                    if(ap.modified > bp.modified) {
+                        mps.push(ap); }
+                    else {
+                        mps.push(bp); }
+                    aidx += 1;
                     bidx += 1; } } }
         return mps;
     }

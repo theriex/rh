@@ -894,6 +894,7 @@ app.tabular = (function () {
         var ptdiv = jt.byId("trowdiv" + pt.instid);
         ptdiv = ptdiv.parentElement;  //enclosing div
         ptdiv.innerHTML = jt.tac2html(pointTAC(pt));
+        timelineSettings("required");
     }
 
 
