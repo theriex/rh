@@ -143,7 +143,7 @@ class UpdatePoint(webapp2.RequestHandler):
         except Exception as e:
             # Client looks for text containing "failed: " + for error reporting
             return appuser.srverr(self, 409, "Point update failed: " + str(e))
-        self.response.headers['Content-Type'] = 'text/html'
+        self.response.headers['Content-Type'] = 'text/html;charset=UTF-8'
         self.response.out.write("ptid: " + str(pt.key().id()))
 
 
@@ -181,9 +181,24 @@ class FetchPoint(webapp2.RequestHandler):
         appuser.return_json(self, [pt])
 
 
+class NukePointPic(webapp2.RequestHandler):
+    def get(self):
+        acc = appuser.get_authenticated_account(self, False)
+        if not acc:
+            return
+        if acc.orgid != 1 or acc.lev != 2:
+            return appuser.srverr(self, 403, "Admin access only.")
+        ptid = self.request.get('pointid')
+        pt = Point.get_by_id(int(ptid))
+        pt.pic = None
+        pt.put()
+        self.response.out.write("Pic set to None for Point " + ptid)
+
+
 app = webapp2.WSGIApplication([('.*/recentpoints', RecentPoints),
                                ('.*/dbqpts', FetchPublicPoints),
                                ('.*/updpt', UpdatePoint),
                                ('.*/ptdat', FetchPoint),
-                               ('.*/ptpic', GetPointPic)],
+                               ('.*/ptpic', GetPointPic),
+                               ('.*/nukepic', NukePointPic)],
                               debug=True)

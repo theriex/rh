@@ -890,6 +890,13 @@ app.tabular = (function () {
     }
 
 
+    function redisplayPoint (pt) {
+        var ptdiv = jt.byId("trowdiv" + pt.instid);
+        ptdiv = ptdiv.parentElement;  //enclosing div
+        ptdiv.innerHTML = jt.tac2html(pointTAC(pt));
+    }
+
+
     function togglePointInclude (ptid) {
         if(tlflds.selname.getValue() === "new") {
             jt.err("Name and save your new timeline"); }
@@ -927,6 +934,7 @@ app.tabular = (function () {
         runsv: function (svmodule) { app[svmodule].display(); },
         togptd: function (id) { togglePointDataDisplay(id); },
         scr2pt: function (id) { scrollToPointId(id); },
-        dfltslug: function () { provideDefaultSlugValue(); }
+        dfltslug: function () { provideDefaultSlugValue(); },
+        redispt: function (pt) { redisplayPoint(pt); }
     };
 }());

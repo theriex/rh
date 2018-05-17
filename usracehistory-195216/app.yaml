@@ -49,6 +49,12 @@ handlers:
   script: src.py.point.app
 
 
+## Delete a point pic
+## GET params: email, authtok, pointid
+- url: .*/nukepic.*
+  script: src.py.point.app
+
+
 ## Fetch public points (sys admin only). Public access: docs/pubpts.json
 ## GET params: email, authtok
 - url: .*/dbqpts.*

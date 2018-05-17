@@ -1317,6 +1317,9 @@ app.dlg = (function () {
 
     function copyPointData (from, to) {
         ptflds.forEach(function (fld) { to[fld] = from[fld]; });
+        //the pic is uploaded separately and is not part of the field change
+        //logic, but it a new pic was uploaded the id should be copied over.
+        to.pic = from.pic;
     }
 
 
@@ -1339,6 +1342,7 @@ app.dlg = (function () {
         pt = app.db.pt4id(ptid);
         if(pointChanged(pt, app.dbpts[ptid])) {
             copyPointData(app.dbpts[ptid], pt);
+            app.tabular.redispt(pt);
             jt.out("editlink" + ptid, "[edit updated point]");
             return; }  //click updated link to edit updated point
         editLoadedPoint(pt);
@@ -1361,6 +1365,8 @@ app.dlg = (function () {
                     ptid = txt.slice(okpre.length);
                     pt = formValuesToObject(edptflds, ptid);
                     app.db.mergeUpdatedPointData(pt);
+                    app.dbpts[pt.instid] = pt;
+                    app.tabular.redispt(pt);
                     return app.dlg.close(); }
                 if(txt.indexOf(errpre) >= 0) {
                     txt = txt.slice(txt.indexOf(errpre) + errpre.length);
