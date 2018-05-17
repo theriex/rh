@@ -657,7 +657,7 @@ app.db = (function () {
 
     function pointLinkedText (pt, pts, fname) {
         var txt = pt.text;
-        txt = txt.replace(/<a\shref\s?=.*#([^"]+)">([^<]+)<\/a>/gi,
+        txt = txt.replace(/<a\shref\s*=\s*"#([^"]+)">([^<]+)<\/a>/gi,
             function (match, p1, p2) {
                 var refid, oc, link;
                 refid = pointIdFromReference(pt, pts, p1);
