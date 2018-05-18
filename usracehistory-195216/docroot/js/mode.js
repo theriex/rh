@@ -175,6 +175,19 @@ app.mode = (function () {
     }
 
 
+    function adjustMenuLeftPos (expand) {
+        var menudiv, levdiv, leftx;
+        menudiv = jt.byId("menudiv");
+        leftx = window.innerWidth - 40;
+        levdiv = jt.byId("levdiv");
+        if(levdiv) {
+            leftx = levdiv.offsetWidth; }
+        if(expand) {
+            leftx = leftx - menudiv.offsetWidth + 26; }
+        menudiv.style.left = leftx + "px";
+    }
+
+
     function displayMenu (expand, select) {
         var html, mdiv, leftx;
         html = ["a", {href:"#menu", onclick:jt.fs("app.mode.menu(" + 
@@ -216,10 +229,7 @@ app.mode = (function () {
                               onclick:jt.fs("app.mode.menu(0,'support')")},
                         "Support"]]); }
         jt.out("menudiv", jt.tac2html(html));
-        mdiv = jt.byId("menudiv");
-        //mdiv.offsetWidth may be zero until all the images load.
-        leftx = window.innerWidth - (Math.max(mdiv.offsetWidth, 30) + 10);
-        mdiv.style.left = leftx + "px";
+        adjustMenuLeftPos(expand);
         if(select) {
             jt.byId("itemdispdiv").style.visibility = "hidden";
             jt.byId("suppvisdiv").style.visibility = "hidden";
