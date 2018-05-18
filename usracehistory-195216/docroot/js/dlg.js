@@ -948,9 +948,10 @@ app.dlg = (function () {
 
 
     function processSignOut () {
-        app.user = {};
         jt.cookie(cookname, "", -1);
-        app.mode.chmode();
+        //while it seems a bit wasteful to go back to the server to fetch
+        //the timeline again, it's important to nuke all context.
+        app.init2();
     }
 
 
