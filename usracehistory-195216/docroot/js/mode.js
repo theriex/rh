@@ -180,7 +180,7 @@ app.mode = (function () {
         menudiv = jt.byId("menudiv");
         leftx = window.innerWidth - 40;
         levdiv = jt.byId("levdiv");
-        if(levdiv) {
+        if(levdiv && levdiv.offsetWidth > 10) {  //currently displayed
             leftx = levdiv.offsetWidth; }
         if(expand) {
             leftx = leftx - menudiv.offsetWidth + 26; }
