@@ -532,27 +532,22 @@ app.db = (function () {
     }
 
 
+    function mergePointsIntoAppCache (aps) {
+        aps.forEach(function (pt) {
+            var acpt = app.mpac[pt.instid];
+            if(!acpt || acpt.modified < pt.modified) {
+                app.mpac[pt.instid] = pt; } });
+    }
+
+
     function mergePoints (aps, bps) {
-        var mps = [], aidx = 0, bidx = 0, ap, bp;
-        while(aidx < aps.length || bidx < bps.length) {
-            if(aidx < aps.length) { ap = aps[aidx]; } else { ap = null; }
-            if(bidx < bps.length) { bp = bps[bidx]; } else { bp = null; }
-            //compare ap to bp, merge if same point
-            if     (ap && !bp) { mps.push(ap); aidx += 1; }
-            else if(!ap && bp) { mps.push(bp); bidx += 1; }
-            else if(ap.tc < bp.tc) { mps.push(ap); aidx += 1; }
-            else if(ap.tc > bp.tc) { mps.push(bp); bidx += 1; }
-            else {  //ap.tc === bp.tc
-                if(ap.instid !== bp.instid) {  //different points
-                    mps.push(ap);  //arbitrarily push ap
-                    aidx += 1; }
-                else {  //same point, push most recently modified
-                    if(ap.modified > bp.modified) {
-                        mps.push(ap); }
-                    else {
-                        mps.push(bp); }
-                    aidx += 1;
-                    bidx += 1; } } }
+        var mps = [];
+        app.mpac = {};  //keep for easy general lookup by point id
+        mergePointsIntoAppCache(aps);
+        mergePointsIntoAppCache(bps);
+        Object.keys(app.mpac).forEach(function (ptid) {
+            mps.push(app.mpac[ptid]); });
+        mps.sort(compareStartDate);
         return mps;
     }
 
@@ -628,9 +623,10 @@ app.db = (function () {
 
     function findPointById (ptid, points) {
         var i, pt;
+        if(app.mpac && app.mpac[ptid]) {
+            return app.mpac[ptid]; }
         //allpts is the largest repository of available points merged for
-        //latest data.  Fall back to provided default if unavailable.
-        //PENDING: might be worth keeping a hashtable rather than brute force
+        //latest data.  Use provided default only if allpts is unavailable.
         if(app.allpts && app.allpts.length) {
             points = app.allpts; }
         else {
@@ -668,7 +664,7 @@ app.db = (function () {
                 var refid, oc, link;
                 refid = pointIdFromReference(pt, pts, p1);
                 if(!refid) {
-                    jt.log(pt.instid + " bad link ref " + p1);
+                    //jt.log(pt.instid + " link ref not found " + p1);
                     return p2; } //remove link, return just text
                 //jt.log(pt.instid + " linked to " + refid);
                 oc = jt.fs(fname + "('" + refid + "','" + pt.instid + "')");
@@ -710,9 +706,11 @@ app.db = (function () {
                     mergePointDataToPoint(pt, updpt); } }); }
         if(app.user.tls) {
             Object.keys(app.user.tls).forEach(function (tlid) {
-                app.user.tls[tlid].points.forEach(function (pt) {
-                    if(pt.instid === updpt.instid) {
-                        mergePointDataToPoint(pt, updpt); } }); }); }
+                var tlpts = app.user.tls[tlid].points;
+                if(tlpts) {
+                    tlpts.forEach(function (pt) {
+                        if(pt.instid === updpt.instid) {
+                            mergePointDataToPoint(pt, updpt); } }); } }); }
     }
 
 
