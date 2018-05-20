@@ -427,6 +427,8 @@ app.tabular = (function () {
             return 0; });
         if(!btls.length) {
             btls = [{tlid:"none", name:""}]; }
+        else {  //have at least one existing built timeline
+            btls.push({tlid:"copy", name:"Copy&nbsp;Timeline"}); }
         btls.push({tlid:"new", name:"New&nbsp;Timeline"});
         btls.forEach(function (btl) {
             selopts.push({value:btl.tlid, text:btl.name}); });
@@ -705,13 +707,19 @@ app.tabular = (function () {
 
 
     function timelineNameChangeReady () {
-        var tlid;
+        var tlid, newtl;
         tlflds.name = tlflds.selname.getValue();
         if(tlflds.name === "none") {
             currtl = null;
             return false; } 
-        if(tlflds.name === "new") {
-            currtl = emptyTimeline();
+        if(tlflds.name === "new" || tlflds.name === "copy") {
+            newtl = emptyTimeline();
+            if(tlflds.name === "copy") {
+                newtl.lang = currtl.lang;
+                newtl.ctype = currtl.ctype;
+                newtl.cids = currtl.cids;
+                newtl.svs = currtl.svs; }
+            currtl = newtl;
             if(tlflds.seltype.getValue() === "Timelines") {
                 currtl.ctype = "Timelines"; }
             setDisplayInputFieldsFromTimeline(currtl);
@@ -964,7 +972,8 @@ app.tabular = (function () {
 
 
     function togglePointInclude (ptid) {
-        if(tlflds.selname.getValue() === "new") {
+        var seln = tlflds.selname.getValue();
+        if(seln === "new" || seln === "copy") {
             jt.err("Name and save your new timeline"); }
         if(currtl.cids.csvcontains(ptid)) {
             currtl.cids = currtl.cids.csvremove(ptid); }

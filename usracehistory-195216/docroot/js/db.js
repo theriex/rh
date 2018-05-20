@@ -631,7 +631,9 @@ app.db = (function () {
         //allpts is the largest repository of available points merged for
         //latest data.  Fall back to provided default if unavailable.
         //PENDING: might be worth keeping a hashtable rather than brute force
-        if(!app.allpts || !app.allpts.length) {
+        if(app.allpts && app.allpts.length) {
+            points = app.allpts; }
+        else {
             points = points || []; }
         for(i = 0; i < points.length; i += 1) {
             pt = points[i];
