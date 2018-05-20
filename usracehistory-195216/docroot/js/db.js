@@ -626,9 +626,13 @@ app.db = (function () {
     }
 
 
-    function findPointById (ptid) {
-        var points, i, pt;
-        points = app.allpts;
+    function findPointById (ptid, points) {
+        var i, pt;
+        //allpts is the largest repository of available points merged for
+        //latest data.  Fall back to provided default if unavailable.
+        //PENDING: might be worth keeping a hashtable rather than brute force
+        if(!app.allpts || !app.allpts.length) {
+            points = points || []; }
         for(i = 0; i < points.length; i += 1) {
             pt = points[i];
             if(pt.instid === ptid) {
@@ -837,7 +841,7 @@ app.db = (function () {
         svdone: function (svid, sta, end) { noteSuppvizDone(svid, sta, end); },
         nextInteraction: function () { nextInteraction(); },
         mergeProgToAccount: function () { mergeProgToAccount(); },
-        pt4id: function (ptid) { return findPointById(ptid); },
+        pt4id: function (ptid, points) { return findPointById(ptid, points); },
         mergeUpdatedPointData: function (pt) { mergeUpdatedPointData(pt); },
         initTimelines: function () { initTimelinesContent(); },
         ptlinktxt: function (p, s, f) { return pointLinkedText(p, s, f); },

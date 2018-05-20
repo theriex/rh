@@ -183,7 +183,14 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 .formicoimg { max-width:25px; max-height:25px; }
 .formseldiv { display:inline-block; }
 #tlrndmaxin { width:3em; }
-#ppsin {width:2em; }
+#ppsin { width:2em; }
+#etlsetidiv { text-align:right; padding:0px 10px; }
+#tlinfodispdiv { overflow:scroll; }
+.attrvaltable { margin:auto; }
+.labtd { text-align:right; font-size:small; }
+.valtd { font-size:medium; }
+#etlinfocontdiv { padding:0px 10px; text-align:center; font-size:medium; }
+.avtextin { width:200px; }
 .wlab { font-size:medium; font-weight:normal; text-align:right; 
   padding:0px 2px 0px 2px; display:block; float:left; width:90px; }
 .wfin { padding:0px; font-size:small; width:200px; }
