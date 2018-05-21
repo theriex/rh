@@ -282,6 +282,7 @@ app.db = (function () {
         jt.log("Preparing data for " + tl.name + "...");
         tl.points = tl.preb || [];
         prepPointsArray(tl.points);
+        app.db.cachePoints(tl.points);
         tl.points.forEach(function (pt) {
             notePointCounts(tl, pt); });
         describePoints(tl);
@@ -543,12 +544,20 @@ app.db = (function () {
     function mergePoints (aps, bps) {
         var mps = [];
         app.mpac = {};  //keep for easy general lookup by point id
+        if(!aps || !bps) {
+            jt.log("db.mergePoints missing parameter"); }
         mergePointsIntoAppCache(aps);
         mergePointsIntoAppCache(bps);
         Object.keys(app.mpac).forEach(function (ptid) {
             mps.push(app.mpac[ptid]); });
         mps.sort(compareStartDate);
         return mps;
+    }
+
+
+    function cachePoints (pts) {
+        app.allpts = app.allpts || [];
+        app.allpts = mergePoints(app.allpts, pts);
     }
 
 
@@ -847,7 +856,8 @@ app.db = (function () {
         ptlinktxt: function (p, s, f) { return pointLinkedText(p, s, f); },
         getOrgId: function (obj) { return getOrgId(obj); },
         prepPointsArray: function (pts) { prepPointsArray(pts); },
-        mergePoints: function (a, b) { return mergePoints(a, b); },
+        prepData: function (tl) { prepData(tl); },
+        cachePoints: function (pts) { return cachePoints(pts); },
         unvisitPoint: function (pt) { unvisitPoint(pt); },
         recalcProgress: function () { return recalcProgress(); }
     };

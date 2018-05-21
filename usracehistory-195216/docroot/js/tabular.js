@@ -651,6 +651,7 @@ app.tabular = (function () {
                 function (result) {
                     result.forEach(function (tl) {
                         app.db.deserialize("Timeline", tl);
+                        app.db.prepData(tl);  //caches tl.points
                         app.user.tls[tl.instid] = tl; });
                     setStateToDatabaseTimeline(result[0]);
                     app.tabular.ptdisp();
@@ -917,12 +918,10 @@ app.tabular = (function () {
             ptsfile = "docs/locpts.json"; }
         jt.call("GET", ptsfile, null,
                 function (result) {
-                    var dcon = app.db.displayContext();
                     //PENDING: fetch recent updates and integrate
+                    app.pubpts = result;  //note fetched
                     app.db.prepPointsArray(result);
-                    //make sure points from whatever timeline the app
-                    //launched with are included
-                    app.allpts = app.db.mergePoints(result, dcon.points);
+                    app.db.cachePoints(result);
                     app.tabular.ptdisp(); },
                 function (code, errtxt) {
                     jt.err("Fetch pubpts failed " + code + " " + errtxt); },
@@ -944,7 +943,7 @@ app.tabular = (function () {
             displayPointFilters("none");
             return updateSuppvizDisplay(); }
         displayPointFilters("initial");
-        if(!app.allpts) {
+        if(!app.pubpts) {
             return fetchPubPoints(); }
         mcrit = getPointMatchCriteria();
         currpts = [];
