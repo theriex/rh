@@ -822,7 +822,8 @@ app.tabular = (function () {
         if(crit.srch) {
             srchtxt = crit.srch.toLowerCase();
             if((pt.text.toLowerCase().indexOf(srchtxt) < 0) &&
-               (pt.keywords.toLowerCase().indexOf(srchtxt) < 0)) {
+               (pt.keywords.toLowerCase().indexOf(srchtxt) < 0) &&
+               (pt.instid.indexOf(srchtxt) < 0)) {
                 return false; } }
         return true;
     }

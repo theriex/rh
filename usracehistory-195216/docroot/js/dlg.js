@@ -257,10 +257,9 @@ app.dlg = (function () {
     function pointCodeNamesCSV (pt) {
         var csv = "", stat = app.db.displayContext().mrcl.tl.stat;
         pt.codes.split("").forEach(function (code) {
+            //processing codes ('U', 'F', 'D') and uknown codes are ignored
             if(stat[code]) {
-                csv = csv.csvappend(stat[code].name); }
-            else {
-                jt.log("Bad point code: " + code + " pt" + pt.instid); } });
+                csv = csv.csvappend(stat[code].name); } });
         return csv;
     }
 
