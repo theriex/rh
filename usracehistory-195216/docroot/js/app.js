@@ -12,7 +12,6 @@ var app = {},  //Global container for application level funcs and values
         jt.log("window.innerWidth: " + window.innerWidth);
         app.user = {};  //used for general reference
         app.dlg.chkcook("background");
-        app.baseurl = "https://usracehistory.org";
         app.db.fetchDisplayTimeline();
     };
 
@@ -32,6 +31,10 @@ var app = {},  //Global container for application level funcs and values
                        "js/sv/lynching",
                        "js/sv/finale"];
         jtminjsDecorateWithUtilities(jt);
+        app.baseurl = "https://usracehistory.org";
+        if(!href.startsWith("https") && !href.startsWith("http://localhost")) {
+            window.location.href = app.baseurl;
+            return; }
         jt.out("rhcontentdiv", "Loading app modules...");
         app.amdtimer = {};
         app.amdtimer.load = { start: new Date() };
