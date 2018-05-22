@@ -125,7 +125,7 @@ app.mode = (function () {
         var tl = app.linear.tldata(),
             dur = Math.round(0.8 * task.dur);  //finish trans before task ends
         points.forEach(function (d) {
-            jt.log("highlight " + d.id + ": " + jt.byId("d.id"));
+            //jt.log("highlight " + d.id + ": " + jt.byId("d.id"));
             tl.focus.select("#" + d.id)
                 .style("fill", "0f0"); });
         points.forEach(function (d) {

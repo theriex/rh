@@ -226,6 +226,7 @@ class UpdateTimeline(webapp2.RequestHandler):
 class FetchTimeline(webapp2.RequestHandler):
     def get(self):
         tlid = self.request.get("tlid")
+        slug = ""
         if tlid:
             tl = fetch_timeline_by_id(tlid)
         else:

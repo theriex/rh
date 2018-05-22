@@ -254,10 +254,13 @@ app.dlg = (function () {
     }
 
 
-    function pointCodeNamesCSV (codes) {
+    function pointCodeNamesCSV (pt) {
         var csv = "", stat = app.db.displayContext().mrcl.tl.stat;
-        codes.split("").forEach(function (code) {
-            csv = csv.csvappend(stat[code].name); });
+        pt.codes.split("").forEach(function (code) {
+            if(stat[code]) {
+                csv = csv.csvappend(stat[code].name); }
+            else {
+                jt.log("Bad point code: " + code + " pt" + pt.instid); } });
         return csv;
     }
 
@@ -291,7 +294,7 @@ app.dlg = (function () {
             ret.tac = [["div", {cla:"buttonptcodesdiv"},
                         [["span", {cla:"buttonptcodeslabelspan"}, 
                           "Groups: "],
-                         pointCodeNamesCSV(d.codes)]],
+                         pointCodeNamesCSV(d)]],
                        ["button", {type:"button", id:"nextbutton",
                                    onclick:jt.fs("app.dlg.button()")},
                         "Continue"]];
