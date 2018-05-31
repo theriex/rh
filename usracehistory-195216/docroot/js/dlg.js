@@ -967,10 +967,38 @@ app.dlg = (function () {
     }
 
 
+    function displayEmailSent (emaddr) {
+        var html;
+        html = ["div", {id:"passemdiv"},
+                [["p", "Your password has been emailed to " + emaddr +
+                 " and should arrive in a few minutes.  If it doesn't" +
+                 " show up, please"],
+                ["ol",
+                 [["li", "Make sure your email address is spelled correctly"],
+                  ["li", "Check your spam folder"],
+                  ["li", "Confirm the email address you entered is the same" +
+                        " one you used when you created your account."]]],
+                ["div", {id: "dlgbuttondiv"},
+                 ["button", {type: "button", id: "okbutton",
+                             onclick: jt.fs("app.dlg.close()")},
+                  "Ok"]]]];
+        displayDialog(null, jt.tac2html(html));
+    }
+
+
     function forgotPassword () {
         var cred = readInputFieldValues(["emailin"]);
-        if(cred) {
-            jt.err("Not implemented yet"); }
+        if(!cred || !jt.isProbablyEmail(cred.emailin)) {
+            jt.out("loginstatdiv", "Please fill in your email address...");
+            return; }
+        jt.call("POST", "mailcred", inputsToParams(cred),
+                function () {
+                    jt.out("loginstatdiv", "");
+                    displayEmailSent(cred.emailin); },
+                function (code, errtxt) {
+                    jt.log("mailcred call failed " + code + " " + errtxt);
+                    jt.out("loginstatdiv", "mail send failed: " + errtxt); },
+                jt.semaphore("forgotPassword"));
     }
 
 

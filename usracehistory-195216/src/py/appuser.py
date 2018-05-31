@@ -14,6 +14,8 @@ import json
 import re
 import pickle
 import string
+import os
+import service
 
 # Container for login and whatever other info needs to be tracked per user.
 # Login consists of retrieving an access token which is used for all
@@ -294,6 +296,32 @@ def return_json(handler, data):
     response.out.write(jsontxt)
 
 
+def mailgun_send(handler, eaddr, subj, body):
+    if ((not os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'))
+        or (handler and re.search("\:[0-9][0-9]80", handler.request.url))):
+        logging.info("Mail not sent to " + eaddr + " from local dev" +
+                     "\n\n" + body)
+        return
+    mg = service.get_service_info("mailgun")
+    authkey = base64.b64encode("api:" + mg.ckey)
+    # urlencode requires ascii (unicode crashes it). encode params vals utf-8
+    params = urllib.urlencode({
+            'from': 'usracehistory support <support@usracehistory.org>',
+            'to': eaddr.encode('utf-8'),
+            'subject': subj.encode('utf-8'),
+            'text': body.encode('utf-8')})
+    headers = {'Authorization': 'Basic {0}'.format(authkey),
+               'Content-Type': 'application/x-www-form-urlencoded'}
+    conn = httplib.HTTPSConnection("api.mailgun.net", 443)
+    conn.request('POST', '/v3/mg.usracehistory.org/messages', params, headers)
+    response = conn.getresponse()
+    logging.info("mgsi " + eaddr + " " + subj + " " + str(response.status) + 
+                 " " + str(response.reason))
+    data = response.read()
+    logging.info("mgsi " + eaddr + " data: " + str(data))
+    conn.close()
+
+
 def update_account(handler, acc):
     cached_put(acc.email, acc)
     return_json(handler, [acc, {"token": acctoken(acc.email, acc.password)}])
@@ -341,8 +369,31 @@ class UpdateMyTimelines(webapp2.RequestHandler):
         return srverr(self, 500, "Not implemented yet")
 
 
+class MailCredentials(webapp2.RequestHandler):
+    def post(self):
+        eaddr = self.request.get('email')
+        if eaddr:
+            eaddr = eaddr.lower()
+            eaddr = re.sub('%40', '@', eaddr)
+            content = "You requested your password be mailed to you..."
+            content += "\n\nThe support system has looked up " + eaddr + " "
+            vq = VizQuery(AppUser, "WHERE email=:1 LIMIT 9", eaddr)
+            accounts = vq.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, 
+                                deadline=10)
+            if len(accounts) > 0:
+                content += "and your password is: " + accounts[0].password
+            else:
+                content += "but found no matching accounts." +\
+                    "\nEither you have not signed up yet, or you used" +\
+                    " a different email address."
+            content += "\n\nhttps://usracehistory.org\n\n"
+            mailgun_send(self, eaddr, "U.S. Race History login", content)
+        return_json(self, "[]")
+
+
 app = webapp2.WSGIApplication([('.*/updacc', UpdateAccount),
                                ('.*/acctok', AccessAccount),
+                               ('.*/mailcred', MailCredentials),
                                ('.*/updatetls', UpdateMyTimelines)],
                               debug=True)
 

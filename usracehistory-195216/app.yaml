@@ -28,6 +28,12 @@ handlers:
   script: src.py.appuser.app
 
 
+## Email forgotten native account credentials
+## POST params: emailin
+- url: .*/mailcred.*
+  script: src.py.appuser.app
+
+
 ## -------------------- point --------------------
 
 ## Add or update a point (org contributor accounts only)

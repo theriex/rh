@@ -10,15 +10,19 @@ class AppService(db.Model):
     data = db.TextProperty()                  # svc specific support data
 
 
+def get_service_info(svcname):
+    qp = {"dboc": AppService, "where": "WHERE name=:1 LIMIT 1", 
+          "wags": svcname}
+    svc = appuser.cached_get(svcname, qp)
+    if not svc:  # make an empty placeholder entry
+        svc = AppService(name=svcname, ckey="unknown", csec="unknown", data="")
+        appuser.cached_put(svcname, svc)
+    return svc
+
+
 class PublicPointIds(webapp2.RequestHandler):
     def get(self):
-        ppsn = "pubpts"
-        qp = {"dboc": AppService, "where": "WHERE name=:1 LIMIT 1", 
-              "wags": ppsn}
-        svc = appuser.cached_get(ppsn, qp)
-        if not svc:
-            svc = AppService(name=ppsn, data="")
-            appuser.cached_put(ppsn, svc)
+        svc = get_service_info("pubpts")
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write(svc.data)
