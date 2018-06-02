@@ -910,6 +910,7 @@ app.dlg = (function () {
                                         ["none",   "none",    "none"]);
         if(data) {
             jt.out("loginstatdiv", "Updating account...");
+            jt.byId("updaccbutton").disabled = true;
             jt.call("POST", "updacc?" + app.auth(), inputsToParams(data),
                     function (result) {
                         app.db.deserialize("AppUser", result[0]);
