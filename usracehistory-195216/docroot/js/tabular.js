@@ -51,7 +51,9 @@ app.tabular = (function () {
     function mayEditPoint (pt) {  //if pt is null, returns may create
         if(!app.user.acc || !app.user.acc.lev) {
             return false; }
-        if(pt && app.user.acc.orgid !== pt.orgid && app.user.acc.orgid !== 1) {
+        if(pt && app.user && app.user.acc && 
+           app.user.acc.orgid !== pt.orgid && 
+           app.user.acc.orgid !== "1") {
             return false; } 
         if(app.user.acc.lev > 1 || !pt) {
             return true; }
@@ -355,15 +357,18 @@ app.tabular = (function () {
 
 
     function verifyDisplayElements () {
-        var html;
+        var html, ps;
         if(jt.byId("pointsdispdiv")) {  //already set up
             return; }
         initTimelineSettingsFields();
+        ps = [{value:"All", text:"All Points"},
+              {value:"Timeline", text:"Timeline Points", selected:"selected"},
+              {value:"Suppviz", text:"Visualizations"}];
+        if(app.user && app.user.acc && app.user.acc.orgid && 
+           app.user.acc.orgid !== "0") {
+            ps.splice(1, 0, {value:"Org", text:"Organization Points"}); }
         ptflds.selpool = makeSelect(
-            "ptdpsel", jt.fs("app.tabular.ptdisp()"),
-            [{value:"All", text:"All Points"},
-             {value:"Timeline", text:"Timeline Points", selected:"selected"},
-             {value:"Suppviz", text:"Visualizations"}]);
+            "ptdpsel", jt.fs("app.tabular.ptdisp()"), ps);
         ptflds.selcode = makeSelect(
             "ptcodesel", jt.fs("app.tabular.ptdisp()"),
             [{value:"All", text:"All Codes"},
@@ -794,6 +799,8 @@ app.tabular = (function () {
                     start: Number(jt.byId("yearstartin").value),
                     end: Number(jt.byId("yearendin").value),
                     srch: jt.byId("srchin").value}, dcon;
+        if(ptflds.selpool.getValue() === "Org") {
+            crit.orgid = app.user.acc.orgid; }
         if(ptflds.selpool.getValue() === "Timeline") {
             if(currtl) {  //editing a timeline
                 crit.editingtimeline = true;
@@ -814,6 +821,8 @@ app.tabular = (function () {
 
     function isMatchingPoint (crit, pt) {
         var srchtxt;
+        if(crit.orgid && pt.orgid !== crit.orgid) {
+            return false; }
         if((crit.ids || crit.editingtimeline) && 
            !crit.ids.csvcontains(pt.instid)) {
             return false; }
@@ -951,6 +960,22 @@ app.tabular = (function () {
     }
 
 
+    function fetchorg (cbf) {
+        var url = "getorg?" + app.auth() + "&orgid=" + app.user.acc.orgid +
+            jt.ts("&cb=", "second");
+        jt.call("GET", url, null,
+                function (orgs) {
+                    if(orgs.length && orgs[0]) {
+                        app.db.deserialize("Organization", orgs[0]);
+                        app.db.cachePoints(orgs[0].recpre);
+                        app.user.org = orgs[0];
+                        cbf(); } },
+                function (code, errtxt) {
+                    jt.log("fetchorg failed " + code + ": " + errtxt); },
+                jt.semaphore("tabular.fetchorg"));
+    }
+
+
     function updatePointsDisplay () {
         var mcrit, outdiv = jt.byId("pointsdispdiv");
         jt.out("downloadlinkdiv", jt.tac2html(
@@ -965,7 +990,13 @@ app.tabular = (function () {
             return updateSuppvizDisplay(); }
         displayPointFilters("initial");
         if(!app.pubpts) {
-            return fetchPubPoints(); }
+            outdiv.innerHTML = jt.tac2html(["div", {cla:"pointsdispline"},
+                                            "Fetching default points..."]);
+            return fetchPubPoints(); }  //calls back when downloaded
+        if(ptflds.selpool.getValue() === "Org" && !app.user.org) {
+            outdiv.innerHTML = jt.tac2html(["div", {cla:"pointsdispline"},
+                                            "Fetching organization points..."]);
+            return fetchorg(updatePointsDisplay); }
         mcrit = getPointMatchCriteria();
         currpts = [];
         app.allpts.forEach(function (pt) {
@@ -1059,6 +1090,7 @@ app.tabular = (function () {
         dfltslug: function () { provideDefaultSlugValue(); },
         redispt: function (pt) { redisplayPoint(pt); },
         togseti: function () { toggleInfoSettings(); },
-        shall: function () { changeToAllPointsDisplay(); }
+        shall: function () { changeToAllPointsDisplay(); },
+        fetchorg: function (cbf) { fetchorg(cbf); }
     };
 }());

@@ -822,7 +822,6 @@ app.dlg = (function () {
 
 
     function showOrgLink () {
-        var url;
         if(app.user.org) {
             jt.out("orglinkdiv", jt.tac2html(
                 [["label", {fo:"orglinka", cla:"liflab"}, "Org:"],
@@ -830,16 +829,7 @@ app.dlg = (function () {
                         onclick:jt.fs("app.dlg.editorg()")},
                   app.user.org.name]]));
             return; }
-        url = "getorg?" + app.auth() + "&orgid=" + app.user.acc.orgid +
-            jt.ts("&cb=", "second");
-        jt.call("GET", url, null,
-                function (orgs) {
-                    if(orgs.length && orgs[0]) {
-                        app.user.org = orgs[0];
-                        showOrgLink(); } },
-                function (code, errtxt) {
-                    jt.log("showOrgLink failed " + code + ": " + errtxt); },
-                jt.semaphore("dlg.showOrgLink"));
+        app.tabular.fetchorg(showOrgLink);
     }
 
 
@@ -1368,7 +1358,7 @@ app.dlg = (function () {
             jt.ts("&cb=", "second");
         jt.call("GET", url, null,
                 function (points) {
-                    app.db.parseDate(points[0]);  //sorting etc needs start
+                    app.db.deserialize("Point", points[0]);
                     app.dbpts[ptid] = points[0];
                     contf(points[0]); },
                 function (code, errtxt) {

@@ -813,9 +813,11 @@ app.db = (function () {
             dbo.refs = JSON.parse(dbo.refs || "[]");
             dbo.translations = JSON.parse(dbo.translations || "[]");
             dbo.stats = JSON.parse(dbo.stats || "{}");
+            parseDate(dbo);  //sorting etc needs start
             break;
         case "Organization":
-            dbo.pts = JSON.parse(dbo.pts || "[]");
+            dbo.recpre = JSON.parse(dbo.recpre || "[]");
+            dbo.recpre.forEach(function (pt) { parseDate(pt); });
             break;
         default:
             jt.log("Attempt to deserialize unknown db class: " + dbc); }

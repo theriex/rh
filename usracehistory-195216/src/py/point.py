@@ -77,15 +77,16 @@ def update_org_recent_points(pt):
         if len(preb) >= 512 * 1024:
             break
         d = {"date":pt.date, "text":pt.text, "codes":pt.codes, 
-             "orgid":pt.orgid, "keywords":pt.keywords, "refs":pt.refs, 
+             "orgid":str(pt.orgid), "keywords":pt.keywords, "refs":pt.refs, 
              "source":pt.source, "srclang":pt.srclang, "created":pt.created, 
              "modified":pt.modified}
         if preb:
             preb += ","
         preb += json.dumps(d)
+    preb = "[" + preb + "]"
     organization = org.Organization.get_by_id(int(pt.orgid))
     organization.recpre = preb
-    organization.put()
+    appuser.cached_put(None, organization)
 
 
 def update_or_create_point(handler, acc, params):
