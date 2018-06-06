@@ -13,10 +13,15 @@ class Organization(db.Model):
     projecturl = db.StringProperty()  # optional page describing timelines work
     # search filtering keyword definitions
     regions = db.TextProperty()    # e.g. National, Boston, Puerto Rico, Hawai'i
-    categories = db.TextProperty()  # e.g. Statistics, Awards, Stereotypes
+    categories = db.TextProperty() # e.g. Statistics, Awards, Stereotypes
     tags = db.TextProperty()       # other org grouping keywords
-    # prebuilt json for all points maintained by the organization
-    pts = db.TextProperty()
+    # Prebuilt json for most recently edited 512k worth of points maintained
+    # by the organization. If any older points get rolled off, they will
+    # still be available from any timelines that include them.  The
+    # expectation is most timelines will be built from other timelines, so
+    # this prebuilt field is primarily for ease of access and increased
+    # visibility of newly added/modified points.
+    recpre = db.TextProperty()
 
 
 def update_organization(org, params):

@@ -795,7 +795,8 @@ app.tabular = (function () {
                     end: Number(jt.byId("yearendin").value),
                     srch: jt.byId("srchin").value}, dcon;
         if(ptflds.selpool.getValue() === "Timeline") {
-            if(currtl) {
+            if(currtl) {  //editing a timeline
+                crit.editingtimeline = true;
                 crit.ids = currtl.cids; }
             else {
                 dcon = app.db.displayContext();
@@ -813,7 +814,8 @@ app.tabular = (function () {
 
     function isMatchingPoint (crit, pt) {
         var srchtxt;
-        if(crit.ids && !crit.ids.csvcontains(pt.instid)) {
+        if((crit.ids || crit.editingtimeline) && 
+           !crit.ids.csvcontains(pt.instid)) {
             return false; }
         if(crit.code !== "All" && pt.codes.indexOf(crit.code) < 0) {
             return false; }
@@ -931,6 +933,24 @@ app.tabular = (function () {
     }
 
 
+    function pointsDispHeaderHTML (mcrit, currpts) {
+        var html = [],
+            name = (currtl && currtl.name) || "";
+        if(!currpts.length) {
+            html.push(["div", {cla:"pointsdispline"},
+                       [name + " has no points, ",
+                        ["a", {href:"#allpts", id:"allptslink",
+                               onclick:jt.fs("app.tabular.shall()")},
+                         "show all available datapoints"]]]); }
+        if(mcrit.editingtimeline) {
+            html.push(["div", {cla:"pointsdispline"},
+                       ["a", {href:"#newpoint", id:"createpointlink",
+                              onclick:jt.fs("app.dlg.ptedit('create')")},
+                        "Create New DataPoint"]]); }
+        return jt.tac2html(html);
+    }
+
+
     function updatePointsDisplay () {
         var mcrit, outdiv = jt.byId("pointsdispdiv");
         jt.out("downloadlinkdiv", jt.tac2html(
@@ -951,6 +971,7 @@ app.tabular = (function () {
         app.allpts.forEach(function (pt) {
             if(isMatchingPoint(mcrit, pt)) {
                 currpts.push(pt); } });
+        outdiv.innerHTML = pointsDispHeaderHTML(mcrit, currpts);
         currpts.forEach(function (pt) {
             var linediv = document.createElement("div");
             linediv.innerHTML = jt.tac2html(pointTAC(pt));
@@ -960,14 +981,6 @@ app.tabular = (function () {
                    title:"Download the displayed points",
                    onclick:jt.fs("app.tabular.showDownloadDialog")},
              ["img", {src:"img/download.png", cla:"downloadlinkimg"}]]));
-    }
-
-
-    function redisplayPoint (pt) {
-        var ptdiv = jt.byId("trowdiv" + pt.instid);
-        ptdiv = ptdiv.parentElement;  //enclosing div
-        ptdiv.innerHTML = jt.tac2html(pointTAC(pt));
-        timelineSettings("required");
     }
 
 
@@ -986,6 +999,25 @@ app.tabular = (function () {
     }
 
 
+    function redisplayPoint (pt) {
+        var ptdiv;
+        ptdiv = jt.byId("trowdiv" + pt.instid);
+        if(ptdiv) {  //point already displayed, redisplay content
+            ptdiv = ptdiv.parentElement;  //enclosing div
+            ptdiv.innerHTML = jt.tac2html(pointTAC(pt)); }
+        else { //point not currently displayed
+            //If currently displaying the timeline points, and this point
+            //was not included, then it was added.  Update the timeline
+            //points and rebuild the points display.
+            if(currtl && ptflds.selpool.getValue() === "Timeline") {
+                currtl.cids = currtl.cids || "";
+                if(!currtl.cids.csvcontains(pt.instid)) {
+                    currtl.cids = currtl.cids.csvappend(pt.instid);
+                    app.tabular.ptdisp(); } } }
+        timelineSettings("required");  //prompt to save timeline changes
+    }
+
+
     function toggleSuppvizInclude (svmn) {
         currtl.svs = currtl.svs || "";
         if(currtl.svs.csvcontains(svmn)) {
@@ -993,6 +1025,18 @@ app.tabular = (function () {
         else {
             currtl.svs = currtl.svs.csvappend(svmn); }
         app.tabular.tledchg("showsave");
+    }
+
+
+    function changeToAllPointsDisplay () {
+        jt.out("pointsdispdiv", jt.tac2html(
+            ["div", {cla:"pointsdispline"},
+             "Collecting available datapoints..."]));
+        //force display update before recalculating all points (FF60.0)
+        setTimeout(function () {
+            jt.byId("ptdpsel").selectedIndex = 0;
+            //setting selectedIndex does not trigger onchange (FF60.0)
+            app.tabular.ptdisp(); }, 50);
     }
 
 
@@ -1014,6 +1058,7 @@ app.tabular = (function () {
         scr2pt: function (id) { scrollToPointId(id); },
         dfltslug: function () { provideDefaultSlugValue(); },
         redispt: function (pt) { redisplayPoint(pt); },
-        togseti: function () { toggleInfoSettings(); }
+        togseti: function () { toggleInfoSettings(); },
+        shall: function () { changeToAllPointsDisplay(); }
     };
 }());

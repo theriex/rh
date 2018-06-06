@@ -709,10 +709,14 @@ app.db = (function () {
 
 
     function mergeUpdatedPointData (updpt) {
+        var found = false;
         if(app.allpts) {
             app.allpts.forEach(function (pt) {
                 if(pt.instid === updpt.instid) {
+                    found = true;
                     mergePointDataToPoint(pt, updpt); } }); }
+        if(!found) {
+            cachePoints([updpt]); }
         if(app.user.tls) {
             Object.keys(app.user.tls).forEach(function (tlid) {
                 var tlpts = app.user.tls[tlid].points;

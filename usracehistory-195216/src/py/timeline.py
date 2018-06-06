@@ -14,6 +14,7 @@ import re
 # timeline owner or an administrator refreshes it.  The cached point data
 # includes only the text best matching the language code for the timeline,
 # and may filter other fields not directly necessary for timeline display.
+# GAE has a 1mb total storage limit for any field or object instance.
 #
 # A timeline is language specific.  Translated timelines have translated
 # names and are separate instances.  Timelines can be created by anyone, but

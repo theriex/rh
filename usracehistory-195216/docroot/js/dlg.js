@@ -28,9 +28,11 @@ app.dlg = (function () {
              year: -90000}]},
         edptflds = [
             {field:"date", layout:"main", type:"text", 
-             descf:"app.db.describeDateFormat", place:"YYYY-MM-DD"},
+             descf:"app.db.describeDateFormat", place:"YYYY-MM-DD",
+             reqd:"Please enter a valid date value."},
             {field:"text", layout:"main", type:"bigtext", 
-             place:"Point Description Text"},
+             place:"Point Description Text",
+             reqd:"Please provide some descriptive text."},
             {field:"codes", layout:"detail", type:"codesel", hin:"codeshin",
              multiple:true, options:[
                 {value:"N", text:"Native American"},
@@ -41,7 +43,8 @@ app.dlg = (function () {
                 {value:"R", text:"Multiracial"},
                 {value:"U", text:"Did you know?"},
                 {value:"F", text:"Firsts"},
-                {value:"D", text:"What year?"}]},
+                {value:"D", text:"What year?"}],
+             reqd:"Please select all applicable point codes."},
             {field:"keywords", layout:"detail", type:"text", 
              place:"tag1, tag2"},
             {field:"source", layout:"detail", type:"text", 
@@ -52,6 +55,7 @@ app.dlg = (function () {
         cookdelim = "..usracehistory..",
         lnfidx = 0,
         tl = null,
+        editpt = null,
         dlgstack = [];
 
 
@@ -1195,7 +1199,7 @@ app.dlg = (function () {
                 obj[fspec.field] = jt.byId(fspec.field + "in").value;
                 break;
             case "bigtext": 
-                obj[fspec.field] = jt.byId(fspec.field + "ta").innerHTML;
+                obj[fspec.field] = jt.byId(fspec.field + "ta").value;
                 break;
             case "codesel":
                 obj[fspec.field] = "";
@@ -1230,7 +1234,7 @@ app.dlg = (function () {
             selopts.multiple = true; }
         fs.options.forEach(function (opt, idx) {
             var oao = {value:opt.value, id:fs.field + "opt" + idx};
-            if(vo && vo[fs.field].indexOf(opt.value) >= 0) {
+            if(vo && vo[fs.field] && vo[fs.field].indexOf(opt.value) >= 0) {
                 oao.selected = "selected"; }
             html.push(["option", oao, opt.text]); });
         html = [["div", {cla:"dlgformline"},
@@ -1283,7 +1287,9 @@ app.dlg = (function () {
 
     function editLoadedPoint (pt) {
         var html;
-        jt.out("editlink" + pt.instid, "[edit]");  //restore original link
+        if(pt.instid) {  //restore original edit link text in case altered
+            jt.out("editlink" + pt.instid, "[edit]"); }
+        editpt = pt;  //for form check access
         html = [
             ["div", {id:"dlgtitlediv"}, "Edit Point"],
             ["div", {cla:"dlgsignindiv"},
@@ -1323,12 +1329,12 @@ app.dlg = (function () {
     }
 
 
-    function togglePointDetailSection (sect) {
+    function togglePointDetailSection (sect, forceDisplay) {
         var sectindiv, otherindiv, sumtr = jt.byId("epdetsumtr");
-        sectindiv = jt.byId("epdetindiv" + sect),
+        sectindiv = jt.byId("epdetindiv" + sect);
         otherindiv = jt.byId("epdetindiv" + 
                              (sect === "detail" ? "pic" : "detail"));
-        if(sectindiv.style.display === "none") {
+        if(sectindiv.style.display === "none" || forceDisplay) {
             sectindiv.style.display = "block";
             otherindiv.style.display = "none";
             sumtr.style.display = "none"; }
@@ -1362,6 +1368,7 @@ app.dlg = (function () {
             jt.ts("&cb=", "second");
         jt.call("GET", url, null,
                 function (points) {
+                    app.db.parseDate(points[0]);  //sorting etc needs start
                     app.dbpts[ptid] = points[0];
                     contf(points[0]); },
                 function (code, errtxt) {
@@ -1373,6 +1380,9 @@ app.dlg = (function () {
 
     function editPoint (pt) {
         var locp;
+        if(pt === "create") {
+            pt = {};
+            return editLoadedPoint(pt); }
         if(typeof pt === "string") {
             if(app.dbpts && !app.dbpts[pt]) {
                 pt = app.dbpts[pt]; }
@@ -1416,6 +1426,22 @@ app.dlg = (function () {
 
 
     function ptsubclick () {
+        var formobj, i, fs, nopictxt, picin;
+        formobj = formValuesToObject(edptflds);
+        jt.out("updatestatdiv", "");
+        for(i = 0; i < edptflds.length; i += 1) {
+            fs = edptflds[i];
+            if(fs.reqd && !formobj[fs.field]) {
+                jt.out("updatestatdiv", fs.reqd);
+                if(fs.layout === "detail") {
+                    app.dlg.togptdet("detail", true); }
+                return;  } }
+        nopictxt = "Uploading a public domain picture for your point will give it more impact and help people remember it. Are you sure you want to save without a pic?";
+        picin = jt.byId("picin");
+        if(picin && !picin.value && editpt && !editpt.instid && !editpt.pic && 
+           !confirm(nopictxt)) {
+            app.dlg.togptdet("pic", true);
+            return; }
         jt.byId("savebutton").disabled = true;  //prevent multiple uploads
         jt.out("savebutton", "Saving...");
         upldmon = {count:0};
@@ -1465,6 +1491,6 @@ app.dlg = (function () {
         omexp: function (instid) { expandOrganizationMember(instid); },
         modmem: function (instid, chg) { modifyMemberLevel(instid, chg); },
         addmem: function () { addOrgMemberByEmail(); },
-        togptdet: function (sect) { togglePointDetailSection(sect); }
+        togptdet: function (sect, req) { togglePointDetailSection(sect, req); }
     };
 }());

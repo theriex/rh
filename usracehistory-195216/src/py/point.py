@@ -4,6 +4,8 @@ from google.appengine.ext import db
 from google.appengine.api import images
 import logging
 import appuser
+import org
+import json
 
 # Accepted date formats:
 #  - point: Y[YYY][ BCE], YYYY-MM, YYYY-MM-DD
@@ -62,6 +64,30 @@ def point_codes():
     return codes
 
 
+def update_org_recent_points(pt):
+    # Rebuild org.recpre
+    # PENDING: update org.recpre directly by splicing out any existing
+    # serialized pt data, prepending the given pt data, and truncating
+    # within 512k.  If org.recpre is empty or null, rebuild from scratch.
+    vq = appuser.VizQuery(Point, "WHERE orgid=:1 ORDER BY modified DESC",
+                          pt.orgid)
+    pts = vq.fetch(1000, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
+    preb = ""
+    for pt in pts:
+        if len(preb) >= 512 * 1024:
+            break
+        d = {"date":pt.date, "text":pt.text, "codes":pt.codes, 
+             "orgid":pt.orgid, "keywords":pt.keywords, "refs":pt.refs, 
+             "source":pt.source, "srclang":pt.srclang, "created":pt.created, 
+             "modified":pt.modified}
+        if preb:
+            preb += ","
+        preb += json.dumps(d)
+    organization = org.Organization.get_by_id(int(pt.orgid))
+    organization.recpre = preb
+    organization.put()
+
+
 def update_or_create_point(handler, acc, params):
     if not acc.lev:
         return appuser.srverr(handler, 403, "Not a contributor account")
@@ -96,6 +122,7 @@ def update_or_create_point(handler, acc, params):
         pt.pic = images.resize(pt.pic, 160, 160)
     pt.put()  # individual points are not cached
     pt = Point.get_by_id(pt.key().id())  # force db retrieval of latest
+    update_org_recent_points(pt)
     return pt
 
 
