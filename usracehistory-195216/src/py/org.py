@@ -152,6 +152,11 @@ class AddNewMember(webapp2.RequestHandler):
         appuser.return_json(self, [public_member_record(mem)])
 
 
+# This method exists just because it can be difficult to get a new
+# Organization instance created, particularly during local development when
+# there are no Organization instances in the db yet.  This makes an org
+# instance named "Placeholder" which can be modified manually to onboard a
+# new organization.
 class VerifyPlaceholderOrg(webapp2.RequestHandler):
     # To call, get params from web console cookie load. Paste into browser
     def get(self):

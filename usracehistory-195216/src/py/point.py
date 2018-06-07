@@ -89,19 +89,29 @@ def update_org_recent_points(pt):
     appuser.cached_put(None, organization)
 
 
+def get_point_by_id_or_source(ptid, source):
+    pt = None
+    if ptid:
+        pt = Point.get_by_id(int(ptid))
+    if not pt and source:
+        vq = appuser.VizQuery(Point, "WHERE source=:1 LIMIT 1", int(source))
+        pts = vq.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
+        if len(pts) > 0:
+            pt = pts[0]
+    return pt
+
+
 def update_or_create_point(handler, acc, params):
     if not acc.lev:
-        return appuser.srverr(handler, 403, "Not a contributor account")
+        raise ValueError("Not a contributor account")
     pointorg = int(params["orgid"] or acc.orgid)
     if acc.orgid != pointorg and acc.orgid != 1:
-        return appuser.srverr(handler, 403, "Data does not match organization")
-    vq = appuser.VizQuery(Point, "WHERE source=:1 LIMIT 1", params["source"])
-    pts = vq.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
+        raise ValueError("Data does not match organization")
+    pt = get_point_by_id_or_source(params["ptid"], params["source"])
+    if pt and pt.orgid != acc.orgid:
+        raise ValueError("Point does not match org")
     tstamp = appuser.nowISO() + ";" + str(acc.key().id())
-    if len(pts) > 0:
-        pt = pts[0]
-        if pt.orgid != acc.orgid:
-            return appuser.srverr(handler, 403, "Point does not match org")
+    if pt:
         pt.modified = tstamp
     else:
         pt = Point(date=params["date"],
@@ -164,15 +174,18 @@ class UpdatePoint(webapp2.RequestHandler):
         acc = appuser.get_authenticated_account(self, False)
         if not acc:
             return
-        params = appuser.read_params(self, ["date", "text", "codes", "orgid",
-                                            "keywords", "refs", "source", 
-                                            "srclang", "translations", "pic"]);
+        params = appuser.read_params(self, ["ptid", "date", "text", "codes", 
+                                            "orgid", "keywords", "refs", 
+                                            "source", "srclang", 
+                                            "translations", "pic"]);
+        # need to return proper content to form submission iframe regardless
+        self.response.headers['Content-Type'] = 'text/html;charset=UTF-8'
         try:
             pt = update_or_create_point(self, acc, params)
         except Exception as e:
             # Client looks for text containing "failed: " + for error reporting
-            return appuser.srverr(self, 409, "Point update failed: " + str(e))
-        self.response.headers['Content-Type'] = 'text/html;charset=UTF-8'
+            self.response.out.write("Point update failed: " + str(e))
+            return
         self.response.out.write("ptid: " + str(pt.key().id()))
 
 

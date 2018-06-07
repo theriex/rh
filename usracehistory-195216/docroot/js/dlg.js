@@ -1287,6 +1287,7 @@ app.dlg = (function () {
                        target: "subframe", enctype: "multipart/form-data"},
               [["input", {type:"hidden", name:"email", value:app.user.email}],
                ["input", {type:"hidden", name:"authtok", value:app.user.tok}],
+               ["input", {type:"hidden", name:"ptid", value:pt.instid || ""}],
                inputFieldsTAC(edptflds, "main", pt),
                ["div", {id:"edptablediv"},
                 ["table", {style:"margin:auto;"},
@@ -1336,9 +1337,9 @@ app.dlg = (function () {
 
 
     function pointChanged (pt, dbpt) {
-        var ptflds = ["date", "text", "codes", "orgid", "keywords", "refs",
-                      "source", "srclang", "translations", "endorsed",
-                      "stats", "created", "modified"];
+        //only compare fields included in the tl.preb instance data
+        var ptflds = ["date", "text", "codes", "orgid", "keywords",
+                      "source", "modified"];
         return !ptflds.every(function (fld) { return pt[fld] === dbpt[fld]; });
     }
 
@@ -1374,7 +1375,7 @@ app.dlg = (function () {
             pt = {};
             return editLoadedPoint(pt); }
         if(typeof pt === "string") {
-            if(app.dbpts && !app.dbpts[pt]) {
+            if(app.dbpts && app.dbpts[pt]) {
                 pt = app.dbpts[pt]; }
             else {
                 return fetchPointFromServer(pt, editPoint); } }

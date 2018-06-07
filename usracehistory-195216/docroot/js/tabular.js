@@ -944,10 +944,13 @@ app.tabular = (function () {
 
     function pointsDispHeaderHTML (mcrit, currpts) {
         var html = [],
-            name = (currtl && currtl.name) || "";
+            name = (currtl && currtl.name) || "",
+            txt = "No points, ";
+        if(name) {
+            txt = name + " has no points, "; }
         if(!currpts.length) {
             html.push(["div", {cla:"pointsdispline"},
-                       [name + " has no points, ",
+                       [txt,
                         ["a", {href:"#allpts", id:"allptslink",
                                onclick:jt.fs("app.tabular.shall()")},
                          "show all available datapoints"]]]); }
