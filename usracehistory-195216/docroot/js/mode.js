@@ -318,18 +318,6 @@ app.mode = (function () {
     }
 
 
-    function isMatchingPoint (pt) {
-        if(srchst) {
-            if(srchst.qstr) {
-                if(pt.text.toLowerCase().indexOf(srchst.qstr) < 0) {
-                    return false; } }
-            if(srchst.tlcode) {
-                if(pt.codes.indexOf(srchst.tlcode) < 0) {
-                    return false; } } }
-        return true;
-    }
-
-
     function endSuppViz(module, start, end) {
         if(mode === "interactive") {
             app.db.svdone(module, start, end);
@@ -344,7 +332,6 @@ app.mode = (function () {
         start: function (tl, currlev) { start(tl, currlev); },
         next: function () { next(); },
         chmode: function (mode) { changeMode(mode); },
-        ptmatch: function (pt) { return isMatchingPoint(pt); },
         menu: function (expand, select) { displayMenu(expand, select); },
         showNextPoints: function (points) { showNextPoints(points); },
         searchstate: function () { return srchst; },

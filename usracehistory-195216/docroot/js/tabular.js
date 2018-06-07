@@ -87,20 +87,24 @@ app.tabular = (function () {
     }
 
 
-    function pointTAC (pt) {
-        var ph = "", eh = "", html = "", si;
-        if(pt.pic) {
+    function pointTAC (pt, deco) {
+        var ph = "", dh = "", eh = "", html = "", si;
+        if(pt.pic && deco !== "plaintext") {
             ph = ["div", {cla:"txtpicdiv"},
                   ["img", {src:"/ptpic?pointid=" + pt.instid, 
                            cla:"txtpicimg"}]]; }
-        if(mayEditPoint(pt)) {
+        if(deco !== "plaintext") {
+            dh = ["a", {href:"#" + pt.instid, cla:"editlink",
+                      onclick:jt.fs("app.tabular.togptd('" + pt.instid + "')")},
+                  "[ptdata]"]; }
+        if(mayEditPoint(pt) && deco !== "plaintext") {
             eh = [" &nbsp;",
                   ["a", {href:"#edit", cla:"editlink", 
                          id:"editlink" + pt.instid,
                          onclick:jt.fs("app.dlg.ptedit('" + 
                                        ((pt && pt.instid) || "") + "')")},
                    "[edit]"]]; }
-        if(mode === "tledit") {
+        if(mode === "tledit" && deco !== "plaintext") {
             si = {type:"checkbox", id:"cb" + pt.instid,
                   onchange:jt.fs("app.tabular.togptsel('" + 
                                  pt.instid + "')")};
@@ -121,10 +125,7 @@ app.tabular = (function () {
                   [ph,
                    app.db.ptlinktxt(pt, currpts, "app.tabular.scr2pt"),
                    " &nbsp;",
-                   ["a", {href:"#" + pt.instid, cla:"editlink",
-                          onclick:jt.fs("app.tabular.togptd('" + pt.instid + 
-                                        "')")},
-                    "[ptdata]"],
+                   dh,
                    eh,
                    ["div", {id:"ptxdiv" + pt.instid, cla:"ptxdiv",
                             style:"display:none"},
@@ -169,9 +170,8 @@ app.tabular = (function () {
             "  font-weight:bold; }\n" +
             "</style>\n" +
             "</head><body>";
-        app.allpts.forEach(function (pt, idx) {
-            if(idx && (!dnld.srchst || app.mode.ptmatch(pt))) {
-                txt += "\n" + jt.tac2html(pointTAC(pt)); } });
+        currpts.forEach(function (pt) {
+            txt += "\n" + jt.tac2html(pointTAC(pt, "plaintext")); });
         txt += "</body></html>\n";
         return "data:text/html;charset=utf-8," + encodeURIComponent(txt);
     }
@@ -179,19 +179,14 @@ app.tabular = (function () {
 
     function getTSVDataURI () {
         var txt = "Date\tText\n";
-        app.allpts.forEach(function (pt, idx) {
-            if(idx && (!dnld.srchst || app.mode.ptmatch(pt))) {
-                txt += pt.date + "\t" + cleanTDValue(pt.text) + "\n"; } });
+        currpts.forEach(function (pt) {
+            txt += pt.date + "\t" + cleanTDValue(pt.text) + "\n"; });
         return "data:text/plain;charset=utf-8," + encodeURIComponent(txt);
     }
 
 
     function getJSONDataURI () {
-        var txt, pts = [];
-        app.allpts.forEach(function (pt, idx) {
-            if(idx && (!dnld.srchst || app.mode.ptmatch(pt))) {
-                pts.push(pt); } });
-        txt = JSON.stringify(pts);
+        var txt = JSON.stringify(currpts);
         return "data:text/plain;charset=utf-8," + encodeURIComponent(txt);
     }
 
