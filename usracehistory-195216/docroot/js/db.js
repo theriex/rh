@@ -251,6 +251,7 @@ app.db = (function () {
     //timeline data for a timeline is saved in edit order not chronological.
     function prepPointsArray (pts) {
         pts.forEach(function (pt) {
+            pt.keywords = pt.keywords || "";
             parseDate(pt); });
         pts.sort(function (a, b) {  //verify in chrono order
             return compareStartDate(a, b); });

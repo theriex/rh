@@ -201,6 +201,7 @@ app.slavery = (function () {
 
     function datapoints () {
         tlpts.forEach(function (pt, idx) {
+            pt.sv = "slavery";
             pt.instid = "slavery" + idx; });
         return tlpts;
     }

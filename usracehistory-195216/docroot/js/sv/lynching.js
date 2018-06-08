@@ -167,6 +167,7 @@ app.lynching = (function () {
 
     function datapoints () {
         tlpts.forEach(function (pt, idx) {
+            pt.sv = "lynching";
             pt.instid = "lynching" + idx; });
         return tlpts;
     }
@@ -280,7 +281,7 @@ app.lynching = (function () {
 
 
     function initShowPoints () {
-        var cdel = 6000
+        var cdel = 6000;
         ani.pts.push({date:0, text:lynchingDefHTML(0), delay:cdel});
         ani.pts.push({date:1, text:lynchingDefHTML(1), delay:cdel});
         ani.pts.push({date:2, text:lynchingDefHTML(2), delay:cdel});

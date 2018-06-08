@@ -87,16 +87,28 @@ app.tabular = (function () {
     }
 
 
-    function pointTAC (pt, deco) {
-        var ph = "", dh = "", eh = "", html = "", si;
+    function pointPicTAC (pt, deco) {
+        var ph = "";
         if(pt.pic && deco !== "plaintext") {
             ph = ["div", {cla:"txtpicdiv"},
                   ["img", {src:"/ptpic?pointid=" + pt.instid, 
                            cla:"txtpicimg"}]]; }
+        return ph;
+    }
+
+
+    function pointDatTAC (pt, deco) {
+        var dh = "";
         if(deco !== "plaintext") {
             dh = ["a", {href:"#" + pt.instid, cla:"editlink",
                       onclick:jt.fs("app.tabular.togptd('" + pt.instid + "')")},
                   "[ptdata]"]; }
+        return dh;
+    }
+
+
+    function pointEditTAC (pt, deco) {
+        var eh = "";
         if(mayEditPoint(pt) && deco !== "plaintext") {
             eh = [" &nbsp;",
                   ["a", {href:"#edit", cla:"editlink", 
@@ -104,15 +116,41 @@ app.tabular = (function () {
                          onclick:jt.fs("app.dlg.ptedit('" + 
                                        ((pt && pt.instid) || "") + "')")},
                    "[edit]"]]; }
+        return eh;
+    }
+
+
+    function titleForModule (name) {
+        if(!app.moduleDefsByName) {
+            app.moduleDefsByName = {};
+            app.modules.forEach(function (md) {
+                app.moduleDefsByName[md.name] = md; }); }
+        return app.moduleDefsByName[name].title;
+    }
+
+
+    function pointCheckboxTAC(pt, deco) {
+        var html = "", si;
         if(mode === "tledit" && deco !== "plaintext") {
-            si = {type:"checkbox", id:"cb" + pt.instid,
-                  onchange:jt.fs("app.tabular.togptsel('" + 
-                                 pt.instid + "')")};
-            if(currtl && currtl.cids && currtl.cids.csvcontains(pt.instid)) {
-                si.checked = "checked"; }
-            html = ["div", {cla:"ptseldiv"},
-                    [["label", {fo:"cb" + pt.instid}, "Include"],
-                     ["input", si]]]; }
+            if(pt.sv) {
+                html = ["div", {cla:"ptseldiv"}, 
+                        "sv: " + titleForModule(pt.sv)]; }
+            else {
+                si = {type:"checkbox", id:"cb" + pt.instid,
+                      onchange:jt.fs("app.tabular.togptsel('" + 
+                                     pt.instid + "')")};
+                if(currtl && currtl.cids && 
+                   currtl.cids.csvcontains(pt.instid)) {
+                    si.checked = "checked"; }
+                html = ["div", {cla:"ptseldiv"},
+                        [["label", {fo:"cb" + pt.instid}, "Include"],
+                         ["input", si]]]; } }
+        return html;
+    }
+
+
+    function pointTAC (pt, deco) {
+        var html = "";
         html = ["div", {cla:"trowdiv", id:"trowdiv" + pt.instid},
                 [["a", {id:"pt" + pt.instid}],  //static anchor for refs
                  ["div", {cla:"trowdatediv"}, 
@@ -120,13 +158,13 @@ app.tabular = (function () {
                    ["br"],
                    dateSpan(pt.end, "-"),
                    ["span", {cla:"tcspan"}, " (" + pt.codes + ") "],
-                   html]],
+                   pointCheckboxTAC(pt, deco)]],
                  ["div", {cla:"trowdescdiv"}, 
-                  [ph,
+                  [pointPicTAC(pt, deco),
                    app.db.ptlinktxt(pt, currpts, "app.tabular.scr2pt"),
                    " &nbsp;",
-                   dh,
-                   eh,
+                   pointDatTAC(pt, deco),
+                   pointEditTAC(pt, deco),
                    ["div", {id:"ptxdiv" + pt.instid, cla:"ptxdiv",
                             style:"display:none"},
                     pointExtendedDataHTML(pt)]]]]];
@@ -883,39 +921,43 @@ app.tabular = (function () {
 
 
     function updateSuppvizDisplay () {
-        var html = [],
-            svs = [
-                // sv/about is a suppviz but not for timelines
-                // sv/levelup runs automatically as part of leveling
-                // discussion: https://github.com/theriex/rh/issues/2
-                {module:"intro", name:"Intro Completion",
-                 descr:"Chronology Unlocked, please bookmark"},
-                {module:"slavery", name:"Slavery",
-                 descr:"Chattel slavery by state, some context"},
-                {module:"lynching", name:"Lynching",
-                 descr:"Lynchings by year range and region"}];
-        svs.forEach(function (sv) {
+        var html = [];
+        app.modules.forEach(function (sv) {
             var si = "";
-            if(mode === "tledit") {
-                si = {type:"checkbox", id:"cb" + sv.module,
-                      onchange:jt.fs("app.tabular.togsvsel('" + 
-                                     sv.module + "')")};
-                if(currtl && currtl.svs && currtl.svs.csvcontains(sv.module)) {
-                    si.checked = "checked"; }
-                si = ["span", {cla:"ptseldiv"},
-                      [["label", {fo:"cb" + sv.module}, "Include"],
-                       ["input", si]]]; }
-            html.push(["div", {cla:"svlistdiv"},
-                       [["div", {cla:"svlistnamediv"},
-                         [si,
-                          ["a", {href:"#run" + sv.module,
-                                 onclick:jt.fs("app.tabular.runsv('" + 
-                                               sv.module + "')")},
-                           ["span", {cla:"svlistnamespan"}, sv.name]]]],
-                        //PENDING: "more..." link to sv about text.
-                        ["div", {cla:"svlistdescdiv"}, sv.descr]]]); });
+            if(sv.type === "sv") {
+                if(mode === "tledit") {
+                    si = {type:"checkbox", id:"cb" + sv.name,
+                          onchange:jt.fs("app.tabular.togsvsel('" + 
+                                         sv.name + "')")};
+                    if(currtl && currtl.svs && 
+                       currtl.svs.csvcontains(sv.name)) {
+                        si.checked = "checked"; }
+                    si = ["span", {cla:"ptseldiv"},
+                          [["label", {fo:"cb" + sv.name}, "Include"],
+                           ["input", si]]]; }
+                html.push(["div", {cla:"svlistdiv"},
+                           [["div", {cla:"svlistnamediv"},
+                             [si,
+                              ["a", {href:"#run" + sv.name,
+                                     onclick:jt.fs("app.tabular.runsv('" + 
+                                                   sv.name + "')")},
+                               ["span", {cla:"svlistnamespan"}, sv.title]]]],
+                            //PENDING: "more..." link to sv about text.
+                            ["div", {cla:"svlistdescdiv"}, sv.desc]]]); } });
         html = ["div", {id:"svsdispdiv"}, html]; 
         jt.out("pointsdispdiv", jt.tac2html(html));
+    }
+
+
+    function cacheSuppVizPoints () {
+        app.modules.forEach(function (md) {
+            var sv, pts;
+            if(md.type === "sv") {
+                sv = app[md.name];
+                if(sv.datapoints) {
+                    pts = sv.datapoints();
+                    app.db.prepPointsArray(pts);
+                    app.db.cachePoints(pts); } } });
     }
 
 
@@ -929,6 +971,7 @@ app.tabular = (function () {
                     app.pubpts = result;  //note fetched
                     app.db.prepPointsArray(result);
                     app.db.cachePoints(result);
+                    cacheSuppVizPoints();
                     app.tabular.ptdisp(); },
                 function (code, errtxt) {
                     jt.err("Fetch pubpts failed " + code + " " + errtxt); },

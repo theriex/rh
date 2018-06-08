@@ -7,6 +7,24 @@ var app = {},  //Global container for application level funcs and values
 (function () {
     "use strict";
 
+    app.modules = [{name:"db", desc:"Data access and app state"},
+                   {name:"dlg", desc:"Dialog interactions"},
+                   {name:"linear", desc:"Linear timeline display"},
+                   {name:"tabular", desc:"Text timeline display"},
+                   {name:"mode", desc:"Menu and topnav display"},
+                   {name:"svcommon", type:"gv", desc:"Factored suppviz utils"},
+                   {name:"support", type:"gv", desc:"Support contact page"},
+                   {name:"levelup", type:"gv", desc:"Next level start display"},
+                   {name:"finale", type:"gv", desc:"Timeline end display"},
+                   //sv general tracking https://github.com/theriex/rh/issues/2
+                   {name:"intro", type:"sv", title:"Intro Completion",
+                    desc:"Chronology Unlocked, please bookmark"},
+                   {name:"slavery", type:"sv", title:"Chattel Slavery",
+                    desc:"Chattel slavery by state, some context points"},
+                   {name:"lynching", type:"sv", title:"Lynching",
+                    desc:"Lynchings by year range and region"}];
+
+
     app.init2 = function () {
         app.amdtimer.load.end = new Date();
         jt.log("window.innerWidth: " + window.innerWidth);
@@ -17,19 +35,12 @@ var app = {},  //Global container for application level funcs and values
 
 
     app.init = function () {
-        var href = window.location.href,
-            modules = ["js/db",       //data access and state
-                       "js/dlg",      //dialog interaction
-                       "js/linear",   //linear timeline display
-                       "js/tabular",  //text timeline display
-                       "js/mode",     //menu and topnav display
-                       "js/sv/svcommon",
-                       "js/sv/support",
-                       "js/sv/levelup",
-                       "js/sv/intro",
-                       "js/sv/slavery",
-                       "js/sv/lynching",
-                       "js/sv/finale"];
+        var modules, href = window.location.href;
+        modules = app.modules.map(function (md) {
+            var path = "js/";
+            if(md.type === "gv" || md.type === "sv") {
+                path += "sv/"; }
+            return path + md.name; });
         jtminjsDecorateWithUtilities(jt);
         app.baseurl = "https://usracehistory.org";
         if(!href.startsWith("https") && !href.startsWith("http://localhost")) {
