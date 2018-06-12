@@ -446,7 +446,9 @@ app.linear = (function () {
                      ["img", {src: "/ptpic?pointid=" + wall.selpts[idx].instid,
                               cla: "bgpicimg",
                               style: "max-width:" + cs.w + "px;" +
-                                     "max-height:" + cs.h + "px;"}]]); } }
+                                     "max-height:" + cs.h + "px;" +
+                                     //Safari inconsistent image top...
+                                     "vertical-align:top;"}]]); } }
         jt.out(divid, jt.tac2html(html));
         wall.grid = grid;
     }
