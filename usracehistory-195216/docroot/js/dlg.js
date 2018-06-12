@@ -477,7 +477,7 @@ app.dlg = (function () {
 
 
     function yearGuessButtonPress (year) {
-        var pt = tl.dlgdat;
+        var pt = tl.dlgdat, button;
         if(pt.start.year === year) {
             closeInteractionTimeTracking();
             jt.out("dlgdatediv", jt.tac2html(
@@ -486,9 +486,9 @@ app.dlg = (function () {
                 jt.byId(yearButtonId(year)).disabled = true; });
             setTimeout(transitionToNext, 1000); }
         else {
-            jt.byId(yearButtonId(year)).disabled = true;
-            jt.out("dlgdatequestion", 
-                   jt.byId("dlgdatequestion").innerHTML + "?");
+            button = jt.byId(yearButtonId(year));
+            button.disabled = true;
+            button.innerHTML = "x";
             pt.yearmisscount = pt.yearmisscount || 0;
             pt.yearmisscount += 1; }
     }
