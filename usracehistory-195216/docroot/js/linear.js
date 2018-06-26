@@ -460,7 +460,8 @@ app.linear = (function () {
         setChartWidthAndHeight();
         initDisplayVariableValues();
         initMainDisplayElements();
-        paintWallpaper("abgdiv");
+        setTimeout(function () {  //don't hold up starting the app
+            paintWallpaper("abgdiv"); }, 200);
         if(!tl.pts || tl.pts.length < 2) {
             jt.err("Timeline requires at least two points to display"); }
         else {
