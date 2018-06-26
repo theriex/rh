@@ -323,6 +323,9 @@ def mailgun_send(handler, eaddr, subj, body):
 
 
 def update_account(handler, acc):
+    if len(acc.password) < 6:
+        return srverr(handler, 403, "Password should be at least 6 characters")
+    # verify token creation works, otherwise this can crash on return
     cached_put(acc.email, acc)
     return_json(handler, [acc, {"token": acctoken(acc.email, acc.password)}])
 

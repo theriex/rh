@@ -263,6 +263,12 @@ app.mode = (function () {
         //     var mc = "newtl";
         //     jt.log("mode.start TEST menu: " + mc);
         //     app.mode.menu(0, mc); }, 200);
+        //TEST: Uncomment to launch suppviz after first interaction
+        // setTimeout(function () {
+        //     var sv = "slavery";
+        //     jt.log("mode.start TEST sv: " + sv);
+        //     app.dlg.close();
+        //     app.tabular.runsv(sv); }, 200);
     }
 
 
