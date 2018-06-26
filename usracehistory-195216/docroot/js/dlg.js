@@ -163,11 +163,13 @@ app.dlg = (function () {
         constrainTextToDialogHeight(d, dim);
         verticallyPositionDialog(d, dim);
         setDialogColors();
-        d3.select("#itemdispdiv")
-            .style("visibility", "visible")
-            .style("max-height", "4px")
-            .transition().duration(250)
-            .style("max-height", dim.h + "px");
+        //give the content a few millis to render so it's not ignored
+        setTimeout(function () {
+            d3.select("#itemdispdiv")
+                .style("visibility", "visible")
+                .style("max-height", "4px")
+                .transition().duration(500)
+                .style("max-height", dim.h + "px"); }, 100);
     }
 
 

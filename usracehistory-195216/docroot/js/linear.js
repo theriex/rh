@@ -464,7 +464,7 @@ app.linear = (function () {
             paintWallpaper("abgdiv"); }, 200);
         if(!tl.pts || tl.pts.length < 2) {
             jt.err("Timeline requires at least two points to display"); }
-        else {
+        else { //calcs are assumed so synchronous call
             bindDataAndDrawChart(); }
         app.mode.start(tl, currlev);
     }
