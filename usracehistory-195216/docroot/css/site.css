@@ -111,6 +111,7 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 #navdiv { position:absolute; left:0px; top:-5px; }
 .levnumbackrect { stroke:#999; fill:#f8e6a0; }
 .levelnumber { }
+.qremtext { stroke:#666; }
 .progbarback   { stroke:#999; fill:#ccc; }
 .progbarfilled { stroke:#999; fill:#00ff4c; }
 

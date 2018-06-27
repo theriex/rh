@@ -622,6 +622,7 @@ app.db = (function () {
             points.reverse();  //so they can be popped off in order...
             return app.mode.showNextPoints(points); }
         if(!currlev.lev.svShown && currlev.lev.svname !== "none") {
+            app.mode.updqrc(0);
             return app[currlev.lev.svname].display(); }
         if(!currlev.lev.levelupShown) {
             if(currlev.lev.num === currlev.lev.maxnum) {

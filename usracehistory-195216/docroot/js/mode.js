@@ -94,7 +94,15 @@ app.mode = (function () {
                 .attr("x", rc.x)
                 .attr("y", rc.y)
                 .attr("height", rc.h)
-                .attr("width", 0); }
+                .attr("width", 0);
+            ms.prog.qrem = ms.prog.g.append("text")
+                .attr("class", "qremtext")
+                .attr("text-anchor", "middle")  //variable width font
+                .attr("x", rc.x + Math.round(rc.w / 2))
+                .attr("y", tc.y - ti.p.t)
+                .attr("dy", "-.4em")   //fudge text baseline
+                .attr("font-size", 12)
+                .text(String("")); }  //see updateRemainingQuestionsCount
         ms.prog.prfill.attr("width", Math.round(currlev.lev.levpcnt * rc.w));
         ms.prog.levnum.text(String(currlev.lev.num));
         ms.currlev = currlev;
@@ -272,6 +280,18 @@ app.mode = (function () {
     }
 
 
+    function updateRemainingQuestionsCount (count) {
+        if(count !== 0) {
+            count = ms.currlev.lev.rempts.length; }
+        if(!count) {
+            count = ""; }
+        else {
+            count = String(count); }
+        if(ms) {
+            ms.prog.qrem.text(count); }
+    }
+
+
     function showSelectStat (points, task) {
         var tl = app.linear.tldata();
         task.msg = "Selecting " + points.length + " Facts";
@@ -284,6 +304,7 @@ app.mode = (function () {
             .style("height", 5 + "px")  //squeeze into div padding
             .style("background", "#CCC")
             .style("visibility", "visible");
+        updateRemainingQuestionsCount();
     }
 
 
@@ -351,6 +372,7 @@ app.mode = (function () {
         updlev: function (currlev) { updateLevelDisplay(currlev); },
         svdone: function (m, s, e) { endSuppViz(m, s, e); },
         requeue: function (pt) { requeue(pt); },
-        currpt: function () { return ms && ms.currpt; }
+        currpt: function () { return ms && ms.currpt; },
+        updqrc: function () { updateRemainingQuestionsCount(); }
     };
 }());
