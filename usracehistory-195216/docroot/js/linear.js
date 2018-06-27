@@ -249,15 +249,20 @@ app.linear = (function () {
     }
 
 
-    function clickCircle (d) {
+    function clickCircle (d, inter) {
+        var currpt = app.mode.currpt();
+        if(currpt && !inter) {  //return to current interactive point after
+            app.db.unvisitPoint(currpt);
+            app.mode.requeue(currpt); }
         zoomToPoint(d);
         markPointVisited(d);
-        app.dlg.info(d);
+        app.dlg.info(d, inter);
     }
 
 
     function byPtId (refid, srcid) {
         var i;
+        //find the current point and put it back on the stack to return to it
         for(i = 0; i < tl.pts.length; i += 1) {
             if(tl.pts[i].instid === srcid) {
                 app.db.unvisitPoint(tl.pts[i]);
@@ -275,7 +280,11 @@ app.linear = (function () {
             my = mouseinfo[1],
             pb = {x: Math.floor(wall.grid.x * (mx / wall.dd.w)),
                   y: Math.floor(wall.grid.y * (my / wall.dd.h))},
-            pt = wall.selpts[(pb.y * wall.grid.x) + pb.x];
+            pt = wall.selpts[(pb.y * wall.grid.x) + pb.x],
+            currpt = app.mode.currpt();
+        if(currpt) {  //return to current interactive point after
+            app.db.unvisitPoint(currpt);
+            app.mode.requeue(currpt); }
         app.dlg.info(pt);
     }
 
@@ -472,7 +481,7 @@ app.linear = (function () {
 
     return {
         display: function (currlev) { display(currlev); },
-        clickCircle: function (pt) { clickCircle(pt); },
+        clickCircle: function (pt, inter) { clickCircle(pt, inter); },
         byPtId: function (refid, srcid) { byPtId(refid, srcid); },
         levelCompleted: function (levpi) { app.levelup.display(tl, levpi); },
         tldata: function () { return tl; },

@@ -157,7 +157,7 @@ app.mode = (function () {
             return app.dlg.saveprog(); }
         ms.currpt = ms.points.pop();
         highlightCircles([ms.currpt], {dur:800});
-        app.linear.clickCircle(ms.currpt);
+        app.linear.clickCircle(ms.currpt, "interactive");
     }
 
 
@@ -324,13 +324,20 @@ app.mode = (function () {
     }
 
 
-    function endSuppViz(module, start, end) {
+    function endSuppViz (module, start, end) {
         if(mode === "interactive") {
             app.db.svdone(module, start, end);
             app.dlg.saveprog(); }  //launches next interaction after save
         //close the display
         d3.select("#suppvisdiv")
             .style("visibility", "hidden");
+    }
+
+
+    function requeue (pt) {
+        if(ms.points.length && ms.points[ms.points.length - 1] === pt) {
+            return; }  //don't push the same point twice
+        ms.points.push(pt);
     }
 
 
@@ -343,6 +350,7 @@ app.mode = (function () {
         searchstate: function () { return srchst; },
         updlev: function (currlev) { updateLevelDisplay(currlev); },
         svdone: function (m, s, e) { endSuppViz(m, s, e); },
-        requeue: function (pt) { ms.points.push(pt); }
+        requeue: function (pt) { requeue(pt); },
+        currpt: function () { return ms && ms.currpt; }
     };
 }());

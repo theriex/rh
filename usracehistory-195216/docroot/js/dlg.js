@@ -270,9 +270,19 @@ app.dlg = (function () {
     }
 
 
-    function infoButtons (d) {
+    function infoButtons (d, inter) {
         var ret = {tac:[], focid:"", date:""};
-        if(d.codes.indexOf("U") >= 0) {
+        if(!inter) {
+            ret.tac = [["div", {cla:"buttonptcodesdiv"},
+                        [["span", {cla:"buttonptcodeslabelspan"}, 
+                          "Groups: "],
+                         pointCodeNamesCSV(d)]],
+                       ["button", {type:"button", id:"backbutton",
+                                   onclick:jt.fs("app.dlg.button()")},
+                        "Return To Interactive"]];
+            ret.focid = "backbutton";
+            ret.date = ["span", {id:"dlgdatespan"}, d.dispdate]; }
+        else if(d.codes.indexOf("U") >= 0) {
             ret.tac = [["span", {cla:"buttonintrospan"}, "Did you know?"],
                        ["div", {id:"choicebuttonsdiv"},
                         [["button", {type:"button", id:"yesbutton",
@@ -394,14 +404,14 @@ app.dlg = (function () {
     }
 
 
-    function showInfoDialog (d) {
+    function showInfoDialog (d, inter) {
         var buttons, pichtml = "", html;
         tl.dlgdat = d;
         if(d.pic) {
             pichtml = ["div", {cla:"dlgpicdiv", id:"dlgpicdiv"},
                        ["img", {cla:"infopic", id:"dlgpicimg",
                                 src:"/ptpic?pointid=" + d.instid}]]; }
-        buttons = infoButtons(d);
+        buttons = infoButtons(d, inter);
         html = [["div", {id:"genentrydiv"}],
                 ["div", {id:"dlgdatediv"}, 
                  [buttons.date,
@@ -1454,7 +1464,7 @@ app.dlg = (function () {
     return {
         init: function (timeline) { tl = timeline; },
         start: function (t, s, f) { showStartDialog(t, s, f); },
-        info: function (d, nextfstr) { showInfoDialog(d, nextfstr); },
+        info: function (d, inter) { showInfoDialog(d, inter); },
         show: function (html) { displayDialog(null, html); },
         close: function (mode) { closeDialog(mode); },
         button: function (answer) { buttonPress(answer); },
