@@ -69,7 +69,6 @@ app.dlg = (function () {
         var ct = lnfs[lnfidx];
         d3.select("#itemdispdiv").style("background", ct.dlgbg);
         d3.select(".dlgtextdiv").style("background", ct.textbg);
-        d3.select(".dlgsavediv").style("background", ct.textbg);
         d3.select("#dlgdatespan").style("background", ct.datebg);
         d3.select("#choicebuttonsdiv").style("background", ct.textbg);
         d3.selectAll("button").style("background", ct.buttonbg);
@@ -107,13 +106,14 @@ app.dlg = (function () {
             img, mh;
         if(!d) {  //Displays other than data should lay out reasonably already.
             return; }
-        //Set min text area height equal img height so img not squished.
+        //Set min text area height equal img height so pic not squished.
         if(d.pic) {
             img = jt.byId("dlgpicimg");
             if(img && img.offsetHeight) {
                 ph = img.offsetHeight; }
-            d3.select("#dlgtextdiv")
-                .style("min-height", ph); }
+            jt.byId("dlgtextdiv").style.minHeight = ph + "px";
+            //pad 4 margin-top 2 === 10, extra in case === 12
+            jt.byId("dlgcontentdiv").style.minHeight = (ph + 12) + "px"; }
         //Set max text area height equal to max dlg height - header/footer
         mh = dlgdim.h;
         resids.forEach(function (id) {

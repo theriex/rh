@@ -45,7 +45,7 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
   visibility:hidden; background:#e0cb07; overflow:hidden;
   padding:5px; border-radius:50px; border: 2px solid #666666; 
   box-shadow:5px 5px 3px #2f2b00; }
-#dlgdatediv { padding:0px 20px; text-align:center; }
+#dlgdatediv { padding:0px 20px; margin-bottom:2px; text-align:center; }
 #dlgdatespan { background:#fce934; }
 #dlgdatequestion { font-style:italic; font-weight:bold; }
 #dlgxdiv, #aboutxdiv { float:right; font-size:x-small; font-weight:bold; 
@@ -55,10 +55,8 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 .infopic { margin:0px 0px 5px 10px; max-width:120px; max-height:166px; }
 .picnamediv { margin:0px 0px 0px 10px; text-align:center; max-width:120px; 
   font-size:x-small; background-image:url('../img/whitewash.png'); }
-.dlgtextdiv, .dlgsavediv { margin-top:2px; background:#ebd400; 
-  padding:4px 4px 4px 4px; overflow:scroll; 
+.dlgtextdiv { background:#ebd400; padding:4px 4px 4px 4px;
   font-family: "Palatino Linotype", "Palatino", serif; }
-.dlgsavediv { font-family: "Open Sans", "Helvetica", sans-serif; }
 #dlgbuttondiv { clear:both; text-align:center; padding:5px 0px 5px 0px; }
 #dlgbuttondiv button { margin:0px 3px; }
 .dlgbuttonsep { padding:0px 5px; }
@@ -84,7 +82,7 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 .elevatortext { fill:#999; font-weight:bold; font-style:italic; 
   text-anchor:middle; }
 
-#introdlgdiv { padding:0px 10px 20px 0px; }
+#introdlgdiv { padding:0px 10px 20px 0px; overflow:hidden; }
 #introtitlediv { font-size:x-large; font-weight:bold; text-align:center;
   padding:10px 10px 10px 16px; line-height:150%;
   font-family: "Open Sans", "Helvetica", sans-serif;
