@@ -197,7 +197,7 @@ app.mode = (function () {
 
 
     function displayMenu (expand, select) {
-        var html, mdiv, leftx;
+        var html;
         html = ["a", {href:"#menu", onclick:jt.fs("app.mode.menu(" + 
                                                   !expand + ")")},
                 ["img", {src:"img/menuicon.png", //50x38
