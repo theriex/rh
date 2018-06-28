@@ -562,7 +562,9 @@ app.dlg = (function () {
                         app.db.deserialize("AppUser", result[0]);
                         setAuthentication(cred.emailin, result);
                         app.dlg.close();
-                        app.db.initTimelines();  //reset for user
+                        //Do not rebuild random timelines for a new account
+                        //or existing progress for points may be lost.
+                        //app.db.initTimelines();
                         app.dlg.myacc(); },
                     function (code, errtxt) {
                         jt.log("createAccount " + code + " " + errtxt);
