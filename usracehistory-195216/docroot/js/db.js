@@ -617,6 +617,7 @@ app.db = (function () {
             currlev.lev.startbuttonshown = true;
             return app.dlg.start(dcon.lastTL.title, dcon.lastTL.subtitle,
                                  jt.fs("app.db.nextInteraction()")); }
+        app.dlg.verifyClosed();  //clear any stray save status dlg
         app.mode.updlev(currlev);
         if(points.length > 0) {
             points.reverse();  //so they can be popped off in order...

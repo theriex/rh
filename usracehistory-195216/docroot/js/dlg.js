@@ -169,7 +169,7 @@ app.dlg = (function () {
                 .style("visibility", "visible")
                 .style("max-height", "4px")
                 .transition().duration(500)
-                .style("max-height", dim.h + "px"); }, 100);
+                .style("max-height", dim.h + "px"); }, 100);  //see verifyClosed
     }
 
 
@@ -1463,12 +1463,23 @@ app.dlg = (function () {
     }
 
 
+    function verifyClosed () {
+        closeDialog();
+        //Because displayDialog renders with a timeout, it is possible to
+        //end up with a dialog being left open if other processing takes
+        //over quickly, even if that processing called dlg.close.  This is a
+        //second failsafe call to make sure the dialog is hidden in that case.
+        setTimeout(closeDialog, 800);
+    }
+
+
     return {
         init: function (timeline) { tl = timeline; },
         start: function (t, s, f) { showStartDialog(t, s, f); },
         info: function (d, inter) { showInfoDialog(d, inter); },
         show: function (html) { displayDialog(null, html); },
         close: function (mode) { closeDialog(mode); },
+        verifyClosed: function () { verifyClosed(); },
         button: function (answer) { buttonPress(answer); },
         guessyear: function (year) { yearGuessButtonPress(year); },
         nextColorTheme: function () { nextColorTheme(); },
