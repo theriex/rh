@@ -100,8 +100,8 @@ app.mode = (function () {
                 .attr("text-anchor", "middle")  //variable width font
                 .attr("x", rc.x + Math.round(rc.w / 2))
                 .attr("y", tc.y - ti.p.t)
-                .attr("dy", "-.4em")   //fudge text baseline
-                .attr("font-size", 12)
+                .attr("dy", "-.3em")   //fudge text baseline
+                .attr("font-size", 14)
                 .text(String("")); }  //see updateRemainingQuestionsCount
         ms.prog.prfill.attr("width", Math.round(currlev.lev.levpcnt * rc.w));
         ms.prog.levnum.text(String(currlev.lev.num));
@@ -281,14 +281,18 @@ app.mode = (function () {
 
 
     function updateRemainingQuestionsCount (count) {
-        if(count !== 0) {
-            count = ms.currlev.lev.rempts.length; }
-        if(!count) {
-            count = ""; }
-        else {
-            count = String(count); }
+        var txt = "";
+        if(count !== 0 && count !== -1) {
+            count = ms.currlev.lev.rempts.length;
+            ms.currlev.lev.remptcounter = count; }
+        if(ms && count === -1) {
+            count = ms.currlev.lev.remptcounter - 1;
+            ms.currlev.lev.remptcounter = count; }
+        count = count || 0;
+        if(count > 0) {
+            txt = String(count) + " points remaining"; }
         if(ms) {
-            ms.prog.qrem.text(count); }
+            ms.prog.qrem.text(txt); }
     }
 
 
@@ -373,6 +377,6 @@ app.mode = (function () {
         svdone: function (m, s, e) { endSuppViz(m, s, e); },
         requeue: function (pt) { requeue(pt); },
         currpt: function () { return ms && ms.currpt; },
-        updqrc: function () { updateRemainingQuestionsCount(); }
+        updqrc: function (count) { updateRemainingQuestionsCount(count); }
     };
 }());

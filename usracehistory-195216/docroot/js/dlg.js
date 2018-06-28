@@ -278,7 +278,7 @@ app.dlg = (function () {
                           "Groups: "],
                          pointCodeNamesCSV(d)]],
                        ["button", {type:"button", id:"backbutton",
-                                   onclick:jt.fs("app.dlg.button()")},
+                                   onclick:jt.fs("app.dlg.button('back')")},
                         "Return To Interactive"]];
             ret.focid = "backbutton";
             ret.date = ["span", {id:"dlgdatespan"}, d.dispdate]; }
@@ -480,9 +480,12 @@ app.dlg = (function () {
     function buttonPress (answer) {
         var inter = tl.dlgdat.interact;
         if(answer) {
-            inter.answer = answer; }
-        if(answer && answer !== buttonText.yes) {
-            tl.dlgdat.remembered = jt.byId("cbremember").checked; }
+            if(answer !== "back") {
+                inter.answer = answer;
+                if(answer !== buttonText.yes) {
+                    tl.dlgdat.remembered = jt.byId("cbremember").checked; } } }
+        if(answer !== "back") {
+            app.mode.updqrc(-1); }
         closeInteractionTimeTracking();
         transitionToNext();
     }
@@ -491,6 +494,7 @@ app.dlg = (function () {
     function yearGuessButtonPress (year) {
         var pt = tl.dlgdat, button;
         if(pt.start.year === year) {
+            app.mode.updqrc(-1);
             closeInteractionTimeTracking();
             jt.out("dlgdatediv", jt.tac2html(
                 ["span", {id:"dlgdatespan"}, pt.dispdate]));
