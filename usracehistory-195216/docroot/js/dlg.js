@@ -9,7 +9,7 @@ app.dlg = (function () {
          datebg: "#fff0b7", buttonbg: "#ffe278"},
         {name: "slate", dlgbg: "#beddb9", textbg: "#d8f2d3", 
          datebg: "#ddfad8", buttonbg: "#aec8aa"},
-        {name: "sky", dlgbg: "#c6deff", textbg: "#e8f6f9", 
+        {name: "sky", dlgbg: "#c6deff", textbg: "#e7f1ff",
          datebg: "#e9f5f8", buttonbg: "#c0e3eb"}],
         buttonText = {yes:"Yes", no:"No"},
         birthyeardefault = (new Date()).getFullYear() - 27,
