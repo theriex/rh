@@ -104,10 +104,8 @@ app.dlg = (function () {
         var ph = 166,  //default infopic max-height from css
             resids = ["dlgdatediv", "dlgbuttondiv"],
             img, mh;
-        if(!d) {  //Displays other than data should lay out reasonably already.
-            return; }
         //Set min text area height equal img height so pic not squished.
-        if(d.pic) {
+        if(d && d.pic) {
             img = jt.byId("dlgpicimg");
             if(img && img.offsetHeight) {
                 ph = img.offsetHeight; }

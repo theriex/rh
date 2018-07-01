@@ -273,7 +273,7 @@ app.mode = (function () {
         //     app.mode.menu(0, mc); }, 200);
         //TEST: Uncomment to launch suppviz after first interaction
         // setTimeout(function () {
-        //     var sv = "slavery";
+        //     var sv = "miscegenation";
         //     jt.log("mode.start TEST sv: " + sv);
         //     app.dlg.close();
         //     app.tabular.runsv(sv); }, 200);

@@ -12,17 +12,21 @@ var app = {},  //Global container for application level funcs and values
                    {name:"linear", desc:"Linear timeline display"},
                    {name:"tabular", desc:"Text timeline display"},
                    {name:"mode", desc:"Menu and topnav display"},
+                   //general visualizations and common utilities
                    {name:"svcommon", type:"gv", desc:"Factored suppviz utils"},
                    {name:"support", type:"gv", desc:"Support contact page"},
                    {name:"levelup", type:"gv", desc:"Next level start display"},
                    {name:"finale", type:"gv", desc:"Timeline end display"},
-                   //sv general tracking https://github.com/theriex/rh/issues/2
+                   //specific visualizations.  For what's left to build see
+                   //https://github.com/theriex/rh/issues/2
                    {name:"intro", type:"sv", title:"Intro Completion",
                     desc:"Chronology Unlocked, please bookmark"},
                    {name:"slavery", type:"sv", title:"Chattel Slavery",
                     desc:"Chattel slavery by state, some context points"},
                    {name:"lynching", type:"sv", title:"Lynching",
-                    desc:"Lynchings by year range and region"}];
+                    desc:"Lynchings by year range and region"},
+                   {name:"miscegenation", type:"sv", title:"Anti-Miscegenation",
+                    desc:"Anti-Miscegenation legislation by state"}];
 
 
     app.init2 = function () {

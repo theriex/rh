@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge, this */
+/*jslint browser, multivar, white, fudge, this, long */
 /*global app, window, jt, d3 */
 
 //factored common data and utilities used in multiple visualizations
@@ -78,8 +78,8 @@ app.svcommon = (function () {
         if(!state.offset) {
             state.prevx = 0;
             state.prevy = 0; }
-        state.prevx += +(pt[0].trim());
-        state.prevy += +(pt[1].trim());
+        state.prevx += Number(pt[0].trim());
+        state.prevy += Number(pt[1].trim());
         pt = {x:state.prevx, y:state.prevy};
         vs.push(pt);
         return pt;
@@ -89,10 +89,10 @@ app.svcommon = (function () {
     function pathToVertices (path) {
         //https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d
         var vs = [], temp = {},
-            state = {prevx:0, prevy:0, offset:false, si:0, co:0}
+            state = {prevx:0, prevy:0, offset:false, si:0, co:0};
         //ensure command letters are clumped with their first coordinate
         path = path.replace(/([MmLlQqCcTtSsAa])\s+/g, "$1");
-        path.split(" ").forEach(function (pt, idx) {
+        path.split(" ").forEach(function (pt) {
             state.si += 1;  //increment current command series index
             if(pt.startsWith("M")) {  //moveto (absolute)
                 state.offset = false;
@@ -219,13 +219,13 @@ app.svcommon = (function () {
         case "median":
             ptd.xvals.sort(function (a, b) { return a - b; });
             ptd.xmid = Math.floor(ptd.xvals.length / 2);
-            if(ptd.xvals.length % 2) {
+            if(ptd.xvals.length % 2 !== 0) {
                 ptd.x = ptd.xvals[ptd.xmid]; }
             else {
                 ptd.x = (ptd.xvals[ptd.xmid - 1] + ptd.xvals[ptd.xmid]) / 2; }
             ptd.yvals.sort(function (a, b) { return a - b; });
             ptd.ymid = Math.floor(ptd.yvals.length / 2);
-            if(ptd.yvals.length % 2) {
+            if(ptd.yvals.length % 2 !== 0) {
                 ptd.y = ptd.yvals[ptd.ymid]; }
             else {
                 ptd.y = (ptd.yvals[ptd.ymid - 1] + ptd.yvals[ptd.ymid]) / 2; }
@@ -239,13 +239,441 @@ app.svcommon = (function () {
                     y:ptd.ysum / ptd.ycount,
                     ps:ptd.str};
         default:
-            console.log("Unknown centerPoint method: " + method); }
+            jt.log("Unknown centerPoint method: " + method); }
     }
+
+
+    function vizsts (source) {
+        var src = source,
+            stats = null,
+            tl = null,
+            chart = src.chart || {colors: {bg: "#fef6d7", 
+                                           progbar: {tick:"#cc6c6c"},
+                                           map: {neutral:"#fadb66",
+                                                 hover:"#d3aaaa",
+                                                 selected:"#cc6c6c"}}},
+            ani = {wmin:1.0, wbase:0.25, nudge:0.05, idx:0, tes:src.tlpts};
+
+        function usmapTAC () {
+            var html = [];
+            app.svcommon.usmap().forEach(function (st) {
+                html.push(["path", {
+                    id:st.id, d:st.d,
+                    onclick:jt.fs("app.vizsts.stclick('" + st.id + "')"),
+                    onmouseover:jt.fs("app.vizsts.stmsover('" + st.id + "')"),
+                    onmouseout:jt.fs("app.vizsts.stmsout('" + st.id + "')"),
+                    fill:chart.colors.map.neutral}]); });
+            html = ["svg", {id:"svgin", width:chart.ms.w, height:chart.ms.h,
+                            viewBox:"0 0 959 593", preserveAspectRatio:"none"},
+                    ["g", {id:"outlines"},
+                     html]];
+            chart.vbmid = {x: Math.round(0.5 * 959),   //calculate from viewbox
+                           y: Math.round(0.35 * 593)};
+            return html;
+        }
+
+
+        function initHTMLContent () {
+            var k;
+            chart.key = {w: 280, 
+                         svg: {h:20}};
+            chart.key.svg.w = chart.key.svg.w || chart.key.w;
+            k = chart.key;
+            k.yr = {start: src.tlpts[0].start.year, 
+                    end: src.tlpts[src.tlpts.length - 1].start.year};
+            k.styles = {
+                mdiv:"width:" + k.w + "px;margin:auto;text-align:center;",
+                ctrl:"display:inline-block;width:56px;height:40px;",
+                tspan:"line-height:40px;font-size:large;cursor:pointer;"};
+            jt.out("suppvisdiv", jt.tac2html(
+                [["div", {id:"keydiv", 
+                          style:k.styles.mdiv + "position:relative;"},
+                  [["svg", {id:"keysvg", width:k.svg.w, height:k.svg.h}],
+                   ["div", {id:"tctrldiv", style:k.styles.mdiv},
+                    [["div", {id:"kcsdiv", style:k.styles.ctrl + "float:left;" +
+                              "text-align:left;vertical-align:middle;"},
+                      ["span", {cla:"tranctrl", style:k.styles.tspan,
+                                onclick:jt.fs("app.vizsts.selyear(" +
+                                              k.yr.start + ")")},
+                       k.yr.start]],
+                     ["div", {id:"kcediv", 
+                              style:k.styles.ctrl + "float:right;" +
+                              "text-align:right;vertical-align:middle;"},
+                      ["span", {cla:"tranctrl", style:k.styles.tspan,
+                                onclick:jt.fs("app.vizsts.selyear(" +
+                                              k.yr.end + ")")},
+                       k.yr.end]],
+                     ["div", {id:"kcldiv", style:k.styles.ctrl},
+                      ["img", {cla:"tranctrl", src:"img/backward.png",
+                               onclick:jt.fs("app.vizsts.transport('jp')")}]],
+                     ["div", {id:"kcplaydiv", style:k.styles.ctrl},
+                      ["img", {cla:"tranctrl", src:"img/play.png",
+                               id:"playpause", onclick:jt.fs(
+                                   "app.vizsts.transport('toggle')")}]],
+                     ["div", {id:"kcrdiv", style:k.styles.ctrl},
+                      ["img", {cla:"tranctrl", src:"img/forward.png",
+                               onclick:jt.fs("app.vizsts.transport('jn')")}]]]],
+                   ["div", {id:"kyrdiv", style:"position:absolute;" +
+                            "top:60px;left:0px;width:280px;min-height:26px;" + 
+                            "padding:12px 0px 0px 0px;" +
+                            "text-align:center;font-weight:bold;"},
+                    ""]]],  //"year"
+                 //text display container:
+                 ["div", {id:"kytdiv", style:"position:absolute;" + 
+                                             "left:30px;top:120px;" +
+                                             "margin-right:30px;" +
+                                             "opacity:0.0;",
+                          onclick:jt.fs("app.vizsts.stunclick()")}],
+                 usmapTAC()]));
+        }
+
+
+        function autoplay (titletime) {
+            d3.select("#kcldiv").style("display", "none");
+            d3.select("#kcrdiv").style("display", "none");
+            d3.select("#kcplaydiv").style("display", "none");
+            setTimeout(function () {
+                //expanding the existing play button looks like crap, so draw..
+                var tg = d3.select("#svgin").append("g").attr("opacity", 1.0);
+                tg.append("text")
+                    .attr("text-anchor", "middle")
+                    .attr("x", chart.vbmid.x + 50)
+                    .attr("y", chart.vbmid.y + 140)
+                    .attr("font-size", 400)
+                    .text("\u25B6")  //black right-pointing triangle
+                    .style("opacity", 1.0)
+                //Can't line this up over what's there since it's outside
+                //the range of SVG.  Going for looking like it was thrown.
+                    .transition().delay(300).duration(1000)
+                    .attr("font-size", 2)
+                    .attr("x", chart.vbmid.x - 10)
+                    .attr("y", 10)
+                    .style("opacity", 0.0)
+                    .remove();
+                setTimeout(function () {
+                    d3.select("#kcldiv").style("display", "inline-block");
+                    d3.select("#kcrdiv").style("display", "inline-block");
+                    d3.select("#kcplaydiv").style("display", "inline-block"); },
+                           1000);
+            }, titletime - 500);
+            setTimeout(function () {
+                app.vizsts.transport("play"); }, titletime + 600);
+        }
+
+
+        function displayTitle () {
+            var tg, delay = 3500, duration = 2000;
+            tg = d3.select("#svgin").append("g").attr("opacity", 1.0);
+            tg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("x", chart.vbmid.x)
+                .attr("y", chart.vbmid.y)
+                .attr("font-size", 78)
+                .attr("font-weight", "bold")
+                .text(src.title);
+            tg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("x", chart.vbmid.x)
+                .attr("y", chart.vbmid.y + 100)
+                .attr("font-size", 64)
+                .attr("font-weight", "bold")
+                .text(src.subtitle);
+            tg.transition().delay(delay).duration(duration)
+                .attr("opacity", 0.0)
+                .remove();
+            autoplay(delay + duration);
+        }
+
+
+        function initDisplayElements () {
+            var kh = 50, mid, ks;
+            chart.ms = {w:tl.width2, h:Math.min((tl.height - kh), tl.width2)};
+            initHTMLContent();
+            ks = chart.key.svg;
+            displayTitle();
+            ks.x = d3.scaleLinear()
+                .domain(d3.extent(src.tlpts, function (d) { return d.tc; }))
+                .range([0, ks.w]);
+            ks.g = d3.select("#keysvg").append("g");
+            ks.g.append("rect")
+                .attr("id", "progbarBackgroundRect")
+                .attr("x", 0)
+                .attr("y", 6)
+                .attr("width", ks.w)
+                .attr("height", ks.h)
+                .style("fill", chart.colors.map.hover)
+                .style("opacity", 0.2);
+            ks.g.append("rect")
+                .attr("id", "progrect")
+                .attr("x", 0)
+                .attr("y", 6)
+                .attr("width", 0)
+                .attr("height", ks.h)
+                .style("fill", chart.colors.map.hover)
+                .style("opacity", 0.8);
+            ks.g.selectAll(".ksbar")
+                .data(src.tlpts)
+                .enter().append("rect")
+                .attr("class", "ksbar")
+                .attr("id", function (d) { return "kb" + d.instid; })
+                .attr("x", function (d) { return ks.x(d.tc); })
+                .attr("y", 6)  //unstick from top of div to make things balance
+                .attr("width", 3)
+                .attr("height", ks.h)
+                .style("fill", chart.colors.progbar.tick)
+                .style("opacity", 0.2)
+                .on("mouseover", function () { this.style.opacity = 1.0; })
+                .on("mouseout", function () { this.style.opacity = 0.2; })
+                .on("click", function (d) { 
+                    app.vizsts.selyear(d.start.year); });
+            mid = {x: Math.round(tl.width2 / 2) + tl.margin.left,
+                   y: Math.round(tl.height / 2) + tl.margin.top};
+            d3.select("#suppvisdiv")
+                .style("left", mid.x - 15 + "px")
+                .style("top", mid.y - 15 + "px")
+                .style("width", 30 + "px")
+                .style("height", 30 + "px")
+                .style("background", chart.colors.bg)
+                .style("visibility", "visible")
+                .transition().duration(2000)
+                .style("left", tl.margin.left + "px")
+                .style("top", tl.margin.top + "px")
+                .style("width", tl.width2 + "px")
+                .style("height", tl.height + "px");
+        }
+
+
+        function updateStateColors (year) {
+            src.stps.forEach(function (st) {
+                var color = src.stcolorf(st, year);
+                d3.select("#" + st.state)
+                    .transition().duration(600)
+                    .style("fill", color); });
+        }
+
+
+        function updateProgressBar (year) {
+            var idx = 0, pcnt;
+            ani.tes.forEach(function (te) {
+                if(te.start.year <= year) {
+                    idx += 1; } });
+            pcnt = Math.round(idx * 100 / (ani.tes.length - 1)) / 100;
+            d3.select("#progrect").transition().duration(500)
+                .attr("width", Math.round(pcnt * chart.key.svg.w));
+        }
+
+
+        function getInteractivePointText (pt) {
+            var ptxt = pt.text || "";
+            if(pt.nodisp) {
+                ptxt = ""; }
+            if(ptxt.indexOf("&nbsp;") > 50) {  //treat as TLDR trunc point
+                ptxt = ptxt.slice(0, ptxt.indexOf("&nbsp;")); }
+            return ptxt;
+        }
+
+
+        function displayPoint (immediate) {
+            var wc = 0, te, ptxt, wait;
+            if(ani.timeout) {
+                clearTimeout(ani.timeout); }
+            ani.idx = Math.max(ani.idx, 0);
+            if(ani.idx < ani.tes.length) {
+                te = ani.tes[ani.idx];
+                if(!immediate && ani.dispyear && ani.dispyear < te.start.year) {
+                    if(te.start.year - ani.dispyear > 40) {
+                        ani.dispyear += 10; }  //close long gaps faster
+                    else {
+                        ani.dispyear += 1; }
+                    jt.out("kyrdiv", ani.dispyear);
+                    ani.timeout = setTimeout(displayPoint, 100);
+                    return; }  //don't go to next point yet
+                ptxt = getInteractivePointText(te);
+                ani.dispyear = te.start.year;
+                jt.out("kyrdiv", te.start.year);
+                if(ptxt) {
+                    d3.select("#kyrdiv")
+                        .style("font-size", "10px")
+                        .transition().duration(500)
+                        .style("font-size", "24px");
+                    jt.out("kytdiv", ptxt);
+                    d3.select("#kytdiv").transition().duration(500)
+                        .style("opacity", 1.0); }
+                updateStateColors(ani.dispyear);
+                updateProgressBar(ani.dispyear);
+                if(ptxt) {
+                    wc += ptxt.split(" ").length; } }
+            else {
+                ani.styrtemp = jt.tac2html(
+                    ["a", {href:"#done", onclick:jt.fs("app.vizsts.finish()")},
+                     "Done"]);
+                jt.out("kyrdiv", ani.styrtemp);
+                setTimeout(function () {  //wait for "next" fade to be over
+                    jt.out("kytdiv", "Click any state for details.");
+                    d3.select("#kytdiv").style("opacity", 1.0)
+                        .transition().duration(3000).style("opacity", 0.0);
+                    setTimeout(function () {jt.out("kytdiv", ""); }, 3000); },
+                           800);
+                app.vizsts.transport("pause");
+                ani.idx = 0;  //reset to beginning they hit play again.
+                app.vizsts.stunclick(); }
+            if(ani.playing) {
+                ani.ww = ani.ww || ani.wbase;
+                wait = Math.max(ani.wmin, wc * ani.ww) * 1000;
+                if(!ptxt) {  //don't pause if nothing displayed
+                    wait = 0; }
+                ani.timeout = setTimeout(function () {
+                    app.vizsts.transport("next"); }, wait); }
+        }
+
+
+        function transport (command) {
+            if(command === "toggle") {
+                command = ani.playing? "pause" : "play"; }
+            switch(command) {
+            case "play":
+                ani.playing = true;
+                jt.byId("playpause").src = "img/pause.png";
+                displayPoint();
+                break;
+            case "pause":
+                ani.playing = false;
+                if(ani.timeout) {
+                    clearTimeout(ani.timeout); }
+                jt.byId("playpause").src = "img/play.png";
+                break;
+            case "jp":
+                ani.idx -= 1;
+                displayPoint("immediate");
+                break;
+            case "prev":
+                ani.idx -= 1;
+                displayPoint();
+                break;
+            case "jn":
+                ani.idx += 1;
+                displayPoint("immediate");
+                break;
+            case "next":
+                // d3.select("#kytdiv").transition().duration(500)
+                //     .style("opacity", 0.0);
+                ani.idx += 1;
+                ani.timeout = setTimeout(displayPoint, 500);
+                break;
+            default:
+                displayPoint(); }
+        }
+
+
+        function display () {
+            var ctx;
+            stats = {start: new Date()};
+            tl = app.linear.timeline();
+            ctx = app.db.makeCoordContext(src.tlpts);
+            src.tlpts.forEach(function (pt) {
+                app.db.makeCoordinates(pt, ctx); });
+            initDisplayElements();
+        }
+
+
+        //reset the animation current index to the first point with given year
+        function displayPointByYear (year) {
+            var teindex = 0;
+            ani.tes.forEach(function (te, idx) {
+                if(year >= te.start.year) { //nearest greater if no exact match
+                    teindex = idx; } });
+            ani.idx = teindex;
+            displayPoint("immediate");
+        }
+
+
+        function stateUnclick () {
+            //unclick all the states just in case they manage to click things
+            //faster than the code cleans up
+            src.stps.forEach(function (st) {
+                jt.byId(st.state).style.fill = chart.colors.map.neutral; });
+            if(ani.styrtemp) {
+                jt.out("kyrdiv", ani.styrtemp); }
+        }
+
+
+        function getSourceStateById (stid) {  //e.g. "AK"
+            if(!ani.statesById) {
+                ani.statesById = {};
+                src.stps.forEach(function (st) {
+                    ani.statesById[st.state] = st; }); }
+            return ani.statesById[stid];
+        }
+
+
+        function closeDialog () {
+            stateUnclick();
+            app.dlg.close();
+        }
+
+
+        function stateClick (stid) {
+            var st;
+            if(ani.playing) {
+                return; }  //ignore state clicks until after interaction done.
+            if(ani.stateclicktimeout) {
+                clearTimeout(ani.stateclicktimeout); }
+            stateUnclick();
+            clearTimeout(ani.stateclicktimeout);  //clear timeout from unclick
+            jt.byId(stid).style.fill = chart.colors.map.selected;
+            st = getSourceStateById(stid);
+            app.dlg.show(jt.tac2html(
+                [["div", {id:"dlgdatediv"}, st.name],
+                 ["div", {id:"dlgcontentdiv"},
+                  ["div", {cla:"dlgtextdiv", id:"dlgtextdiv"},
+                   src.sthtmlf(st)]],
+                 ["div", {id:"dlgbuttondiv"},
+                  ["button", {type: "button", id: "okbutton",
+                              onclick: jt.fs("app.vizsts.closeDialog()")},
+                   "Close"]]]));
+        }
+
+
+        function stateMouseOver (stid) {
+            var st = jt.byId("kytdiv").innerHTML;
+            if(!st) {
+                jt.byId(stid).style.fill = chart.colors.map.hover; }
+        }
+
+
+        function stateMouseOut (stid) {
+            var st = jt.byId("kytdiv").innerHTML;
+            if(!st) {
+                jt.byId(stid).style.fill = chart.colors.map.neutral; }
+        }
+
+
+        function finish () {
+            if(!ani.finished) {
+                ani.finished = true;
+                stats.end = new Date();
+                app.mode.svdone(src.module, stats.start, stats.end); }
+        }
+
+
+        return {
+            display: function () { display(); },
+            transport: function (command) { transport(command); },
+            selyear: function (year) { displayPointByYear(year); },
+            stclick: function (stid) { stateClick(stid); },
+            stunclick: function (stid) { stateUnclick(stid); },
+            stmsover: function (stid) { stateMouseOver(stid); },
+            stmsout: function (stid) { stateMouseOut(stid); },
+            closeDialog: function () { closeDialog(); },
+            finish: function () { finish(); }
+        };
+    }  //end vizsts
 
 
     return {
         usmap: function () { return usmap; },
         pathToVertices: function (path) { return pathToVertices(path); },
-        centerPoint: function (path) { return centerPoint(path); }
+        centerPoint: function (path) { return centerPoint(path); },
+        vizsts: function (src) { app.vizsts = vizsts(src); return app.vizsts; }
     };
 }());

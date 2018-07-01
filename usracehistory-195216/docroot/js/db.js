@@ -868,6 +868,7 @@ app.db = (function () {
         prepData: function (tl) { prepData(tl); },
         cachePoints: function (pts) { return cachePoints(pts); },
         unvisitPoint: function (pt) { unvisitPoint(pt); },
-        recalcProgress: function () { return recalcProgress(); }
+        recalcProgress: function () { return recalcProgress(); },
+        compareStartDate: function (a, b) { return compareStartDate(a, b); }
     };
 }());
