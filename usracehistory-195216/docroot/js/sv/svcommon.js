@@ -481,7 +481,7 @@ app.svcommon = (function () {
             if(ani.idx < ani.tes.length) {
                 te = ani.tes[ani.idx];
                 if(!immediate && ani.dispyear && ani.dispyear < te.start.year) {
-                    if(te.start.year - ani.dispyear > 40) {
+                    if(te.start.year - ani.dispyear > 30) {
                         ani.dispyear += 10; }  //close long gaps faster
                     else {
                         ani.dispyear += 1; }
@@ -555,8 +555,8 @@ app.svcommon = (function () {
                 displayPoint("immediate");
                 break;
             case "next":
-                // d3.select("#kytdiv").transition().duration(500)
-                //     .style("opacity", 0.0);
+                d3.select("#kytdiv").transition().duration(500)
+                    .style("opacity", 0.0);
                 ani.idx += 1;
                 ani.timeout = setTimeout(displayPoint, 500);
                 break;

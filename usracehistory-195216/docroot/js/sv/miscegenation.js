@@ -12,23 +12,24 @@ app.miscegenation = (function () {
         sps = [{state:"AK", name:"Alaska", points:[]},  //none
                {state:"HI", name:"Hawaii", points:[]},  //none
                {state:"AL", name:"Alabama", points:[
-                   { date:"1852", text:"Alabama prohibits intermarriage between Whites and Negroes or mulattos.", nodisp:true }]},
+                   { date:"1822", text:"Alabama prohibits intermarriage between Whites and Negroes or mulattos.", nodisp:true }]},
                {state:"AR", name:"Arkansas", points:[
                    { date:"1838", text:"Arkansas prohibits intermarriage between Whites and Negroes, Indians, or mulattos.", nodisp:true }]},
                {state:"AZ", name:"Arizona", points:[
                    { date:"1865", source:"ksep: R48", text:"Arizona prohibits “All marriages of white persons with negroes, mulattoes, Indians, or Mongolians.” This is the first use of the term “Mongolian” as a racialized term for Asian Americans in anti-miscegenation laws.", color:cm2 },
+                   { date:"1931", text:"Arizona adds \"Filipinos\" and \"Hindus\" to their list of races.", nodisp:true},
                    { date:"1962", source:"ksep: R113", text:"Arizona legalizes interracial marriage.", nodisp:true, color:cmx }]},
                {state:"CA", name:"California", points:[
                    { date:"1850", source:"ksep: R34", text:"California prohibits intermarriage between Whites and Negroes or mulattos.", nodisp:true },
                    { date:"1880", text:"California expands its anti-miscegenation law to explicitely prohibit marriage between Whites and “Mongolians”", nodisp:true, color:cm2 },
-                   { date:"1901", source:"ksep: A47", text:"California’s anti-miscegenation law is amended to include marriages between whites and “Mongolians.” This law remains in effect until 1948.", nodisp:true, color:cm2 },
+                   { date:"1933", source:"ksep: A47", text:"California’s anti-miscegenation law is amended again to explicitely exclude \"members of the Malay race\" in order to illegalize Filipino-White marriages.", nodisp:true, color:cm2 },
                    { date:"1948", source:"ksep: R78", text:"California legalizes interracial marriage.", nodisp:true, color:cmx }]},
                {state:"CO", name:"Colorado", points:[
                    { date:"1864", text:"Colorado prohibits intermarriage between Whites and Negroes or mulattos", nodisp:true },
                    { date:"1957", text:"Colorado legalizes interracial marriage.", nodisp:true, color:cmx }]},
                {state:"CT", name:"Connecticut", points:[]},  //none
                {state:"DE", name:"Delaware", points:[
-                   { date:"1807", source:"ksep: R19", text:"Delaware prohibits intermarriage between Whites and Negroes or mulattos.", nodisp:true }]},
+                   { date:"1721", source:"ksep: R19", text:"Delaware prohibits intermarriage between Whites and Negroes or mulattos.", nodisp:true }]},
                {state:"FL", name:"Florida", points:[
                    { date:"1832", source:"ksep: R25", text:"Florida prohibits intermarriage between Whites and Negroes or mulattos.", nodisp:true }]},
                {state:"GA", name:"Georgia", points:[
@@ -48,8 +49,8 @@ app.miscegenation = (function () {
                    { date:"1818", source:"ksep: R21", text:"Indiana prohibits intermarriage between Whites and Negroes or mulattos.", nodisp:true },
                    { date:"1965", text:"Indiana legalizes interracial marriage.", nodisp:true, color:cmx }]},
                {state:"KS", name:"Kansas", points:[
-                   { date:"1851", source:"ksep: R36", text:"Kansas legalizes interracial marriage.", nodisp:true, color:cmx },
-                   { date:"1855", text:"Kansas prohibits intermarriage between Whites and Negroes or mulattos.", nodisp:true }]},
+                   { date:"1855", text:"Kansas prohibits intermarriage between Whites and Negroes or mulattos.", nodisp:true },
+                   { date:"1859", source:"ksep: R36", text:"Kansas legalizes interracial marriage.", nodisp:true, color:cmx }]},
                {state:"KY", name:"Kentucky", points:[
                    { date:"1792", source:"ksep: R17", text:"Kentucky prohibits intermarriage between Whites and Negroes or mulattos.", nodisp:true }]},
                {state:"LA", name:"Louisiana", points:[
@@ -62,7 +63,7 @@ app.miscegenation = (function () {
                {state:"MD", name:"Maryland", points:[
                    { date:"1664", source:"ksep: R5", text:"The first anti-miscegenation law in Maryland is passed.", nodisp:true }]},
                {state:"ME", name:"Maine", points:[
-                   { date:"1821", source:"ksep: R22", text:"Maine prohibits intermarriage between Whites and Negroes, Indians, or mulattos.", color:cm2, nodisp:true },
+                   { date:"1821", source:"ksep: R22", text:"Maine prohibits intermarriage between Whites and Negroes, Indians, or mulattos.", color:cm1, nodisp:true },
                    { date:"1883", text:"Maine legalizes interracial marriage.", nodisp:true, color:cmx }]},
                {state:"MI", name:"Michigan", points:[
                    { date:"1838", text:"Michigan prohibits intermarriage between Whites and Negroes, Indians, or mulattos.", nodisp:true },
@@ -141,7 +142,7 @@ app.miscegenation = (function () {
                {state:"WV", name:"West Virginia", points:[
                    { date:"1863", source:"ksep: R46", text:"West Virginia prohibits intermarriage between Whites and Negroes or mulattos.", nodisp:true }]},
                {state:"WY", name:"Wyoming", points:[
-                   { date:"1913", text:"Wyoming prohibits \"all marriages of white persons with Negroes, Mulattoes, Mongolians or Malays\"", nodisp:true, color:cm2 },
+                   { date:"1869", text:"Wyoming prohibits \"all marriages of white persons with Negroes, Mulattoes, Mongolians or Malays\".  The law is repealed before reaching statehood, then reinstated in 1913", nodisp:true, color:cm2 },
                    { date:"1965", text:"Wyoming legalizes interracial marriage.", nodisp:true, color:cmx }]}],
         tlpts = [  //all code:"R", generated cid
             { date:"1492", text:"With the arrival of Columbus, Native Americans are brought into contact with Europeans and with African slaves" },

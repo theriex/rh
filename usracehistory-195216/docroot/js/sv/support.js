@@ -6,9 +6,9 @@ app.support = (function () {
 
     var content = [
         ["h2", "Support"],
-        ["p", "If you run into anything that doesn't look right, help us improve! Let us know on <span id=\"supghsp\">github issue tracking</span> or <span id=\"supiemsp\">email</span>."],
+        ["p", "Help improve this site! Issues are tracked on <span id=\"supghsp\">github</span>, or just <span id=\"supiemsp\">send email</span> if you notice something."],
         ["p", "If you can, please <span id=\"supdonsp\">make a donation to support this site</span>."],
-        ["p", "If your organization would like to manage its own data or sponsor new visualizations, <span id=\"suporgesp\">get in touch</span>."],
+        ["p", "If your organization would like to manage its own data, or sponsor creating a new visualization, <span id=\"suporgesp\">get in touch</span>."],
         ["p", "For other info, <span id=\"supdocsp\">see the docs</span>."]],
         repls = [
             {id:"supghsp", url:"https://github.com/theriex/rh/issues"},
