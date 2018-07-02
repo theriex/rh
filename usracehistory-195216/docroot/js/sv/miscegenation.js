@@ -144,12 +144,12 @@ app.miscegenation = (function () {
                {state:"WY", name:"Wyoming", points:[
                    { date:"1869", text:"Wyoming prohibits \"all marriages of white persons with Negroes, Mulattoes, Mongolians or Malays\".  The law is repealed before reaching statehood, then reinstated in 1913", nodisp:true, color:cm2 },
                    { date:"1965", text:"Wyoming legalizes interracial marriage.", nodisp:true, color:cmx }]}],
-        tlpts = [  //all code:"R", generated cid
+        tlpts = [
             { date:"1492", text:"With the arrival of Columbus, Native Americans are brought into contact with Europeans and with African slaves" },
             { date:"1614-04-05", text:"Pocahontas (aka Matoaka or Amonute, later Rebecca), 19 year old daughter of Algonquin Chief Powhatan, marries tobacco planter John Rolfe in probably the earliest officially recorded interracial marriage in North America" },
             { date:"1700", text:"Intermarriage between the African slaves and Native Americans. During the 18th century the African slave population is predominantly male and there is a decline in the number of Native American men." },
             { date:"1784", source:"ksep: R15", text:"Patrick Henry presents a Bill to the Virginia Legislature reflecting the philosophy that racial mixing will address social problems stating that: \"...every White man who married an Indian woman should be paid ten pounds, and five for each child born of such a marriage; and that if any White woman married an Indian she should be entitled to ten pounds with which the county court should buy them livestock; that once each year the Indian husband of this woman should be entitled to three pounds with which the county court should buy clothes for him; &nbsp;that every child born to the Indian man and White woman should be educated by the state between the ages of ten and twenty-one years...\"" },
-            { date:"1800", source:"ksep: M1", text:"First major wave of Arab immigration. Motivations include escaping civil war and/or religious persecution. The overwhelming majority are from the Ottoman province of Syria (now Syria, Lebanon, Jordan, and Palestine). Most immigrants are Christian, only 5-10% are Muslim and and an even smaller number are Druze. Men outnumber women 4:1, leading to high intermarriage rates." },
+            { date:"1800", source:"ksep: M1", codes:"MR", text:"First major wave of Arab immigration. Motivations include escaping civil war and/or religious persecution. The overwhelming majority are from the Ottoman province of Syria (now Syria, Lebanon, Jordan, and Palestine). Most immigrants are Christian, only 5-10% are Muslim and and an even smaller number are Druze. Men outnumber women 4:1, leading to high intermarriage rates." },
             { date:"1838", source:"ksep: R29", text:"Michigan and Arkansas prohibit intermarriage between Whites and Negroes, Indians, or mulattos.", nodisp:true },
             { date:"1850", text:"Chinese American men marry African American women in high proportions to their total marriage numbers due to few Chinese American women being in the United States" },
             { date:"1852", source:"ksep: R38", text:"Alabama and Utah prohibit intermarriage between Whites and Negroes or mulattos.", nodisp:true },
@@ -212,7 +212,10 @@ app.miscegenation = (function () {
         idprefix = idprefix || "";
         app.db.parseDate(pt);  //need start.year
         pt.sv = "miscegenation";
-        pt.codes = "R";
+        if(!pt.codes) {
+            pt.codes = "NBR";
+            if(pt.color === cm2 || pt.color === cmx) {
+                pt.codes += "A"; } }
         pt.instid = "miscegenation" + idprefix + idx;
     }
 
