@@ -25,7 +25,7 @@ class Point(db.Model):
     translations = db.TextProperty()  # JSON array {lang, text}
     pic = db.BlobProperty()        # optional freely shareable pic (file upload)
     endorsed = db.TextProperty()   # CSV of AppUser ids
-    stats = db.TextProperty()      # optional JSON stats depending on codes
+    stats = db.TextProperty()      # optional JSON object for whatever data
     created = db.StringProperty()  # ISO datetime;TLAcc id (owner)
     modified = db.StringProperty() # ISO datetime;TLAcc id
 
@@ -64,6 +64,12 @@ def point_codes():
     return codes
 
 
+def is_deleted_point(pt):
+    if pt.stats and "\"status\":\"deleted\"" in pt.stats:
+        return True
+    return False
+
+
 def update_org_recent_points(pt):
     # Rebuild org.recpre
     # PENDING: update org.recpre directly by splicing out any existing
@@ -76,9 +82,11 @@ def update_org_recent_points(pt):
     for pt in pts:
         if len(preb) >= 512 * 1024:
             break
-        d = {"date":pt.date, "text":pt.text, "codes":pt.codes, 
-             "orgid":str(pt.orgid), "keywords":pt.keywords, "refs":pt.refs, 
-             "source":pt.source, "srclang":pt.srclang, "created":pt.created, 
+        if is_deleted_point(pt):
+            continue
+        d = {"date":pt.date, "text":pt.text, "codes":pt.codes,
+             "orgid":str(pt.orgid), "keywords":pt.keywords, "refs":pt.refs,
+             "source":pt.source, "srclang":pt.srclang, "created":pt.created,
              "modified":pt.modified}
         if preb:
             preb += ","
@@ -112,12 +120,14 @@ def update_or_create_point(handler, acc, params):
         raise ValueError("Point does not match org")
     tstamp = appuser.nowISO() + ";" + str(acc.key().id())
     if pt:
+        logging.info("updating point " + str(pt.key().id()))
         pt.modified = tstamp
     else:
+        logging.info("creating new point for org " + acc.orgid)
         pt = Point(date=params["date"],
                    orgid=pointorg,
                    endorsed="",  # not updated from client
-                   stats="",     # not updated from client
+                   stats="",     # empty until updated from client
                    created=tstamp,
                    modified=tstamp)
     pt.date = params["date"] or pt.date
@@ -127,6 +137,7 @@ def update_or_create_point(handler, acc, params):
     pt.refs = params["refs"] or pt.refs or ""
     pt.source = params["source"] or pt.source or ""
     pt.srclang = params["srclang"] or pt.srclang or "en-US"
+    pt.stats = params["stats"] or ""
     pt.translations = params["translations"] or pt.translations or ""
     if params["pic"]:
         pt.pic = db.Blob(params["pic"])
@@ -156,9 +167,13 @@ class FetchPublicPoints(webapp2.RequestHandler):
         if acc.orgid != 1 or acc.lev != 2:
             return appuser.srverr(self, 403, "Admin access only.")
         res = []
-        # PENDING: walk AppService pubpts ptid CSV to build result list
+        # PENDING: Fetch selected public points rather than all points.
+        # Plan is to store selected point ids in an AppService instance
+        # name:"pubpts", data:"ptid1,ptid2,...", then walk those ids. 
         pts = Point.all()
         for pt in pts:
+            if is_deleted_point(pt):
+                continue
             res.append(pt)
         appuser.return_json(self, res)
 
@@ -176,7 +191,7 @@ class UpdatePoint(webapp2.RequestHandler):
             return
         params = appuser.read_params(self, ["ptid", "date", "text", "codes", 
                                             "orgid", "keywords", "refs", 
-                                            "source", "srclang", 
+                                            "source", "srclang", "stats",
                                             "translations", "pic"]);
         # need to return proper content to form submission iframe regardless
         self.response.headers['Content-Type'] = 'text/html;charset=UTF-8'

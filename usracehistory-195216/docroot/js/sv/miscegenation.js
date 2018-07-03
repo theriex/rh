@@ -149,25 +149,25 @@ app.miscegenation = (function () {
             { date:"1614-04-05", text:"Pocahontas (aka Matoaka or Amonute, later Rebecca), 19 year old daughter of Algonquin Chief Powhatan, marries tobacco planter John Rolfe in probably the earliest officially recorded interracial marriage in North America" },
             { date:"1700", text:"Intermarriage between the African slaves and Native Americans. During the 18th century the African slave population is predominantly male and there is a decline in the number of Native American men." },
             { date:"1784", source:"ksep: R15", text:"Patrick Henry presents a Bill to the Virginia Legislature reflecting the philosophy that racial mixing will address social problems stating that: \"...every White man who married an Indian woman should be paid ten pounds, and five for each child born of such a marriage; and that if any White woman married an Indian she should be entitled to ten pounds with which the county court should buy them livestock; that once each year the Indian husband of this woman should be entitled to three pounds with which the county court should buy clothes for him; &nbsp;that every child born to the Indian man and White woman should be educated by the state between the ages of ten and twenty-one years...\"" },
-            { date:"1800", source:"ksep: M1", codes:"MR", text:"First major wave of Arab immigration. Motivations include escaping civil war and/or religious persecution. The overwhelming majority are from the Ottoman province of Syria (now Syria, Lebanon, Jordan, and Palestine). Most immigrants are Christian, only 5-10% are Muslim and and an even smaller number are Druze. Men outnumber women 4:1, leading to high intermarriage rates." },
-            { date:"1838", source:"ksep: R29", text:"Michigan and Arkansas prohibit intermarriage between Whites and Negroes, Indians, or mulattos.", nodisp:true },
+            { date:"1800", source:"ksep: M1", codes:"MR", text:"In the first major wave of Arab immigration, men outnumber women 4:1 leading to high intermarriage rates." },
+            { date:"1838", source:"ksep: R29", text:"Michigan and Arkansas prohibit intermarriage between Whites and Negroes, Indians, or mulattos.", nodisp:true, nodat:true },
             { date:"1850", text:"Chinese American men marry African American women in high proportions to their total marriage numbers due to few Chinese American women being in the United States" },
-            { date:"1852", source:"ksep: R38", text:"Alabama and Utah prohibit intermarriage between Whites and Negroes or mulattos.", nodisp:true },
-            { date:"1855", source:"ksep: R41", text:"Kansas, Nebraska and Washington prohibit intermarriage between Whites and Negroes, Indians (in Washington), or mulattos.", nodisp:true },
-            { date:"1864", source:"ksep: R47", text:"Colorado and Idaho prohibit intermarriage between Whites and Negroes, mulattos. Idaho also prohibits intermarriage between Whites and Chinese.", nodisp:true },
-            { date:"1883", source:"ksep: R57", text:"Maine and Michigan legalize interracial marriage.", nodisp:true },
+            { date:"1852", source:"ksep: R38", text:"Alabama and Utah prohibit intermarriage between Whites and Negroes or mulattos.", nodisp:true, nodat:true },
+            { date:"1855", source:"ksep: R41", text:"Kansas, Nebraska and Washington prohibit intermarriage between Whites and Negroes, Indians (in Washington), or mulattos.", nodisp:true, nodat:true },
+            { date:"1864", source:"ksep: R47", text:"Colorado and Idaho prohibit intermarriage between Whites and Negroes, mulattos. Idaho also prohibits intermarriage between Whites and Chinese.", nodisp:true, nodat:true },
+            { date:"1883", source:"ksep: R57", text:"Maine and Michigan legalize interracial marriage.", nodisp:true, nodat:true },
             { date:"1900s", source:"ksep: R61", text:"The eugenics movement supplies a new set of arguments to support existing restrictions on interracial marriage. These arguments incorporate a \"scientific\" brand of racism, emphasizing the supposed biological dangers of mixing the races – also known as miscegenation." },
-            { date:"1909", source:"ksep: R65", text:"South Dakota and North Dakota prohibit intermarriage between Whites and Negroes, or mulattos.", nodisp:true },
-            { date:"1913-1947", source:"ksep: R70", text:"30 of 48 states maintain anti-miscegenation laws." },
+            { date:"1909", source:"ksep: R65", text:"South Dakota and North Dakota prohibit intermarriage between Whites and Negroes, or mulattos.", nodisp:true, nodat:true },
+            { date:"1913-1947", source:"ksep: R70", text:"30 of 48 states maintain anti-miscegenation laws.", nodisp:true },
             { date:"1930", text:"The Motion Picture Production Code (aka Hays Code) explicitly states the depiction of \"miscegenation... is forbidden\"" },
             { date:"1950", source:"ksep: R80", text:"Anti-miscegenation legislation now generally includes not only unions between blacks and whites but also Mongolians, Malayans, Mulattos and Native Americans." },
-            { date:"1957", source:"ksep: R85", text:"Colorado and South Dakota legalize interracial marriage.", nodisp:true },
+            { date:"1957", source:"ksep: R85", text:"Colorado and South Dakota legalize interracial marriage.", nodisp:true, nodat:true },
             { date:"1959", source:"ksep: R87", text:"Mildred Jeter and Richard Loving are married in Washington DC and arrested when they return home to Virginia for violating VA’s anti-miscegenation law. Jeter and Loving plead guilty to the charge of miscegenation in Virginia court and are sentenced to a year in jail, which they could avoid by leaving Virginia and staying out for 25 years. They appeal the ruling." },
-            { date:"1959", source:"ksep: R88", text:"Idaho and Nevada legalize interracial marriage.", nodisp:true },
-            { date:"1963", source:"ksep: R89", text:"Nebraska and Utah legalize interracial marriage.", nodisp:true },
+            { date:"1959", source:"ksep: R88", text:"Idaho and Nevada legalize interracial marriage.", nodisp:true, nodat:true },
+            { date:"1963", source:"ksep: R89", text:"Nebraska and Utah legalize interracial marriage.", nodisp:true, nodat:true },
             { date:"1964-12-07", source:"ksep: R90", text:"The U.S. Supreme Court, which ruled against Jim Crow laws in the 1954 decision of Brown v. Board of Education, rules as invalid a Florida statute allowing harsher penalties for cohabitation and adultery by interracial couples than same-race couples in McLaughlin v. Florida. This case is said to be a predecessor to the Loving v. Virginia case (in 1967)." },
-            { date:"1965", source:"ksep: R91", text:"Indiana and Wyoming legalize interracial marriage.", nodisp:true },
-            { date:"1913", source:"ksep: R68", text:"South Dakota prohibits marriage of \"persons belonging to the African, Corean [sic], Malayan, or Mongolian race with any person of the opposite sex belonging to the Caucasian or White race\". Wyoming prohibits \"all marriages of white persons with Negroes, Mulattoes, Mongolians or Malays\"", color:cm2 },
+            { date:"1965", source:"ksep: R91", text:"Indiana and Wyoming legalize interracial marriage.", nodisp:true, nodat:true },
+            { date:"1913", source:"ksep: R68", text:"South Dakota prohibits marriage of \"persons belonging to the African, Corean [sic], Malayan, or Mongolian race with any person of the opposite sex belonging to the Caucasian or White race\". Wyoming prohibits \"all marriages of white persons with Negroes, Mulattoes, Mongolians or Malays\"", nodisp:true, nodat:true },
             { date:"1966", source:"ksep: R114", text:"17 states still have anti-miscegenation laws: Alabama, Arkansas, Delaware, Florida, Georgia, Kentucky, Louisiana, Maryland, Mississippi, Missouri, North Carolina, Oklahoma, South Carolina, Tennessee, Texas, Virginia and West Virginia. Only 9 states never had anti-miscegenation laws (Alaska, Connecticut, Hawai’i, Minnesota, New Hampshire, New Jersey, New York, Vermont, and Wisconsin).", nodisp:true },
             { date:"1967", source:"ksep: R92", text:"Loving v. Virginia (the case involving Mildred Jeter and Richard Loving) is heard by the U.S. Supreme Court which strikes down anti-miscegenation laws as unconstitutional, ruling that distinctions between citizens solely because of their ancestry was \"odious to a free people whose institutions are founded upon the doctrine of equality.\"" }];
 
@@ -229,7 +229,11 @@ app.miscegenation = (function () {
                 allpts.push(pt);
                 prepPointData(pt, idx, sp.state); }); });
         tlpts.forEach(function (pt, idx) {
-            allpts.push(pt);
+            //nodat points were preserved for legacy sourcing, then split
+            //into their component facts for display purposes. Avoid
+            //redundant data point display in reference mode.
+            if(!pt.nodat) {
+                allpts.push(pt); }
             prepPointData(pt, idx); });
         allpts.sort(function (a, b) {
             return app.db.compareStartDate(a, b); });

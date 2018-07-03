@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge, for */
+/*jslint browser, multivar, white, fudge, for, long */
 /*global app, jt, d3, confirm */
 
 app.dlg = (function () {
@@ -402,6 +402,14 @@ app.dlg = (function () {
     }
 
 
+    function setFocus (elemid) {
+        jt.byId(elemid).focus();
+        //try again in a moment in case the element wasn't ready
+        setTimeout(function () {
+            jt.byId(elemid).focus(); }, 700);
+    }
+
+
     function showInfoDialog (d, inter) {
         var buttons, pichtml = "", html;
         tl.dlgdat = d;
@@ -424,7 +432,7 @@ app.dlg = (function () {
         //setting focus the first time does not work for whatever
         //reason, but it helps for subsequent dialog displays.
         if(buttons.focid) {
-            setTimeout(function () { jt.byId(buttons.focid).focus(); }, 500); }
+            setFocus(buttons.focid); }
     }
 
 
@@ -900,7 +908,7 @@ app.dlg = (function () {
                               onclick:jt.fs("app.dlg.updacc()")},
                    "Ok"]]]];
         displayDialog(null, jt.tac2html(html));
-        jt.byId("namein").focus();
+        setFocus("namein");
         if(app.db.getOrgId(app.user.acc)) {
             showOrgLink(); }
     }
@@ -1059,7 +1067,7 @@ app.dlg = (function () {
                         onclick:jt.fs("app.dlg.forgotpw()")},
                   "forgot password"]]];
         displayDialog(null, jt.tac2html(html));
-        jt.byId("emailin").focus();
+        setFocus("emailin");
     }
 
 
@@ -1291,6 +1299,24 @@ app.dlg = (function () {
     }
 
 
+    function editPointButtonsHTML (pt) {
+        var html = [];
+        html.push(["button", {type:"button", id:"cancelbutton",
+                               onclick:jt.fs("app.dlg.close()")}, 
+                    "Cancel"]);
+        html.push(" &nbsp; ");
+        if(pt.instid) {
+            html.push(["button", {type:"button", id:"deletebutton",
+                                  onclick:jt.fs("app.dlg.ptdelclick()")},
+                       "Delete"]);
+            html.push(" &nbsp; "); }
+        html.push(["button", {type:"submit", id:"savebutton",
+                              onclick:jt.fs("app.dlg.ptsubclick()")},
+                   "Save"]);
+        return ["div", {id:"dlgbuttondiv"}, html];
+    }
+
+
     function editLoadedPoint (pt) {
         var html;
         if(pt.instid) {  //restore original edit link text in case altered
@@ -1304,6 +1330,8 @@ app.dlg = (function () {
               [["input", {type:"hidden", name:"email", value:app.user.email}],
                ["input", {type:"hidden", name:"authtok", value:app.user.tok}],
                ["input", {type:"hidden", name:"ptid", value:pt.instid || ""}],
+               ["input", {type:"hidden", name:"stats", value:pt.stats || "",
+                          id:"statshin"}],
                inputFieldsTAC(edptflds, "main", pt),
                ["div", {id:"edptablediv"},
                 ["table", {style:"margin:auto;"},
@@ -1324,14 +1352,7 @@ app.dlg = (function () {
                ["div", {id:"updatestatdiv"}],
                ["iframe", {id:"subframe", name:"subframe",
                            src:"/updpt", style:"display:none"}],
-               ["div", {id:"dlgbuttondiv"},
-                [["button", {type:"button", id:"cancelbutton",
-                             onclick:jt.fs("app.dlg.close()")}, 
-                  "Cancel"],
-                 " &nbsp; ",
-                 ["button", {type:"submit", id:"savebutton",
-                             onclick:jt.fs("app.dlg.ptsubclick()")},
-                  "Save"]]]]]]];
+               editPointButtonsHTML(pt)]]]];
         displayDialog(null, jt.tac2html(html));
     }
 
@@ -1405,7 +1426,7 @@ app.dlg = (function () {
 
 
     function monitorPointUpdateSubmit () {
-        var seconds, subframe, fc, txt, ptid, pt, 
+        var seconds, subframe, fc, txt, ptid,
             okpre = "ptid: ", errpre = "failed: ";
         seconds = Math.round(upldmon.count / 10);
         if(upldmon.count > 20) {
@@ -1432,13 +1453,32 @@ app.dlg = (function () {
     }
 
 
+    function makePointFormSubmitObject () {
+        var subobj = formValuesToObject(edptflds);
+        subobj.stats = editpt.stats || {};
+        subobj.stats = JSON.stringify(subobj.stats);
+        return subobj;
+    }
+
+
+    function disablePointEditButtons () {
+        //prevent multiple form submissions, or canceling while waiting for
+        //the server to come back.
+        var delb = jt.byId("deletebutton");
+        jt.byId("cancelbutton").disabled = true;  //avoid inconsistent state
+        jt.byId("savebutton").disabled = true;    //prevent multiple submits
+        if(delb) {
+            delb.disabled = true; }               //prevent multiple submits
+    }
+
+
     function ptsubclick () {
-        var formobj, i, fs, nopictxt, picin;
-        formobj = formValuesToObject(edptflds);
+        var subobj, i, fs, nopictxt, picin;
+        subobj = makePointFormSubmitObject();
         jt.out("updatestatdiv", "");
         for(i = 0; i < edptflds.length; i += 1) {
             fs = edptflds[i];
-            if(fs.reqd && !formobj[fs.field]) {
+            if(fs.reqd && !subobj[fs.field]) {
                 jt.out("updatestatdiv", fs.reqd);
                 if(fs.layout === "detail") {
                     app.dlg.togptdet("detail", true); }
@@ -1449,8 +1489,26 @@ app.dlg = (function () {
            !confirm(nopictxt)) {
             app.dlg.togptdet("pic", true);
             return; }
-        jt.byId("savebutton").disabled = true;  //prevent multiple uploads
+        disablePointEditButtons();
         jt.out("savebutton", "Saving...");
+        upldmon = {count:0};
+        setTimeout(monitorPointUpdateSubmit, 100);
+        jt.byId("editpointform").submit();
+    }
+
+
+    function ptdelclick () {
+        var subobj, vertext;
+        vertext = "Timelines with this point will still have the data available until they are next edited.  Are you sure you want to delete this point?";
+        if(!confirm(vertext)) {
+            return; }
+        subobj = makePointFormSubmitObject();
+        subobj.stats = JSON.parse(subobj.stats);
+        subobj.stats.status = "deleted";
+        subobj.stats = JSON.stringify(subobj.stats);
+        jt.byId("statshin").value = subobj.stats;
+        disablePointEditButtons();
+        jt.out("deletebutton", "Deleting...");
         upldmon = {count:0};
         setTimeout(monitorPointUpdateSubmit, 100);
         jt.byId("editpointform").submit();
@@ -1502,6 +1560,7 @@ app.dlg = (function () {
         contnosave: function () { continueToNext(); },
         ptedit: function (ptid) { editPoint(ptid); },
         ptsubclick: function () { ptsubclick(); },
+        ptdelclick: function () { ptdelclick(); },
         togfdesc: function (field, desc) { toggleFieldDesc(field, desc); },
         codeselchg: function () { codeselchg(); },
         editorg: function (mode) { editOrganization(mode); },

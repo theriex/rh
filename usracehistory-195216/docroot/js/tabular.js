@@ -1045,9 +1045,11 @@ app.tabular = (function () {
                 currpts.push(pt); } });
         outdiv.innerHTML = pointsDispHeaderHTML(mcrit, currpts);
         currpts.forEach(function (pt) {
-            var linediv = document.createElement("div");
-            linediv.innerHTML = jt.tac2html(pointTAC(pt));
-            outdiv.appendChild(linediv); });
+            var linediv;
+            if(!pt.stats || pt.stats.status !== "deleted") {
+                linediv = document.createElement("div");
+                linediv.innerHTML = jt.tac2html(pointTAC(pt));
+                outdiv.appendChild(linediv); } });
         jt.out("downloadlinkdiv", jt.tac2html(
             ["a", {href:"#Download", id:"downloadlink",
                    title:"Download the displayed points",
@@ -1076,6 +1078,8 @@ app.tabular = (function () {
         ptdiv = jt.byId("trowdiv" + pt.instid);
         if(ptdiv) {  //point already displayed, redisplay content
             ptdiv = ptdiv.parentElement;  //enclosing div
+            if(pt.stats && pt.stats.status === "deleted") {
+                ptdiv.style.display = "none"; }
             ptdiv.innerHTML = jt.tac2html(pointTAC(pt)); }
         else { //point not currently displayed
             //If currently displaying the timeline points, and this point
