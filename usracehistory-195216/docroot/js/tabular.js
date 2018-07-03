@@ -622,6 +622,8 @@ app.tabular = (function () {
     function timelineSettings (spec) {
         var div, st = {};
         div = jt.byId("etlsetdiv");
+        if(!div) {  //not editing timeline, probably editing point directly
+            return; }
         st.prev = div.style.display;
         if(spec === "required") {
             div.style.display = "block"; }
