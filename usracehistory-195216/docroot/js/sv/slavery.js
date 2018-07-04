@@ -4,21 +4,21 @@
 app.slavery = (function () {
     "use strict";
 
-    var stats = null,
-        tl = null,
-        chart = {colors: {bg: "#fef6d7", 
-                          map: {neutral:"#fadb66",
-                                slavery:"#cc6c6c",
-                                hover:"#d3aaaa"}}},
-        ani = {wmin:1.0, wbase:0.25, nudge:0.05, tes:[]},
+    var viz = null,
+        colors = {slavery:"#cc6c6c", free:"#fadb66"},
+        allpts = null,
+        //start: When slavery was legalized or the first official record of
+        //       chattel slaves being held, whichever is earliest.
+        //end:   When slavery was made illegal or the last official record 
+        //       of chattel slaves being held, whichever is latest.
         sps = [{state:"AK", name:"Alaska", start:0, end:0,
-                notes:"Slavery and forced labor of indigenous people by others, including the U.S. government, but everything after the Alaska purchase in 1867 should have been illegal."},
+                notes:"Slavery and forced labor of indigenous people by others, including the U.S. government.  Slavery after the Alaska purchase in 1867 was illegal."},
                {state:"HI", name:"Hawaii", start:0, end:0,
                 notes:"Indentured servitude of native Hawaiians and imported labor under extremely harsh conditions."},
                {state:"AL", name:"Alabama", start:1721, end:1865,
                 notes:"First slaves brought to Alabama aboard the Harriet in 1721. Slavery ends when the 13th amendment is ratified."},
                {state:"AR", name:"Arkansas", start:1720, end:1865,
-               notes:"The first slaves came with settlers moving into the John Law colony on land given to them on the lower Arkansas River by the king of France."},
+                notes:"The first slaves came with settlers moving into the John Law colony on land given to them on the lower Arkansas River by the king of France."},
                {state:"AZ", name:"Arizona", start:1692, end:1862,
                 notes:"Slavery is outlawed with the Arizona Organic Act, separating the state from New Mexico. In 1861 the southern half was part of the Confederacy."
 },
@@ -49,7 +49,7 @@ app.slavery = (function () {
                {state:"LA", name:"Louisiana", start:1710, end:1864,
                 notes:"French colonists enslave indigenous people in 1706 and introduce African slavery in 1710. Slavery was officially abolished by the Louisiana state Constitution of 1864."},
                {state:"MA", name:"Massachusetts", start:1638, end:1840,
-                notes:"The first African slaves may have been brought in 1624, but the first confirmed account is in 1638 when Pequot prisoners were exchanged for African slaves in the West Indies.  Technically slavery remains legal until the 13th amendment is ratified, but several are freed in court cases and from 1790-1820 no slaves are reported. In 1830 one slave is reported. From 1840 on no slaves are reported."},
+                notes:"The first African slaves may have been brought in 1624, but the first confirmed account is in 1638 when Pequot prisoners were exchanged for African slaves in the West Indies.  Technically slavery remains legal until the 13th amendment is ratified, but several are freed in court cases beginning in 1781 arguing slavery violates the constitution of the commonwealth. From 1790-1820 no slaves are reported. In 1830 one slave is reported. From 1840 on no slaves are reported."},
                {state:"MD", name:"Maryland", start:1642, end:1864,
                 notes:"13 African slaves are brought to St. Mary's City in 1642. In 1864 slavery is prohibited in the revised state constitution."},
                {state:"ME", name:"Maine", start:1736, end:1820,
@@ -69,22 +69,23 @@ app.slavery = (function () {
                 notes:"English colonists bring slaves when they migrate from Virginia beginning in 1655. Slavery was encouraged through land grants per slave. Slavery ends when the 13th amendment is ratified."},
                {state:"ND", name:"North Dakota", start:1802, end:1820,
                 notes:"The first recorded non-Indian child born in North Dakota was in 1802 to Black slaves Pierre Bonza and his wife. Non-Native population and infrastructure was sparse until railroads beginning in 1872. The Missouri Commpromise prohibited slavery in 1820. North Dakokta becomes a state in 1889."},
-               {state:"NE", name:"Nebraska", start:1804, end:1861,
+               {state:"NE", name:"Nebraska", start:1855, end:1861,
                 notes:"York, an enslaved African held by William Clark traveled and worked with him in 1804 and in 1806. European-American settlement did not begin in any numbers until after 1848 and the California Gold Rush. Some migrant farmers from the South brought a small number of slaves with them. In 1855 there were 13 slaves in Nebraska. Slavery was outlawed by the territorial legislature in 1861. Nebraska becomes a state in 1867."},
                {state:"NH", name:"New Hampshire", start:1645, end:1865,
                 notes:"Slaves are noted in New Hampshire in 1645, primarily around Portsmouth. New Hampshire did not impose a tariff on import of slaves and was a popular port. A law banning discrimination for citizenship is passed in 1857, but slavery explicitely ends with ratification of the 13th amendment."},
                {state:"NJ", name:"New Jersey", start:1626, end:1865,
                 notes:"New Jersey was originally part of New Netherlands which had slaves beginning in 1626. In 1664 they offer land grants per slave to encourage slavery. A gradual abolition act is passed in 1804. Slavery was permanently abolished in 1846, but at the start of the civil there were 18 \"apprentices for life\". The last 16 slaves are freed on ratification of the 13th amendment."},
                {state:"NM", name:"New Mexico", start:1692, end:1865,
-                notes:"Young Native American captives are sold into slavery in New Mexico beginning in 1692. Slavery persists until the 13th amendment is ratified, and forced servitude continues until the Peonage act of 1867."},
+                //Native American children were sold as slaves
+                notes:"Native American slaves referred to as genízaros were sold into slavery in New Mexico beginning in 1692.  Their children were also sold.  The Act for the Protection of Slave Property is passed in 1859. Slavery persists until the 13th amendment is ratified, and forced servitude continues until the Peonage act of 1867."},
                {state:"NV", name:"Nevada", start:0, end:0,
                 notes:"While Mormons set up way stations in Nevada en route to California gold fields Nevada was generally anti-slavery. Nevada becomes a state in 1864."},
                {state:"NY", name:"New York", start:1626, end:1827,
                 notes:"The Dutch West India Company imports 11 black male slaves into the New Netherlands in 1626. New York begins gradual emancipation in 1799, with remaining slaves freed in 1827."},
                {state:"OH", name:"Ohio", start:1800, end:1865,
-                notes:"Slavery is illegal in the territory based on the Northwest Ordinance of 1787, and is abolished by the original state constitution in 1802, however slave owners living in southern Ohio would transport their slaves across the river to Kentucky to avoid law enforcement. A practice that probably subsided over time but definitely ends with ratification of the 13th amendment. The 1830 census lists 6 slaves. A small number of the 337 African Americans living in Ohio in 1800 were likely slaves."},
+                notes:"Slavery is illegal in the territory based on the Northwest Ordinance of 1787, and is abolished by the original state constitution in 1802, however slave owners living in southern Ohio would transport their slaves across the river to Kentucky to avoid law enforcement. A practice that probably subsided over time but ends with ratification of the 13th amendment. The 1830 census lists 6 slaves. A small number of the 337 African Americans living in Ohio in 1800 were likely slaves."},
                {state:"OK", name:"Oklahoma", start:1832, end:1863,
-                notes:"Black slaves are moved to Oklahoma with their Native American (primarily Cherokee) owners in the Trail of Tears starting in 1830. Slaves in the Cherokee nation are emancipated by the Cherokee National Council in 1863. Native American slave ownership was not traditionally chattel, but by this time enough similarities had developed that not including the period seems like an omission."},
+                notes:"Black slaves are moved to Oklahoma with their Native American (primarily Cherokee) owners in the Trail of Tears starting in 1830. Slaves in the Cherokee nation are emancipated by the Cherokee National Council in 1863. Native American slave ownership was not traditionally chattel, but by this time had developed significant similarities."},
                {state:"OR", name:"Oregon", start:1853, end:1865,
                 notes:"In 1844 all blacks are excluded from the state, but some slaves are still brought in with early settlers, primarily from Missouri, beginning in 1853. Slavery is made illegal in the state consitution in 1857. Oregon becomes a state in 1859. In 1860 the state census lists 3 slaves. Black exclusion is not repealed until 1926."},
                {state:"PA", name:"Pennsylvania", start:1639, end:1847,
@@ -93,7 +94,7 @@ app.slavery = (function () {
                 notes:"Black slaves were in Rhode Island by 1652. Gradual emancipation in 1784. Slave trading continued even after the Abolition Society attempts to secure enforcement of previous legislation in 1789. Violations continue until at least 1796. Census reports 5 slaves in 1840. By the 1850 census there are zero reported."},
                {state:"SC", name:"South Carolina", start:1526, end:1865,
                 notes:"After the first slave rebellion and failed settlement by the Spanish in 1526, The first British settlers arrive in 1670 with slaves. Slavery ends when the 13th amendment is ratified."},
-               {state:"SD", name:"South Dakota", start:1804, end:1820,
+               {state:"SD", name:"South Dakota", start:0, end:0,
                 notes:"York, an enslaved African held by William Clark traveled and worked with him in South Dakota in 1804 and in 1806. The Missouri Compromise prohibited slavery in the region in 1820. South Dakota becomes a state in 1889."},
                {state:"TN", name:"Tennessee", start:1766, end:1865,
                 notes:"Slaves are brought in to Tennessee in 1766 while the region is still part of North Carolina. It is the last state to join the Confederacy and the first state brought back into the Union after the civil war."},
@@ -199,6 +200,51 @@ app.slavery = (function () {
              codes:"B", orgid:"1", source:"ksep: B279"}];
 
 
+    function getColorForState (st, year) {
+        if(st.start > 0 && st.start <= year && year < st.end) {
+            return colors.slavery; }
+        return colors.free;
+    }
+
+
+    function getHTMLForState (st) {
+        var html = ["div", {cla:"sthcdiv"}, st.notes];
+        return jt.tac2html(html);
+    }
+
+
+    function verifyVisualizationInitialized () {
+        if(viz) { return; }
+        viz = {};
+        allpts = [];
+        sps.forEach(function (sp) {
+            if(sp.start > 0) {
+                allpts.push({date:String(sp.start), text:""});
+                if(sp.end < 1865) {
+                    allpts.push({date:String(sp.end), text:""}); } } })
+        tlpts.forEach(function (pt) {
+            allpts.push(pt); });
+        allpts.forEach(function (pt) {
+            app.db.parseDate(pt); });
+        allpts.sort(function (a, b) {
+            return app.db.compareStartDate(a, b); });
+        viz.visualization = app.svcommon.vizsts(
+            {title:"Legalized Chattel Slavery",
+             subtitle:"By Region/State",
+             module:"slavery",
+             tlpts:allpts,
+             stps:sps,
+             stcolorf:getColorForState,
+             sthtmlf:getHTMLForState});
+    }
+
+
+    function display () {
+        verifyVisualizationInitialized();
+        viz.visualization.display();
+    }
+
+
     function datapoints () {
         tlpts.forEach(function (pt, idx) {
             pt.sv = "slavery";
@@ -207,412 +253,9 @@ app.slavery = (function () {
     }
 
 
-    function usmapTAC () {
-        var html = [];
-        app.svcommon.usmap().forEach(function (state) {
-            html.push(["path", {
-                id:state.id, d:state.d,
-                onclick:jt.fs("app.slavery.stclick('" + state.id + "')"),
-                onmouseover:jt.fs("app.slavery.stmsover('" + state.id + "')"),
-                onmouseout:jt.fs("app.slavery.stmsout('" + state.id + "')"),
-                fill:chart.colors.map.neutral}]); });
-        html = ["svg", {id:"svgin", width:chart.ms.w, height:chart.ms.h,
-                        viewBox:"0 0 959 593", preserveAspectRatio:"none"},
-                ["g", {id:"outlines"},
-                 html]];
-        chart.vbmid = {x: Math.round(0.5 * 959),   //calculate from viewbox
-                       y: Math.round(0.35 * 593)};
-        return html;
-    }
-
-
-    function initHTMLContent () {
-        var k;
-        chart.key = {w: 280, 
-                     svg: {h:20}};
-        chart.key.svg.w = chart.key.svg.w || chart.key.w;
-        k = chart.key;
-        k.yr = {start: tlpts[0].start.year, 
-                end: tlpts[tlpts.length - 1].start.year};
-        k.styles = {mdiv:"width:" + k.w + "px;margin:auto;text-align:center;",
-                    ctrl:"display:inline-block;width:56px;height:40px;",
-                    tspan:"line-height:40px;font-size:large;cursor:pointer;"};
-        jt.out("suppvisdiv", jt.tac2html(
-            [["div", {id:"keydiv", style:k.styles.mdiv + "position:relative;"},
-              [["svg", {id:"keysvg", width:k.svg.w, height:k.svg.h}],
-               ["div", {id:"tctrldiv", style:k.styles.mdiv},
-                [["div", {id:"kcsdiv", style:k.styles.ctrl + "float:left;" +
-                          "text-align:left;vertical-align:middle;"},
-                  ["span", {cla:"tranctrl", style:k.styles.tspan,
-                            onclick:jt.fs("app.slavery.selyear(" +
-                                          k.yr.start + ")")},
-                   k.yr.start]],
-                 ["div", {id:"kcediv", style:k.styles.ctrl + "float:right;" +
-                          "text-align:right;vertical-align:middle;"},
-                  ["span", {cla:"tranctrl", style:k.styles.tspan,
-                            onclick:jt.fs("app.slavery.selyear(" +
-                                          k.yr.end + ")")},
-                   k.yr.end]],
-                 ["div", {id:"kcldiv", style:k.styles.ctrl},
-                  ["img", {cla:"tranctrl", src:"img/backward.png",
-                           onclick:jt.fs("app.slavery.transport('prev')")}]],
-                 ["div", {id:"kcplaydiv", style:k.styles.ctrl},
-                  ["img", {id:"playpause", cla:"tranctrl", src:"img/play.png",
-                           onclick:jt.fs("app.slavery.transport('toggle')")}]],
-                 ["div", {id:"kcrdiv", style:k.styles.ctrl},
-                  ["img", {cla:"tranctrl", src:"img/forward.png",
-                           onclick:jt.fs("app.slavery.transport('next')")}]]]],
-               ["div", {id:"kyrdiv", style:"position:absolute;" +
-                        "top:60px;left:0px;width:280px;min-height:26px;" + 
-                        "padding:12px 0px 0px 0px;" +
-                        "text-align:center;font-weight:bold;"},
-                ""]]],  //"year"
-             //text display container:
-             ["div", {id:"kytdiv", style:"position:absolute;" + 
-                                         "left:30px;top:120px;" +
-                                         "margin-right:30px;" +
-                                         "opacity:0.0;",
-                      onclick:jt.fs("app.slavery.stunclick()")}],
-             usmapTAC()]));
-    }
-
-
-    function autoplay (titletime) {
-        d3.select("#kcldiv").style("display", "none");
-        d3.select("#kcrdiv").style("display", "none");
-        d3.select("#kcplaydiv").style("display", "none");
-        setTimeout(function () {
-            //expanding the existing play button looks like crap, so draw..
-            var tg = d3.select("#svgin").append("g").attr("opacity", 1.0);
-            tg.append("text")
-                .attr("text-anchor", "middle")
-                .attr("x", chart.vbmid.x + 50)
-                .attr("y", chart.vbmid.y + 140)
-                .attr("font-size", 400)
-                .text("\u25B6")  //black right-pointing triangle
-                .style("opacity", 1.0)
-                .transition().delay(500).duration(2000)
-                .attr("font-size", 2)
-                .attr("x", chart.vbmid.x - 10)
-                .attr("y", 10)
-                .style("opacity", 0.0)
-                .remove();
-            setTimeout(function () {
-                d3.select("#kcldiv").style("display", "inline-block");
-                d3.select("#kcrdiv").style("display", "inline-block");
-                d3.select("#kcplaydiv").style("display", "inline-block"); },
-                       2000);
-        }, titletime - 500);
-        setTimeout(function () {
-            app.slavery.transport("play"); }, titletime + 2500);
-    }
-
-
-    function displayTitle () {
-        var mid, tg, delay = 3500, duration = 2000;
-        tg = d3.select("#svgin").append("g").attr("opacity", 1.0);
-        tg.append("text")
-            .attr("text-anchor", "middle")
-            .attr("x", chart.vbmid.x)
-            .attr("y", chart.vbmid.y)
-            .attr("font-size", 78)
-            .attr("font-weight", "bold")
-            .text("Legalized Chattel Slavery");
-        tg.append("text")
-            .attr("text-anchor", "middle")
-            .attr("x", chart.vbmid.x)
-            .attr("y", chart.vbmid.y + 100)
-            .attr("font-size", 64)
-            .attr("font-weight", "bold")
-            .text("By Region/State");
-        tg.transition().delay(delay).duration(duration)
-            .attr("opacity", 0.0)
-            .remove();
-        autoplay(delay + duration);
-    }
-
-
-    function initDisplayElements () {
-        var kh = 50, mid, ks;
-        chart.ms = {w:tl.width2, h:Math.min((tl.height - kh), tl.width2)};
-        initHTMLContent();
-        ks = chart.key.svg;
-        displayTitle();
-        ks.x = d3.scaleLinear()
-            .domain(d3.extent(tlpts, function (d) { return d.tc; }))
-            .range([0, ks.w]);
-        ks.g = d3.select("#keysvg").append("g");
-        ks.g.append("rect")
-            .attr("id", "progbarBackgroundRect")
-            .attr("x", 0)
-            .attr("y", 6)
-            .attr("width", ks.w)
-            .attr("height", ks.h)
-            .style("fill", chart.colors.map.hover)
-            .style("opacity", 0.2);
-        ks.g.append("rect")
-            .attr("id", "progrect")
-            .attr("x", 0)
-            .attr("y", 6)
-            .attr("width", 0)
-            .attr("height", ks.h)
-            .style("fill", chart.colors.map.hover)
-            .style("opacity", 0.8);
-        ks.g.selectAll(".ksbar")
-            .data(tlpts)
-            .enter().append("rect")
-            .attr("class", "ksbar")
-            .attr("id", function (d) { return "kb" + d.instid; })
-            .attr("x", function (d) { return ks.x(d.tc); })
-            .attr("y", 6)  //unstick from top of div to make things balance
-            .attr("width", 3)
-            .attr("height", ks.h)
-            .style("fill", chart.colors.map.slavery)
-            .style("opacity", 0.2)
-            .on("mouseover", function () { this.style.opacity = 1.0; })
-            .on("mouseout", function () { this.style.opacity = 0.2; })
-            .on("click", function (d) { app.slavery.selyear(d.start.year); });
-        mid = {x: Math.round(tl.width2 / 2) + tl.margin.left,
-               y: Math.round(tl.height / 2) + tl.margin.top};
-        d3.select("#suppvisdiv")
-            .style("left", mid.x - 15 + "px")
-            .style("top", mid.y - 15 + "px")
-            .style("width", 30 + "px")
-            .style("height", 30 + "px")
-            .style("background", chart.colors.bg)
-            .style("visibility", "visible")
-            .transition().duration(2000)
-            .style("left", tl.margin.left + "px")
-            .style("top", tl.margin.top + "px")
-            .style("width", tl.width2 + "px")
-            .style("height", tl.height + "px");
-    }
-
-
-    function initAnimationSequence () {
-        var byy = {};   //display points by year
-        //make sure there is a display point for each state's slavery
-        //start and end years to drive the state color changes.
-        sps.forEach(function (sp) {
-            if(sp.start) {
-                byy[sp.start] = {text:""};
-                //technically it's the year after the end when it's over but
-                //blink the state off on the year to reinforce the value.
-                byy[sp.end] = {text:""}; } });
-        //add the display points from the suppvis, overwriting the default
-        //state toggle point to include display text.
-        tlpts.forEach(function (pt) {
-            byy[pt.start.year] = {text:pt.text, instid:pt.instid}; });
-        //make a sorted array out of that to use as a sequence
-        Object.keys(byy).forEach(function (year) {
-            ani.tes.push({year:year, text:byy[year].text, 
-                          instid:byy[year].instid}); });
-        ani.tes.sort(function (a, b) {
-            return a.year - b.year; });
-        ani.idx = 0;
-    }
-
-
-    function markSlaveStates (year) {
-        //technically there is still slavery during the ending year, but
-        //doing all the endings year + 1 just makes it harder to follow
-        //the date when it happened.
-        sps.forEach(function (sp) {
-            if(year >= sp.start && year < sp.end) {
-                d3.select("#" + sp.state)
-                    .transition().duration(600)
-                    .style("fill", chart.colors.map.slavery); }
-            else {
-                d3.select("#" + sp.state)
-                    .transition().duration(600)
-                    .style("fill", chart.colors.map.neutral); } });
-    }
-
-
-    function updateProgressBar (year) {
-        var idx = 0, pcnt;
-        ani.tes.forEach(function (te) {
-            if(te.year <= year) {
-                idx += 1; } });
-        pcnt = Math.round(idx * 100 / (ani.tes.length - 1)) / 100;
-        d3.select("#progrect").transition().duration(500)
-            .attr("width", Math.round(pcnt * chart.key.svg.w));
-    }
-
-
-    function displayPoint () {
-        var wc = 1, te, fintext = "Click any state for details.";
-        if(ani.timeout) {
-            clearTimeout(ani.timeout); }
-        ani.idx = Math.max(ani.idx, 0);
-        if(ani.idx < ani.tes.length) {
-            te = ani.tes[ani.idx];
-            if(ani.dispyear && ani.dispyear < Number(te.year)) {
-                ani.dispyear += 1;
-                jt.out("kyrdiv", ani.dispyear);
-                ani.timeout = setTimeout(displayPoint, 100);
-                return; }  //don't go to next point yet
-            else {
-                ani.dispyear = Number(te.year);
-                jt.out("kyrdiv", te.year);
-                d3.select("#kyrdiv")
-                    .style("font-size", "10px")
-                    .transition().duration(500)
-                    .style("font-size", "24px");
-                jt.out("kytdiv", te.text || "");
-                d3.select("#kytdiv").transition().duration(500)
-                    .style("opacity", 1.0);
-                markSlaveStates(te.year);
-                updateProgressBar(te.year);
-                if(te.text) {
-                    wc += te.text.split(" ").length; } } }
-        else {
-            ani.styrtemp = jt.tac2html(
-                ["a", {href:"#done", onclick:jt.fs("app.slavery.finish()")},
-                 "Done"]);
-            jt.out("kyrdiv", ani.styrtemp);
-            jt.out("kytdiv", fintext);
-            app.slavery.transport("pause");
-            ani.idx = 0;  //reset to beginning they hit play again.
-            app.slavery.stunclick(); }
-        if(ani.playing) {
-            ani.ww = ani.ww || ani.wbase;
-            ani.timeout = setTimeout(function () {
-                app.slavery.transport("next"); },
-                                     Math.max(ani.wmin, wc * ani.ww) * 1000); }
-    }
-
-
-    function transport (command) {
-        if(command === "toggle") {
-            command = ani.playing? "pause" : "play"; }
-        switch(command) {
-        case "play":
-            ani.playing = true;
-            jt.byId("playpause").src = "img/pause.png";
-            displayPoint();
-            break;
-        case "pause":
-            ani.playing = false;
-            if(ani.timeout) {
-                clearTimeout(ani.timeout); }
-            jt.byId("playpause").src = "img/play.png";
-            break;
-        case "prev":
-            ani.idx -= 1;
-            displayPoint();
-            break;
-        case "next":
-            ani.idx += 1;
-            displayPoint();
-            break;
-        default:
-            displayPoint(); }
-    }
-
-
-    function display () {
-        var ctx;
-        stats = {start: new Date()};
-        tl = app.linear.timeline();
-        tlpts.forEach(function (pt) {
-            app.db.parseDate(pt); });
-        ctx = app.db.makeCoordContext(tlpts);
-        tlpts.forEach(function (pt) {
-            app.db.makeCoordinates(pt, ctx); });
-        initDisplayElements();
-        initAnimationSequence();
-    }
-
-
-    function displayPointByYear (year) {
-        var teindex = 0;
-        ani.tes.forEach(function (te, idx) {
-            if(year >= te.year) { //track all interim to catch nearest year
-                teindex = idx; } });
-        ani.idx = teindex;
-        displayPoint();
-    }
-
-
-    function stateUnclick () {
-        //unclick all the states just in case they manage to click things
-        //faster than the code cleans up
-        sps.forEach(function (st) {
-            jt.byId(st.state).style.fill = chart.colors.map.neutral; });
-        if(ani.styrtemp) {
-            jt.out("kyrdiv", ani.styrtemp); }
-        d3.select("#kytdiv").transition().duration(1400).style("opacity", 0.0);
-        ani.stateclicktimeout = setTimeout(function () { 
-            jt.out("kytdiv", ""); }, 1400);
-    }
-
-
-    function stateClick (stid) {
-        var stxt, wc, txtwait;
-        if(ani.playing) {
-            return; }
-        if(ani.stateclicktimeout) {
-            clearTimeout(ani.stateclicktimeout); }
-        stateUnclick();
-        clearTimeout(ani.stateclicktimeout);
-        jt.byId(stid).style.fill = chart.colors.map.slavery;
-
-        if(!ani.statename) {
-            ani.statename = {};
-            sps.forEach(function (st) {
-                ani.statename[st.state] = st.name; }); }
-        ani.styrtemp = jt.byId("kyrdiv").innerHTML;
-        jt.out("kyrdiv", ani.statename[stid]);
-
-        if(!ani.statetext) {
-            ani.statetext = {};
-            sps.forEach(function (st) {
-                ani.statetext[st.state] = st.notes; }); }
-        stxt = ani.statetext[stid];
-        jt.out("kytdiv", stxt);
-        d3.select("#kytdiv").transition().duration(300).style("opacity", 1.0);
-        wc = stxt.split(" ").length;
-        txtwait = Math.max(8, Math.round(wc * ani.wbase)) * 1000;
-        jt.log("stateClick txtwait: " + txtwait);
-        ani.stateclicktimeout = setTimeout(function () {
-            stateUnclick(stid); }, txtwait);
-    }
-
-
-    function stateMouseOver (stid) {
-        var st = jt.byId("kytdiv").innerHTML;
-        if(!st) {
-            jt.byId(stid).style.fill = chart.colors.map.hover; }
-    }
-
-
-    function stateMouseOut (stid) {
-        var st = jt.byId("kytdiv").innerHTML;
-        if(!st) {
-            jt.byId(stid).style.fill = chart.colors.map.neutral; }
-    }
-
-
-    function finish () {
-        //PENDING: ask some kind of a question to complete the viz.
-        //possibly how long the longest status quo period was
-        if(!ani.finished) {
-            ani.finished = true;
-            stats.end = new Date();
-            app.mode.svdone("slavery", stats.start, stats.end); }
-    }
-
-
     return {
         display: function () { display(); },
-        transport: function (command) { transport(command); },
-        selyear: function (year) { displayPointByYear(year); },
-        stclick: function (stid) { stateClick(stid); },
-        stunclick: function (stid) { stateUnclick(stid); },
-        stmsover: function (stid) { stateMouseOver(stid); },
-        stmsout: function (stid) { stateMouseOut(stid); },
-        finish: function () { finish(); },
+        finish: function () { viz.visualization.finish(); },
         datapoints: function () { return datapoints(); }
     };
 }());
