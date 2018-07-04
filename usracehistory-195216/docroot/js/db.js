@@ -800,26 +800,42 @@ app.db = (function () {
     }
 
 
+    function bleepParseJSON (jtxt, dval) {
+        var ds, unserializedMarker = "[object Object]";
+        dval = dval || "[]";   //assume array if no dval
+        if(jtxt === unserializedMarker) {
+            jt.log("bleepParseJSON ignoring " + unserializedMarker);
+            jtxt = dval; }
+        try {
+            ds = JSON.parse(jtxt)
+        } catch(exception) {
+            jt.log("bleepParseJSON exception " + exception);
+            ds = JSON.parse(dval);
+        }
+        return ds;
+    }
+
+
     function deserialize (dbc, dbo) {
         switch(dbc) {
         case "AppUser":
-            dbo.settings = JSON.parse(dbo.settings || "{}");
-            dbo.remtls = JSON.parse(dbo.remtls || "[]");
-            dbo.completed = JSON.parse(dbo.completed || "[]");
-            dbo.started = JSON.parse(dbo.started || "[]");
-            dbo.built = JSON.parse(dbo.built || "[]");
+            dbo.settings = bleepParseJSON(dbo.settings, "{}");
+            dbo.remtls = bleepParseJSON(dbo.remtls, "[]");
+            dbo.completed = bleepParseJSON(dbo.completed, "[]");
+            dbo.started = bleepParseJSON(dbo.started, "[]");
+            dbo.built = bleepParseJSON(dbo.built, "[]");
             break;
         case "Timeline":
-            dbo.preb = JSON.parse(dbo.preb || "[]");
+            dbo.preb = bleepParseJSON(dbo.preb, "[]");
             break;
         case "Point":
-            dbo.refs = JSON.parse(dbo.refs || "[]");
-            dbo.translations = JSON.parse(dbo.translations || "[]");
-            dbo.stats = JSON.parse(dbo.stats || "{}");
+            dbo.refs = bleepParseJSON(dbo.refs, "[]");
+            dbo.translations = bleepParseJSON(dbo.translations, "[]");
+            dbo.stats = bleepParseJSON(dbo.stats, "{}");
             parseDate(dbo);  //sorting etc needs start
             break;
         case "Organization":
-            dbo.recpre = JSON.parse(dbo.recpre || "[]");
+            dbo.recpre = bleepParseJSON(dbo.recpre, "[]");
             dbo.recpre.forEach(function (pt) { parseDate(pt); });
             break;
         default:

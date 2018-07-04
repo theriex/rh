@@ -6,6 +6,7 @@ import logging
 import appuser
 import org
 import json
+import re
 
 # Accepted date formats:
 #  - point: Y[YYY][ BCE], YYYY-MM, YYYY-MM-DD
@@ -70,29 +71,46 @@ def is_deleted_point(pt):
     return False
 
 
+def point_summary_dict(pt):
+    d = {"instid":str(pt.key().id()), "orgid":str(pt.orgid), 
+         "created":pt.created, "modified":pt.modified,
+         "date":pt.date, "text":pt.text, "codes":pt.codes,
+         "keywords":pt.keywords, "refs":pt.refs,
+         "source":pt.source, "srclang":pt.srclang}
+    return d
+
+
 def update_org_recent_points(pt):
-    # Rebuild org.recpre
-    # PENDING: update org.recpre directly by splicing out any existing
-    # serialized pt data, prepending the given pt data, and truncating
-    # within 512k.  If org.recpre is empty or null, rebuild from scratch.
-    vq = appuser.VizQuery(Point, "WHERE orgid=:1 ORDER BY modified DESC",
-                          pt.orgid)
-    pts = vq.fetch(1000, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
-    preb = ""
-    for pt in pts:
-        if len(preb) >= 512 * 1024:
-            break
-        if is_deleted_point(pt):
-            continue
-        d = {"date":pt.date, "text":pt.text, "codes":pt.codes,
-             "orgid":str(pt.orgid), "keywords":pt.keywords, "refs":pt.refs,
-             "source":pt.source, "srclang":pt.srclang, "created":pt.created,
-             "modified":pt.modified}
-        if preb:
-            preb += ","
-        preb += json.dumps(d)
-    preb = "[" + preb + "]"
+    # Rebuild org.recpre if empty or null, otherwise splice in pt.
+    # Maintain max recpre size of 512k to stay within 1mb db obj limit.
     organization = org.Organization.get_by_id(int(pt.orgid))
+    preb = organization.recpre
+    if preb and len(preb) > 3000:  # save db quota, splice in pt
+        ptid = str(pt.key().id())
+        preb = json.loads(preb)
+        # remove existing instance from prebuilt if it exists
+        upda = [x for x in preb if "instid" in x and x["instid"] != ptid]
+        # prepend the modified point unless deleted
+        if not is_deleted_point(pt):
+            upda.insert(0, point_summary_dict(pt))
+        preb = json.dumps(upda)
+        if len(preb) >= 512 * 1024:  # exceeded total size, knock last off
+            upda = upda[0:len(upda) - 1]
+            preb = json.dumps(upda)
+    else: # rebuild from database query
+        vq = appuser.VizQuery(Point, "WHERE orgid=:1 ORDER BY modified DESC",
+                              pt.orgid)
+        pts = vq.fetch(1000, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
+        preb = ""
+        for pt in pts:
+            if len(preb) >= 512 * 1024:
+                break
+            if is_deleted_point(pt):
+                continue
+            if preb:
+                preb += ","
+            preb += json.dumps(point_summary_dict(pt))
+        preb = "[" + preb + "]"
     organization.recpre = preb
     appuser.cached_put(None, organization)
 
