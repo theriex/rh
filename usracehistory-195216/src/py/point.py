@@ -120,7 +120,7 @@ def get_point_by_id_or_source(ptid, source):
     if ptid:
         pt = Point.get_by_id(int(ptid))
     if not pt and source:
-        vq = appuser.VizQuery(Point, "WHERE source=:1 LIMIT 1", int(source))
+        vq = appuser.VizQuery(Point, "WHERE source=:1 LIMIT 1", source)
         pts = vq.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
         if len(pts) > 0:
             pt = pts[0]
@@ -141,7 +141,7 @@ def update_or_create_point(handler, acc, params):
         logging.info("updating point " + str(pt.key().id()))
         pt.modified = tstamp
     else:
-        logging.info("creating new point for org " + acc.orgid)
+        logging.info("creating new point for org " + str(acc.orgid))
         pt = Point(date=params["date"],
                    orgid=pointorg,
                    endorsed="",  # not updated from client
