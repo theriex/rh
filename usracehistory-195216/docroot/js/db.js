@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge, for */
+/*jslint browser, multivar, white, fudge, for, long */
 /*global app, window, jt, d3, confirm */
 
 app.db = (function () {
@@ -264,7 +264,7 @@ app.db = (function () {
     //    date: Date or range.  See README.md for allowed formats.
     //    text: Description of the point (max 1200 chars)
     //    codes: NBLAMRUFD (see point.py point_codes)
-    //    orgid: Organization id, 1 is public
+    //    orgid: Organization id, 1 is bootstrap org
     //    keywords: CSV of org defined keywords (regions, categories, tags)
     //    source: Arbitrary source tag used when the point was loaded.
     //    pic: instid if an image exists, empty string otherwise
@@ -803,11 +803,13 @@ app.db = (function () {
     function bleepParseJSON (jtxt, dval) {
         var ds, unserializedMarker = "[object Object]";
         dval = dval || "[]";   //assume array if no dval
-        if(jtxt === unserializedMarker) {
+        if(!jtxt) {
+            jtxt = dval; }
+        else if(jtxt === unserializedMarker) {
             jt.log("bleepParseJSON ignoring " + unserializedMarker);
             jtxt = dval; }
         try {
-            ds = JSON.parse(jtxt)
+            ds = JSON.parse(jtxt);
         } catch(exception) {
             jt.log("bleepParseJSON exception " + exception);
             ds = JSON.parse(dval);

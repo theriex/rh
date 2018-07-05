@@ -469,7 +469,11 @@ app.tabular = (function () {
             btls.push({tlid:"copy", name:"Copy&nbsp;Timeline"}); }
         btls.push({tlid:"new", name:"New&nbsp;Timeline"});
         btls.forEach(function (btl) {
-            selopts.push({value:btl.tlid, text:btl.name}); });
+            var selopt = {value:btl.tlid, text:btl.name};
+            if(app.user.acc.built.length &&
+               selopt.value === app.user.acc.built[0].tlid) {
+                selopt.selected = "selected"; }
+            selopts.push(selopt); });
         tlflds.selname = makeSelect("tlselname",
                                     jt.fs("app.tabular.tledchg('namechg')"),
                                     selopts);

@@ -41,7 +41,6 @@ class Timeline(db.Model):
     subtitle = db.StringProperty(indexed=False)  # text for start dialog
     lang = db.StringProperty(indexed=False)  # e.g. en-US, en-US-x-grade etc
     comment = db.TextProperty()    # optional credit, short descrip, whatever
-    orgid = db.IntegerProperty()   # Organization id (if accepted by org)
     ctype = db.StringProperty()    # Timelines|Points|Random [:levcnt:rndmax]
     cids = db.TextProperty()       # CSV of Point ids or Timeline ids
     svs = db.TextProperty()        # CSV of SuppViz module names
@@ -110,6 +109,9 @@ def rebuild_prebuilt_timeline_points(tl):
                             "keywords": pt.keywords,
                             "source": pt.source,
                             "pic": picval,
+                            # an org contributor may edit only if point owner.
+                            # that's determined from the created accID
+                            "created": pt.created,
                             "modified": pt.modified})
     jtxt = "[" + jtxt + "]"
     return jtxt
@@ -139,7 +141,6 @@ def update_or_create_timeline(handler, acc, params):
     timeline.subtitle = params["subtitle"] or ""
     timeline.lang = params["lang"] or "en-US"
     timeline.comment = params["comment"] or ""
-    timeline.orgid = acc.orgid
     timeline.ctype = params["ctype"]
     timeline.cids = params["cids"] or ""
     timeline.svs = params["svs"] or ""
@@ -150,16 +151,13 @@ def update_or_create_timeline(handler, acc, params):
 
 
 def update_timeline_list(tlist, timeline):
+    # place the given timeline first in the list so the app can select the
+    # most recently modified timeline as the default to work with.
     tlist = tlist or "[]"
     tlist = json.loads(tlist)
-    found = False
-    for entry in tlist:
-        if int(entry["tlid"]) == timeline.key().id():
-            found = True
-            entry["name"] = timeline.name
-    if not found:
-        tlist.append({"tlid": str(timeline.key().id()),
-                      "name": timeline.name})
+    tlist = [tl for tl in tlist if tl["tlid"] != str(timeline.key().id())]
+    tlist.insert(0, {"tlid": str(timeline.key().id()),
+                     "name": timeline.name})
     return json.dumps(tlist)
 
 
@@ -185,7 +183,7 @@ def fetch_timeline_by_slug (slug):
 
 def make_bootstrap_demo ():
     # When no demo timeline exists, make something to boot the system with.
-    tl = Timeline(name="Bootstrap Demo", orgid=1, ctype="Points:6", svs="")
+    tl = Timeline(name="Bootstrap Demo", ctype="Points:6", svs="")
     ptids = []
     pts = point.Point.all()
     for pt in pts:
