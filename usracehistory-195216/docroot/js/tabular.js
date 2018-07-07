@@ -18,7 +18,8 @@ app.tabular = (function () {
         tlsetflds = null,
         tlsetfldopts = [],
         mode = "refdisp",  //tledit
-        currpts = null;
+        currpts = null,
+        edcmds = ["new", "copy", "cpsrc"];
 
 
     function dateSpan (dobj, prefix) {
@@ -57,7 +58,8 @@ app.tabular = (function () {
             return false; } 
         if(app.user.acc.lev > 1 || !pt) {
             return true; }
-        if(pt.created.split(";")[1] === app.user.acc.instid) {
+        //pt.created should be defined if edited post 18jul05. just in case..
+        if(pt.created && pt.created.split(";")[1] === app.user.acc.instid) {
             return true; }
         return false;
     }
@@ -303,7 +305,7 @@ app.tabular = (function () {
             tac: function () {
                 var html = [];
                 spec.opts.forEach(function (opt) {
-                    var attributes = {value:opt.value};
+                    var attributes = {value:opt.value, id:"opt" + opt.value};
                     if(opt.selected) {
                         attributes.selected = "selected"; }
                     html.push(["option", attributes,
@@ -456,18 +458,25 @@ app.tabular = (function () {
 
 
     function timelineSelectHTML () {
-        var btls = [], selopts = [];
+        var btls = [], selopts = [], dcon;
         app.user.acc.built.forEach(function (tl) {
             btls.push(tl); });
         btls.sort(function (a, b) {
             if(a.name < b.name) { return -1; }
             if(a.name > b.name) { return 1; }
             return 0; });
-        if(!btls.length) {
+        if(!btls.length) {  //use placeholder so they can select what to do
             btls = [{tlid:"none", name:""}]; }
-        else {  //have at least one existing built timeline
-            btls.push({tlid:"copy", name:"Copy&nbsp;Timeline"}); }
+        //new, copy, cpsrc options
         btls.push({tlid:"new", name:"New&nbsp;Timeline"});
+        if(app.user.acc.built.length) {  //setStateToDatabaseTimeline mods name
+            btls.push({tlid:"copy", name:"Copy&nbsp;Timeline"}); }
+        dcon = app.db.displayContext();
+        if(dcon.ds.length === 1 && //source TL not a compound
+           app.user.acc.built.every(function (tl) {  //not personally built
+               return tl.tlid !== dcon.ds[0].instid; })) {
+            btls.push({tlid:"cpsrc", name:"Copy&nbsp;" + dcon.ds[0].name}); }
+        //create select from timeline options
         btls.forEach(function (btl) {
             var selopt = {value:btl.tlid, text:btl.name};
             if(app.user.acc.built.length &&
@@ -675,6 +684,7 @@ app.tabular = (function () {
         currtl = Object.assign({}, dbtl);
         app.user.tls = app.user.tls || {};
         app.user.tls[dbtl.instid] = dbtl;
+        jt.out("optcopy", "Copy&nbsp;" + tl.name);
     }
 
 
@@ -752,18 +762,24 @@ app.tabular = (function () {
 
 
     function timelineNameChangeReady () {
-        var tlid, newtl;
+        var tlid, newtl, dcon;
         tlflds.name = tlflds.selname.getValue();
         if(tlflds.name === "none") {
             currtl = null;
             return false; } 
-        if(tlflds.name === "new" || tlflds.name === "copy") {
-            newtl = emptyTimeline();
+        if(edcmds.indexOf(tlflds.name) >= 0) {
+            newtl = emptyTimeline();  //"new"
             if(tlflds.name === "copy") {
                 newtl.lang = currtl.lang;
                 newtl.ctype = currtl.ctype;
                 newtl.cids = currtl.cids;
                 newtl.svs = currtl.svs; }
+            if(tlflds.name === "cpsrc") {
+                dcon = app.db.displayContext();
+                newtl.lang = dcon.ds[0].lang;
+                newtl.ctype = dcon.ds[0].ctype;
+                newtl.cids = dcon.ds[0].cids;
+                newtl.svs = dcon.ds[0].svs; }
             currtl = newtl;
             if(tlflds.seltype.getValue() === "Timelines") {
                 currtl.ctype = "Timelines"; }
@@ -1066,7 +1082,7 @@ app.tabular = (function () {
 
     function togglePointInclude (ptid) {
         var seln = tlflds.selname.getValue();
-        if(seln === "new" || seln === "copy") {
+        if(edcmds.indexOf(seln) >= 0) {  //new, copy, cpsrc
             jt.err("Name and save your new timeline"); }
         if(currtl.cids.csvcontains(ptid)) {
             currtl.cids = currtl.cids.csvremove(ptid); }
