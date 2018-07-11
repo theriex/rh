@@ -47,8 +47,10 @@ app.dlg = (function () {
              reqd:"Please select all applicable point codes."},
             {field:"keywords", layout:"detail", type:"text", 
              place:"tag1, tag2"},
+            {field:"refs", pname:"References", layout:"ref", type:"txtlst",
+             place:"reference citation and/or URL"},
             {field:"source", layout:"detail", type:"text", 
-             place:"optional source id"},
+             place:"unique id for point"},
             {field:"pic", layout:"pic", type:"image"}],
         upldmon = null,
         cookname = "userauth",
@@ -1203,6 +1205,20 @@ app.dlg = (function () {
     }
 
 
+    function readTextListInputFields (field) {
+        var i, count, inel, val, txts = [];
+        for(i = 0; i < 50; i += 1) {
+            count = i + 1;
+            inel = jt.byId(field + count + "in");
+            if(!inel) {  //no more text inputs found
+                break; }
+            val = inel.value.trim();
+            if(val) {
+                txts.push(val); } }
+        editpt[field] = txts;
+    }
+
+
     function formValuesToObject (fields, ptid) {
         var obj = {};
         if(ptid) {
@@ -1225,6 +1241,10 @@ app.dlg = (function () {
                 if(ptid && jt.byId(fspec.field + "in").files.length) {
                     obj[fspec.field] = "/ptpic?pointid=" + ptid; }
                 break;
+            case "txtlst":
+                readTextListInputFields(fspec.field);
+                obj[fspec.field] = editpt[fspec.field];
+                break;
             default: jt.err("formValuesToObject unknown fspec " + fspec); } });
         return obj;
     }
@@ -1241,7 +1261,11 @@ app.dlg = (function () {
     function codeselInputTAC (fs, mode, vo) {
         var inid, selopts, html = [];
         if(mode === "list") {
-            return ["div", {cla:"fldvaldiv"}, vo[fs.field]]; }
+            fs.options.forEach(function (opt) {
+                if(vo && vo[fs.field] && vo[fs.field].indexOf(opt.value) >= 0) {
+                    html.push(["div", {cla:"buttonptcodesdiv"}, 
+                               opt.text]); } });
+            return html; }
         inid = fs.field + "sel";
         selopts = {id:inid, onchange:jt.fs("app.dlg.codeselchg()")};
         if(fs.multiple) {
@@ -1278,12 +1302,69 @@ app.dlg = (function () {
     }
 
 
+    function textListEditContentTAC (fs, txts) {
+        var html = [], fname = fs.pname || fs.field.capitalize();
+        html.push(["div", {cla:"dlgformline"},
+                   [fname,
+                    ["button", {type:"button", id:"addbutton",
+                                onclick:jt.fs("app.dlg.addtxt('" + fs.field + 
+                                              "')")}, "+"]]]);
+        //filtering of empty elements is done by readTextListInputFields
+        if(!txts.length) {  //provide an empty line to start with
+            txts.push(""); }
+        txts.forEach(function (txt, idx) {
+            var count = idx + 1;
+            html.push(["div", {cla:"dlgrefinline"},
+                       [["label", {fo:fs.field + count + "in", cla:"reflab"}, 
+                         String(count) + "."],
+                        ["input", {type:"text", cla:"refin",
+                                   name:fs.field + count + "in",
+                                   id:fs.field + count + "in",
+                                   value:txt || "",
+                                   placeholder:fs.place || ""}]]]); });
+        return html;
+    }
+
+
+    function textListInputTAC (fs, mode, pt) {
+        var html = [], txts = pt[fs.field] || [];
+        if(mode === "list") {
+            txts.forEach(function (txt) {
+                html.push(["li", jt.linkify(txt)]); });
+            if(html.length) {
+                html = ["ul", {cla:"refslist"}, html]; } }
+        else {  //edit
+            html = ["div", {cla:"txtlstdiv", id:fs.field + "indiv"}, 
+                    textListEditContentTAC(fs, txts)]; }
+        return html;
+    }
+
+
+    function addTextListElement (field) {
+        //some folks might want to make several blanks and then fill, but
+        //delete is accomplished by automatically filtering out empty inputs
+        //and can't have it both ways.  Auto delete filtering is simpler.
+        var fs;
+        readTextListInputFields(field);  //updates editpt[field] contents
+        editpt[field].push("");
+        //find the field spec for rendering
+        edptflds.forEach(function (epf) {
+            if(epf.field === field) {
+                fs = epf; } });
+        //rewrite the editing content
+        jt.out(field + "indiv", jt.tac2html(
+            textListEditContentTAC(fs, editpt[field])));
+        jt.byId(field + editpt[field].length + "in").focus();
+    }
+
+
     function fieldTAC (fspec, mode, pt) {
         switch(fspec.type) {
         case "text": return textInputTAC(fspec, mode, pt);
         case "bigtext": return largeTextInputTAC(fspec, mode, pt);
         case "codesel": return codeselInputTAC(fspec, mode, pt);
         case "image": return imageInputTAC(fspec, mode, pt);
+        case "txtlst": return textListInputTAC(fspec, mode, pt);
         default: jt.log("fieldTAC unknown fspec " + fspec); }
         return "";
     }
@@ -1323,8 +1404,8 @@ app.dlg = (function () {
             jt.out("editlink" + pt.instid, "[edit]"); }
         editpt = pt;  //for form check access
         html = [
-            ["div", {id:"dlgtitlediv"}, "Edit Point"],
-            ["div", {cla:"dlgsignindiv"},
+            ["div", {id:"dlgdatediv"}, "Edit Point"],
+            ["div", {id:"dlgcontentdiv"},
              ["form", {action:"/updpt", method:"post", id:"editpointform", 
                        target: "subframe", enctype: "multipart/form-data"},
               [["input", {type:"hidden", name:"email", value:app.user.email}],
@@ -1332,6 +1413,8 @@ app.dlg = (function () {
                ["input", {type:"hidden", name:"ptid", value:pt.instid || ""}],
                ["input", {type:"hidden", name:"stats", id:"statshin",
                           value:JSON.stringify(pt.stats || {})}],
+               ["input", {type:"hidden", name:"refs", id:"refshin",
+                          value:JSON.stringify(pt.refs || [])}],
                inputFieldsTAC(edptflds, "main", pt),
                ["div", {id:"edptablediv"},
                 ["table", {style:"margin:auto;"},
@@ -1339,37 +1422,48 @@ app.dlg = (function () {
                    [["th", ["a", {href:"#details", 
                                   onclick:jt.fs("app.dlg.togptdet('detail')")},
                             "details"]],
+                    ["th", ["a", {href:"#refs",
+                                  onclick:jt.fs("app.dlg.togptdet('ref')")},
+                            "refs"]],
                     ["th", ["a", {href:"#pic", 
                                   onclick:jt.fs("app.dlg.togptdet('pic')")},
                             "pic"]]]],
                   ["tr", {id:"epdetsumtr"},
-                   [["td", inputFieldsTAC(edptflds, "detail", pt, "list")],
-                    ["td", inputFieldsTAC(edptflds, "pic", pt, "list")]]]]]],
+                   [["td", {colspan:2}, 
+                     inputFieldsTAC(edptflds, "detail", pt, "list")],
+                    ["td", inputFieldsTAC(edptflds, "pic", pt, "list")]]],
+                  ["tr", {id:"eprefsumtr"},
+                   ["td", {colspan:3}, 
+                    inputFieldsTAC(edptflds, "ref", pt, "list")]]]]],
                ["div", {id:"epdetindiv" + "detail", style:"display:none;"},
                 inputFieldsTAC(edptflds, "detail", pt, "edit")],
+               ["div", {id:"epdetindiv" + "ref", style:"display:none;"},
+                inputFieldsTAC(edptflds, "ref", pt, "edit")],
                ["div", {id:"epdetindiv" + "pic", style:"display:none;"},
                 inputFieldsTAC(edptflds, "pic", pt, "edit")],
                ["div", {id:"updatestatdiv"}],
                ["iframe", {id:"subframe", name:"subframe",
-                           src:"/updpt", style:"display:none"}],
-               editPointButtonsHTML(pt)]]]];
+                           src:"/updpt", style:"display:none"}]]]],
+            editPointButtonsHTML(pt)];
         displayDialog(null, jt.tac2html(html));
     }
 
 
     function togglePointDetailSection (sect, forceDisplay) {
-        var sectindiv, otherindiv, sumtr = jt.byId("epdetsumtr");
-        sectindiv = jt.byId("epdetindiv" + sect);
-        otherindiv = jt.byId("epdetindiv" + 
-                             (sect === "detail" ? "pic" : "detail"));
-        if(sectindiv.style.display === "none" || forceDisplay) {
-            sectindiv.style.display = "block";
-            otherindiv.style.display = "none";
-            sumtr.style.display = "none"; }
-        else {  //already displayed, toggle off
-            sectindiv.style.display = "none";
-            otherindiv.style.display = "none";
-            sumtr.style.display = "table-row"; }
+        var sects = ["detail", "ref", "pic"];
+        sects.forEach(function (s) {
+            var div = jt.byId("epdetindiv" + s);
+            if(s === sect) {
+                if(div.style.display === "none" || forceDisplay) {
+                    div.style.display = "block";
+                    jt.byId("eprefsumtr").style.display = "none";
+                    jt.byId("epdetsumtr").style.display = "none"; }
+                else {  //toggle off if clicked again when displayed
+                    div.style.display = "none";
+                    jt.byId("eprefsumtr").style.display = "table-row";
+                    jt.byId("epdetsumtr").style.display = "table-row"; } }
+            else {  //other section
+                div.style.display = "none"; } });
     }
 
 
@@ -1457,6 +1551,8 @@ app.dlg = (function () {
         var subobj = formValuesToObject(edptflds);
         subobj.stats = editpt.stats || {};
         subobj.stats = JSON.stringify(subobj.stats);
+        subobj.refs = subobj.refs || [];
+        subobj.refs = JSON.stringify(subobj.refs);
         return subobj;
     }
 
@@ -1489,6 +1585,7 @@ app.dlg = (function () {
            !confirm(nopictxt)) {
             app.dlg.togptdet("pic", true);
             return; }
+        jt.byId("refshin").value = subobj.refs;
         disablePointEditButtons();
         jt.out("savebutton", "Saving...");
         upldmon = {count:0};
@@ -1568,6 +1665,7 @@ app.dlg = (function () {
         omexp: function (instid) { expandOrganizationMember(instid); },
         modmem: function (instid, chg) { modifyMemberLevel(instid, chg); },
         addmem: function () { addOrgMemberByEmail(); },
-        togptdet: function (sect, req) { togglePointDetailSection(sect, req); }
+        togptdet: function (sect, req) { togglePointDetailSection(sect, req); },
+        addtxt: function (field) { addTextListElement(field); }
     };
 }());
