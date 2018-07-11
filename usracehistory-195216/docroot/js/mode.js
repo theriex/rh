@@ -266,17 +266,15 @@ app.mode = (function () {
         app.dlg.init(tl);
         jt.log("mode.start calling db.nextInteraction");
         app.db.nextInteraction();
-        //TEST: Uncomment to launch menu command after first interaction
-        // setTimeout(function () {
-        //     var mc = "newtl";
-        //     jt.log("mode.start TEST menu: " + mc);
-        //     app.mode.menu(0, mc); }, 200);
-        //TEST: Uncomment to launch suppviz after first interaction
-        // setTimeout(function () {
-        //     var sv = "miscegenation";
-        //     jt.log("mode.start TEST sv: " + sv);
-        //     app.dlg.close();
-        //     app.tabular.runsv(sv); }, 200);
+        ms.params = jt.parseParams();
+        //TEST harness points now available via url params:
+        if(ms.params.menu) {  //e.g. ?menu=refmode
+            setTimeout(function () {
+                app.mode.menu(0, ms.params.menu); }, 200); }
+        else if(ms.params.sv) {  //e.g. ?sv=miscegenation
+            setTimeout(function () {
+                app.dlg.close();
+                app.tabular.runsv(ms.params.sv); }, 200); }
     }
 
 

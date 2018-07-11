@@ -737,7 +737,9 @@ app.db = (function () {
             tlmarker = "/timeline/",
             idx = url.indexOf(tlmarker);
         if(idx >= 0) {
-            slug = url.slice(idx + tlmarker.length); }
+            slug = url.slice(idx + tlmarker.length);
+            if(slug.indexOf("?") > 0) {
+                slug = slug.slice(0, slug.indexOf("?")); } }
         jt.log("fetchDisplayTimeline slug: " + slug);
         jt.out("rhcontentdiv", "Loading " + slug + "...");
         app.user.tls = app.user.tls || {};
