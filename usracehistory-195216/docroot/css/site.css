@@ -57,6 +57,9 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
   font-size:x-small; background-image:url('../img/whitewash.png'); }
 .dlgtextdiv { background:#ebd400; padding:4px 4px 4px 4px;
   font-family: "Palatino Linotype", "Palatino", serif; }
+.dlgrefsdiv { font-size:small; }
+.refslinkspan { font-size:x-small; font-family:monospace; font-style:italic;
+  cursor:pointer; }
 #dlgbuttondiv { clear:both; text-align:center; padding:5px 0px 5px 0px; }
 #dlgbuttondiv button { margin:0px 3px; }
 .dlgbuttonsep { padding:0px 5px; }
@@ -140,7 +143,6 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 #dlgtitlediv { padding:5px 20px; text-align:center; font-weight:bold; 
   font-size:x-large; font-family: "Open Sans", "Helvetica", sans-serif; }
 .dlgformline { padding:2px 0px; }
-.dlgrefinline { padding:2px 0px 2px 15px; }
 .txtlstdiv { padding:3px 0px 10px 0px; }
 .dlgsubline { padding:2px 0px 2px 5px; }
 .liflab, .reflab { font-size:medium; font-weight:normal; text-align:right; 
@@ -149,6 +151,7 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 .lifsep { clear:both; }
 .reflab { width:20px; }
 .refin { width:260px; }
+.refslist { margin:0px; padding-left:25px; }
 .refslist li { font-size:small; }
 #forgotpassdiv { text-align:center; font-size:medium; padding:6px 0px 0px 0px; }
 .dlgbackimg { max-height:27px; opacity:0.5; }
@@ -224,6 +227,7 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 #edptablediv table tr td { padding:0px 10px; }
 #passemdiv { padding:10px; }
 #addbutton { margin:0px 0px 0px 10px; }
+#editpointform { max-width:300px; }
 
 /* -------------------- */
 /* visualizations */

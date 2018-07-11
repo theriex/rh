@@ -412,13 +412,31 @@ app.dlg = (function () {
     }
 
 
+    function refsListHTML (refs) {
+        var html = [];
+        refs.forEach(function (txt) {
+            html.push(["li", jt.linkify(txt)]); });
+        if(html.length) {
+            html = ["ol", {cla:"refslist"}, html]; }
+        return jt.tac2html(html);
+    }
+
+
     function showInfoDialog (d, inter) {
-        var buttons, pichtml = "", html;
+        var buttons, pichtml = "", refshtml = "", html;
         tl.dlgdat = d;
         if(d.pic) {
             pichtml = ["div", {cla:"dlgpicdiv", id:"dlgpicdiv"},
                        ["img", {cla:"infopic", id:"dlgpicimg",
                                 src:"/ptpic?pointid=" + d.instid}]]; }
+        if(d.refs && d.refs.length) {
+            refshtml = ["div", {id:"dlgrefsdiv"},
+                        [["a", {onclick:jt.fs("app.toggledivdisp('" +
+                                              "refslistdiv" + d.instid + "')")},
+                          ["span", {cla:"refslinkspan"}, "refs"]],
+                         ["div", {id:"refslistdiv" + d.instid,
+                                  style:"display:none;"},
+                          refsListHTML(d.refs)]]]; }
         buttons = infoButtons(d, inter);
         html = [["div", {id:"genentrydiv"}],
                 ["div", {id:"dlgdatediv"}, 
@@ -427,7 +445,8 @@ app.dlg = (function () {
                 ["div", {id:"dlgcontentdiv"},
                  ["div", {cla:"dlgtextdiv", id:"dlgtextdiv"},
                   [pichtml,
-                   app.db.ptlinktxt(d, tl.pts, "app.linear.byPtId")]]],
+                   app.db.ptlinktxt(d, tl.pts, "app.linear.byPtId"),
+                   refshtml]]],
                 ["div", {id:"dlgbuttondiv"}, buttons.tac]];
         displayDialog(d, jt.tac2html(html));
         d.interact = {start:new Date()};
@@ -1314,7 +1333,7 @@ app.dlg = (function () {
             txts.push(""); }
         txts.forEach(function (txt, idx) {
             var count = idx + 1;
-            html.push(["div", {cla:"dlgrefinline"},
+            html.push(["div", {cla:"dlgformline"},
                        [["label", {fo:fs.field + count + "in", cla:"reflab"}, 
                          String(count) + "."],
                         ["input", {type:"text", cla:"refin",
@@ -1327,12 +1346,9 @@ app.dlg = (function () {
 
 
     function textListInputTAC (fs, mode, pt) {
-        var html = [], txts = pt[fs.field] || [];
+        var html, txts = pt[fs.field] || [];
         if(mode === "list") {
-            txts.forEach(function (txt) {
-                html.push(["li", jt.linkify(txt)]); });
-            if(html.length) {
-                html = ["ul", {cla:"refslist"}, html]; } }
+            html = refsListHTML(txts); }
         else {  //edit
             html = ["div", {cla:"txtlstdiv", id:fs.field + "indiv"}, 
                     textListEditContentTAC(fs, txts)]; }
@@ -1468,9 +1484,12 @@ app.dlg = (function () {
 
 
     function pointChanged (pt, dbpt) {
-        //only compare fields included in the tl.preb instance data
+        //Only compare fields included in the tl.preb instance data or the
+        //separately fetched point will always be different.  Could probably
+        //get by just comparing the modified time, but may as well be
+        //comprehensive for now.
         var ptflds = ["date", "text", "codes", "orgid", "keywords",
-                      "source", "modified"];
+                      "source", "refs", "modified"];
         return !ptflds.every(function (fld) { return pt[fld] === dbpt[fld]; });
     }
 

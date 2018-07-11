@@ -108,6 +108,7 @@ def rebuild_prebuilt_timeline_points(tl):
                             "orgid": str(pt.orgid),
                             "keywords": pt.keywords,
                             "source": pt.source,
+                            "refs":pt.refs,
                             "pic": picval,
                             # an org contributor may edit only if point owner.
                             # that's determined from the created accID

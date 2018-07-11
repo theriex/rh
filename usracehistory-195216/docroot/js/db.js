@@ -248,11 +248,11 @@ app.db = (function () {
     //Important that all arrays of points be in chronological sorted order
     //when processing.  This is what enables merging points from a randomly
     //selected timeline with points from a chronological timeline.  Prebuilt
-    //timeline data for a timeline is saved in edit order not chronological.
+    //timeline data for a timeline is saved in edit order (not chronological).
     function prepPointsArray (pts) {
         pts.forEach(function (pt) {
             pt.keywords = pt.keywords || "";
-            parseDate(pt); });
+            app.db.deserialize("Point", pt); });  //calls parseDate
         pts.sort(function (a, b) {  //verify in chrono order
             return compareStartDate(a, b); });
     }
@@ -267,6 +267,7 @@ app.db = (function () {
     //    orgid: Organization id, 1 is bootstrap org
     //    keywords: CSV of org defined keywords (regions, categories, tags)
     //    source: Arbitrary source tag used when the point was loaded.
+    //    refs: Zero or more reference citation strings
     //    pic: instid if an image exists, empty string otherwise
     //    modified: ISO when the point was last updated
     //These fields added from calculations and user data:
