@@ -9,6 +9,7 @@ app.tabular = (function () {
         dnld = {srchst:"", opts:[{format:"html", name:"Document (HTML)"},
                                  {format:"pdf", name:"Document (PDF)"},
                                  {format:"tsv", name:"Spreadsheet (TSV)"},
+                                 {format:"txt", name:"Slides Outline (TXT)"},
                                  {format:"json", name:"JavaScript (JSON)"},
                                  {format:"none", name:"Nevermind"}]},
         tlflds = {},
@@ -225,6 +226,18 @@ app.tabular = (function () {
     }
 
 
+    function getTXTDataURI () {
+        var txt = "";
+        currpts.forEach(function (pt) {
+            var paras = pt.text.split("\n");
+            txt += pt.date + "\n";
+            paras.forEach(function (para) {
+                txt += "    " + para + "\n"; });
+            txt += "\n"; });
+        return "data:text/plain;charset=utf-8," + encodeURIComponent(txt);
+    }
+
+
     function getJSONDataURI () {
         var txt = JSON.stringify(currpts);
         return "data:text/plain;charset=utf-8," + encodeURIComponent(txt);
@@ -259,6 +272,15 @@ app.tabular = (function () {
                  [["img", {src: "img/download.png"}],
                   ["span", {id:"downloadactiontextspan"}, 
                    "Download TSV"]]]));
+            break;
+        case "txt":
+            jt.out("downloadactiondiv", jt.tac2html(
+                ["a", {id:"downloadactionlink", href:getTXTDataURI(),
+                       download:"rh.txt",
+                       onclick:jt.fsd("app.dlg.close()")},
+                 [["img", {src: "img/download.png"}],
+                  ["span", {id:"downloadactiontextspan"}, 
+                   "Download TXT"]]]));
             break;
         case "json":
             jt.out("downloadactiondiv", jt.tac2html(
