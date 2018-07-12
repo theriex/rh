@@ -423,20 +423,22 @@ app.dlg = (function () {
 
 
     function showInfoDialog (d, inter) {
-        var buttons, pichtml = "", refshtml = "", html;
+        var buttons, pichtml = "", refshtml, html;
         tl.dlgdat = d;
         if(d.pic) {
             pichtml = ["div", {cla:"dlgpicdiv", id:"dlgpicdiv"},
                        ["img", {cla:"infopic", id:"dlgpicimg",
                                 src:"/ptpic?pointid=" + d.instid}]]; }
+        refshtml = [["a", {onclick:jt.fs("app.dlg.search()")},
+                     ["img", {cla:"searchicoimg", src:"img/search.png"}]]];
         if(d.refs && d.refs.length) {
-            refshtml = ["div", {id:"dlgrefsdiv"},
-                        [["a", {onclick:jt.fs("app.toggledivdisp('" +
-                                              "refslistdiv" + d.instid + "')")},
-                          ["span", {cla:"refslinkspan"}, "refs"]],
-                         ["div", {id:"refslistdiv" + d.instid,
-                                  style:"display:none;"},
-                          refsListHTML(d.refs)]]]; }
+            refshtml.push([["a", {onclick:jt.fs("app.toggledivdisp('" +
+                                            "refslistdiv" + d.instid + "')")},
+                            ["span", {cla:"refslinkspan"}, "refs"]],
+                           ["div", {id:"refslistdiv" + d.instid,
+                                    style:"display:none;"},
+                            refsListHTML(d.refs)]]); }
+        refshtml = ["div", {id:"dlgrefsdiv"}, refshtml];
         buttons = infoButtons(d, inter);
         html = [["div", {id:"genentrydiv"}],
                 ["div", {id:"dlgdatediv"}, 
@@ -1649,6 +1651,13 @@ app.dlg = (function () {
     }
 
 
+    function searchForPoint () {
+        var qstr = tl.dlgdat.text.split(" ").slice(0, 10).join("+"),
+            url = "https://duckduckgo.com/?q=" + qstr;
+        window.open(url);
+    }
+
+
     return {
         init: function (timeline) { tl = timeline; },
         start: function (t, s, f) { showStartDialog(t, s, f); },
@@ -1685,6 +1694,7 @@ app.dlg = (function () {
         modmem: function (instid, chg) { modifyMemberLevel(instid, chg); },
         addmem: function () { addOrgMemberByEmail(); },
         togptdet: function (sect, req) { togglePointDetailSection(sect, req); },
-        addtxt: function (field) { addTextListElement(field); }
+        addtxt: function (field) { addTextListElement(field); },
+        search: function () { searchForPoint(); }
     };
 }());
