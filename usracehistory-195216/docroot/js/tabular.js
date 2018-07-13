@@ -92,7 +92,7 @@ app.tabular = (function () {
 
     function pointPicTAC (pt, deco) {
         var ph = "";
-        if(pt.pic && deco !== "plaintext") {
+        if(pt.pic && deco !== "solohtml") {
             ph = ["div", {cla:"txtpicdiv"},
                   ["img", {src:"/ptpic?pointid=" + pt.instid, 
                            cla:"txtpicimg"}]]; }
@@ -100,26 +100,36 @@ app.tabular = (function () {
     }
 
 
-    function pointDatTAC (pt, deco) {
-        var dh = "";
-        if(deco !== "plaintext") {
-            dh = ["a", {href:"#" + pt.instid, cla:"editlink",
-                      onclick:jt.fs("app.tabular.togptd('" + pt.instid + "')")},
-                  "[ptdata]"]; }
-        return dh;
-    }
-
-
-    function pointEditTAC (pt, deco) {
-        var eh = "";
-        if(mayEditPoint(pt) && deco !== "plaintext") {
-            eh = [" &nbsp;",
-                  ["a", {href:"#edit", cla:"editlink", 
-                         id:"editlink" + pt.instid,
-                         onclick:jt.fs("app.dlg.ptedit('" + 
-                                       ((pt && pt.instid) || "") + "')")},
-                   "[edit]"]]; }
-        return eh;
+    function pointButtonsTAC (pt, deco) {
+        var buttons = [], divs = [];
+        //ptdata button
+        buttons.push(["a", {href:"#" + pt.instid, cla:"editlink",
+                            onclick:jt.fs("app.toggledivdisp('ptxdiv" + 
+                                          pt.instid + "')")},
+                      "[ptdata]"]);
+        divs.push(["div", {id:"ptxdiv" + pt.instid, cla:"ptxdiv",
+                           style:"display:none"},
+                   pointExtendedDataHTML(pt)]);
+        //refs
+        if(pt.refs && pt.refs.length) {
+            buttons.push([" &nbsp;",
+                          ["a", {href:"#refs" + pt.instid, cla:"editlink",
+                                 onclick:jt.fs("app.toggledivdisp('ptrdiv" +
+                                               pt.instid + "')")},
+                           "[refs]"]]);
+            divs.push(["div", {id:"ptrdiv" + pt.instid, cla:"ptxdiv",
+                               style:"display:none"},
+                       app.dlg.refsListHTML(pt.refs)]); }
+        //edit
+        if(mayEditPoint(pt) && deco !== "solohtml") {
+            buttons.push([" &nbsp;",
+                          ["a", {href:"#edit", cla:"editlink", 
+                                 id:"editlink" + pt.instid,
+                                 onclick:jt.fs("app.dlg.ptedit('" + 
+                                               ((pt && pt.instid) || "") + 
+                                               "')")},
+                           "[edit]"]]); }
+        return buttons.concat(divs);
     }
 
 
@@ -134,7 +144,7 @@ app.tabular = (function () {
 
     function pointCheckboxTAC(pt, deco) {
         var html = "", si;
-        if(mode === "tledit" && deco !== "plaintext") {
+        if(mode === "tledit" && deco !== "solohtml") {
             if(pt.sv) {
                 html = ["div", {cla:"ptseldiv"}, 
                         "sv: " + titleForModule(pt.sv)]; }
@@ -164,13 +174,11 @@ app.tabular = (function () {
                    pointCheckboxTAC(pt, deco)]],
                  ["div", {cla:"trowdescdiv"}, 
                   [pointPicTAC(pt, deco),
+                   //onclick function won't work if standalone html, but
+                   //anchors should still work if anchor available.
                    app.db.ptlinktxt(pt, currpts, "app.tabular.scr2pt"),
                    " &nbsp;",
-                   pointDatTAC(pt, deco),
-                   pointEditTAC(pt, deco),
-                   ["div", {id:"ptxdiv" + pt.instid, cla:"ptxdiv",
-                            style:"display:none"},
-                    pointExtendedDataHTML(pt)]]]]];
+                   pointButtonsTAC(pt, deco)]]]];
         return html;
     }
 
@@ -179,16 +187,6 @@ app.tabular = (function () {
         var trowdiv = jt.byId("trowdiv" + id);
         if(trowdiv) {
             trowdiv.scrollIntoView(); }
-    }
-
-
-    function togglePointDataDisplay (id) {
-        var ptxdiv = jt.byId("ptxdiv" + id);
-        if(ptxdiv) {
-            if(ptxdiv.style.display === "none") {
-                ptxdiv.style.display = "block"; }
-            else {
-                ptxdiv.style.display = "none"; } }
     }
 
 
@@ -212,8 +210,19 @@ app.tabular = (function () {
             "</style>\n" +
             "</head><body>";
         currpts.forEach(function (pt) {
-            txt += "\n" + jt.tac2html(pointTAC(pt, "plaintext")); });
-        txt += "</body></html>\n";
+            txt += "\n" + jt.tac2html(pointTAC(pt, "solohtml")); });
+        txt += "\n</body>\n";
+        txt += "<script>" +
+            "var app = {};" +
+            "app.toggledivdisp = function (divid) {" +
+            "    var div = document.getElementById(divid);" +
+            "    if(div) {" +
+            "        if(div.style.display === \"block\") {" +
+            "            div.style.display = \"none\"; }" +
+            "        else {" +
+            "            div.style.display = \"block\"; } }" +
+            "};</script>\n";
+        txt += "</html>\n";
         return "data:text/html;charset=utf-8," + encodeURIComponent(txt);
     }
 
@@ -1174,7 +1183,6 @@ app.tabular = (function () {
         togtlsel: function (tlid) { togglePointInclude(tlid); },
         canctl: function () { cancelTimelineEdit(); },
         runsv: function (svmodule) { app[svmodule].display(); },
-        togptd: function (id) { togglePointDataDisplay(id); },
         scr2pt: function (id) { scrollToPointId(id); },
         dfltslug: function () { provideDefaultSlugValue(); },
         redispt: function (pt) { redisplayPoint(pt); },

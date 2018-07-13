@@ -1695,6 +1695,7 @@ app.dlg = (function () {
         addmem: function () { addOrgMemberByEmail(); },
         togptdet: function (sect, req) { togglePointDetailSection(sect, req); },
         addtxt: function (field) { addTextListElement(field); },
-        search: function () { searchForPoint(); }
+        search: function () { searchForPoint(); },
+        refsListHTML: function (refs) { return refsListHTML(refs); }
     };
 }());
