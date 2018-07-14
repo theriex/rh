@@ -149,6 +149,11 @@ handlers:
 - url: .*/js/
   static_dir: docroot/js/
 
+## Nightly periodic processing towards the end of the quota reset cycle.
+- url: .*/periodic.*
+  script: src.py.service.app
+  login: admin
+
 ## The index page
 - url: /index.html
   static_files: docroot/index.html

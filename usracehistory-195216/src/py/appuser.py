@@ -217,13 +217,16 @@ def match_token_to_acc(token, acc):
     return acc
 
 
-def nowISO():
-    dt = datetime.datetime.utcnow()
+def dt2ISO(dt):
     iso = str(dt.year) + "-" + str(dt.month).rjust(2, '0') + "-"
     iso += str(dt.day).rjust(2, '0') + "T" + str(dt.hour).rjust(2, '0')
     iso += ":" + str(dt.minute).rjust(2, '0') + ":"
     iso += str(dt.second).rjust(2, '0') + "Z"
     return iso
+
+
+def nowISO():
+    return dt2ISO(datetime.datetime.utcnow())
 
 
 # The email parameter is required. Then either password or authok.
@@ -363,7 +366,8 @@ class AccessAccount(webapp2.RequestHandler):
         acc = get_authenticated_account(self, False)
         if not acc:
             return
-        return_json(self, [acc, {"token": acctoken(acc.email, acc.password)}])
+        acc.accessed = nowISO()
+        update_account(self, acc)
 
 
 class UpdateMyTimelines(webapp2.RequestHandler):
