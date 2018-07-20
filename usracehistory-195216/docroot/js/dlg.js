@@ -78,13 +78,13 @@ app.dlg = (function () {
 
 
     function constrainDialogToChartDims () {
-        var dim = {mx:Math.round(0.02 * tl.width),
+        var dim = {mx:Math.round(0.01 * tl.width),
                    myt:Math.round(0.15 * tl.height),
                    myb:Math.round(0.9 * tl.height)};
         if(tl.width > 500) {  //expand the x margin to appear less elongated
             dim.mx = Math.round(0.04 * tl.width); }
         dim.x = tl.margin.left + dim.mx;
-        dim.w = tl.width - (2 * dim.mx);
+        dim.w = tl.width - tl.margin.left - (2 * dim.mx);
         //Start the dialog near the bottom of the display so content
         //adjustments can move it up rather than down. This is in case of
         //visual artifacts due to timing hiccups or whatever.
@@ -195,7 +195,7 @@ app.dlg = (function () {
     function showStartDialog (title, subtitle, clickfstr) {
         var html = wrapText(subtitle || "", 18);
         if(window.innerWidth < 400) {
-            html = html.replace("<br/>", ""); }
+            html = html.replace(/<br\/>/g, ""); }
         //no dialog dismissal option.  Use menu select to do something else.
         html = ["div", {id:"introdlgdiv"},
                 [["div", {id:"introtitlediv"}, title],
