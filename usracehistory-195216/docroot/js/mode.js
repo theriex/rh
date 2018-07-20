@@ -256,7 +256,8 @@ app.mode = (function () {
 
 
     function start (tl, currlev) {
-        ms = {divid:tl.divid, tl:tl, w:tl.width, h:30};  //reset mode state
+        ms = {divid:tl.divid, tl:tl, h:30,    //reset mode state
+              w:tl.width - 10};  //leave space for right menu
         jt.byId("tcontdiv").style.top = String(ms.h) + "px";
         ms.disp = "linear";  //other option is "text"
         verifyDisplayElements();
