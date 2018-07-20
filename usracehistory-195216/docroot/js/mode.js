@@ -42,7 +42,7 @@ app.mode = (function () {
                     ["div", {id:"noticediv",
                              style:"width:" + (ms.w - 60) + "px;" +
                                    "opacity:1.0"},
-                     ["Please help report any bugs ",
+                     ["Help and more ",
                       ["img", {cla:"noticeimg", src:"img/forward.png"}]]]];
             jt.out(ms.divid, jt.tac2html(html));
             ms.progsvg = d3.select("#svgnav");
@@ -183,61 +183,41 @@ app.mode = (function () {
     }
 
 
-    function adjustMenuLeftPos (expand) {
-        var menudiv, levdiv, leftx;
-        menudiv = jt.byId("menudiv");
-        leftx = window.innerWidth - 40;
-        levdiv = jt.byId("levdiv");
-        if(levdiv && levdiv.offsetWidth > 10) {  //currently displayed
-            leftx = levdiv.offsetWidth; }
+    function verifyMenuContent (expand) {
+        //best to make sure one of the default menu items has the longest
+        //name so offsetWidth of the menu contents doesn't vary.
+        var menu = [{m:"visual",  n:"Interactive&nbsp;Mode"},
+                    {m:"refmode", n:"Reference&nbsp;Mode"},
+                    {m:"myacc",   n:"My&nbsp;Account",      c:"acc"},
+                    {m:"newtl",   n:"Create&nbsp;Timeline", c:"acc"},
+                    {m:"signout", n:"Sign&nbsp;Out",        c:"acc"},
+                    {m:"signin",  n:"Sign&nbsp;In",         c:"noacc"},
+                    {m:"support", n:"Support"}],
+            acc = app.user && app.user.tok,
+            html = [];
+        menu.forEach(function (mi) {
+            if(!mi.c || (acc && mi.c === "acc") || (!acc && mi.c === "noacc")) {
+                html.push(["div", {cla:"menulinemain"},
+                           ["a", {href:"#" + mi.m,
+                                  onclick:jt.fs("app.mode.menu(0,'" + mi.m + 
+                                                "')")},
+                            mi.n]]); } });
+        html = [["div", {id:"menuicondiv", style:"text-align:right;"},
+                 ["a", {href:"#menu", onclick:jt.fs("app.mode.menu(" + 
+                                                    !expand + ")")},
+                  ["img", {src:"img/menuicon.png", //50x38
+                           style:"max-height:20px;max-width:30px;"}]]],
+                ["div", {id:"menulinesdiv", style:"display:none;"},
+                 html]];
+        jt.out("menudiv", jt.tac2html(html));
         if(expand) {
-            leftx = leftx - menudiv.offsetWidth + 26; }
-        menudiv.style.left = leftx + "px";
+            jt.byId("menulinesdiv").style.display = "block"; }
     }
 
 
+
     function displayMenu (expand, select) {
-        var html;
-        html = ["a", {href:"#menu", onclick:jt.fs("app.mode.menu(" + 
-                                                  !expand + ")")},
-                ["img", {src:"img/menuicon.png", //50x38
-                         style:"max-height:20px;max-width:30px;"}]];
-        if(expand) {
-            html = [["div", {cla:"menuline", style:"text-align:right"}, html]];
-            if(mode === "interactive") {
-                html.push(["div", {cla:"menulinemain"},
-                           ["a", {href:"#refmode",
-                                  onclick:jt.fs("app.mode.menu(0,'refmode')")},
-                            "Reference&nbsp;Mode"]]); }
-            else { //in reference mode
-                html.push(["div", {cla:"menulinemain"},
-                           ["a", {href:"#visual", 
-                                  onclick:jt.fs("app.mode.menu(0,'visual')")},
-                            "Interactive&nbsp;Mode"]]); }
-            if(app.user && app.user.tok) {
-                html.push(["div", {cla:"menulinemain"},
-                           ["a", {href:"#profile",
-                                  onclick:jt.fs("app.mode.menu(0, 'myacc')")},
-                            "My&nbsp;Account"]]);
-                html.push(["div", {cla:"menulinemain"},
-                           ["a", {href:"#create",
-                                  onclick:jt.fs("app.mode.menu(0, 'newtl')")},
-                            "Create&nbsp;Timeline"]]);
-                html.push(["div", {cla:"menulinemain"},
-                           ["a", {href:"#SignOut",
-                                  onclick:jt.fs("app.mode.menu(0, 'signout')")},
-                            "Sign&nbsp;Out"]]); }
-            else { //not signed in
-                html.push(["div", {cla:"menulinemain"},
-                           ["a", {href:"#SignIn",
-                                  onclick:jt.fs("app.mode.menu(0,'signin')")},
-                            "Sign&nbsp;In"]]); }
-            html.push(["div", {cla:"menulinemain"},
-                       ["a", {href:"#support",
-                              onclick:jt.fs("app.mode.menu(0,'support')")},
-                        "Support"]]); }
-        jt.out("menudiv", jt.tac2html(html));
-        adjustMenuLeftPos(expand);
+        verifyMenuContent(expand);
         if(select) {
             jt.byId("itemdispdiv").style.visibility = "hidden";
             jt.byId("suppvisdiv").style.visibility = "hidden";
