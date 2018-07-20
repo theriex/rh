@@ -269,7 +269,9 @@ app.mode = (function () {
             ms.currlev.lev.remptcounter = count; }
         count = count || 0;
         if(count > 0) {
-            txt = String(count) + " points remaining"; }
+            txt = String(count) + " points left"; }
+        if(count >= ms.currlev.lev.points.length) {
+            txt = ""; }  //just started, don't distract with extra text.
         if(ms) {
             ms.prog.qrem.text(txt); }
     }
