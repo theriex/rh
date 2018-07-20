@@ -343,6 +343,8 @@ app.linear = (function () {
              ["div", {id:"tcontdiv", style:"display:none;"}],
              ["div", {id:"lcontdiv"},
               ["svg", {id:"svgmain", width:tl.chart.w, height:tl.chart.h}]],
+             //circles can overflow the background when zooming, leftcoldiv
+             //hides that overflow which otherwise can look sloppy.
              ["div", {id:"leftcoldiv", style:"top:25px;width:10px;"}],
              ["div", {id:"navdiv"}],
              ["div", {id:"suppvisdiv"}],
