@@ -47,7 +47,7 @@ var app = {},  //Global container for application level funcs and values
             return path + md.name; });
         jtminjsDecorateWithUtilities(jt);
         app.baseurl = "https://usracehistory.org";
-        if(!href.startsWith("https") && !href.startsWith("http://localhost")) {
+        if(!href.startsWith("https") && href.indexOf(":9080") < 0) {
             window.location.href = app.baseurl;
             return; }
         jt.out("rhcontentdiv", "Loading app modules...");

@@ -159,6 +159,9 @@ app.dlg = (function () {
             jt.log("displayDialog " + d.instid + " " + 
                    d.text.slice(0, 50) + "..."); }
         dim = constrainDialogToChartDims();
+        //Verify the dialog is hidden so there is no blink when the content
+        //gets updated.
+        jt.byId("itemdispdiv").style.visibility = "hidden";
         jt.out("itemdispdiv", html);
         constrainTextToDialogHeight(d, dim);
         verticallyPositionDialog(d, dim);
@@ -166,10 +169,12 @@ app.dlg = (function () {
         //give the content a few millis to render so it's not ignored
         setTimeout(function () {
             d3.select("#itemdispdiv")
-                .style("visibility", "visible")
                 .style("max-height", "4px")
+                .style("visibility", "visible")
                 .transition().duration(500)
-                .style("max-height", dim.h + "px"); }, 100);  //see verifyClosed
+                .style("max-height", dim.h + "px"); }, 
+                   //This timeout value needs to be less than in verifyClosed
+                   1000);  //< verifyClosed timeout
     }
 
 
@@ -1647,7 +1652,7 @@ app.dlg = (function () {
         //end up with a dialog being left open if other processing takes
         //over quickly, even if that processing called dlg.close.  This is a
         //second failsafe call to make sure the dialog is hidden in that case.
-        setTimeout(closeDialog, 800);
+        setTimeout(closeDialog, 1200);
     }
 
 
