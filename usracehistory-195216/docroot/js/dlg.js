@@ -173,7 +173,7 @@ app.dlg = (function () {
                 .style("visibility", "visible")
                 .transition().duration(500)
                 .style("max-height", dim.h + "px"); }, 
-                   //This timeout value needs to be less than in verifyClosed
+                   //This timeout value affects setFocus and verifyClosed
                    1000);  //< verifyClosed timeout
     }
 
@@ -411,9 +411,10 @@ app.dlg = (function () {
 
     function setFocus (elemid) {
         jt.byId(elemid).focus();
-        //try again in a moment in case the element wasn't ready
+        //try again in a moment in case the element wasn't ready.  Typically
+        //isn't due to displayDialog transitions and timeouts.
         setTimeout(function () {
-            jt.byId(elemid).focus(); }, 700);
+            jt.byId(elemid).focus(); }, 1200);
     }
 
 

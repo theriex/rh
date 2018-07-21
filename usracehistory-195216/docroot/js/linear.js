@@ -220,26 +220,12 @@ app.linear = (function () {
 
 
     function zoomToPoint (d) {
-        var et = {fs:Math.round(0.3 * tl.height2), bpad:2};
+        var zd = 32; //zoom divisor: 1/d === elevator width
         if(!d) {
             jt.log("linear.zoomToPoint given null");
             return; }
-        if(!tl.elevator) {
-            et.g = d3.select(".brush");
-            et.g.insert("text", "rect")
-                .attr("class", "elevatortext")
-                .attr("font-size", et.fs)
-                .attr("x", Math.round(tl.width2 / 2))
-                .attr("y", et.fs + et.bpad)
-                .text("scroll: zoom");
-            et.g.insert("text", "rect")
-                .attr("class", "elevatortext")
-                .attr("font-size", et.fs)
-                .attr("x", Math.round(tl.width2 / 2))
-                .attr("y", tl.height2 - et.bpad)
-                .text("drag: pan"); }
-        tl.sel = [tl.x2(d.tc) - Math.round(tl.width2 / 8),
-                  tl.x2(d.tc) + Math.round(tl.width2 / 8)];
+        tl.sel = [tl.x2(d.tc) - Math.round(tl.width2 / zd),
+                  tl.x2(d.tc) + Math.round(tl.width2 / zd)];
         tl.sel[0] = Math.max(tl.sel[0], 0);
         tl.sel[1] = Math.min(tl.sel[1], tl.width2);
         tl.svg.select(".zoom").transition().duration(2000).call(
