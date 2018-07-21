@@ -52,58 +52,60 @@ app.mode = (function () {
     }
 
 
+    function initProgBarElements (currlev, ti, tc, rc) {
+        ms.prog = {};
+        ms.prog.g = ms.progsvg.append("g");
+        ms.prog.levrect = ms.prog.g.append("rect")
+            .attr("class", "levnumbackrect")
+            .attr("ry", 5)
+            .attr("x", tc.x - ti.p.l)
+            .attr("y", ti.m.t)
+            .attr("height", tc.h)
+            .attr("width", tc.w);
+        ms.prog.levnum = ms.prog.g.append("text")
+            .attr("class", "levelnumber")
+            .attr("text-anchor", "middle")  //variable width font
+            .attr("x", ti.m.l + Math.round(tc.w / 2))
+            .attr("y", tc.y - ti.p.t)
+            .attr("dy", "-.1em")   //fudge text baseline
+            .attr("font-size", ti.fs)
+            .text(String(currlev.lev.num));
+        ms.prog.prback = ms.prog.g.append("rect")
+            .attr("class", "progbarback")
+            .attr("x", rc.x)
+            .attr("y", rc.y)
+            .attr("height", rc.h)
+            .attr("width", rc.w);
+        ms.prog.prfill = ms.prog.g.append("rect")
+            .attr("class", "progbarfilled")
+            .attr("id", "progdisprect")
+            .attr("x", rc.x)
+            .attr("y", rc.y)
+            .attr("height", rc.h)
+            .attr("width", 0);
+    }
+
+
     function updateLevelDisplay (currlev) {
         var ti = {fs: 18,   //font size for level number
                   p: {t: 1, r: 2, b: 1, l: 2},  //padding top right bottom left
                   m: {t: 3, r: 2, b: 0, l: 3}}, //margin  top right bottom left
-            tc = {x: ti.m.l + ti.p.l,
+            tc = {x: ti.m.l + ti.p.l,    //text coordinates (level number)
                   y: ti.m.t + ti.p.t + ti.fs,
                   h: ti.p.t + ti.fs + ti.p.b,
                   w: ti.p.l + ti.fs + ti.p.r},
-            rc = {x: tc.x + tc.w + ti.m.r,
+            rc = {x: tc.x + tc.w + ti.m.r,   //rect coordinates (prog bar)
                   y: Math.floor(tc.h / 2),
                   h: Math.floor(tc.h / 4),
-                  w: ms.w - (tc.x + tc.w)};
+                  w: ms.w - (tc.x + tc.w)},
+            calc = {pcnt:currlev.lev.levpcnt};
         if(!ms.prog) {
-            ms.prog = {};
-            ms.prog.g = ms.progsvg.append("g");
-            ms.prog.levrect = ms.prog.g.append("rect")
-                .attr("class", "levnumbackrect")
-                .attr("ry", 5)
-                .attr("x", tc.x - ti.p.l)
-                .attr("y", ti.m.t)
-                .attr("height", tc.h)
-                .attr("width", tc.w);
-            ms.prog.levnum = ms.prog.g.append("text")
-                .attr("class", "levelnumber")
-                .attr("text-anchor", "middle")  //variable width font
-                .attr("x", ti.m.l + Math.round(tc.w / 2))
-                .attr("y", tc.y - ti.p.t)
-                .attr("dy", "-.1em")   //fudge text baseline
-                .attr("font-size", ti.fs)
-                .text(String(currlev.lev.num));
-            ms.prog.prback = ms.prog.g.append("rect")
-                .attr("class", "progbarback")
-                .attr("x", rc.x)
-                .attr("y", rc.y)
-                .attr("height", rc.h)
-                .attr("width", rc.w);
-            ms.prog.prfill = ms.prog.g.append("rect")
-                .attr("class", "progbarfilled")
-                .attr("id", "progdisprect")
-                .attr("x", rc.x)
-                .attr("y", rc.y)
-                .attr("height", rc.h)
-                .attr("width", 0);
-            ms.prog.qrem = ms.prog.g.append("text")
-                .attr("class", "qremtext")
-                .attr("text-anchor", "middle")  //variable width font
-                .attr("x", rc.x + Math.round(rc.w / 2))
-                .attr("y", tc.y - ti.p.t)
-                .attr("dy", "-.3em")   //fudge text baseline
-                .attr("font-size", 14)
-                .text(String("")); }  //see updateRemainingQuestionsCount
-        ms.prog.prfill.attr("width", Math.round(currlev.lev.levpcnt * rc.w));
+            initProgBarElements(currlev, ti, tc, rc); }
+        if(ms.currlev && ms.currlev.lev.remptcounter >= 0) {
+            calc.rem = ms.currlev.lev.remptcounter;
+            calc.total = ms.currlev.lev.points.length;
+            calc.pcnt = (calc.total - calc.rem) / calc.total; }
+        ms.prog.prfill.attr("width", Math.round(calc.pcnt * rc.w));
         ms.prog.levnum.text(String(currlev.lev.num));
         ms.currlev = currlev;
     }
@@ -260,7 +262,6 @@ app.mode = (function () {
 
 
     function updateRemainingQuestionsCount (count) {
-        var txt = "";
         if(count !== 0 && count !== -1) {
             count = ms.currlev.lev.rempts.length;
             ms.currlev.lev.remptcounter = count; }
@@ -268,12 +269,7 @@ app.mode = (function () {
             count = ms.currlev.lev.remptcounter - 1;
             ms.currlev.lev.remptcounter = count; }
         count = count || 0;
-        if(count > 0) {
-            txt = String(count) + " points left"; }
-        if(count >= ms.currlev.lev.points.length) {
-            txt = ""; }  //just started, don't distract with extra text.
-        if(ms) {
-            ms.prog.qrem.text(txt); }
+        updateLevelDisplay(ms.currlev);
     }
 
 
