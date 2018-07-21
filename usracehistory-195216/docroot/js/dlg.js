@@ -1105,7 +1105,7 @@ app.dlg = (function () {
         html = [["div", {id:"dlgtitlediv"}, "Save Progress"],
                 ["div", {cla:"dlgsignindiv"},
                  ["div", {cla:"dlgformline"},
-                  "Sign in to save your progress"]],
+                  "Sign in to keep your progress."]],
                 ["div", {id:"dlgbuttondiv"},
                  [["button", {type:"button", id:"skipbutton",
                               onclick:jt.fs("app.dlg.contnosave()")},
@@ -1115,6 +1115,7 @@ app.dlg = (function () {
                               onclick:jt.fs("app.dlg.signin()")},
                    "Sign In"]]]];
         displayDialog(null, jt.tac2html(html));
+        setFocus("signinbutton");
         dlgstack.push(app.dlg.saveprog);
     }
 
