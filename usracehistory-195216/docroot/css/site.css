@@ -11,10 +11,10 @@ body {
   background:#e7e1e2;
 }
 
-A:link {text-decoration:none; color:#004052; }
-A:visited {text-decoration:none; color:#004052; }
-A:active {text-decoration:none; color:#004052; }
-A:hover {text-decoration:underline; color:#00989a; }
+A:link {text-decoration:none; color:#0590b8; }
+A:visited {text-decoration:none; color:#0590b8; }
+A:active {text-decoration:none; color:#0590b8; }
+A:hover {text-decoration:underline; color:#3bd4ff; }
 
 img { border:0px; vertical-align:middle; }
 
@@ -35,6 +35,10 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 #menudiv { position:absolute; right:5px; top:-2px; margin-top:-3px; }
 .menulinemain { background:url('../img/menuback.png'); text-align:center; 
   padding:5px; }
+.menulinemain a:link {text-decoration:none; color:#004052; }
+.menulinemain a:visited {text-decoration:none; color:#004052; }
+.menulinemain a:active {text-decoration:none; color:#004052; }
+.menulinemain a:hover {text-decoration:underline; color:#00989a; }
 #suppvisdiv { position:absolute; left:80px; top:80px; 
   visibility:hidden; background:#e0cb07; overflow:scroll;
   padding:10px; border-radius:5px; border: 2px solid #666666; }
