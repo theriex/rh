@@ -172,6 +172,8 @@ app.mode = (function () {
 
 
     function changeMode (chmode) {
+        if(chmode === "same") {
+            chmode = mode; }
         chmode = chmode || mode;
         showModeElements(chmode);
         if(mode === "interactive") {
@@ -194,7 +196,8 @@ app.mode = (function () {
                     {m:"newtl",   n:"Create&nbsp;Timeline", c:"acc"},
                     {m:"signout", n:"Sign&nbsp;Out",        c:"acc"},
                     {m:"signin",  n:"Sign&nbsp;In",         c:"noacc"},
-                    {m:"support", n:"Support"}],
+                    {m:"support", n:"Support"},
+                    {m:"about",   n:"About"}],
             acc = app.user && app.user.tok,
             html = [];
         menu.forEach(function (mi) {
@@ -229,7 +232,8 @@ app.mode = (function () {
             switch(select) {  //next action
             case "visual": changeMode("interactive"); break;
             case "refmode": changeMode("reference"); break;
-            case "support": app.support.display(ms); break; 
+            case "support": app.support.display(ms, "support"); break; 
+            case "about": app.support.display(ms, "about"); break; 
             case "signin": app.dlg.signin(); break;
             case "myacc": app.dlg.myacc(); break;
             case "newtl": app.tabular.tledit(); break;
