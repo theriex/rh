@@ -7,14 +7,14 @@ app.support = (function () {
     var dispdef = {
         support:{title:"Support", content:[
             ["p", "Help improve this site! Issues are tracked on <span id=\"supghsp\">github</span>, or just <span id=\"supiemsp\">send email</span> if you notice something."],
-            ["p", "If you can, please <span id=\"supdonsp\">make a donation to support this site</span>."],
+// Not worth mentioning until the donation page has been set up
+//            ["p", "If you can, please <span id=\"supdonsp\">make a donation to support this site</span>."],
             ["p", "If your organization would like to manage its own data, or sponsor creating a new visualization, <span id=\"suporgesp\">get in touch</span>."]],
                  repls:[
                      {id:"supghsp", url:"https://github.com/theriex/rh/issues"},
                      {id:"supiemsp", em:"issues", delay:1000},
                      {id:"supdonsp", url:"docs/interimdonation.html"},
-                     {id:"suporgesp", em:"contact", delay:1000},
-                     {id:"supdocsp", url:"docs/documentation.html"}]},
+                     {id:"suporgesp", em:"contact", delay:1000}]},
         about:{title:"About", content:[
             ["p", "The goal of the U.S. Race History Project is to provide introductory information that promotes understanding and respect for the context of people whose histories are frequently ignored.  Points are presented interactively for perusal when visiting the site, or by reference with optional download."],
             ["p", "All timelines are incomplete.  You are encouraged to check all points for yourself.  Knowledge evolves over time and history has multiple perspectives."],
@@ -27,7 +27,7 @@ app.support = (function () {
     function replace (def) {
         var emd = "@usracehistory.org";
         def.repls.forEach(function (rep) {
-            if(rep.url) {
+            if(rep.url && jt.byId(rep.id)) {
                 jt.out(rep.id, jt.tac2html(
                     ["a", {href:rep.url,
                            onclick:jt.fs("window.open('" + rep.url + "')")},
@@ -40,9 +40,13 @@ app.support = (function () {
 
 
     function display (ms, dc) {
-        var def, html, svd, contheight;
+        var def, currpt, html, svd, contheight;
         dc = dc || "support";
         def = dispdef[dc];
+        currpt = app.mode.currpt();
+        if(currpt) {  //return to the same point after this display is done.
+            app.db.unvisitPoint(currpt);
+            app.mode.requeue(currpt); }
         html = [["div", {id:"suppxdiv"},
                  ["a", {href:"#close",
                         onclick:jt.fs("app.support.close()")}, "x"]],
