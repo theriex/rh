@@ -58,7 +58,8 @@ app.dlg = (function () {
         lnfidx = 0,
         tl = null,
         editpt = null,
-        dlgstack = [];
+        dlgstack = [],
+        sip = {};  //sign-in prompting
 
 
     function nextColorTheme () {
@@ -1102,25 +1103,40 @@ app.dlg = (function () {
 
     function showSignInToSaveDialog () {
         var html;
+        if(!sip || !sip.count) {
+            sip = {count:0,
+                   prompts:["Sign in to keep your progress.",
+                            "Sign in to keep your progress.<br/>" +
+                            "(No spam. Minimal info. Timeline use only.)"]}; }
+        sip.idx = Math.min(sip.count, sip.prompts.length - 1);
         html = [["div", {id:"dlgtitlediv"}, "Save Progress"],
                 ["div", {cla:"dlgsignindiv"},
-                 ["div", {cla:"dlgformline"},
-                  "Sign in to keep your progress."]],
-                ["div", {id:"dlgbuttondiv"},
-                 [["button", {type:"button", id:"skipbutton",
-                              onclick:jt.fs("app.dlg.contnosave()")},
-                   "Skip"],
-                  " &nbsp; ",
-                  ["button", {type:"button", id:"signinbutton",
-                              onclick:jt.fs("app.dlg.signin()")},
-                   "Sign In"]]]];
+                 ["div", {cla:"dlgformline", style:"text-align:center;"},
+                  sip.prompts[sip.idx]]]];
+        if(sip.count > 1) {
+            html.push(["div", {cla:"dlgformline"},
+                       [["input", {type:"checkbox", id:"cbnosi"}],
+                        ["label", {fo:"cbnosi"},
+                         "Don't keep progress, don't ask again."]]]); }
+        html.push(["div", {id:"dlgbuttondiv"},
+                   [["button", {type:"button", id:"skipbutton",
+                                onclick:jt.fs("app.dlg.contnosave()")},
+                     "Skip"],
+                    " &nbsp; ",
+                    ["button", {type:"button", id:"signinbutton",
+                                onclick:jt.fs("app.dlg.signin()")},
+                     "Sign In"]]]);
         displayDialog(null, jt.tac2html(html));
         setFocus("signinbutton");
         dlgstack.push(app.dlg.saveprog);
+        sip.count += 1;
     }
 
 
     function continueToNext () {
+        var cbnosi = jt.byId("cbnosi");
+        if(cbnosi && cbnosi.checked) {
+            sip.noprompt = true; }
         if(jt.byId("savestatspan")) {
             jt.out("savestatspan", "Continuing..."); }
         tl.pendingSaves = 0;
@@ -1146,7 +1162,10 @@ app.dlg = (function () {
     function saveProgress () {
         var html, data,
             savestat = "Saving your progress...";
-        if(!app.user.email) {
+        if(!app.user.email) {  //not signed in
+            if(sip.noprompt) {
+                setTimeout(continueToNext, 500);
+                return; }
             return showSignInToSaveDialog(); }
         //jt.log("saving progress");
         html = [["div", {id:"dlgtitlediv"}, "Save Progress"],
