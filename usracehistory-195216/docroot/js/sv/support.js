@@ -12,7 +12,7 @@ app.support = (function () {
             ["p", "If your organization would like to manage its own data, or sponsor creating a new visualization, <span id=\"suporgesp\">get in touch</span>."]],
                  repls:[
                      {id:"supghsp", url:"https://github.com/theriex/rh/issues"},
-                     {id:"supiemsp", em:"issues", delay:1000},
+                     {id:"supiemsp", em:"support", delay:1000},
                      {id:"supdonsp", url:"docs/interimdonation.html"},
                      {id:"suporgesp", em:"contact", delay:1000}]},
         about:{title:"About", content:[
