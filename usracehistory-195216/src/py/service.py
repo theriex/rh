@@ -78,7 +78,7 @@ def recent_timeline_edits(thresh):
 
 class PeriodicProcessing(webapp2.RequestHandler):
     def get(self):
-        daysback = 3
+        daysback = 1
         dtnow = datetime.datetime.utcnow()
         thresh = appuser.dt2ISO(dtnow - datetime.timedelta(daysback))
         body = "usracehistory access since " + thresh + "\n"
