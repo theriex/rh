@@ -4,6 +4,7 @@ from google.appengine.ext import db
 from google.appengine.api import images
 import logging
 import appuser
+import service
 import org
 import json
 import re
@@ -181,18 +182,27 @@ class FetchPublicPoints(webapp2.RequestHandler):
     def get(self):
         acc = appuser.get_authenticated_account(self, False)
         if not acc:
-            return
+            return  # error already reported
         if acc.orgid != 1 or acc.lev != 2:
             return appuser.srverr(self, 403, "Admin access only.")
-        res = []
-        # PENDING: Fetch selected public points rather than all points.
-        # Plan is to store selected point ids in an AppService instance
-        # name:"pubpts", data:"ptid1,ptid2,...", then walk those ids. 
-        pts = Point.all()
-        for pt in pts:
-            if is_deleted_point(pt):
-                continue
-            res.append(pt)
+        vq = appuser.VizQuery(service.AppService, "WHERE name=:1", "pubpts")
+        svcs = vq.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
+        if not len(svcs):  # create the entry as a placeholder
+            svc = service.AppService(name="pubpts", ckey="", csec="", data="")
+            svc.put()
+        res = []  # result accumulator
+        if len(svcs) > 0 and len(svcs[0].data) > 100:
+            for ptid in svcs[0].data.split(","):
+                pt = Point.get_by_id(int(ptid))
+                if is_deleted_point(pt):
+                    continue
+                res.append(pt)
+        else:  # no point ids to process, fetch everything
+            pts = Point.all()
+            for pt in pts:
+                if is_deleted_point(pt):
+                    continue
+                res.append(pt)
         appuser.return_json(self, res)
 
 
