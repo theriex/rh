@@ -1107,7 +1107,7 @@ app.dlg = (function () {
             sip = {count:0,
                    prompts:["Sign in to keep your progress.",
                             "Sign in to keep your progress.<br/>" +
-                            "(No spam. Minimal info. Timeline use only.)"]}; }
+                            "(Account info for app use only.)"]}; }
         sip.idx = Math.min(sip.count, sip.prompts.length - 1);
         html = [["div", {id:"dlgtitlediv"}, "Save Progress"],
                 ["div", {cla:"dlgsignindiv"},
