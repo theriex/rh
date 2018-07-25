@@ -1113,7 +1113,7 @@ app.dlg = (function () {
                 ["div", {cla:"dlgsignindiv"},
                  ["div", {cla:"dlgformline", style:"text-align:center;"},
                   sip.prompts[sip.idx]]]];
-        if(sip.count > 1) {
+        if(sip.count > 0) {
             html.push(["div", {cla:"dlgformline"},
                        [["input", {type:"checkbox", id:"cbnosi"}],
                         ["label", {fo:"cbnosi"},
