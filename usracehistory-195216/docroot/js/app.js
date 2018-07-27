@@ -53,7 +53,7 @@ var app = {},  //Global container for application level funcs and values
         jt.out("rhcontentdiv", "Loading app modules...");
         app.amdtimer = {};
         app.amdtimer.load = { start: new Date() };
-        jt.loadAppModules(app, modules, href, app.init2, "?cbp=180723");
+        jt.loadAppModules(app, modules, href, app.init2, "?cbp=180727");
     };
 
 
