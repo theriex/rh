@@ -472,9 +472,15 @@ app.db = (function () {
             ppl = Math.floor(tl.points.length / levs.length);
             levs.forEach(function (lev, idx) {
                 if(idx < levs.length - 1) {
-                    lev.points = tl.points.slice(0, (idx + 1) * ppl); }
+                    lev.points = tl.points.slice(idx * ppl, (idx + 1) * ppl); }
                 else {  //any remainder points go in last level
                     lev.points = tl.points.slice(idx * ppl); } });
+            // levs.forEach(function (lev, idx) {
+            //     var txt = "lev " + idx + ": " + lev.points.length + " ";
+            //     if(lev.points.length) {
+            //         txt += lev.points[0].instid + "..." +
+            //             lev.points[lev.points.length - 1].instid; }
+            //     jt.log(txt); });
             tl.levs = levs; });
         //calculate endpoint values (just avoiding cluttering up prev loop)
         dcon.ds.forEach(function (tl) {
