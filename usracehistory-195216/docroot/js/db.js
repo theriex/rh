@@ -302,24 +302,30 @@ app.db = (function () {
     }
 
 
+    function parseProgStr (str) {
+        var ces, pes = {isoShown:"", isoClosed:"", viewCount:0, tagCodes:""};
+        if(str) {
+            ces = str.split(";");
+            pes.isoShown = ces[1];
+            pes.isoClosed = ces[2];
+            if(ces.length > 3) {
+                pes.viewCount = Number(ces[3]); }
+            if(ces.length > 4) {
+                pes.tagCodes = ces[4]; } }
+        return pes;
+    }
+
+
     function getProgressElements (csv, id) {
-        var idx, str, ces,
-            pes = {isoShown:"", isoClosed:"", viewCount:0, tagCodes:""};
+        var idx, str;
         idx = csv.indexOf(id);
         if(idx < 0) {
-            return pes; }
+            return parseProgStr(); }
         str = csv.slice(idx);
         idx = str.indexOf(",");
         if(idx >= 0) {
             str = str.slice(0, idx); }
-        ces = str.split(";");
-        pes.isoShown = ces[1];
-        pes.isoClosed = ces[2];
-        if(ces.length > 3) {
-            pes.viewCount = Number(ces[3]); }
-        if(ces.length > 4) {
-            pes.tagCodes = ces[4]; }
-        return pes;
+        return parseProgStr(str);
     }
 
 
@@ -898,6 +904,7 @@ app.db = (function () {
         cachePoints: function (pts) { return cachePoints(pts); },
         unvisitPoint: function (pt) { unvisitPoint(pt); },
         recalcProgress: function () { return recalcProgress(); },
-        compareStartDate: function (a, b) { return compareStartDate(a, b); }
+        compareStartDate: function (a, b) { return compareStartDate(a, b); },
+        parseProgStr: function (str) { return parseProgStr(str); }
     };
 }());

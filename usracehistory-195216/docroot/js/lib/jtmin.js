@@ -1,6 +1,6 @@
-/*global alert, console, document, window, XMLHttpRequest, JSON, escape, unescape, setTimeout, navigator */
+/*jslint browser, multivar, white, fudge, this, for, long */
 
-/*jslint browser, multivar, white, fudge, this, for */
+/*global alert, console, document, window, XMLHttpRequest, JSON, escape, unescape, setTimeout, navigator */
 
 ////////////////////////////////////////
 // Just The Mods I Need
@@ -413,7 +413,7 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
     uo.isoString2Day = uo.ISOString2Day;
 
 
-    uo.ISOString2Time = function (str) {
+    uo.ISOString2Time = function (str, utc) {
         var date, year, month, day, hours, minutes, seconds;
         if (!str) {
             str = new Date().toISOString();
@@ -424,7 +424,12 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
         hours = parseInt(str.slice(11, 13), 10);
         minutes = parseInt(str.slice(14, 16), 10);
         seconds = parseInt(str.slice(17, 19), 10);
-        date = new Date(year, (month - 1), day, hours, minutes, seconds, 0);
+        if(utc || str.endsWith("Z")) {
+            date = new Date(Date.UTC(year, (month - 1), day, 
+                                     hours, minutes, seconds, 0)); }
+        else {
+            date = new Date(year, (month - 1), day, 
+                            hours, minutes, seconds, 0); }
         return date;
     };
     uo.isoString2Time = uo.ISOString2Time;
@@ -757,7 +762,8 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
         fso.drop = fso.drop || function (evt) {
             var pos = {x: evt.pageX, y: evt.pageY},
                 dat = fso.dat.split(":"),
-                offset = {x: pos.x - (+dat[1]), y: pos.y - (+dat[2])},
+                offset = {x: pos.x - (Number(dat[1])), 
+                          y: pos.y - (Number(dat[2]))},
                 srcelem = uo.byId(dat[0]),
                 coord = uo.geoPos(srcelem);
             uo.evtend(evt);
@@ -927,10 +933,10 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
             tempdiv.id = tempdivid;
             document.body.appendChild(tempdiv);
         }
-        now = new Date().getTime();
+        now = Date.now();
         start = now;
         while (now - start < delayms) {
-            now = new Date().getTime();
+            now = Date.now();
             uo.out(tempdivid, "delay " + (now - start));
         }
         uo.out(tempdivid, "");
@@ -1057,7 +1063,7 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
         var levels, iso, slug;
         levels = { year: 2, month: 4, day: 6, hour: 8, minute: 10 };
         prefix = prefix || "";
-        if(toklev && toklev.endsWith('Z')) {
+        if(toklev && toklev.endsWith("Z")) {
             iso = toklev; }
         else {
             iso = new Date().toISOString(); }
@@ -1161,7 +1167,7 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
         if (path.lastIndexOf(".") > path.lastIndexOf("/")) {
             path = path.slice(0, path.lastIndexOf("/"));
         }
-        if (path.charAt(path.length - 1) !== '/') {
+        if (path.charAt(path.length - 1) !== "/") {
             path += "/";
         }
         parastr = parastr || "";

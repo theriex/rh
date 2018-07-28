@@ -153,36 +153,113 @@ app.linear = (function () {
     }
 
 
-    function fillColorForPoint (pt) {
-        var fc, now = jt.isoString2Time();  //use ISO Z time (no time zone)
-        if(!tl.vrng) {
-            tl.vrng = {start:now, end:0};
-            tl.pts.forEach(function (pt) {
-                var dt;
-                if(pt.isoShown) {
-                    dt = jt.isoString2Time(pt.isoShown);
-                    if(dt < tl.vrng.start) {
-                        tl.vrng.start = dt; }
-                    if(!tl.vrng.end || dt > tl.vrng.end) {
-                        tl.vrng.end = dt; } } });
-            jt.log("tl.vrng: " + tl.vrng.start + " to " + tl.vrng.end); }
-        if(!tl.heat) {
-            tl.test = d3.scaleTime()
-                .domain([tl.vrng.start, tl.vrng.end])
-                .range([0, 100]);
-            tl.heat = d3.scaleTime()
-                .domain([tl.vrng.start, tl.vrng.end])
-                .range([d3.rgb("#005eff"), d3.rgb("#FF7200")])
-                .interpolate(d3.interpolateRgb);
-            jt.log("tl.heat: " + tl.heat(tl.vrng.start) + " to " + 
-                   tl.heat(tl.vrng.end)); }
-        if(pt.isoShown) {
-            fc = tl.heat(jt.isoString2Time(pt.isoShown));
-            //jt.log("pt " + pt.instid + " " + fc);
-            return fc; }
-        return "#000";
+    function chromacoding () {  //heat color values for elapsed human time
+        var hc = {dcon:app.db.displayContext(),
+                  oldest:new Date().toISOString()};
+        if(app.user && app.user.acc && app.user.acc.started) {
+            app.user.acc.started.forEach(function (st) {
+                if(st.pts && st.tlid === hc.dcon.tlid) {
+                    st.pts.csvarray().forEach(function (ps) {
+                        var prog = app.db.parseProgStr(ps);
+                        if(prog.isoClosed < hc.oldest) {
+                            hc.oldest = prog.isoClosed; } }); } }); }
+        hc.buckets = [
+            {name:"5min",   tdm:5,       cool:"#ffdd26", hot:"#ff7200"},
+            {name:"30min",  tdm:30,      cool:"#00fe74", hot:"#effe00"},
+            {name:"day",    tdm:24*60,   cool:"#00d5fe", hot:"#00fe74"},
+            {name:"week",   tdm:7*24*60, cool:"#0000ff", hot:"#00d5fe"}];
+        return hc;
     }
 
+
+    function updateChromaTimescale (hc, nowiso) {
+        var now = jt.isoString2Time(),  //microseconds can bump outside range
+            window;
+        if(hc && hc.upd && now.getTime() - hc.upd.getTime() < 30 * 1000) {
+            return; }  //still fresh enough
+        hc.upd = now;
+        hc.newest = now.toISOString();
+        window = {start:now};
+        hc.buckets.forEach(function (bu) {
+            window.end = window.start;
+            window.start = new Date(window.end.getTime() - bu.tdm * 60 * 1000);
+            bu.start = window.start.toISOString();
+            hc.oldest = bu.start;
+            bu.end = window.end.toISOString();
+            bu.st = d3.scaleTime()
+                .domain([window.start, window.end])
+                .range([d3.rgb(bu.cool), d3.rgb(bu.hot)])
+                .interpolate(d3.interpolateRgb); });
+        app.linear.recolorPoints();
+    }
+
+
+    function fillColorForDate (date) {
+        var fc = "#000", dstr;
+        if(typeof date === "string") {
+            date = jt.isoString2Time(date); }
+        dstr = date.toISOString();
+        tl.hc.buckets.forEach(function (bu) {
+            //ok if a borderline case updates again from later bucket
+            if(dstr <= bu.end && dstr >= bu.start) {
+                fc = bu.st(date); } });
+        return fc;
+    }
+
+
+    function fillColorForPoint (pt) {
+        var fc = "#000", shown;
+        if(!tl.hc) {
+            tl.hc = chromacoding(); }
+        updateChromaTimescale(tl.hc, new Date().toISOString());
+        if(pt.isoShown) {
+            shown = pt.isoShown;
+            if(shown > tl.hc.newest) {
+                shown = tl.hc.newest; }
+            if(shown < tl.hc.oldest) {
+                shown = tl.hc.oldest; }
+            fc = fillColorForDate(jt.isoString2Time(shown)); }
+        return fc;
+    }
+
+
+    function testChromaBuckets () {
+        var now = new Date().getTime();
+        tl.hc.tests = [new Date(now - 1*60*1000),         //5 minutes
+                       new Date(now - 2*60*1000),
+                       new Date(now - 3*60*1000),
+                       new Date(now - 4*60*1000),
+                       new Date(now - 5*60*1000),
+                       new Date(now - 10*60*1000),        //30 minutes
+                       new Date(now - 15*60*1000),
+                       new Date(now - 20*60*1000),
+                       new Date(now - 25*60*1000),
+                       new Date(now - 30*60*1000),
+                       new Date(now - 1*60*60*1000),      //hours
+                       new Date(now - 2*60*60*1000),
+                       new Date(now - 6*60*60*1000),
+                       new Date(now - 12*60*60*1000),
+                       new Date(now - 18*60*60*1000),
+                       new Date(now - 24*60*60*1000),
+                       new Date(now - 2*24*60*60*1000),   //days
+                       new Date(now - 3*24*60*60*1000),
+                       new Date(now - 4*24*60*60*1000),
+                       new Date(now - 5*24*60*60*1000),
+                       new Date(now - 6*24*60*60*1000)];
+        tl.hc.tests.forEach(function (date, idx) {
+            var pt = tl.pts[idx], color;
+            color = fillColorForDate(date);
+            tl.focus.select("#" + pt.id)
+                .style("fill", color); });
+    }
+
+
+    function recolorPoints () {
+        tl.pts.forEach(function (pt) {
+            tl.focus.select("#" + pt.id)
+                .style("fill", fillColorForPoint(pt)); });
+    }
+            
 
     function highlightPoint (d, highlight) {
         if(highlight) {
@@ -316,6 +393,7 @@ app.linear = (function () {
         addFocusInteractiveElements();
         addContextDecorativeElements();
         adjustTickTextVisibility();
+        //testChromaBuckets();
     }
 
 
@@ -475,6 +553,7 @@ app.linear = (function () {
         tldata: function () { return tl; },
         unzoom: function () { unzoom(); },
         timeline: function () { return tl; },
-        fillColorForPoint: function (d) { return fillColorForPoint(d); }
+        fillColorForPoint: function (d) { return fillColorForPoint(d); },
+        recolorPoints: function () { return recolorPoints(); }
     };
 }());
