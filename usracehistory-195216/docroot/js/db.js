@@ -814,7 +814,9 @@ app.db = (function () {
         dval = dval || "[]";   //assume array if no dval
         if(!jtxt) {
             jtxt = dval; }
-        else if(jtxt === unserializedMarker) {
+        if(typeof jtxt !== "string") {  //already deserialized
+            return jtxt; }
+        if(jtxt === unserializedMarker) {
             jt.log("bleepParseJSON ignoring " + unserializedMarker);
             jtxt = dval; }
         try {
