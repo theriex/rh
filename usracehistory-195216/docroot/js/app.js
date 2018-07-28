@@ -33,8 +33,7 @@ var app = {},  //Global container for application level funcs and values
         app.amdtimer.load.end = new Date();
         jt.log("window.innerWidth: " + window.innerWidth);
         app.user = {};  //used for general reference
-        app.dlg.chkcook("background");
-        app.db.fetchDisplayTimeline();
+        app.dlg.chkcook(app.db.fetchDisplayTimeline);
     };
 
 

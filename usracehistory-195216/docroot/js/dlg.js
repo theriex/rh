@@ -972,7 +972,7 @@ app.dlg = (function () {
     }
 
 
-    function processSignIn (cred, bg) {
+    function processSignIn (cred, contf) {
         //PENDING: Go with localStorage user instance if found, then redisplay
         //if any significant changes found after db retrieval.
         var params;
@@ -982,11 +982,12 @@ app.dlg = (function () {
         if(cred) {
             jt.call("GET", "acctok?" + params, null,
                     function (result) {
+                        jt.log("processSignIn retrieved AppUser");
                         app.db.deserialize("AppUser", result[0]);
                         setAuthentication(cred.emailin, result);
                         app.db.initTimelines();  //reset for user
-                        if(bg) {  //Background mode, leave UI/flow alone.
-                            return; }
+                        if(contf) {
+                            return contf(); }
                         app.dlg.close();
                         app.linear.display(); },
                     function (code, errtxt) {
@@ -1006,13 +1007,14 @@ app.dlg = (function () {
     }
 
 
-    function checkCookieSignIn (bg) {
+    function checkCookieSignIn (contf) {
         var cval = jt.cookie(cookname);
         jt.log("cookie " + cookname + ": " + cval);
-        if(cval) {
-            cval = cval.split(cookdelim);
-            processSignIn({emailin:cval[0].replace("%40", "@"),
-                           authtok:cval[1]}, bg); }
+        if(!cval) {
+            return contf(); }
+        cval = cval.split(cookdelim);
+        processSignIn({emailin:cval[0].replace("%40", "@"),
+                       authtok:cval[1]}, contf);
     }
 
 
@@ -1705,7 +1707,7 @@ app.dlg = (function () {
         back: function () { closeDialog(); popBack(); },
         login: function () { processSignIn(); },
         logout: function () { processSignOut(); },
-        chkcook: function (bg) { checkCookieSignIn(bg); },
+        chkcook: function (cf) { checkCookieSignIn(cf); },
         forgotpw: function () { forgotPassword(); },
         saveprog: function () { saveProgress(); },
         contnosave: function () { continueToNext(); },
