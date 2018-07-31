@@ -2,20 +2,30 @@ import webapp2
 import datetime
 from google.appengine.ext import db
 import logging
+import appuser
+import json
 
-# A DayCount keeps track of which timelines were accessed how many times
-# each day so that information is available for activity reporting.  Anytime
-# a save happens, or a timeline is completed, the counts for that timeline
-# get incremented.  Non-critical, async and non-blocking as possible.
-#
-# The toptlsum is computed by periodic task after day close or by admin.
-# Each summary entry has fields tlid, name, lang, desc, org, status, ctype,
-# created, modified, count30d (total access count past 30 days).  The
-# summaries are built by retrieving the top 200 most recently modified
-# timelines, then merging those with the count data over the past 30 days
-# faulting in any timeline instances that weren't already retrieved.
+# DayCount keeps track of timeline fetches and progress saves to enable
+# viewing activity.  Entries are aggregated nightly.
 class DayCount(db.Model):
     """ Traffic access accumulator. May under-report if save errors. """
-    day = db.StringProperty(required=True)  # ISO day (midnight eastern)
-    tlcounts = db.TextProperty()  # CSV tlid:count
-    toptlsum = db.TextProperty()  # JSON array of tl summaries (after day over)
+    tstamp = db.StringProperty(required=True)  # ISO day (midnight eastern)
+    rtype = db.StringProperty(required=True)   # tlfetch, tlsave, daysum
+    detail = db.TextProperty()                 # json dict
+
+
+def noteTimelineFetch(handler, tl, uidp):
+    dc = {"tlid": str(tl.key().id()), "tlname":tl.name, "uidp": uidp}
+    headers = handler.request.headers
+    hkeys = ["Referer", "User-Agent", "X-Appengine-Country", 
+             "X-Appengine-Citylatlong", "X-Appengine-Region"]
+    names = ["referer", "agent", "country", "latlong", "region"]
+    for idx, key in enumerate(hkeys):
+        val = ""
+        if key in headers:
+            val = headers[key]
+        dc[names[idx]] = val
+    record = DayCount(tstamp=appuser.nowISO(), rtype="tlfetch",
+                      detail=json.dumps(dc))
+    record.put()
+

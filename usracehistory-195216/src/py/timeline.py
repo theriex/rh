@@ -5,6 +5,7 @@ from google.appengine.api import memcache
 import logging
 import appuser
 import point
+import daycount
 import json
 import re
 
@@ -239,6 +240,9 @@ class FetchTimeline(webapp2.RequestHandler):
             tl = make_bootstrap_demo()
         if not tl:
             return appuser.srverr(self, 404, "No Timeline " + tlid)
+        uidp = self.request.get("uidp")
+        if uidp:
+            daycount.noteTimelineFetch(self, tl, uidp)
         tls = contained_timelines(tl);
         appuser.return_json(self, tls);
 

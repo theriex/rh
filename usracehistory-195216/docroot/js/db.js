@@ -757,7 +757,8 @@ app.db = (function () {
         app.user.tls = app.user.tls || {};
         //PENDING: Go with localStorage timeline if available, then redisplay
         //if db fetch shows anything has changed.
-        jt.call("GET", "fetchtl?slug=" + slug, null,
+        url = "fetchtl?" + app.db.uidp() + "&slug=" + slug;
+        jt.call("GET", url, null,
                 function (result) {  //one or more timeline objects
                     result.forEach(function (tl) {
                         app.db.deserialize("Timeline", tl); });
@@ -877,6 +878,15 @@ app.db = (function () {
             return obj.orgid; }
         return "";
     }
+
+
+    function userIdParam () {
+        var td = app.amdtimer.load.end,
+            uid = td.toISOString() + td.getTimezoneOffset();
+        if(app.user && app.user.acc) {
+            uid = app.user.acc.instid; }
+        return "uidp=" + uid;
+    }
             
         
     return {
@@ -899,6 +909,7 @@ app.db = (function () {
         initTimelines: function () { initTimelinesContent(); },
         ptlinktxt: function (p, s, f) { return pointLinkedText(p, s, f); },
         getOrgId: function (obj) { return getOrgId(obj); },
+        uidp: function () { return userIdParam(); },
         prepPointsArray: function (pts) { prepPointsArray(pts); },
         prepData: function (tl) { prepData(tl); },
         cachePoints: function (pts) { return cachePoints(pts); },
