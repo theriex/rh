@@ -14,8 +14,7 @@ class DayCount(db.Model):
     detail = db.TextProperty()                 # json dict
 
 
-def noteTimelineFetch(handler, tl, uidp):
-    dc = {"tlid": str(tl.key().id()), "tlname":tl.name, "uidp": uidp}
+def write_dc_entry(handler, dct, data):
     headers = handler.request.headers
     hkeys = ["Referer", "User-Agent", "X-Appengine-Country", 
              "X-Appengine-Citylatlong", "X-Appengine-Region"]
@@ -24,8 +23,27 @@ def noteTimelineFetch(handler, tl, uidp):
         val = ""
         if key in headers:
             val = headers[key]
-        dc[names[idx]] = val
-    record = DayCount(tstamp=appuser.nowISO(), rtype="tlfetch",
-                      detail=json.dumps(dc))
+        data[names[idx]] = val
+    record = DayCount(tstamp=appuser.nowISO(), rtype=dct,
+                      detail=json.dumps(data))
     record.put()
+
+
+def note_timeline_fetch(handler, tl, uidp):
+    dc = {"tlid": str(tl.key().id()), "tlname":tl.name, "uidp": uidp}
+    write_dc_entry(handler, "tlfetch", dc)
+
+
+class NoteProgress(webapp2.RequestHandler):
+    def post(self):
+        if not appuser.verify_secure_comms(self):
+            return
+        data = appuser.read_params(self, ["uidp", "tlid", "st", "svs", "pts"]);
+        if data["uidp"] and data["tlid"] and data["pts"]:
+            write_dc_entry(self, "tlsave", data)
+        appuser.return_json(self, "[]")
+
+
+app = webapp2.WSGIApplication([('.*/noteprog', NoteProgress)],
+                              debug=True)
 

@@ -1161,15 +1161,24 @@ app.dlg = (function () {
     }
 
 
+    function promptSignIn () {
+        var data = jt.objdata(app.db.displayContext().prog);
+        jt.call("POST", "noteprog?" + app.db.uidp(), data,
+                function () { return true; },
+                function (code, errtxt) {
+                    jt.log("noteGuestProgress " + code + " " + errtxt); },
+                jt.semaphore("dlg.noteGuestProgress"));
+        if(sip.noprompt) {
+            setTimeout(continueToNext, 500);
+            return; }
+        showSignInToSaveDialog();
+    }
+
+
     function saveProgress () {
-        var html, data,
-            savestat = "Saving your progress...";
+        var html, data, savestat = "Saving your progress...";
         if(!app.user.email) {  //not signed in
-            if(sip.noprompt) {
-                setTimeout(continueToNext, 500);
-                return; }
-            return showSignInToSaveDialog(); }
-        //jt.log("saving progress");
+            return promptSignIn(); }
         html = [["div", {id:"dlgtitlediv"}, "Save Progress"],
                 ["div", {cla:"dlgsignindiv"},
                  ["div", {cla:"dlgformline"},

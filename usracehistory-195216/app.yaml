@@ -76,7 +76,7 @@ handlers:
 
 
 ## Fetch the specified Timeline.
-## GET params: tlid
+## GET params: tlid or slug, optional uidp
 - url: .*/fetchtl.*
   script: src.py.timeline.app
 
@@ -134,6 +134,14 @@ handlers:
 ## GET params: 
 - url: .*/pubptids.*
   script: src.py.service.app
+
+
+## -------------------- daycount --------------------
+
+## Note interaction progress
+## POST params: prog, uidp
+- url: .*/noteprog.*
+  script: src.py.daycount.app
 
 
 ######################################################################

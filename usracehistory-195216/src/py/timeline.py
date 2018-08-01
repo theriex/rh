@@ -242,7 +242,7 @@ class FetchTimeline(webapp2.RequestHandler):
             return appuser.srverr(self, 404, "No Timeline " + tlid)
         uidp = self.request.get("uidp")
         if uidp:
-            daycount.noteTimelineFetch(self, tl, uidp)
+            daycount.note_timeline_fetch(self, tl, uidp)
         tls = contained_timelines(tl);
         appuser.return_json(self, tls);
 
