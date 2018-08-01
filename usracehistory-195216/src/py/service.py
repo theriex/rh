@@ -4,7 +4,9 @@ import logging
 import appuser
 import point
 import timeline
+import daycount
 import datetime
+import json
 
 class AppService(db.Model):
     name = db.StringProperty(required=True)   # Unique service name
@@ -31,12 +33,42 @@ class PublicPointIds(webapp2.RequestHandler):
         self.response.out.write(svc.data)
 
 
+def recent_activity(thresh):
+    tlf = {}
+    sav = {}
+    # PENDING: avg num points completed, avg time/pt (also note from accounts)
+    vq = appuser.VizQuery(daycount.DayCount, "ORDER BY tstamp DESC")
+    dcs = vq.fetch(42000, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
+    for dc in dcs:
+        if dc.tstamp < thresh:
+            break
+        detail = json.loads(dc.detail)
+        tlid = detail["tlid"]
+        if dc.rtype == "tlfetch":
+            if tlid in tlf:
+                tlf[tlid] += 1
+            else:
+                tlf[tlid] = 1
+        elif dc.rtype == "tlsave":
+            if detail["uidp"] not in sav:  # save not already noted
+                sav[detail["uidp"]] = len(detail["pts"].split(","))
+    summary = ""
+    for key in tlf:
+        name = key
+        tl = timeline.fetch_timeline_by_id(int(key))
+        if tl:
+            name += " (" + tl.name + ")"
+        summary += "tlfetch " + name + ": " + str(tlf[key]) + "\n"
+    for key in sav:
+        summary += " tlsave " + key + ": " + str(sav[key]) + "\n"
+    return summary
+
+
 def recent_access_accounts(thresh):
     vq = appuser.VizQuery(appuser.AppUser, "ORDER BY accessed DESC")
     accs = vq.fetch(1000, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
     names = ""
     for acc in accs:
-        logging.info(acc.email + " " + acc.accessed)
         if acc.accessed < thresh:
             break
         if names:
@@ -82,6 +114,7 @@ class PeriodicProcessing(webapp2.RequestHandler):
         dtnow = datetime.datetime.utcnow()
         thresh = appuser.dt2ISO(dtnow - datetime.timedelta(daysback))
         body = "usracehistory access since " + thresh + "\n"
+        body += recent_activity(thresh) + "\n"
         body += recent_access_accounts(thresh) + "\n"
         body += recent_timeline_edits(thresh) + "\n"
         body += recent_point_edits(thresh) + "\n"
