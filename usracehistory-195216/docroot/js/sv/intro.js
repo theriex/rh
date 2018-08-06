@@ -288,8 +288,8 @@ app.intro = (function () {
             plat.type = "mac"; }
         else {
             plat.type = "pc"; }
-        //Removed "You might be speedier or more thorough" chatter.
-        jt.out("sv0textdiv", "Completion will take more than one visit.");
+        //Space for an additional text message if needed.
+        jt.out("sv0textdiv", "");
         setTimeout(displayActionLink, 1200);
     }
 
