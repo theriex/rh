@@ -744,7 +744,7 @@ app.db = (function () {
 
 
     function fetchDisplayTimeline () {
-        var slug = "demo",
+        var slug = "default",
             url = window.location.href,
             tlmarker = "/timeline/",
             idx = url.indexOf(tlmarker);

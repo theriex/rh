@@ -233,10 +233,10 @@ class FetchTimeline(webapp2.RequestHandler):
         else:
             slug = self.request.get("slug")
             if not slug:
-                slug = "demo"
+                slug = "default"
             slug = slug.lower()  # just in case someone camel cases a url..
             tl = fetch_timeline_by_slug(slug)
-        if not tl and slug == "demo":
+        if not tl and slug == "default":
             tl = make_bootstrap_demo()
         if not tl:
             return appuser.srverr(self, 404, "No Timeline " + tlid)
