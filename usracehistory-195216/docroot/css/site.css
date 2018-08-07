@@ -252,7 +252,7 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 #sv0contdiv { }
 #sv0timediv { font-size:small; text-align:center; }
 #sv0textdiv { font-size:small; text-align:center; padding:20px 0px 10px 0px; }
-#sv0linkdiv, #sv0closediv, #sv0buttonsdiv { 
+#sv0linkdiv, #sv0closediv, #sv0buttonsdiv, #suppclosediv { 
   font-size:large; font-weight:bold; text-align:center;
   padding:5px 10px 15px 10px; }
 #sv0txtdiv { background:#d6edf2; padding:10px; border-radius:10px;

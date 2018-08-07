@@ -1136,14 +1136,19 @@ app.dlg = (function () {
 
 
     function continueToNext () {
-        var cbnosi = jt.byId("cbnosi");
+        var chdet = app.support.chapter(),
+            cbnosi = jt.byId("cbnosi");
         if(cbnosi && cbnosi.checked) {
             sip.noprompt = true; }
         if(jt.byId("savestatspan")) {
             jt.out("savestatspan", "Continuing..."); }
         tl.pendingSaves = 0;
         nextColorTheme();
-        app.dlg.close();
+        app.dlg.verifyClosed();  //otherwise can end up overlayed over chapter
+        //The cutoff here is for timelines resembling a book.  Shorter
+        //timelines can divide into sections using suppviz.
+        if(chdet.ttl > 200 && chdet.rem <= 0) {
+            return app.support.chapter(app.db.nextInteraction); }
         app.db.nextInteraction();
     }
 

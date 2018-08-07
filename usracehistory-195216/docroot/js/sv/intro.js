@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge */
+/*jslint browser, multivar, white, fudge, long */
 /*global app, window, jt, d3 */
 
 app.intro = (function () {
@@ -340,6 +340,7 @@ app.intro = (function () {
         display: function () { display(); },
         actlink: function (action) { displayActionText(action); },
         close: function () { close(); },
-        hidetxtdiv: function () { jt.byId("sv0txtdiv").style.opacity = 0; }
+        hidetxtdiv: function () { jt.byId("sv0txtdiv").style.opacity = 0; },
+        initLinkText: function () { initLinkText(); }
     };
 }());

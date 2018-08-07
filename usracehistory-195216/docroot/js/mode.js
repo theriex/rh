@@ -232,8 +232,8 @@ app.mode = (function () {
             switch(select) {  //next action
             case "visual": changeMode("interactive"); break;
             case "refmode": changeMode("reference"); break;
-            case "support": app.support.display(ms, "support"); break; 
-            case "about": app.support.display(ms, "about"); break; 
+            case "support": app.support.display(ms.tl, "support"); break; 
+            case "about": app.support.display(ms.tl, "about"); break; 
             case "signin": app.dlg.signin(); break;
             case "myacc": app.dlg.myacc(); break;
             case "newtl": app.tabular.tledit(); break;
