@@ -464,15 +464,15 @@ app.db = (function () {
 
 
     function makeTimelineLevels () {
-        var levnum = 1;
+        var levnum = 0;
         dcon.ds.forEach(function (tl, idx) {
             var levs = [], ppl;
             tl.svs.csvarray().forEach(function (svn) {
+                levnum += 1;
                 levs.push({svname:svn,
                            svShown:"",       //suppviz not displayed yet
                            levelupShown:"",  //levelup viz not displayed yet
-                           num:levnum});
-                levnum += 1; });
+                           num:levnum}); });
             if(!levs.length) {
                 levs.push({svname:"none", num:levnum}); }
             ppl = Math.floor(tl.points.length / levs.length);
@@ -639,10 +639,9 @@ app.db = (function () {
             app.mode.updqrc(0);
             return app[currlev.lev.svname].display(); }
         if(!currlev.lev.levelupShown) {
-            if(currlev.lev.num === currlev.lev.maxnum) {
-                return app.finale.display(true); }
             return app.levelup.display(currlev); }
-        jt.log("db.nextInteraction fell through. Should never happen. ");
+        //no points left, sv shown, levelup shown, go with the finale
+        app.finale.display(true);  //record it so on reload they can restart
     }
 
 

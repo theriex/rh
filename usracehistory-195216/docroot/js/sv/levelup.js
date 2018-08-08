@@ -294,7 +294,7 @@ app.levelup = (function () {
             nextlev = levinf.levs[levinf.lev.num],  //last level calls finale
             txty = Math.round(0.4 * pc.y), ys, ye,
             nextf = displayStartButton;
-        if(!nextlev.points || !nextlev.points.length) {
+        if(!nextlev || !nextlev.points || !nextlev.points.length) {
             lines.push("");
             lines.push("All points completed!");
             nextf = autodone; }
