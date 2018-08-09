@@ -21,8 +21,8 @@ app.support = (function () {
             ["p", "The project thanks its member organizations for their essential contributions and perspective.  Technical development can be followed on <span id=\"supghsp\">github</span>."]],
                repls:[
                    {id:"supghsp", url:"https://github.com/theriex/rh/issues"}]},
-        chapter:{title:"End of Chapter <span id=\"chnsp\">N</span>", content:[
-            ["p", "You covered <span id=\"chptcsp\"></span> points from <span id=\"chyfsp\"></span> to <span id=\"chytsp\"></span>."],
+        chapter:{title:"End of Chapter <span id=\"chnsp\"></span>", content:[
+            ["p", "You covered <span id=\"chptcsp\">_</span> points <span id=\"chyfsp\"></span> <span id=\"chytsp\"></span>."],
             ["p", "To revisit any of these points, use the menu to switch to reference mode."],
             ["div", {id:"sv0textdiv"}, ""], //bookmark site instructions
             ["div", {id:"sv0linkdiv"}, ""], //instruction details as needed
@@ -79,7 +79,7 @@ app.support = (function () {
         //give the content a few millis to render so it's not ignored
         setTimeout(function () {
             var dims = {w: Math.max(280, Math.round(0.5 * tl.width)),
-                        h: Math.max(400, Math.round(0.7 * tl.height))};
+                        h: Math.max(340, Math.round(0.7 * tl.height))};
             dims.l = Math.max(0, Math.round(0.5 * (tl.width - dims.w)));
             d3.select("#suppvisdiv")
                 .style("left", dims.l + "px")
@@ -98,21 +98,19 @@ app.support = (function () {
     function updateChapterDetails () {
         var dcon = app.db.displayContext(),
             ttl = dcon.points.length,  //total number of all points in timeline
-            ppc = Math.round(ttl / 10),  //points per chapter
+            ppc = Math.ceil(ttl / 10),  //points per chapter (no leftover pts)
             cpl = dcon.prog.pts.csvarray().length,  //completed points length
-            cch = chdet.chn || Math.floor(cpl / ppc), //set or calc chapter num
-            pfc = cpl - (cch * ppc),  //points completed this chapter
-            rem = ppc - pfc;  //how many remaining points in chapter
+            cch = Math.floor(cpl / ppc); //set or calc chapter num
+        if(!chdet.chn && chdet.chn !== 0) {
+            jt.log("updateChapterDetails initializing chapter num to " + cch);
+            chdet.chn = cch; }
+        chdet.pfc = cpl - (chdet.chn * ppc),  //points completed this chapter
+        chdet.rem = ppc - chdet.pfc;  //how many remaining points in chapter
+        jt.log("points remaining in chapter: " + chdet.rem);
         chdet.dcon = dcon;
         chdet.ttl = ttl;
         chdet.ppc = ppc;
         chdet.cpl = cpl;
-        chdet.pfc = pfc;
-        chdet.rem = rem;
-        if(!chdet.chn) {
-            jt.log("updateChapterDetails initializing chapter num to " + cch);
-            chdet.chn = cch; }
-        jt.log("points remaining in chapter: " + chdet.rem);
     }
 
 
@@ -133,8 +131,8 @@ app.support = (function () {
         dispdef.chapter.repls = [
             {id:"chnsp", txt:chdet.chn},
             {id:"chptcsp", txt:chdet.ppc},
-            {id:"chyfsp", txt:yi.s},
-            {id:"chytsp", txt:yi.e},
+            {id:"chyfsp", txt:"from " + yi.s},
+            {id:"chytsp", txt:"to " + yi.e},
             {id:"sv0textdiv", ff:app.intro.initLinkText},
             {id:"contbutton", click:contf}];
         display(app.linear.timeline(), "chapter");
