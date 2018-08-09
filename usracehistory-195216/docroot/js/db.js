@@ -464,17 +464,15 @@ app.db = (function () {
 
 
     function makeTimelineLevels () {
-        var levnum = 0;
         dcon.ds.forEach(function (tl, idx) {
             var levs = [], ppl;
             tl.svs.csvarray().forEach(function (svn) {
-                levnum += 1;
                 levs.push({svname:svn,
                            svShown:"",       //suppviz not displayed yet
                            levelupShown:"",  //levelup viz not displayed yet
-                           num:levnum}); });
-            if(!levs.length) {
-                levs.push({svname:"none", num:levnum}); }
+                           num:levs.length + 1}); });
+            //end with empty level to show levelup and then finale
+            levs.push({svname:"none", num:levs.length + 1});
             ppl = Math.floor(tl.points.length / levs.length);
             levs.forEach(function (lev, idx) {
                 if(idx < levs.length - 1) {
@@ -492,8 +490,7 @@ app.db = (function () {
         dcon.ds.forEach(function (tl) {
             dcon.lastTL = tl;
             tl.levs.forEach(function (lev) {
-                dcon.lastLev = lev;
-                lev.maxnum = levnum; }); });
+                dcon.lastLev = lev; }); });
         recalcProgress("init");
     }
 

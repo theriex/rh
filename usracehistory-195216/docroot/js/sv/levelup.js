@@ -323,19 +323,16 @@ app.levelup = (function () {
 
 
     function makePieData () {
-        var ttl = 0, 
+        var ttl = levinf.tl.points.length,
             pcttl = 0, 
             data = [];
-        levinf.levs.forEach(function (lev) {
-            ttl += lev.points.length; });
         levinf.levs.forEach(function (lev, idx) {
             var datum = {label:"Level " + lev.num,
                          stat:idx - levinf.lev.num,
-                         count:Math.floor((lev.points.length / ttl) * 100)};
+                         count:((lev.points.length / ttl) * 100)};
+            //jt.log("makePieData lev " + idx + ": " + lev.points.length);
             pcttl += datum.count;
             data.push(datum); });
-        if(pcttl < 100) {
-            data[0].count = 100 - pcttl; }
         return data;
     }
 
