@@ -23,7 +23,7 @@ app.support = (function () {
                    {id:"supghsp", url:"https://github.com/theriex/rh/issues"}]},
         chapter:{title:"End of Chapter <span id=\"chnsp\"></span>", content:[
             ["p", "You covered <span id=\"chptcsp\">_</span> points <span id=\"chyfsp\"></span> <span id=\"chytsp\"></span>."],
-            ["p", "To revisit any of these points, switch to reference mode off the menu."],
+            ["p", "To revisit any of these points, switch to reference mode from the menu."],
             ["div", {id:"sv0textdiv"}, ""], //bookmark site instructions
             ["div", {id:"sv0linkdiv"}, ""], //instruction details as needed
             ["div", {id:"suppclosediv"},
@@ -86,7 +86,7 @@ app.support = (function () {
                 .style("top", "20px")  //leave room for menu access
                 .style("width", dims.w + "px")
                 .style("height","50px")  //ensure title visible
-                .style("background", "#fff5ce")
+                .style("background", "#f8feeb")
                 .style("visibility", "visible")
                 .transition().duration(2000)
                 .style("height", dims.h + "px");
