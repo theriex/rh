@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge, this, for */
+/*jslint browser, multivar, white, fudge, this, for, long */
 /*global app, window, jt, d3 */
 
 app.lynching = (function () {
@@ -261,19 +261,23 @@ app.lynching = (function () {
 
 
     function lynchingDefHTML (idx) {
-        var crit = [
+        var html = "", crit = [
             {p:"There must be legal evidence that a person was killed.",
              s:"If not killed, or no body found - not counted."},
             {p:"That person must have met death illegally.",
              s:"If accident, or self defense - not counted."},
             {p:"A group of three or more persons must have participated in the killing.",
              s:"Murder by one or two - not counted."},
-            {p:"The group must have acted under the pretext of service to justice, race or tradition."}], i, html = "";
-        for(i = 0; i <= idx; i += 1) {
+            {p:"The group must have acted under the pretext of service to justice, race or tradition."}];
+        crit.forEach(function (crit, ci) {
+            var disp = "visible";
+            if(ci > idx) {
+                disp = "hidden"; }
             html += jt.tac2html(
-                ["li", ["div", {cla:"lynchcrititemdiv"},
-                        [["div", {cla:"lynchcritpdiv"}, crit[i].p],
-                         ["div", {cla:"lynchcritsdiv"}, crit[i].s]]]]); }
+                ["li", {style:"visibility:" + disp + ";"},
+                 ["div", {cla:"lynchcrititemdiv"},
+                  [["div", {cla:"lynchcritpdiv"}, crit.p],
+                   ["div", {cla:"lynchcritsdiv"}, crit.s]]]]); });
         html = jt.tac2html([["div", {cla:"lynchcrittdiv"}, "Lynching Criteria"],
                             ["ol", {id:"lynchritol"}, html]]);
         return html;

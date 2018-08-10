@@ -260,7 +260,7 @@ app.mode = (function () {
                 app.mode.menu(0, ms.params.menu); }, 200); }
         else if(ms.params.sv) {  //e.g. ?sv=miscegenation
             setTimeout(function () {
-                app.dlg.close();
+                app.dlg.verifyClosed();
                 app.tabular.runsv(ms.params.sv); }, 200); }
     }
 
