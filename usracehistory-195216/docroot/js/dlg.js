@@ -400,13 +400,23 @@ app.dlg = (function () {
 
 
     function saveGenerationInfo () {
+        var data;
         gendat.gens.forEach(function (gen) {
             var input = jt.byId(gen.id + "in");
             if(input) {
                 gen.year = Number(input.value); } });
         gendat.accepted = true;
         closeGenerationEntry();
-        jt.log("dlg.saveGenerationInfo not writing to server yet...");
+        if(app.user && app.user.acc) {
+            app.user.acc.settings = app.user.acc.settings || {};
+            app.user.acc.settings.gendat = gendat;
+            data = jt.objdata({settings:JSON.stringify(app.user.acc.settings)});
+            jt.call("POST", "updacc?" + app.auth(), data,
+                    function () {
+                        jt.log("saveGenerationInfo updacc succeeded"); },
+                    function (code, errtxt) {
+                        jt.log("saveGenerationInfo " + code + ": " + errtxt); },
+                    jt.semaphore("dlg.saveGenerationInfo")); }
     }
 
 
@@ -584,6 +594,8 @@ app.dlg = (function () {
     function setAuthentication (email, result) {
         app.user.email = email;
         app.user.acc = result[0];
+        if(app.user.acc.settings && app.user.acc.settings.gendat) {
+            gendat = app.user.acc.settings.gendat; }
         app.user.tok = result[1].token;
         jt.cookie(cookname, email + cookdelim + app.user.tok, 365);
         if(!app.auth) {
@@ -1700,6 +1712,13 @@ app.dlg = (function () {
     }
 
 
+    function getOrSetGenerationData (gen) {
+        if(gen) {
+            gendat = gen; }
+        return gendat;
+    }
+
+
     return {
         init: function (timeline) { tl = timeline; },
         start: function (t, s, f) { showStartDialog(t, s, f); },
@@ -1738,6 +1757,7 @@ app.dlg = (function () {
         togptdet: function (sect, req) { togglePointDetailSection(sect, req); },
         addtxt: function (field) { addTextListElement(field); },
         search: function () { searchForPoint(); },
-        refsListHTML: function (refs) { return refsListHTML(refs); }
+        refsListHTML: function (refs) { return refsListHTML(refs); },
+        gendat: function (gen) { return getOrSetGenerationData(gen); }
     };
 }());

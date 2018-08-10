@@ -104,13 +104,20 @@ app.support = (function () {
         if(!chdet.chn && chdet.chn !== 0) {
             jt.log("updateChapterDetails initializing chapter num to " + cch);
             chdet.chn = cch; }
-        chdet.pfc = cpl - (chdet.chn * ppc),  //points completed this chapter
+        chdet.pfc = cpl - (chdet.chn * ppc);  //points completed this chapter
         chdet.rem = ppc - chdet.pfc;  //how many remaining points in chapter
         jt.log("points remaining in chapter: " + chdet.rem);
         chdet.dcon = dcon;
         chdet.ttl = ttl;
         chdet.ppc = ppc;
         chdet.cpl = cpl;
+    }
+
+
+    function chapterHint () {
+        if(chdet.chn >= 3 && !app.dlg.gendat().accepted) {
+            return jt.out("sv0textdiv", "To see dates relative to your lifetime, click the \"Generations\" button on the interaction dialog."); }
+        app.intro.initLinkText();
     }
 
 
@@ -133,7 +140,7 @@ app.support = (function () {
             {id:"chptcsp", txt:chdet.ppc},
             {id:"chyfsp", txt:"from " + yi.s},
             {id:"chytsp", txt:"to " + yi.e},
-            {id:"sv0textdiv", ff:app.intro.initLinkText},
+            {id:"sv0textdiv", ff:chapterHint},
             {id:"contbutton", click:contf}];
         display(app.linear.timeline(), "chapter");
         setTimeout(function () {
