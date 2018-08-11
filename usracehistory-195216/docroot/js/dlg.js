@@ -531,8 +531,8 @@ app.dlg = (function () {
                 if(answer !== buttonText.yes) {
                     tl.dlgdat.remembered = jt.byId("cbremember").checked; } } }
         if(answer !== "back") {
-            app.mode.updqrc(-1); }
-        closeInteractionTimeTracking();
+            app.mode.updqrc(-1);
+            closeInteractionTimeTracking(); }
         transitionToNext();
     }
 

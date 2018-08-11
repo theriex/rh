@@ -325,11 +325,13 @@ app.linear = (function () {
 
     function byPtId (refid, srcid) {
         var i;
-        //find the current point and put it back on the stack to return to it
+        //find the current point and put it back on the stack to return to it.
+        //unless it was already closed (like if following a link off a link)
         for(i = 0; i < tl.pts.length; i += 1) {
             if(tl.pts[i].instid === srcid) {
-                app.db.unvisitPoint(tl.pts[i]);
-                app.mode.requeue(tl.pts[i]);
+                if(!tl.pts[i].isoClosed) {
+                    app.db.unvisitPoint(tl.pts[i]);
+                    app.mode.requeue(tl.pts[i]); }
                 break; } }
         for(i = 0; i < tl.pts.length; i += 1) {
             if(tl.pts[i].instid === refid) {
