@@ -414,7 +414,8 @@ app.linear = (function () {
              ["div", {id:"leftcoldiv", style:"top:25px;width:10px;"}],
              ["div", {id:"navdiv"}],
              ["div", {id:"suppvisdiv"}],
-             ["div", {id:"itemdispdiv"}, "hello"],
+             ["div", {id:"itemdispdiv"}],
+             ["div", {id:"popupdiv"}],
              ["div", {id:"menudiv"}]]);
         //Making the div draggable disables selecting text, which is annoying
         //when editing and copying text for search.

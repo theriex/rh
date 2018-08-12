@@ -59,7 +59,8 @@ app.dlg = (function () {
         tl = null,
         editpt = null,
         dlgstack = [],
-        sip = {};  //sign-in prompting
+        sip = {},  //sign-in prompting
+        popdim = null;
 
 
     function nextColorTheme () {
@@ -151,6 +152,7 @@ app.dlg = (function () {
             y = Math.min(y, dim.myb - (dd.offsetHeight + 10)); }
         d3.select("#itemdispdiv")
             .style("top", y + "px");
+        popdim = {x:dim.x, y:y, w:dim.w, h:dim.h};  //popup over dialog
     }
 
 
@@ -198,7 +200,7 @@ app.dlg = (function () {
         //     " in the United States<br/>";
 
 
-    function showStartDialog (title, subtitle, clickfstr) {
+    function showStartDialog (title, subtitle, clickfstr, cmt) {
         var html = wrapText(subtitle || "", 18);
         if(window.innerWidth < 400) {
             html = html.replace(/<br\/>/g, ""); }
@@ -214,6 +216,31 @@ app.dlg = (function () {
                       ["div", {id: "startcontdiv"},
                        "Start"]]]]]]]];
         displayDialog(null, jt.tac2html(html));
+        if(cmt && cmt.type === "popup") {
+            setTimeout(function () {
+                var pd = jt.byId("popupdiv");
+                pd.innerHTML = jt.tac2html(
+                    ["div", {id:"popupcontdiv"},
+                     ["table",
+                      [["tr",
+                        ["td",
+                         ["div", {id:"popuptxtdiv"}, wrapText(cmt.text, 32)]]],
+                       ["tr",
+                        ["td",
+                         ["div", {cla:"buttonsdiv"},
+                          ["button", {type:"button", id:"popokbutton",
+                                      onclick:jt.fs("app.dlg.closepop()")},
+                           cmt.button]]]]]]]);
+                pd.style.left = (popdim.x + 10) + "px";
+                pd.style.top = (popdim.y + 50) + "px";
+                //pd.style.width = (popdim.w - 20) + "px";
+                pd.style.maxWidth = (popdim.w - 20) + "px";
+                pd.style.visibility = "visible"; }, 1000); }
+    }
+
+
+    function closePopup () {
+        jt.byId("popupdiv").style.visibility = "hidden";
     }
 
 
@@ -1721,7 +1748,7 @@ app.dlg = (function () {
 
     return {
         init: function (timeline) { tl = timeline; },
-        start: function (t, s, f) { showStartDialog(t, s, f); },
+        start: function (t, s, f, c) { showStartDialog(t, s, f, c); },
         info: function (d, inter) { showInfoDialog(d, inter); },
         show: function (html) { displayDialog(null, html); },
         close: function (mode) { closeDialog(mode); },
@@ -1758,6 +1785,7 @@ app.dlg = (function () {
         addtxt: function (field) { addTextListElement(field); },
         search: function () { searchForPoint(); },
         refsListHTML: function (refs) { return refsListHTML(refs); },
-        gendat: function (gen) { return getOrSetGenerationData(gen); }
+        gendat: function (gen) { return getOrSetGenerationData(gen); },
+        closepop: function () { closePopup(); }
     };
 }());

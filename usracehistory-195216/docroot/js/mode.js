@@ -224,6 +224,7 @@ app.mode = (function () {
     function displayMenu (expand, select) {
         verifyMenuContent(expand);
         if(select) {
+            jt.byId("popupdiv").style.visibility = "hidden";
             jt.byId("itemdispdiv").style.visibility = "hidden";
             jt.byId("suppvisdiv").style.visibility = "hidden";
             switch(select) {  //update title if needed

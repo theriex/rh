@@ -618,6 +618,17 @@ app.db = (function () {
     }
 
 
+    function parseComment (cmt) {
+        var m;
+        if(!cmt) {
+            return ""; }
+        m = cmt.match(/(.*)\[(.*)\]/);
+        if(m) {
+            return {type:"popup", text:m[1], button:m[2]}; }
+        return {type:"unknown", text:cmt};
+    }
+
+
     function nextInteraction () {
         var currlev = recalcProgress(),
             points = currlev.lev.rempts.slice(0, currlev.tl.pointsPerSave);
@@ -626,7 +637,8 @@ app.db = (function () {
            currlev.lev.levpcnt === 0 && !currlev.lev.startbuttonshown) {
             currlev.lev.startbuttonshown = true;
             return app.dlg.start(dcon.lastTL.title, dcon.lastTL.subtitle,
-                                 jt.fs("app.db.nextInteraction()")); }
+                                 jt.fs("app.db.nextInteraction()"),
+                                 parseComment(dcon.lastTL.comment)); }
         app.dlg.verifyClosed();  //clear any stray save status dlg
         app.mode.updlev(currlev);
         if(points.length > 0) {
