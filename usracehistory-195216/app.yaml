@@ -93,6 +93,11 @@ handlers:
 - url: .*/findcomps.*
   script: src.py.tlcomp.app
 
+## General completion stats (sys admin only, heavy database hit)
+## GET params: email, authtok
+- url: .*/compstats.*
+  script: src.py.tlcomp.app
+
 
 ## -------------------- organization --------------------
 

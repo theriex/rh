@@ -4,6 +4,7 @@ import logging
 import appuser
 import point
 import timeline
+import tlcomp
 import daycount
 import datetime
 import json
@@ -116,6 +117,7 @@ class PeriodicProcessing(webapp2.RequestHandler):
         body = "usracehistory access since " + thresh + "\n"
         body += recent_activity(thresh) + "\n"
         body += recent_access_accounts(thresh) + "\n"
+        body += tlcomp.recent_completions(thresh) + "\n"
         body += recent_timeline_edits(thresh) + "\n"
         body += recent_point_edits(thresh) + "\n"
         subj = "usracehistory activity report"

@@ -17,6 +17,46 @@ class TLComp(db.Model):
     created = db.StringProperty()  # ISO datetime
 
 
+def stats_from_data(csv):
+    if not csv:
+        return 0, 0
+    ttl = 0
+    entries = csv.split(",")
+    for entry in entries:
+        elements = entry.split(";")
+        # ident = elements[0]
+        start = appuser.iso2DT(elements[1])
+        end = appuser.iso2DT(elements[2])
+        ttl += (end - start).total_seconds()
+    return ttl / len(entries), ttl
+
+
+def usec(secs, units):
+    if units == "m":
+        return str(round(secs / 60, 1)) + "m"
+    return str(round(secs, 1)) + "s"
+
+
+def recent_completions(thresh):
+    vq = appuser.VizQuery(TLComp, "ORDER BY created DESC")
+    tlcs = vq.fetch(30, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
+    cs = ""
+    for tc in tlcs:
+        if tc.created < thresh:
+            break
+        data = json.loads(tc.data)
+        pavg, pttl = stats_from_data(data["pts"])
+        savg, sttl = 0, 0
+        if "svs" in data:
+            savg, sttl = stats_from_data(data["svs"])
+        ttl = pttl + sttl
+        cs += (tc.username + " (" + str(tc.userid) + ") completed " + 
+               tc.tlname + " (" + str(tc.tlid) + ") " + tc.created + 
+               " ptavg: " + usec(pavg, "s") + 
+               ", time: " + usec(ttl, "m") + "\n")
+    return cs
+
+
 # Write the completion record, then update the account.  Not worth a chained
 # transaction.  If anything goes wrong it is possible to end up with a
 # duplicate TLComp entry on retry.  Might have to dedupe query results.  A
@@ -47,7 +87,7 @@ class NoteTimelineCompletion(webapp2.RequestHandler):
             compinst = compinst[0]
             compinst["latest"] = tstamp
         else:
-            compinst = {"tlid":tlid, "name":"tlname", "first":tstamp,
+            compinst = {"tlid":tlid, "name":params["tlname"], "first":tstamp,
                         "latest":tstamp}
         completed = [ci for ci in completed if ci["tlid"] != tlid]
         completed.append(compinst)
@@ -68,7 +108,20 @@ class FindCompletions(webapp2.RequestHandler):
         appuser.return_json(self, res)
 
 
+class CompletionStats(webapp2.RequestHandler):
+    def get(self):
+        acc = appuser.get_authenticated_account(self, False)
+        if not acc:
+            return
+        if acc.orgid != 1 or acc.lev != 2:
+            return appuser.srverr(self, 403, "Admin access only.")
+        text = recent_completions("2018-01-01T00:00:00Z")
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write(text)
+
+
 app = webapp2.WSGIApplication([('.*/notecomp', NoteTimelineCompletion),
-                               ('.*/findcomps', FindCompletions)],
+                               ('.*/findcomps', FindCompletions),
+                               ('.*compstats', CompletionStats)],
                               debug=True)
 

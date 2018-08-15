@@ -229,6 +229,13 @@ def nowISO():
     return dt2ISO(datetime.datetime.utcnow())
 
 
+def iso2DT(isostr):
+    isostr = re.sub(r'\.\d+Z', "Z", isostr)  # remove any included millis
+    dt = datetime.datetime.utcnow()
+    dt = dt.strptime(isostr, "%Y-%m-%dT%H:%M:%SZ")
+    return dt
+
+
 # The email parameter is required. Then either password or authok.
 def get_authenticated_account(handler, create):
     params = read_params(handler, ["email", "authtok", "password"])
