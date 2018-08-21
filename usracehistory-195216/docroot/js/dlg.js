@@ -164,6 +164,7 @@ app.dlg = (function () {
         dim = constrainDialogToChartDims();
         //Verify the dialog is hidden so there is no blink when the content
         //gets updated.
+        jt.byId("popupdiv").style.visibility = "hidden";
         jt.byId("itemdispdiv").style.visibility = "hidden";
         jt.out("itemdispdiv", html);
         constrainTextToDialogHeight(d, dim);
