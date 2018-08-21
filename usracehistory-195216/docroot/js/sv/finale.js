@@ -8,9 +8,10 @@ app.finale = (function () {
         chart = {},      //container for svg references
         hr = {},         //honor roll working variables
         //PENDING: stop running the dynamic stuff after 400 times or whatever
-        //just so you don't chew up batteries
+        //so you don't chew up battery power
         hrto = null,     //honor roll timeout reference
-        slto = null;     //searchlights timeout reference
+        slto = null,     //searchlights timeout reference
+        tda = {};        //text area display attributes
 
 
     function moveSearchlights () {
@@ -29,7 +30,8 @@ app.finale = (function () {
                 .attr("cx", co.cx)
                 .attr("cy", co.cy); });
         if(slto) { clearTimeout(slto); }
-        slto = setTimeout(moveSearchlights, dur);
+        if(!hr.paused) {
+            slto = setTimeout(moveSearchlights, dur); }
     }
 
 
@@ -90,20 +92,24 @@ app.finale = (function () {
             .attr("font-size", 14)
             .attr("stroke", "none")
             .attr("fill", "#666")
-            .text(app.db.displayContext().lastTL.name)
+            .text(app.db.displayContext().lastTL.title)
             .style("opacity", 0.0)
             .transition().delay(1500).duration(2000)
             .style("opacity", 1.0);
     }
 
 
-    function toggleHonorScrolling () {
-        if(!hr.paused) {
+    function toggleHonorScrolling (command) {
+        if(!hr.paused || command === "stop") {
+            jt.log("toggleHonorScrolling paused");
             hr.paused = true;
             if(hrto) {
                 clearTimeout(hrto); } }
         else {
+            jt.log("toggleHonorScrolling resuming");
             hr.paused = false;
+            hr.updcount = 0;
+            moveSearchlights();
             updateHonorRoll(); }  //update immediately
     }
 
@@ -120,6 +126,7 @@ app.finale = (function () {
             .attr("fill", "#000")
             .text(txt)
             .style("opacity", linedef.opa)
+            .style("cursor", "pointer")
             .on("click", toggleHonorScrolling);
         return te;
     }
@@ -145,17 +152,28 @@ app.finale = (function () {
             hr.nidx -= 3;
             hr.placeholderTextCleared = true; }
         if(hrto) { clearTimeout(hrto); }
+        if(hr.updcount >= hr.updmax) {
+            return toggleHonorScrolling("stop"); }
+        hr.updcount += 1;
+        if(hr.updcount > 1) {
+            d3.select("#finctitle").text("* Honor Roll *"); }
+        jt.log("updateHonorRoll updcount: " + hr.updcount);
         hrto = setTimeout(updateHonorRoll, hr.trt);
     }
 
 
     function startHonorRoll (comps) {
-        hr.names = ["", "", "* Honor Roll *", hr.username]
+        var fillnames = ["Ryan", "Olivia", "Michael", "Sophia", "Emily", "Joe",
+                         "Grace", "Alex", "Isabella", "Chris", "Mia", "Lucas"];
+        hr.names = ["", "", "* Honor Roll *", hr.username];
+        hr.updmax = 120;  //pause after this to avoid wasting batteries
+        hr.updcount = 0;
         comps.forEach(function (comp) {
             if(hr.names.indexOf(comp.username) < 0) {
                 hr.names.push(comp.username); } });
-        while(hr.names.length < 13) {
-            hr.names.push(""); }
+        fillnames.forEach(function (name) {
+            if(hr.names.length < 13) {
+                hr.names.push(name); } });
         chart.hrg = d3.select("#svgf").append("g");
         hr.ldefs.forEach(function (linedef, idx) {
             createHonorRollText(linedef, idx, hr.names[idx]); });
@@ -165,9 +183,13 @@ app.finale = (function () {
 
 
     function initHonorRoll () {
-        var i, url, tlid = app.db.displayContext().tlid;
+        var url, tlid = app.db.displayContext().tlid;
         hr = {x:chart.cx - 120, y:30, lh:30, nidx:0, trt:2400};
-        hr.username = app.user.acc.name || "User " + app.user.instid + " (You)";
+        hr.username = "No Account";
+        if(app.user && app.user.acc) {
+            hr.username = app.user.acc.name;
+            if(!hr.username) {
+                hr.username = "User " + app.user.instid + " (You)"; } }
         hr.ldefs = [{y:hr.y + 0 * hr.lh, opa:0.0},
                     {y:hr.y + 1 * hr.lh, opa:0.1},
                     {y:hr.y + 2 * hr.lh, opa:1.0},
@@ -177,6 +199,8 @@ app.finale = (function () {
                     {y:hr.y + 6 * hr.lh, opa:0.0}];
         //PENDING: When a static daily stats page becomes available, fetch
         //the names from there rather than by general query.
+        if(!app.auth) {
+            return startHonorRoll([{username:hr.username}]); }
         url = "findcomps?" + app.auth() + "&tlid=" + tlid +
             jt.ts("&cb=", "second");
         jt.call("GET", url, null,
@@ -195,8 +219,8 @@ app.finale = (function () {
 
     function appendDonateButton () {
         chart.cg.append("ellipse")
-            .attr("cx", chart.cx + 71)
-            .attr("cy", 281)
+            .attr("cx", tda.cx + 71)
+            .attr("cy", tda.y + 61)
             .attr("rx", 44)
             .attr("ry", 20)
             .attr("stroke", "none")
@@ -205,8 +229,8 @@ app.finale = (function () {
             .transition().delay(4000).duration(1800)
             .style("opacity", 1.0);
         chart.cg.append("ellipse")
-            .attr("cx", chart.cx + 70)
-            .attr("cy", 280)
+            .attr("cx", tda.cx + 70)
+            .attr("cy", tda.y + 60)
             .attr("rx", 40)
             .attr("ry", 16)
             .attr("stroke", "none")
@@ -217,8 +241,8 @@ app.finale = (function () {
         chart.cg.append("text")
             .attr("id", "findontxt")
             .attr("text-anchor", "middle")
-            .attr("x", chart.cx + 70)
-            .attr("y", 285)
+            .attr("x", tda.cx + 70)
+            .attr("y", tda.y + 65)
             .attr("font-size", 16)
             .attr("stroke", "none")
             .attr("fill", "#444")
@@ -230,33 +254,104 @@ app.finale = (function () {
     }
 
 
+    function copyTimelineURLToClipboard () {
+        var ta = jt.byId("urlta");
+        try {
+            ta.focus();
+            ta.select();
+            if(document.execCommand("copy")) {
+                chart.cg.cbtxt.text("Copied"); }
+            else {
+                chart.cg.cbtxt.text("---"); }
+        } catch (e) {
+            chart.cg.cbtxt.text("***");
+            jt.log("copyTimelineURLToClipboard " + e);
+        }
+        setTimeout(function () {
+            chart.cg.cbtxt.text("Copy Link"); }, 1000);
+    }
+
+
+    function appendCopyURLButton () {
+        chart.cg.append("ellipse")
+            .attr("cx", tda.cx + 87)
+            .attr("cy", tda.y - 17)
+            .attr("rx", 48)
+            .attr("ry", 16)
+            .attr("stroke", "none")
+            .attr("fill", "5656b7")
+            .style("opacity", 0.0)
+            .transition().delay(2000).duration(1800)
+            .style("opacity", 1.0);
+        chart.cg.append("ellipse")
+            .attr("cx", tda.cx + 86)
+            .attr("cy", tda.y - 18)
+            .attr("rx", 44)
+            .attr("ry", 12)
+            .attr("stroke", "none")
+            .attr("fill", "#ffff75")  //yellow
+            .style("opacity", 0.0)
+            .transition().delay(2000).duration(1800)
+            .style("opacity", 1.0);
+        chart.cg.cbtxt = chart.cg.append("text")
+            .attr("id", "findontxt")
+            .attr("text-anchor", "middle")
+            .attr("x", tda.cx + 86)
+            .attr("y", tda.y - 13)
+            .attr("font-size", 14)
+            .attr("stroke", "none")
+            .attr("fill", "#444")
+            .text("Copy Link")
+            .on("click", copyTimelineURLToClipboard)
+            .style("opacity", 0.0);
+        chart.cg.cbtxt.transition().delay(2000).duration(1800)
+            .style("opacity", 1.0);
+    }
+
+
+    function tdaInit() {
+        tda.x = chart.cx - 120;
+        tda.y = 220;  //y offset for first line of text
+        tda.cx = chart.cx;
+        jt.log("tda x:" + tda.x + ", y:" + tda.y + ", cx:" + tda.cx);
+    }
+
+
     function appendClosureText () {
+        tdaInit();
         chart.cg = d3.select("#svgf").append("g");
         chart.cg.append("text")
             .attr("class", "finexplore")
             .attr("text-anchor", "left")
-            .attr("x", chart.cx - 120)
-            .attr("y", 220)
+            .attr("x", tda.x)
+            .attr("y", tda.y)
             .attr("font-size", 18)
-            .text("Use the menu to see timeline")
+            .text("Share this timeline!")
             .style("opacity", 0.0)
             .transition().delay(1000).duration(4000)
             .style("opacity", 1.0);
-        chart.cg.append("text")
-            .attr("class", "finexplore")
-            .attr("text-anchor", "left")
-            .attr("x", chart.cx - 120)
-            .attr("y", 240)
-            .attr("font-size", 18)
-            .text("points or create your own.")
-            .style("opacity", 0.0)
-            .transition().delay(1000).duration(4000)
+        chart.cg.fo = chart.cg.append("foreignObject")
+            .attr("x", tda.x)
+            .attr("y", tda.y + 6)
+            .attr("width", 240)
+            .attr("height", 24)
+            .style("opacity", 0.0);
+        chart.cg.ta = chart.cg.fo.append("xhtml:textarea")
+            .attr("wrap", "off")  //"soft" + render as single line
+            .attr("id", "urlta")
+            .style("width", "240px")
+            .style("height", "24px")
+            .style("padding", "3px")
+            .style("color", "#666")
+            .text(app.db.timelineURL(app.db.displayContext().lastTL));
+        chart.cg.fo.transition().delay(1000).duration(4000)
             .style("opacity", 1.0);
+        appendCopyURLButton();
         chart.cg.append("text")
             .attr("class", "findonate")
             .attr("text-anchor", "left")
-            .attr("x", chart.cx - 120)
-            .attr("y", 270)
+            .attr("x", tda.x)
+            .attr("y", tda.y + 60)
             .attr("font-size", 18)
             .attr("stroke", "none")
             .attr("fill", "#666")
@@ -294,24 +389,27 @@ app.finale = (function () {
 
 
     function display (record) {
-        var ds, tinst, data;
+        var ds, tinst, auth = "", data;
         app.dlg.close();  //in case left open
         tl = app.linear.timeline();
         chart.colors = {bg:"#eefeff"};
         initDisplayElements();
         if(record) {
-            d3.select("#finctitle").text = "Recording Completion...";
+            d3.select("#finctitle").text("Saving...");
             ds = app.db.displayContext().ds;
             tinst = ds[ds.length - 1];
             data = "tlid=" + tinst.instid + "&tlname=" + jt.enc(tinst.name);
-            jt.call("POST", "notecomp?" + app.auth(), data,
+            if(app.auth) {  //undefined if testing standalone
+                auth = app.auth(); }
+            jt.call("POST", "notecomp?" + auth, data,
                     function (result) {
                         app.db.deserialize("AppUser", result[0]);
                         app.user.acc = result[0];
-                        d3.select("#finctitle").text = "Timeline Completed!"; },
+                        d3.select("#finctitle").text("Timeline Completed!"); },
                     function (code, errtxt) {
+                        //not much to do, will retry next time they load..
                         jt.log("finale acc upd " + code + ": " + errtxt);
-                        d3.select("#finctitle").text = errtxt; },
+                        d3.select("#finctitle").text("Timeline Completed!"); },
                     jt.semaphore("finale.display")); }
     }
 

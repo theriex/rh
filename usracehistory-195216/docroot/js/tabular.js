@@ -410,7 +410,7 @@ app.tabular = (function () {
              min:3, max:50, getf:function () { return tlflds.pps || 6; }},
             {field:"url", type:"info",
              getf:function (tl) { 
-                 var url = app.baseurl + "/timeline/" + (tl.slug || tl.instid);
+                 var url = app.db.timelineURL(tl);
                  return jt.tac2html(
                      ["a", {href:url,
                             onclick:jt.fs("window.open('" + url + "')")},

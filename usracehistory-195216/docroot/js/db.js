@@ -895,6 +895,11 @@ app.db = (function () {
             uid = app.user.acc.instid; }
         return "uidp=" + uid;
     }
+
+
+    function timelineURL (tl) {
+        return app.baseurl + "/timeline/" + (tl.slug || tl.instid);
+    }
             
         
     return {
@@ -924,6 +929,7 @@ app.db = (function () {
         unvisitPoint: function (pt) { unvisitPoint(pt); },
         recalcProgress: function () { return recalcProgress(); },
         compareStartDate: function (a, b) { return compareStartDate(a, b); },
-        parseProgStr: function (str) { return parseProgStr(str); }
+        parseProgStr: function (str) { return parseProgStr(str); },
+        timelineURL: function (timeline) { return timelineURL(timeline); }
     };
 }());
