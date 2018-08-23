@@ -182,6 +182,9 @@ def fetch_timeline_by_slug (slug):
             return tl
         except:
             return fetch_timeline_by_id(instid)
+    # If slug is all numbers, look it up as a tlid
+    if re.match(r'^[0-9]+$', slug):
+        return fetch_timeline_by_id(slug)
     vq = appuser.VizQuery(Timeline, "WHERE slug=:1 LIMIT 1", slug)
     instances = vq.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
     if len(instances) > 0:
