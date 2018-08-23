@@ -8,6 +8,7 @@ import point
 import daycount
 import json
 import re
+import pickle
 
 # A timeline is the first data retrieved on site access and it includes the
 # summarized point data for fast display.  This cached summary data is NOT
@@ -165,14 +166,22 @@ def update_timeline_list(tlist, timeline):
 
 def fetch_timeline_by_id (tlid):
     tlid = str(tlid)
+    logging.info("fetch_timeline_by_id: " + tlid)
     tl = appuser.cached_get(tlid, {"dboc": Timeline, "byid": tlid})
     return tl
     
 
 def fetch_timeline_by_slug (slug):
+    logging.info("fetch_timeline_by_slug: " + slug)
     instid = memcache.get(slug)
     if instid:
-        return fetch_timeline_by_id(instid)
+        # if slug was a tlid, then we found the cached version and it should
+        # be reconstituted.  Otherwise we found the tlid
+        try:
+            tl = pickle.loads(instid)
+            return tl
+        except:
+            return fetch_timeline_by_id(instid)
     vq = appuser.VizQuery(Timeline, "WHERE slug=:1 LIMIT 1", slug)
     instances = vq.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
     if len(instances) > 0:

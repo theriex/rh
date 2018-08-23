@@ -135,7 +135,7 @@ app.support = (function () {
             compl = chdet.remind.disabled,
             fail = chdet.remind.enabled;
         if(cbrem.checked) {  //previously unchecked, now checked
-            remval = "yes",
+            remval = "yes";
             trans = chdet.remind.tron;
             compl = chdet.remind.enabled;
             fail = chdet.remind.disabled; }
