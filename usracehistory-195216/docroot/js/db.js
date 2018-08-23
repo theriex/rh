@@ -404,7 +404,7 @@ app.db = (function () {
         if(!dcon.prog) {
             dcon.prog = {tlid:dcon.lastTL.instid,
                          st:new Date().toISOString(),
-                         svs:"", pts:""}; }
+                         remindme:"yes", svs:"", pts:""}; }
         if(app.user && app.user.acc) {
             acc = app.user.acc;
             proginst = findTimelineInfo(dcon.prog.tlid, acc.started);
@@ -711,6 +711,8 @@ app.db = (function () {
 
     function mergeProgToAccount () {
         var prog = dcon.prog, i, stp, update = false;
+        prog.latestsave = new Date().toISOString();
+        prog.reminder = "";
         app.user.acc.started = app.user.acc.started || [];
         for(i = 0; i < app.user.acc.started.length; i += 1) {
             stp = app.user.acc.started[i];

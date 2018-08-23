@@ -4,7 +4,11 @@
 app.support = (function () {
     "use strict";
 
-    var dispdef = {
+    var chdet = {remind:{enabled:"Email me a reminder if I don't finish today.",
+                         tron:"Enabling...",
+                         troff:"Disabling...",
+                         disabled:"Enable reminders."}},
+        dispdef = {
         support:{title:"Support", content:[
             ["p", "Help improve this site! Issues are tracked on <span id=\"supghsp\">github</span>, or just <span id=\"supiemsp\">send email</span> if you notice something."],
 // Not worth mentioning until the donation page has been set up
@@ -23,13 +27,16 @@ app.support = (function () {
                    {id:"supghsp", url:"https://github.com/theriex/rh/issues"}]},
         chapter:{title:"End of Chapter <span id=\"chnsp\"></span>", content:[
             ["p", "You covered <span id=\"chptcsp\">_</span> points <span id=\"chyfsp\"></span> <span id=\"chytsp\"></span>."],
-            ["p", "To revisit any of these points, switch to reference mode from the menu."],
-            ["div", {id:"sv0textdiv"}, ""], //bookmark site instructions
-            ["div", {id:"sv0linkdiv"}, ""], //instruction details as needed
+            ["div", {id:"remdiv"},
+             [["input", {type:"checkbox", id:"cbrem", checked:"checked"}],
+              ["label", {fo:"cbrem", id:"labrem"}, chdet.remind.enabled]]],
+            ["div", {id:"revisitdiv", style:"padding:20px 0px 5px 0px;"},
+             "To revisit any of these points, switch to reference mode from the menu."],
+            ["div", {id:"sv0textdiv"}, ""], //instruction details as needed
+            ["div", {id:"sv0linkdiv"}, ""], //bookmark/homescreen instructions
             ["div", {id:"suppclosediv"},
              ["button", {type:"button", cla:"ghostbutton", id:"contbutton"},
-              "Continue"]]]}},
-        chdet = {};
+              "Continue"]]]}};
 
 
     function replace (def) {
@@ -121,6 +128,40 @@ app.support = (function () {
     }
 
 
+    function toggleReminderSetting () {
+        var cbrem = jt.byId("cbrem"), data,
+            remval = "no",
+            trans = chdet.remind.troff,
+            compl = chdet.remind.disabled,
+            fail = chdet.remind.enabled;
+        if(cbrem.checked) {  //previously unchecked, now checked
+            remval = "yes",
+            trans = chdet.remind.tron;
+            compl = chdet.remind.enabled;
+            fail = chdet.remind.disabled; }
+        jt.out("labrem", trans);
+        app.db.displayContext().prog.remindme = remval;
+        app.db.mergeProgToAccount();  //normalize updated prog with db state
+        data = app.db.postdata("AppUser", app.user.acc);
+        jt.call("POST", "updacc?" + app.auth(), data,
+                function () {  //recently saved, local data up to date
+                    jt.out("labrem", compl); },
+                function (code, errtxt) {
+                    jt.log("toggleReminderSetting " + code + ": " + errtxt);
+                    jt.out("labrem", fail); },
+                jt.semaphore("support.toggleReminderSetting"));
+    }
+
+
+    function reminderDisplay () {
+        var prog = app.db.displayContext().prog;
+        if(prog.remindme === "no") {
+            jt.byId("cbrem").checked = false;
+            jt.out("labrem", chdet.remind.disabled); }
+        jt.on("cbrem", "click", toggleReminderSetting);
+    }
+
+
     function chapterSummary (contf) {
         var progpts = [], yi = {};
         updateChapterDetails();
@@ -130,7 +171,8 @@ app.support = (function () {
         chdet.chn += 1;  //starts at zero, incremented to current chapter
         yi.p = chdet.chn - 1;  //previous chapter number
         yi.s = yi.p * chdet.ppc;  //index of starting point
-        yi.e = (chdet.chn * chdet.ppc) - 1;  //index of ending point
+        yi.e = Math.min(((chdet.chn * chdet.ppc) - 1),  //index of ending point
+                        (chdet.cpl - 1));
         yi.s = progpts[yi.s].split(";")[0];  //get id of point
         yi.s = app.db.pt4id(yi.s).start.year;  //get point for id
         yi.e = progpts[yi.e].split(";")[0];
@@ -141,6 +183,7 @@ app.support = (function () {
             {id:"chyfsp", txt:"from " + yi.s},
             {id:"chytsp", txt:"to " + yi.e},
             {id:"sv0textdiv", ff:chapterHint},
+            {id:"remdiv", ff:reminderDisplay},
             {id:"contbutton", click:contf}];
         display(app.linear.timeline(), "chapter");
         setTimeout(function () {
