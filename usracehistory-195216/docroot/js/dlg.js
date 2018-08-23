@@ -619,13 +619,18 @@ app.dlg = (function () {
     }
 
 
+    function setCookie (email, authtok) {
+        jt.cookie(cookname, email + cookdelim + authtok, 365);
+    }
+
+
     function setAuthentication (email, result) {
         app.user.email = email;
         app.user.acc = result[0];
         if(app.user.acc.settings && app.user.acc.settings.gendat) {
             gendat = app.user.acc.settings.gendat; }
         app.user.tok = result[1].token;
-        jt.cookie(cookname, email + cookdelim + app.user.tok, 365);
+        setCookie(email, app.user.tok);
         if(!app.auth) {
             app.auth = function () {
                 return "email=" + jt.enc(app.user.email) + "&authtok=" +
@@ -1048,7 +1053,16 @@ app.dlg = (function () {
 
 
     function checkCookieSignIn (contf) {
-        var cval = jt.cookie(cookname);
+        var cval = jt.parseParams("String");
+        if(cval.email && cval.authtok) {
+            setCookie(cval.email, cval.authtok);
+            cval.href = window.location.href;
+            cval.qidx = cval.href.indexOf("?");
+            if(cval.qidx > 0) {
+                //eat the authtok etc info.  The browser may interpret this
+                //as a redirect, Ok it it does since the cookie is set.
+                window.location.href = cval.href.slice(0, cval.qidx); } }
+        cval = jt.cookie(cookname);
         jt.log("cookie " + cookname + ": " + cval);
         if(!cval) {
             return contf(); }

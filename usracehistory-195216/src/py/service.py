@@ -92,8 +92,9 @@ def send_reminder_if_needed(acc, sched):
         rdue = reminder_due(tlp, sched)
         if rdue:
             tlp["reminder"] = rdue
+            token = appuser.acctoken(acc.email, acc.password)
             remlog = rdue + " reminder " + acc.email + " tlid: " + tlp["tlid"]
-            body = "As requested, this is your " + rdue + " reminder to finish the timeline you started.  The best is yet to come.  Here's the link to continue: https://usracehistory.org/timeline/" + tlp["tlid"]
+            body = "As requested, this is your " + rdue + " reminder to finish the timeline you started.  The best is yet to come.  Here's the link to continue: https://usracehistory.org/timeline/" + tlp["tlid"] + "?email=" + acc.email + "&authtok=" + token
             subj = rdue + " timeline reminder"
             try:
                 appuser.mailgun_send(None, acc.email, subj, body)
