@@ -1060,7 +1060,7 @@ app.dlg = (function () {
             cval.qidx = cval.href.indexOf("?");
             if(cval.qidx > 0) {
                 //eat the authtok etc info.  The browser may interpret this
-                //as a redirect, Ok it it does since the cookie is set.
+                //as a redirect, Ok if it does since the cookie is set.
                 window.location.href = cval.href.slice(0, cval.qidx); } }
         cval = jt.cookie(cookname);
         jt.log("cookie " + cookname + ": " + cval);

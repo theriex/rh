@@ -459,22 +459,26 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
     };
 
 
-    uo.colloquialDate = function (date, compress) {
+    uo.colloquialDate = function (date, compress, commands) {
         var now = new Date(),
             elapsed,
             dayname,
             month,
             retval;
+        commands = commands || "";
         if (typeof date === "string") {
             date = uo.ISOString2Day(date);
+            if(commands.indexOf("z2loc") >= 0) {
+                date = uo.tz2loc(date); }
         }
         elapsed = now.getTime() - date.getTime();
-        if (elapsed < 24 * 60 * 60 * 1000) {
-            return "Today";
-        }
-        if (elapsed < 48 * 60 * 60 * 1000) {
-            return "Yesterday";
-        }
+        if(commands.indexOf("nodaily") < 0) {
+            if (elapsed < 24 * 60 * 60 * 1000) {
+                return "Today";
+            }
+            if (elapsed < 48 * 60 * 60 * 1000) {
+                return "Yesterday";
+            } }
         dayname = String(uo.days[date.getUTCDay()]);
         month = String(uo.months[date.getMonth()]);
         if (compress) {

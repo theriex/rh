@@ -348,6 +348,75 @@ app.mode = (function () {
     }
 
 
+    function elapsed (seconds) {
+        if(Math.floor(seconds / (24 * 60 * 60)) > 0) {
+            return Number(seconds / (24 * 60 * 60)).toFixed(1) + " days"; }
+        if(Math.floor(seconds / (60 * 60)) > 0) {
+            return Number(seconds / (60 * 60)).toFixed(1) + " hours"; }
+        if(Math.floor(seconds / 60) > 0) {
+            return Number(seconds / 60).toFixed(1) + " minutes"; }
+        return Number(seconds).toFixed(1) + " seconds";
+    }
+
+
+    function getCompletionStats (user, tlid) {
+        var html, ce = null, cs, st = "";
+        user.completed.forEach(function (comp) {
+            if(comp.tlid === tlid) {
+                ce = comp; } });
+        if(!ce) {
+            return "has NOT completed this timeline."; }
+        if(ce.stats) {
+            cs = ce.stats;
+            st = " having studied a total of " + elapsed(cs.pttl + cs.sttl) +
+                ", covering " + cs.pcount + " points in " + elapsed(cs.pttl) +
+                " (an average of " + elapsed(cs.pavg) + " per point)";
+            if(cs.scount) {
+                st += " and " + cs.scount + " supplemental visualizations in " +
+                    elapsed(cs.sttl) + " (an average of " + elapsed(cs.savg) +
+                    " per visualization)"; }
+            st += "."; }
+        html = ["has completed ",
+                ["span", {id:"ctltitlespan"}, ce.title], " ", 
+                ["span", {id:"ctlsubtspan"}, ce.subtitle],
+                " on ",
+                jt.colloquialDate(ce.latest, false, "z2loc,nodaily"),
+                st];
+        return html;
+    }
+
+
+    function displayCompletionCertificate (user, tlid) {
+        var html, website = user.web || "";
+        if(user.web) {
+            website = ["a", {href:user.web, 
+                             onclick:jt.fs("window.open('" + user.web + "')")},
+                       user.web]; }
+        html = ["div", {id:"certcontdiv"},
+                [["div", {id:"certnamediv"}, user.name],
+                 ["div", {id:"certtitlediv"}, user.title],
+                 ["div", {id:"certwebdiv"}, website],
+                 ["div", {id:"certuiddiv"}, "(user id: " + user.instid + ")"],
+                 ["div", {id:"certstatsdiv"}, getCompletionStats(user, tlid)]]];
+        jt.out("rhcontentdiv", jt.tac2html(html));
+    }
+
+
+    function showCompletionCertificate () {
+        var params = jt.parseParams("String");
+        jt.out("rhcontentdiv", "Fetching completion certificate...");
+        jt.call("GET", "pubuser?email=" + jt.enc(params.email), null,
+                function (users) {
+                    var user = users[0];
+                    app.db.deserialize("AppUser", user);
+                    displayCompletionCertificate(user, params.compcert); },
+                function (code, errtxt) {
+                    jt.out("rhcontentdiv", "Fetch failed. Error code " + code +
+                           ": " + errtxt); },
+                jt.semaphore("mode.showCompletionCertificate"));
+    }
+
+
     return {
         start: function (tl, currlev) { start(tl, currlev); },
         next: function () { next(); },
@@ -359,6 +428,7 @@ app.mode = (function () {
         svdone: function (m, s, e) { endSuppViz(m, s, e); },
         requeue: function (pt) { requeue(pt); },
         currpt: function () { return ms && ms.currpt; },
-        updqrc: function (count) { updateRemainingQuestionsCount(count); }
+        updqrc: function (count) { updateRemainingQuestionsCount(count); },
+        showcert: function () { showCompletionCertificate(); }
     };
 }());

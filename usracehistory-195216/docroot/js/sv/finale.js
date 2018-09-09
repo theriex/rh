@@ -311,7 +311,7 @@ app.finale = (function () {
 
     function tdaInit() {
         tda.x = chart.cx - 120;
-        tda.y = 220;  //y offset for first line of text
+        tda.y = 246;  //y offset for share text
         tda.cx = chart.cx;
         jt.log("tda x:" + tda.x + ", y:" + tda.y + ", cx:" + tda.cx);
     }
@@ -320,6 +320,25 @@ app.finale = (function () {
     function appendClosureText () {
         tdaInit();
         chart.cg = d3.select("#svgf").append("g");
+        chart.cg.lfo = chart.cg.append("foreignObject")
+            .attr("x", tda.x)
+            .attr("y", tda.y - 56)
+            .attr("width", 240)
+            .attr("height", 24)
+            .style("opacity", 0.0);
+        chart.cg.lfo.append("xhtml:a")
+            .attr("href", "#compcert")
+            .on("click", function () {
+                var email = "unknown";
+                if(app.user && app.user.acc) {
+                    email = app.user.acc.email; }
+                d3.event.preventDefault();
+                window.open(app.baseurl + 
+                            "?compcert=" + app.db.displayContext().tlid + 
+                            "&email=" + email); })
+            .text("Show Completion Certificate");
+        chart.cg.lfo.transition().delay(1000).duration(4000)
+            .style("opacity", 1.0);
         chart.cg.append("text")
             .attr("class", "finexplore")
             .attr("text-anchor", "left")
@@ -398,7 +417,10 @@ app.finale = (function () {
             d3.select("#finctitle").text("Saving...");
             ds = app.db.displayContext().ds;
             tinst = ds[ds.length - 1];
-            data = "tlid=" + tinst.instid + "&tlname=" + jt.enc(tinst.name);
+            data = {tlid:tinst.instid, tlname:tinst.name,
+                    tltitle:tinst.title || "",
+                    tlsubtitle:tinst.subtitle || ""};
+            data = jt.objdata(data);
             if(app.auth) {  //undefined if testing standalone
                 auth = app.auth(); }
             jt.call("POST", "notecomp?" + auth, data,

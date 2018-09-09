@@ -19,7 +19,7 @@ class TLComp(db.Model):
 
 def stats_from_data(csv):
     if not csv:
-        return 0, 0
+        return 0, 0, 0
     ttl = 0
     entries = csv.split(",")
     for entry in entries:
@@ -28,7 +28,7 @@ def stats_from_data(csv):
         start = appuser.iso2DT(elements[1])
         end = appuser.iso2DT(elements[2])
         ttl += (end - start).total_seconds()
-    return ttl / len(entries), ttl
+    return ttl / len(entries), ttl, len(entries)
 
 
 def usec(secs, units):
@@ -45,16 +45,25 @@ def recent_completions(thresh):
         if tc.created < thresh:
             break
         data = json.loads(tc.data)
-        pavg, pttl = stats_from_data(data["pts"])
-        savg, sttl = 0, 0
+        pavg, pttl, pcount = stats_from_data(data["pts"])
+        savg, sttl, scount = 0, 0, 0
         if "svs" in data:
-            savg, sttl = stats_from_data(data["svs"])
+            savg, sttl, scount = stats_from_data(data["svs"])
         ttl = pttl + sttl
         cs += (tc.username + " (" + str(tc.userid) + ") completed " + 
                tc.tlname + " (" + str(tc.tlid) + ") " + tc.created + 
                " ptavg: " + usec(pavg, "s") + 
                ", time: " + usec(ttl, "m") + "\n")
     return cs
+
+
+def completion_stats(prog):
+    pavg, pttl, pcount = stats_from_data(prog["pts"])
+    savg, sttl, scount = 0, 0, 0
+    if "svs" in prog:
+        savg, sttl, scount = stats_from_data(prog["svs"])
+    return {"pavg":pavg, "pttl":pttl, "pcount":pcount,
+            "savg":savg, "sttl":sttl, "scount":scount}
 
 
 # Write the completion record, then update the account.  Not worth a chained
@@ -66,7 +75,8 @@ class NoteTimelineCompletion(webapp2.RequestHandler):
         acc = appuser.get_authenticated_account(self, False)
         if not acc:
             return
-        params = appuser.read_params(self, ["tlid", "tlname"]);
+        params = appuser.read_params(self, ["tlid", "tlname", "tltitle", 
+                                            "tlsubtitle"]);
         tlid = params["tlid"]
         started = json.loads(acc.started)
         proginst = [pi for pi in started if pi["tlid"] == tlid]
@@ -85,10 +95,14 @@ class NoteTimelineCompletion(webapp2.RequestHandler):
         compinst = [ci for ci in completed if ci["tlid"] == tlid]
         if len(compinst):
             compinst = compinst[0]
-            compinst["latest"] = tstamp
         else:
-            compinst = {"tlid":tlid, "name":params["tlname"], "first":tstamp,
-                        "latest":tstamp}
+            compinst = {"tlid":tlid, "name":params["tlname"], 
+                        "count":0, "first":tstamp}
+        compinst["latest"] = tstamp
+        compinst["count"] += 1
+        compinst["title"] = params["tltitle"]
+        compinst["subtitle"] = params["tlsubtitle"]
+        compinst["stats"] = completion_stats(proginst)
         completed = [ci for ci in completed if ci["tlid"] != tlid]
         completed.append(compinst)
         acc.started = json.dumps(started)

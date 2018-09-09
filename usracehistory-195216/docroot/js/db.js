@@ -753,6 +753,20 @@ app.db = (function () {
     }
 
 
+    function isNonTimelineDisplay (url) {
+        var url = window.location.href, params, displayed = false;
+        if(url.indexOf("compcert=") < 0) {
+            return false; }
+        params = jt.parseParams("String");
+        if(params.compcert && params.email) {
+            displayed = true;
+            app.mode.showcert(); }
+        if(!displayed) {
+            jt.log("Unknown URL parameters"); }
+        return displayed;
+    }
+
+
     function fetchDisplayTimeline () {
         var slug = "default",
             url = window.location.href,
@@ -762,6 +776,8 @@ app.db = (function () {
             slug = url.slice(idx + tlmarker.length);
             if(slug.indexOf("?") > 0) {
                 slug = slug.slice(0, slug.indexOf("?")); } }
+        if(isNonTimelineDisplay(url)) {
+            return; }
         jt.log("fetchDisplayTimeline slug: " + slug);
         jt.out("rhcontentdiv", "Loading " + slug + "...");
         app.user.tls = app.user.tls || {};

@@ -405,9 +405,34 @@ class MailCredentials(webapp2.RequestHandler):
         return_json(self, "[]")
 
 
+class PublicUserInfo(webapp2.RequestHandler):
+    def get(self):
+        eaddr = self.request.get('email')
+        if not eaddr:
+            return srverr(self, 400, "email address not specified")
+        eaddr = eaddr.lower()
+        eaddr = re.sub('%40', '@', eaddr)
+        account = find_user_by_email(eaddr)
+        if not account:
+            return srverr(self, 404, "email address " + eaddr + " not found.")
+        pub = {"instid": str(account.key().id()),
+               "email": account.email,
+               "status": account.status,
+               "name": account.name,
+               "title": account.title,
+               "web": account.web,
+               "lang": account.lang,
+               "completed": account.completed,
+               "started": account.started,
+               "created": account.created,
+               "accessed": account.accessed}
+        return_json(self, [pub])
+
+
 app = webapp2.WSGIApplication([('.*/updacc', UpdateAccount),
                                ('.*/acctok', AccessAccount),
                                ('.*/mailcred', MailCredentials),
-                               ('.*/updatetls', UpdateMyTimelines)],
+                               ('.*/updatetls', UpdateMyTimelines),
+                               ('.*/pubuser', PublicUserInfo)],
                               debug=True)
 

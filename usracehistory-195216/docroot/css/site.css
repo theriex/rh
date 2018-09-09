@@ -293,3 +293,17 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 
 /* sv miscegenation */
 .sthdatespan { font-weight:bold; padding-right:5px; }
+
+/* -------------------- */
+/* cert */
+
+#certcontdiv { margin:0px 5px 5px 2px; padding:5px; border:10px solid #530000;
+  box-shadow:5px 5px 3px #655050; background:antiquewhite; 
+  max-width:400px; margin:auto; }
+#certnamediv { font-size:xx-large; text-align:center; font-weight:bold;
+  padding:10px; }
+#certtitlediv, #certwebdiv { font-size:medium; text-align:center; }
+#certuiddiv { font-size:small; text-align:center; padding-bottom:5px; }
+#certstatsdiv { padding:5px 2px; font-size:medium; font-style:italic; }
+#ctltitlespan { font-style:normal; font-weight:bold; font-size:large; }
+#ctlsubtspan { font-style:normal; font-weight:bold; }

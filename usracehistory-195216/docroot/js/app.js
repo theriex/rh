@@ -49,6 +49,8 @@ var app = {},  //Global container for application level funcs and values
         if(!href.startsWith("https") && href.indexOf(":9080") < 0) {
             window.location.href = app.baseurl;
             return; }
+        if(href.indexOf(":9080") > 0) {
+            app.baseurl = window.location.href; }
         jt.out("rhcontentdiv", "Loading app modules...");
         app.amdtimer = {};
         app.amdtimer.load = { start: new Date() };

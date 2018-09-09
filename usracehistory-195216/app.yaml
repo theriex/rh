@@ -33,6 +33,11 @@ handlers:
 - url: .*/mailcred.*
   script: src.py.appuser.app
 
+## Return public information like timeline completions, given an email address
+## GET params: email
+- url: .*/pubuser.*
+  script: src.py.appuser.app
+
 
 ## -------------------- point --------------------
 
