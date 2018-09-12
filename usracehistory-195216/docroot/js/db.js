@@ -701,8 +701,8 @@ app.db = (function () {
                     return p2; } //remove link, return just text
                 //jt.log(pt.instid + " linked to " + refid);
                 oc = jt.fs(fname + "('" + refid + "','" + pt.instid + "')");
-                //standardize the link href to be #pt<id> for anchors
-                link = "<a href=\"" + p1 + "\"" +
+                //standardize the link href to be #<id>
+                link = "<a href=\"#" + p1 + "\"" +
                     " onclick=\"" + oc + "\">" + p2 + "</a>";
                 return link; });
         return txt;
