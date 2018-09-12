@@ -95,6 +95,9 @@ class NoteTimelineCompletion(webapp2.RequestHandler):
         compinst = [ci for ci in completed if ci["tlid"] == tlid]
         if len(compinst):
             compinst = compinst[0]
+            if "count" not in compinst:  # completed before count introduced
+                compinst["count"] = 1    # at least one completion, start there
+            compinst["name"] = params["tlname"]  # update name in case changed
         else:
             compinst = {"tlid":tlid, "name":params["tlname"], 
                         "count":0, "first":tstamp}
