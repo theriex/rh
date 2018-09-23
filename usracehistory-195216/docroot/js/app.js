@@ -45,6 +45,11 @@ var app = {},  //Global container for application level funcs and values
                     "https://www.pastkey.com",
                     "http://pastkey.org",
                     "http://www.pastkey.org",
+                    //usracehistory is transitioning to an iframe demo..
+                    "http://usracehistory.org",
+                    "http://www.usracehistory.org",
+                    "https://usracehistory.org",
+                    "https://www.usracehistory.org",
                     "http://usracehistory.com",
                     "http://www.usracehistory.com",
                     "https://usracehistory.com",
