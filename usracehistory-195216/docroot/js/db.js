@@ -753,33 +753,32 @@ app.db = (function () {
     }
 
 
-    function isNonTimelineDisplay (url) {
-        var url = window.location.href, params, displayed = false;
-        if(url.indexOf("compcert=") < 0) {
-            return false; }
+    function getTimelineSlug () {
+        var slug = "", params,
+            href = window.location.href,
+            tlmarker = "/timeline/",
+            idx = href.indexOf(tlmarker);
+        if(idx >= 0) {
+            slug = href.slice(idx + tlmarker.length);
+            if(slug.indexOf("?") > 0) {
+                slug = slug.slice(0, slug.indexOf("?")); } }
+        if(slug) { 
+            return slug; }
         params = jt.parseParams("String");
         if(params.compcert && params.email) {
-            displayed = true;
             app.mode.showcert(); }
-        if(!displayed) {
-            jt.log("Unknown URL parameters"); }
-        return displayed;
+        else {
+            app.mode.showlanding(); }
+        return "";
     }
 
 
     function fetchDisplayTimeline () {
-        var slug = "default",
-            url = window.location.href,
-            tlmarker = "/timeline/",
-            idx = url.indexOf(tlmarker);
-        if(idx >= 0) {
-            slug = url.slice(idx + tlmarker.length);
-            if(slug.indexOf("?") > 0) {
-                slug = slug.slice(0, slug.indexOf("?")); } }
-        if(isNonTimelineDisplay(url)) {
+        var url, slug = getTimelineSlug();
+        if(!slug) {  //no timeline specified, alt display already handled
             return; }
         jt.log("fetchDisplayTimeline slug: " + slug);
-        jt.out("rhcontentdiv", "Loading " + slug + "...");
+        jt.out("loadstatdiv", "Loading " + slug + "...");
         app.user.tls = app.user.tls || {};
         //PENDING: Go with localStorage timeline if available, then redisplay
         //if db fetch shows anything has changed.

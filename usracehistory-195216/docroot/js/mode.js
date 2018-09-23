@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge */
+/*jslint browser, multivar, white, fudge, for */
 /*global app, window, jt, d3 */
 
 //Menu and other top nav area functionality.
@@ -417,6 +417,38 @@ app.mode = (function () {
     }
 
 
+    function showLandingPage () {
+        //The core html for the landing page is in index.html
+        var i, html, mt, p, ps = document.getElementsByTagName("p"),
+            ghu = "https://github.com/theriex/rh";
+        for(i = 0; i < ps.length; i += 1) {
+            p = ps[i];
+            html = p.innerHTML;
+            mt = "PastKey";
+            if(html.indexOf(mt) >= 0) {
+                html = html.replace(mt, jt.tac2html(
+                    ["span", {cla:"titlespan"}, mt])); }
+            mt = "open source project";
+            if(html.indexOf(mt) >= 0) {
+                html = html.replace(mt, jt.tac2html(
+                    ["a", {href:ghu, 
+                           onclick:jt.fs("window.open('" + ghu + "')")},
+                     mt])); }
+            mt = "timelines you can try:";
+            if(html.indexOf(mt) >= 0) {
+                html = html.replace(mt, jt.tac2html(
+                    [mt,
+                     ["table", {cla:"tltable"},
+                      [["tr",
+                        [["th", "name"], ["th", "pts"], ["th", "svs"]]],
+                       ["tr",
+                        [["td", ["a", {href:"https://pastkey/timeline/default"},
+                                 "U.S. Race History"]], 
+                         ["td", 344], ["td", 3]]]]]])); }
+            p.innerHTML = html; }
+    }
+
+
     return {
         start: function (tl, currlev) { start(tl, currlev); },
         next: function () { next(); },
@@ -429,6 +461,7 @@ app.mode = (function () {
         requeue: function (pt) { requeue(pt); },
         currpt: function () { return ms && ms.currpt; },
         updqrc: function (count) { updateRemainingQuestionsCount(count); },
-        showcert: function () { showCompletionCertificate(); }
+        showcert: function () { showCompletionCertificate(); },
+        showlanding: function () { showLandingPage(); }
     };
 }());

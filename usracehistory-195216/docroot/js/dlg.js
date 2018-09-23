@@ -1259,10 +1259,11 @@ app.dlg = (function () {
                        jt.byId("savestatspan").innerHTML === savestat) {
                         continueToNext(); } },
                 function (code, errtxt) {
-                    jt.out("savstat", "Save failed. " + code + " " + errtxt);
+                    jt.out("savstatspan", "Save failed " + code + " " + errtxt);
                     jt.out("dlgbuttondiv", buttons([
                         ["skipbutton", "Skip", "app.dlg.contnosave()"],
-                        ["retrybutton", "Retry", "app.dlg.saveprog()"]])); },
+                        ["retrybutton", "Retry", "app.dlg.saveprog()"]]));
+                    setDialogColors(); },  //match buttons
                 jt.semaphore("dlg.saveProgress"));
     }
 

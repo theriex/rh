@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge */
+/*jslint browser, multivar, white, fudge, for */
 /*global window jtminjsDecorateWithUtilities */
 
 var app = {},  //Global container for application level funcs and values
@@ -33,28 +33,49 @@ var app = {},  //Global container for application level funcs and values
         app.amdtimer.load.end = new Date();
         jt.log("window.innerWidth: " + window.innerWidth);
         app.user = {};  //used for general reference
+        jt.out("loadstatdiv", "");
         app.dlg.chkcook(app.db.fetchDisplayTimeline);
     };
 
 
+    app.validURL = function () {
+        var subs = ["http://pastkey.com",
+                    "http://www.pastkey.com",
+                    "https://pastkey.com",
+                    "https://www.pastkey.com",
+                    "http://pastkey.org",
+                    "http://www.pastkey.org",
+                    "http://usracehistory.com",
+                    "http://www.usracehistory.com",
+                    "https://usracehistory.com",
+                    "https://www.usracehistory.com"],
+            href = window.location.href, i;
+        href = href.toLowerCase();  //just in case
+        app.baseurl = "https://pastkey.org";
+        for(i = 0; i < subs.length; i += 1) {
+            if(href.indexOf(subs[i]) >= 0) {
+                window.location.href = href.replace(subs[i], app.baseurl);
+                return false; } }
+        if(href.match(/:\d080/)) {
+            app.baseurl = href.slice(0, href.indexOf("080") + 3); }
+        return true;
+    };
+
+
     app.init = function () {
-        var modules, href = window.location.href;
+        var modules;
+        jtminjsDecorateWithUtilities(jt);
+        if(!app.validURL()) {  //sets app.baseurl or redirects as needed
+            return; }
         modules = app.modules.map(function (md) {
             var path = "js/";
             if(md.type === "gv" || md.type === "sv") {
                 path += "sv/"; }
             return path + md.name; });
-        jtminjsDecorateWithUtilities(jt);
-        app.baseurl = "https://usracehistory.org";
-        if(!href.startsWith("https") && href.indexOf(":9080") < 0) {
-            window.location.href = app.baseurl;
-            return; }
-        if(href.indexOf(":9080") > 0) {
-            app.baseurl = window.location.href; }
-        jt.out("rhcontentdiv", "Loading app modules...");
+        jt.out("loadstatdiv", "Loading app modules...");
         app.amdtimer = {};
         app.amdtimer.load = { start: new Date() };
-        jt.loadAppModules(app, modules, href, app.init2, "?cbp=180912");
+        jt.loadAppModules(app, modules, app.baseurl, app.init2, "?cbp=180912");
     };
 
 
