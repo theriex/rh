@@ -442,7 +442,7 @@ app.mode = (function () {
                       [["tr",
                         [["th", "name"], ["th", "pts"], ["th", "svs"]]],
                        ["tr",
-                        [["td", ["a", {href:"https://pastkey/timeline/default"},
+                        [["td", ["a", {href:app.baseurl + "/timeline/default"},
                                  "U.S. Race History"]], 
                          ["td", 344], ["td", 3]]]]]])); }
             p.innerHTML = html; }
