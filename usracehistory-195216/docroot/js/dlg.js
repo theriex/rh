@@ -54,7 +54,7 @@ app.dlg = (function () {
             {field:"pic", layout:"pic", type:"image"}],
         upldmon = null,
         cookname = "userauth",
-        cookdelim = "..usracehistory..",
+        cookdelim = "..pastkey..",
         lnfidx = 0,
         tl = null,
         editpt = null,

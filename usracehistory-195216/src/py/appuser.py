@@ -316,14 +316,14 @@ def mailgun_send(handler, eaddr, subj, body):
     authkey = base64.b64encode("api:" + mg.ckey)
     # urlencode requires ascii (unicode crashes it). encode params vals utf-8
     params = urllib.urlencode({
-            'from': 'usracehistory support <support@usracehistory.org>',
+            'from': 'PastKey Support <support@pastkey.org>',
             'to': eaddr.encode('utf-8'),
             'subject': subj.encode('utf-8'),
             'text': body.encode('utf-8')})
     headers = {'Authorization': 'Basic {0}'.format(authkey),
                'Content-Type': 'application/x-www-form-urlencoded'}
     conn = httplib.HTTPSConnection("api.mailgun.net", 443)
-    conn.request('POST', '/v3/mg.usracehistory.org/messages', params, headers)
+    conn.request('POST', '/v3/mg.pastkey.org/messages', params, headers)
     response = conn.getresponse()
     logging.info("mgsi " + eaddr + " " + subj + " " + str(response.status) + 
                  " " + str(response.reason))
@@ -400,7 +400,7 @@ class MailCredentials(webapp2.RequestHandler):
                 content += "but found no matching accounts." +\
                     "\nEither you have not signed up yet, or you used" +\
                     " a different email address."
-            content += "\n\nhttps://usracehistory.org\n\n"
+            content += "\n\nhttps://pastkey.org\n\n"
             mailgun_send(self, eaddr, "U.S. Race History login", content)
         return_json(self, "[]")
 

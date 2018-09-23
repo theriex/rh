@@ -793,8 +793,8 @@ app.db = (function () {
                     jt.out("rhcontentdiv", jt.tac2html([
                         "Could not load " + slug + ": " + code + " " + errtxt,
                         ["br"],
-                        ["a", {href:"https://usracehistory.org"},
-                         "Click here to load the default timeline"]]));
+                        ["a", {href:"https://pastkey.org"},
+                         "Click here to return to the main site."]]));
                     app.dlg.signin(); },
                 jt.semaphore("db.fetchDisplayTimeline"));
     }

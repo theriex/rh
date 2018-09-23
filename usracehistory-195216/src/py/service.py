@@ -94,7 +94,7 @@ def send_reminder_if_needed(acc, sched):
             tlp["reminder"] = rdue
             token = appuser.acctoken(acc.email, acc.password)
             remlog = rdue + " reminder " + acc.email + " tlid: " + tlp["tlid"]
-            body = "As requested, this is your " + rdue + " reminder to finish the timeline you started.  The best is yet to come.  Here's the link to continue: https://usracehistory.org/timeline/" + tlp["tlid"] + "?email=" + acc.email + "&authtok=" + token
+            body = "As requested, this is your " + rdue + " reminder to finish the timeline you started.  The best is yet to come.  Here's the link to continue: https://pastkey.org/timeline/" + tlp["tlid"] + "?email=" + acc.email + "&authtok=" + token
             subj = rdue + " timeline reminder"
             try:
                 appuser.mailgun_send(None, acc.email, subj, body)
@@ -169,7 +169,7 @@ class PeriodicProcessing(webapp2.RequestHandler):
         daysback = 1
         dtnow = datetime.datetime.utcnow()
         thresh = appuser.dt2ISO(dtnow - datetime.timedelta(daysback))
-        body = "usracehistory access since " + thresh + "\n"
+        body = "PastKey access since " + thresh + "\n"
         try:
             body += "***Recent Activity:\n"
             body += recent_activity(thresh) + "\n"
@@ -184,9 +184,9 @@ class PeriodicProcessing(webapp2.RequestHandler):
         except:
             logging.warn("Data retrieval failure, body: " + body)
             raise
-        subj = "usracehistory activity report"
+        subj = "PastKey activity report"
         try:
-            appuser.mailgun_send(None, "support@usracehistory.org", subj, body)
+            appuser.mailgun_send(None, "support@pastkey.org", subj, body)
         except:
             logging.warn(subj + "\n\n" + body)
             raise

@@ -40,7 +40,7 @@ app.support = (function () {
 
 
     function replace (def) {
-        var emd = "@usracehistory.org";
+        var emd = "@pastkey.org";
         def.repls.forEach(function (rep) {
             if(rep.url && jt.byId(rep.id)) {
                 jt.out(rep.id, jt.tac2html(
