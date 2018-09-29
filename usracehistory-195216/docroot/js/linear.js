@@ -493,6 +493,11 @@ app.linear = (function () {
         else if(picpts.length >= 40) { grid = {x:8, y:5}; }
         else if(picpts.length >= 24) { grid = {x:6, y:4}; }
         else if(picpts.length >= 12) { grid = {x:4, y:3}; }
+        else if(picpts.length >= 9) { grid = {x:3, y:3}; }
+        else if(picpts.length >= 6) { grid = {x:3, y:2}; }
+        else if(picpts.length >= 4) { grid = {x:2, y:2}; }
+        else if(picpts.length >= 2) { grid = {x:2, y:1}; }
+        else if(picpts.length >= 1) { grid = {x:1, y:1}; }
         else { jt.log("Not enough pic points to display. " + picpts.length +
                      " of " + tl.pts.length + "."); return; }
         while(wall.selpts.length < (grid.x * grid.y)) {

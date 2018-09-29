@@ -1061,6 +1061,7 @@ app.tabular = (function () {
                 function (orgs) {
                     if(orgs.length && orgs[0]) {
                         app.db.deserialize("Organization", orgs[0]);
+                        app.db.prepPointsArray(orgs[0].recpre);
                         app.db.cachePoints(orgs[0].recpre);
                         app.user.org = orgs[0];
                         cbf(); } },
