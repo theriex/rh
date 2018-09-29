@@ -235,6 +235,8 @@ app.levelup = (function () {
 
     function displayCompletionText () {
         var words = ["Level " + levinf.lev.num, "Completed"];
+        if(levinf.levs.length === 1) {
+            words = ["Level Complete"]; }
         words.forEach(function (word, idx) {
             chart.vg.append("text")
                 .attr("x", chart.tp.xc)

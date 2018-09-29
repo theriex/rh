@@ -185,11 +185,11 @@ app.finale = (function () {
     function initHonorRoll () {
         var url, tlid = app.db.displayContext().tlid;
         hr = {x:chart.cx - 120, y:30, lh:30, nidx:0, trt:2400};
-        hr.username = "No Account";
+        hr.username = "No Account (You)";
         if(app.user && app.user.acc) {
             hr.username = app.user.acc.name;
             if(!hr.username) {
-                hr.username = "User " + app.user.instid + " (You)"; } }
+                hr.username = "No Account Name (You)"; } }
         hr.ldefs = [{y:hr.y + 0 * hr.lh, opa:0.0},
                     {y:hr.y + 1 * hr.lh, opa:0.1},
                     {y:hr.y + 2 * hr.lh, opa:1.0},
