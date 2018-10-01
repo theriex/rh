@@ -442,9 +442,15 @@ app.mode = (function () {
                       [["tr",
                         [["th", "name"], ["th", "pts"], ["th", "svs"]]],
                        ["tr",
-                        [["td", ["a", {href:app.baseurl + "/timeline/default"},
-                                 "U.S. Race History"]], 
-                         ["td", 344], ["td", 3]]]]]])); }
+                        [["td", 
+                          ["a", {href:app.baseurl + "/timeline/default"},
+                           "U.S. Race History"]], 
+                         ["td", 344], ["td", 3]]],
+                       ["tr",
+                        [["td", 
+                          ["a", {href:app.baseurl + "/timeline/ellabaker"},
+                           "Ella Baker"]],
+                         ["td", 9], ["td", 0]]] ]]])); }
             p.innerHTML = html; }
     }
 
