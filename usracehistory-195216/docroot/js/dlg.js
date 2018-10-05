@@ -182,7 +182,7 @@ app.dlg = (function () {
     }
 
 
-    function wrapText (txt, cc) {
+    function wrapText (txt, cc, minw) {
         var line = "", res = [], words = txt.split(/\s/);
         words.forEach(function (word) {
             if(line.length + word.length < cc) {
@@ -193,7 +193,11 @@ app.dlg = (function () {
                 line = word; } });
         if(line) {  //append any remainder
             res.push(line); }
-        return res.join("<br/> ").trim();
+        res = res.join("<br/> ").trim();
+        if(window.innerWidth < minw) {
+            res = res.replace(/<br>/g, "");
+            res = res.replace(/<br\/>/g, ""); }
+        return res;
     }
         // html = "An introduction<br/>" +
         //     " to the history<br/>" +
@@ -202,9 +206,7 @@ app.dlg = (function () {
 
 
     function showStartDialog (title, subtitle, clickfstr, cmt) {
-        var html = wrapText(subtitle || "", 18);
-        if(window.innerWidth < 400) {
-            html = html.replace(/<br\/>/g, ""); }
+        var html = wrapText(subtitle || "", 18, 400);
         //no dialog dismissal option.  Use menu select to do something else.
         html = ["div", {id:"introdlgdiv"},
                 [["div", {id:"introtitlediv"}, title],
@@ -225,7 +227,8 @@ app.dlg = (function () {
                      ["table",
                       [["tr",
                         ["td",
-                         ["div", {id:"popuptxtdiv"}, wrapText(cmt.text, 32)]]],
+                         ["div", {id:"popuptxtdiv"}, 
+                          wrapText(cmt.text, 32, 400)]]],
                        ["tr",
                         ["td",
                          ["div", {cla:"buttonsdiv"},

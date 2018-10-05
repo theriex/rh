@@ -20,11 +20,8 @@ app.support = (function () {
                      {id:"supdonsp", url:"docs/interimdonation.html"},
                      {id:"suporgesp", em:"contact", delay:1000}]},
         about:{title:"About", content:[
-            ["p", "The goal of the U.S. Race History Project is to provide introductory information that promotes understanding and respect for the context of people whose histories are frequently ignored.  Points are presented interactively for perusal when visiting the site, or by reference with optional download."],
-            ["p", "All timelines are incomplete.  You are encouraged to check all points for yourself.  Knowledge evolves over time and history has multiple perspectives."],
-            ["p", "The project thanks its member organizations for their essential contributions and perspective.  Technical development can be followed on <span id=\"supghsp\">github</span>."]],
-               repls:[
-                   {id:"supghsp", url:"https://github.com/theriex/rh/issues"}]},
+            ["p", "PastKey was created to promote understanding and respect for the context of people whose histories are frequently ignored.  You are encouraged to check points for yourself, knowledge evolves over time and history has multiple perspectives."],
+            ["p", "The project thanks its member organizations for their essential contributions and guidance."]]},
         chapter:{title:"End of Chapter <span id=\"chnsp\"></span>", content:[
             ["p", "You covered <span id=\"chptcsp\">_</span> points <span id=\"chyfsp\"></span> <span id=\"chytsp\"></span>."],
             ["div", {id:"remdiv"},
@@ -41,6 +38,7 @@ app.support = (function () {
 
     function replace (def) {
         var emd = "@pastkey.org";
+        if(!def.repls) { return; }
         def.repls.forEach(function (rep) {
             if(rep.url && jt.byId(rep.id)) {
                 jt.out(rep.id, jt.tac2html(
@@ -61,10 +59,21 @@ app.support = (function () {
     }
 
 
+    function getDisplayDef(tl, dc) {
+        var def = dispdef[dc], abtxt = "";
+        if(tl.hc && tl.hc.dcon && tl.hc.dcon.lastTL) {
+            abtxt = tl.hc.dcon.lastTL.about || ""; }
+        if(dc === "about" && abtxt) {
+            def.content = jt.tac2html(def.content) + jt.tac2html(
+                ["div", {cla:"timelineaboutdiv"}, abtxt]); }
+        return def;
+    }
+
+
     function display (tl, dc) {
         var def, currpt, html, svd, contheight;
         dc = dc || "support";
-        def = dispdef[dc];
+        def = getDisplayDef(tl, dc);
         currpt = app.mode.currpt();
         if(currpt) {  //return to the same point after this display is done.
             app.db.unvisitPoint(currpt);

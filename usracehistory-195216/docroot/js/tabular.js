@@ -401,6 +401,7 @@ app.tabular = (function () {
             {field:"subtitle", type:"text"},
             {field:"lang", type:"text"},
             {field:"comment", type:"text"},
+            {field:"about", type:"text"},
             {field:"ctype", type:"ui"},
             {field:"cids", type:"ui"},
             {field:"svs", type:"ui"},
@@ -850,6 +851,7 @@ app.tabular = (function () {
         currtl.title = jt.byId("titlein").value;
         currtl.subtitle = jt.byId("subtitlein").value;
         currtl.comment = jt.byId("commentin").value;
+        currtl.about = jt.byId("aboutin").value;
         currtl.ctype = tlflds.seltype.getValue();
         if(currtl.ctype === "Points") {
             if(tlflds.selseq.getValue() === "Random") {

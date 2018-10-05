@@ -42,7 +42,8 @@ class Timeline(db.Model):
     title = db.StringProperty()    # title for start dialog, not unique
     subtitle = db.StringProperty(indexed=False)  # text for start dialog
     lang = db.StringProperty(indexed=False)  # e.g. en-US, en-US-x-grade etc
-    comment = db.TextProperty()    # optional credit, short descrip, whatever
+    comment = db.TextProperty()    # text at startup (see db.js parseComment)
+    about = db.TextProperty()      # html to include in about (see support.js)
     ctype = db.StringProperty()    # Timelines|Points|Random [:levcnt:rndmax]
     cids = db.TextProperty()       # CSV of Point ids or Timeline ids
     svs = db.TextProperty()        # CSV of SuppViz module names
@@ -144,6 +145,7 @@ def update_or_create_timeline(handler, acc, params):
     timeline.subtitle = params["subtitle"] or ""
     timeline.lang = params["lang"] or "en-US"
     timeline.comment = params["comment"] or ""
+    timeline.about = params["about"] or ""
     timeline.ctype = params["ctype"]
     timeline.cids = params["cids"] or ""
     timeline.svs = params["svs"] or ""
@@ -226,7 +228,7 @@ class UpdateTimeline(webapp2.RequestHandler):
             return
         params = appuser.read_params(self, ["instid", "name", "ctype", "cids", 
                                             "svs", "slug", "title", "subtitle",
-                                            "lang", "comment"]);
+                                            "lang", "comment", "about"]);
         timeline = update_or_create_timeline(self, acc, params)
         if timeline:
             updated = update_timeline_list(acc.built, timeline)
