@@ -72,6 +72,8 @@ var app = {},  //Global container for application level funcs and values
         jtminjsDecorateWithUtilities(jt);
         if(!app.validURL()) {  //sets app.baseurl or redirects as needed
             return; }
+        if(window.location.href.indexOf("/timeline/") >= 0) {
+            jt.out("splashdiv", "Starting timeline"); }
         modules = app.modules.map(function (md) {
             var path = "js/";
             if(md.type === "gv" || md.type === "sv") {
