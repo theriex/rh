@@ -297,7 +297,7 @@ app.linear = (function () {
 
 
     function zoomToPoint (d) {
-        var zd = 32; //zoom divisor: 1/d === elevator width
+        var zd = 4; //zoom divisor: 1/d === elevator width
         if(!d) {
             jt.log("linear.zoomToPoint given null");
             return; }
