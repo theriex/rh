@@ -29,7 +29,7 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 /* -------------------- */
 /* splash */
 
-#splashdiv { padding:10px; background-image:url('../img/splashbg.png'); 
+#splashdiv { padding:10px; opacity:0.1; transition:all 1.3s ease;
   background-attachment: fixed; background-size: auto 100%; 
   background-repeat: no-repeat; min-height:755px; }
 #splashdiv img { width:100%; max-width:400px; display:block; margin:0 auto; }

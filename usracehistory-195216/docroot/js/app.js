@@ -68,12 +68,16 @@ var app = {},  //Global container for application level funcs and values
 
 
     app.init = function () {
-        var modules;
+        var modules, splash;
         jtminjsDecorateWithUtilities(jt);
         if(!app.validURL()) {  //sets app.baseurl or redirects as needed
             return; }
+        splash = jt.byId("splashdiv");
         if(window.location.href.indexOf("/timeline/") >= 0) {
-            jt.out("splashdiv", "Starting timeline"); }
+            splash.innerHTML = "Starting timeline"; }
+        else {
+            splash.style.backgroundImage = "url('../img/splashbg.png')"; }
+        splash.style.opacity = 1.0;
         modules = app.modules.map(function (md) {
             var path = "js/";
             if(md.type === "gv" || md.type === "sv") {
