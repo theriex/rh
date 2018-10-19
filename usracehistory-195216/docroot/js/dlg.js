@@ -1734,6 +1734,7 @@ app.dlg = (function () {
 
 
     function closeDialog (mode) {
+        jt.byId("popupdiv").style.visibility = "hidden";
         d3.select("#itemdispdiv")
             .style("visibility", "hidden");
         if(mode) {  //e.g. "reference"
