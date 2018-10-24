@@ -445,6 +445,10 @@ app.tabular = (function () {
              {value:"A", text:"Asian American"},
              {value:"M", text:"Middle East and North Africa"},
              {value:"R", text:"Multiracial"},
+             //activate as timelines added
+             //{value:"Q", text:"LGBTQ"},
+             //{value:"C", text:"Class Oppression"},
+             //question type codes can be helpful to search for balance
              {value:"U", text:"Did you know?"},
              {value:"F", text:"Firsts"},
              {value:"D", text:"What year?"}]);
