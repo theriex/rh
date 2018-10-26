@@ -196,21 +196,26 @@ app.mode = (function () {
         //name so offsetWidth of the menu contents doesn't vary.
         var menu = [{m:"visual",  n:"Interactive&nbsp;Mode"},
                     {m:"refmode", n:"Reference&nbsp;Mode"},
-                    {m:"myacc",   n:"My&nbsp;Account",      c:"acc"},
-                    {m:"newtl",   n:"Create&nbsp;Timeline", c:"acc"},
+                    {m:"myacc",   n:"My&nbsp;Account",      c:"dis"},
+                    {m:"newtl",   n:"Create&nbsp;Timeline", c:"dis"},
                     {m:"signout", n:"Sign&nbsp;Out",        c:"acc"},
                     {m:"signin",  n:"Sign&nbsp;In",         c:"noacc"},
                     {m:"support", n:"Support"},
                     {m:"about",   n:"About"}],
             acc = app.user && app.user.tok,
-            html = [];
+            html = [], item = "";
         menu.forEach(function (mi) {
-            if(!mi.c || (acc && mi.c === "acc") || (!acc && mi.c === "noacc")) {
-                html.push(["div", {cla:"menulinemain"},
-                           ["a", {href:"#" + mi.m,
+            if(!mi.c || ((mi.c === "acc" && acc) ||
+                         (mi.c === "noacc" && !acc) ||
+                         (mi.c === "dis"))) {
+                if(mi.c === "dis" && !acc) {
+                    item = ["span", {cla:"disabledmenuline"}, mi.n]; }
+                else {
+                    item = ["a", {href:"#" + mi.m,
                                   onclick:jt.fs("app.mode.menu(0,'" + mi.m + 
                                                 "')")},
-                            mi.n]]); } });
+                            mi.n]; }
+                html.push(["div", {cla:"menulinemain"}, item]); } });
         html = [["div", {id:"menuicondiv", style:"text-align:right;"},
                  ["a", {href:"#menu", onclick:jt.fs("app.mode.menu(" + 
                                                     !expand + ")")},
