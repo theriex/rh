@@ -182,6 +182,8 @@ app.mode = (function () {
             clearSearchState();
             app.db.nextInteraction(); }
         else { //"reference"
+            if(jt.byId("tlctxdiv")) {
+                jt.byId("tlctxdiv").style.display = "none"; }
             if(ms.disp !== "text") {
                 toggleDisplay(); } }
     }
