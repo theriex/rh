@@ -118,7 +118,7 @@ app.mode = (function () {
             jt.byId("abgdiv").style.display = "none";
             jt.byId("lcontdiv").style.display = "none";
             jt.byId("tcontdiv").style.display = "block";
-            jt.byId("itemdispdiv").style.visibility = "hidden";
+            app.dlg.verifyClosed();
             ms.disp = "text";
             app.tabular.display(); }  //rebuild contents each time
         else {
@@ -182,6 +182,8 @@ app.mode = (function () {
             clearSearchState();
             app.db.nextInteraction(); }
         else { //"reference"
+            //hide the timeline creation context if it has been created, so
+            //returning to plain reference doesn't leave it up.
             if(jt.byId("tlctxdiv")) {
                 jt.byId("tlctxdiv").style.display = "none"; }
             if(ms.disp !== "text") {
