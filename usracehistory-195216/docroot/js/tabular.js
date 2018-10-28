@@ -20,7 +20,22 @@ app.tabular = (function () {
         tlsetfldopts = [],
         mode = "refdisp",  //tledit
         currpts = null,
-        edcmds = ["new", "copy", "cpsrc"];
+        edcmds = ["new", "copy", "cpsrc"],
+        ptcodes = [
+            {value:"All", text:"All Codes", ty:"gen"},
+            {value:"N", text:"Native American", ty:"tl"},
+            {value:"B", text:"African American", ty:"tl"},
+            {value:"L", text:"Latino/as", ty:"tl"},
+            {value:"A", text:"Asian American", ty:"tl"},
+            {value:"M", text:"Middle East and North Africa", ty:"tl"},
+            {value:"R", text:"Multiracial", ty:"tl"},
+            //activate as timelines added
+            //{value:"Q", text:"LGBTQ", ty:"tl"},
+            //{value:"C", text:"Class Oppression", ty:"tl"},
+            //question type codes can be helpful to search for balance
+            {value:"U", text:"Did you know?", ty:"qt"},
+            {value:"F", text:"Firsts", ty:"qt"},
+            {value:"D", text:"What year?", ty:"qt"}];
 
 
     function dateSpan (dobj, prefix) {
@@ -162,6 +177,51 @@ app.tabular = (function () {
     }
 
 
+    function showCodesDescription (event, ptid) {
+        var pt = app.db.pt4id(ptid, currpts),
+            html = [], qt = "Standard", pdiv, pos;
+        if(!pt) {
+            jt.log("showCodesDescription pt " + ptid + " not found");
+            return; }
+        html.push(["div", {id:"dlgxdiv", 
+                           onclick:jt.fs("app.dlg.closepop()")}, "X"]);
+        html.push(["div", {cla:"codeslistsectiondiv"}, "Histories:"]);
+        ptcodes.forEach(function (code) {
+            if(code.ty === "tl" && pt.codes.indexOf(code.value) >= 0) {
+                html.push(["div", {cla:"ptlcodediv"}, code.text]); }
+            if(code.ty === "qt" && pt.codes.indexOf(code.value) >= 0) {
+                qt = code.text; } });
+        html.push(["div", {cla:"codeslistsectiondiv"}, "Question Type:"]);
+        html.push(["div", {cla:"ptlcodediv"}, qt]);
+        if(pt.tagCodes && pt.tagCodes.indexOf("r") >= 0) {
+            html.push(["div", {cla:"ptremdiv"}, "&#x2605; Remembered"]); }
+        jt.out("popupdiv", jt.tac2html(html));
+        pos = jt.geoXY(event);
+        pdiv = jt.byId("popupdiv");
+        pdiv.style.left = pos.x + "px";
+        pdiv.style.top = pos.y + "px";
+        pdiv.style.visibility = "visible";
+    }
+
+
+    function pointCodesTAC (pt) {
+        var html = [];
+        if(pt.tagCodes && pt.tagCodes.indexOf("r") >= 0) {
+            html.push(" ");
+            html.push(["a", {href:"#Remember", title:"Remembered",
+                             onclick:jt.fs("app.tabular.codesdesc(event,'" + 
+                                           pt.instid + "')")},
+                       "&#x2605;"]); }
+        html.push(" (");
+        html.push(["a", {href:"#Codes", title:"Show Codes",
+                         onclick:jt.fs("app.tabular.codesdesc(event,'" + 
+                                       pt.instid + "')")},
+                   pt.codes]);
+        html.push(") ");
+        return html;
+    }
+
+
     function pointTAC (pt, deco) {
         var html = "";
         html = ["div", {cla:"trowdiv", id:"trowdiv" + pt.instid},
@@ -170,7 +230,7 @@ app.tabular = (function () {
                   [dateSpan(pt.start),
                    ["br"],
                    dateSpan(pt.end, "-"),
-                   ["span", {cla:"tcspan"}, " (" + pt.codes + ") "],
+                   ["span", {cla:"tcspan"}, pointCodesTAC(pt)],
                    pointCheckboxTAC(pt, deco)]],
                  ["div", {cla:"trowdescdiv"}, 
                   [pointPicTAC(pt, deco),
@@ -437,21 +497,7 @@ app.tabular = (function () {
         ptflds.selpool = makeSelect(
             "ptdpsel", jt.fs("app.tabular.ptdisp()"), ps);
         ptflds.selcode = makeSelect(
-            "ptcodesel", jt.fs("app.tabular.ptdisp()"),
-            [{value:"All", text:"All Codes"},
-             {value:"N", text:"Native American"},
-             {value:"B", text:"African American"},
-             {value:"L", text:"Latino/as"},
-             {value:"A", text:"Asian American"},
-             {value:"M", text:"Middle East and North Africa"},
-             {value:"R", text:"Multiracial"},
-             //activate as timelines added
-             //{value:"Q", text:"LGBTQ"},
-             //{value:"C", text:"Class Oppression"},
-             //question type codes can be helpful to search for balance
-             {value:"U", text:"Did you know?"},
-             {value:"F", text:"Firsts"},
-             {value:"D", text:"What year?"}]);
+            "ptcodesel", jt.fs("app.tabular.ptdisp()"), ptcodes);
         html = [["div", {id:"tcontheaddiv"},
                  [["div", {id:"tlctxdiv"}, ""],  //timeline context
                   ["div", {id:"ptctxdiv"},       //points context
@@ -1195,6 +1241,7 @@ app.tabular = (function () {
         redispt: function (pt) { redisplayPoint(pt); },
         togseti: function () { toggleInfoSettings(); },
         shall: function () { changeToAllPointsDisplay(); },
-        fetchorg: function (cbf) { fetchorg(cbf); }
+        fetchorg: function (cbf) { fetchorg(cbf); },
+        codesdesc: function (event, ptid) { showCodesDescription(event, ptid); }
     };
 }());
