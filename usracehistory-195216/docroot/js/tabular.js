@@ -21,21 +21,8 @@ app.tabular = (function () {
         mode = "refdisp",  //tledit
         currpts = null,
         edcmds = ["new", "copy", "cpsrc"],
-        ptcodes = [
-            {value:"All", text:"All Codes", ty:"gen"},
-            {value:"N", text:"Native American", ty:"tl"},
-            {value:"B", text:"African American", ty:"tl"},
-            {value:"L", text:"Latino/as", ty:"tl"},
-            {value:"A", text:"Asian American", ty:"tl"},
-            {value:"M", text:"Middle East and North Africa", ty:"tl"},
-            {value:"R", text:"Multiracial", ty:"tl"},
-            //activate as timelines added
-            //{value:"Q", text:"LGBTQ", ty:"tl"},
-            //{value:"C", text:"Class Oppression", ty:"tl"},
-            //question type codes can be helpful to search for balance
-            {value:"U", text:"Did you know?", ty:"qt"},
-            {value:"F", text:"Firsts", ty:"qt"},
-            {value:"D", text:"What year?", ty:"qt"}];
+        wsv = {},  //working set values (keywords and year range from points)
+        mcr = {};  //match criteria for points to display
 
 
     function dateSpan (dobj, prefix) {
@@ -81,30 +68,6 @@ app.tabular = (function () {
     }
 
 
-    function pointExtendedAttrValHTML(attr, val) {
-        return ["div",
-                [["span", {cla:"pxdattrspan"}, attr],
-                 "&nbsp;",  //for double click select separation and visual
-                 val]];
-    }
-
-
-    function pointExtendedDataHTML (pt) {
-        var html = [];
-        html.push(pointExtendedAttrValHTML("id", pt.instid));
-        if(pt.source) {
-            html.push(pointExtendedAttrValHTML("source", pt.source)); }
-        if(pt.keywords) {
-            html.push(pointExtendedAttrValHTML("keywords", pt.keywords)); }
-        html.push(pointExtendedAttrValHTML("orgid", pt.orgid));
-        html.push(pointExtendedAttrValHTML("timecode", pt.tc));
-        //PENDING: refs should be a ul with new tabs if URLs
-        //PENDING: stats should be displayed once available
-        //Not doing endorsed for general display.
-        return jt.tac2html(html);
-    }
-
-
     function pointPicTAC (pt, deco) {
         var ph = "";
         if(pt.pic && deco !== "solohtml") {
@@ -117,14 +80,6 @@ app.tabular = (function () {
 
     function pointButtonsTAC (pt, deco) {
         var buttons = [], divs = [];
-        //ptdata button
-        buttons.push(["a", {href:"#" + pt.instid, cla:"editlink",
-                            onclick:jt.fs("app.toggledivdisp('ptxdiv" + 
-                                          pt.instid + "')")},
-                      "[ptdata]"]);
-        divs.push(["div", {id:"ptxdiv" + pt.instid, cla:"ptxdiv",
-                           style:"display:none"},
-                   pointExtendedDataHTML(pt)]);
         //refs
         if(pt.refs && pt.refs.length) {
             buttons.push([" &nbsp;",
@@ -136,7 +91,7 @@ app.tabular = (function () {
                                style:"display:none"},
                        app.dlg.refsListHTML(pt.refs)]); }
         //edit
-        if(mayEditPoint(pt) && deco !== "solohtml") {
+        if(mode === "tledit" && mayEditPoint(pt) && deco !== "solohtml") {
             buttons.push([" &nbsp;",
                           ["a", {href:"#edit", cla:"editlink", 
                                  id:"editlink" + pt.instid,
@@ -177,24 +132,36 @@ app.tabular = (function () {
     }
 
 
-    function showCodesDescription (event, ptid) {
+    function spdAttrVal (attr, val) {
+        var html = ["div", {cla:"spdavdiv"},
+                    [["span", {cla:"spdattrspan"}, attr + ": "],
+                     ["span", {cla:"spdvalspan"}, val]]];
+        return html;
+    }
+
+
+    function showPointDetails (event, ptid) {
         var pt = app.db.pt4id(ptid, currpts),
-            html = [], qt = "Standard", pdiv, pos;
+            html = [], qt, pdiv, pos;
         if(!pt) {
-            jt.log("showCodesDescription pt " + ptid + " not found");
+            jt.log("showPointDetails pt " + ptid + " not found");
             return; }
+        qt = pt.qtype || "C";
         html.push(["div", {id:"dlgxdiv", 
                            onclick:jt.fs("app.dlg.closepop()")}, "X"]);
-        html.push(["div", {cla:"codeslistsectiondiv"}, "Histories:"]);
-        ptcodes.forEach(function (code) {
-            if(code.ty === "tl" && pt.codes.indexOf(code.value) >= 0) {
-                html.push(["div", {cla:"ptlcodediv"}, code.text]); }
-            if(code.ty === "qt" && pt.codes.indexOf(code.value) >= 0) {
-                qt = code.text; } });
-        html.push(["div", {cla:"codeslistsectiondiv"}, "Question Type:"]);
-        html.push(["div", {cla:"ptlcodediv"}, qt]);
+        html.push(spdAttrVal(qt, app.qts[qt]));
         if(pt.tagCodes && pt.tagCodes.indexOf("r") >= 0) {
             html.push(["div", {cla:"ptremdiv"}, "&#x2605; Remembered"]); }
+        app.keyflds.forEach(function (field) {
+            if(pt[field]) {
+                html.push(["div", {cla:"spdsecdiv"}, field.capitalize()]);
+                pt[field].csvarray().forEach(function (key) {
+                    html.push(["div", {cla:"spdkeydiv"}, key]); }); } });
+        html.push(spdAttrVal("id", pt.instid));
+        if(pt.source) {
+            html.push(spdAttrVal("source", pt.source)); }
+        html.push(spdAttrVal("orgid", pt.orgid));
+        html.push(spdAttrVal("timecode", pt.tc));
         jt.out("popupdiv", jt.tac2html(html));
         pos = jt.geoXY(event);
         pdiv = jt.byId("popupdiv");
@@ -205,19 +172,19 @@ app.tabular = (function () {
 
 
     function pointCodesTAC (pt) {
-        var html = [];
+        var html = [], qt = pt.qtype || "C";
         if(pt.tagCodes && pt.tagCodes.indexOf("r") >= 0) {
             html.push(" ");
             html.push(["a", {href:"#Remember", title:"Remembered",
-                             onclick:jt.fs("app.tabular.codesdesc(event,'" + 
+                             onclick:jt.fs("app.tabular.ptdet(event,'" + 
                                            pt.instid + "')")},
                        "&#x2605;"]); }
-        html.push(" (");
-        html.push(["a", {href:"#Codes", title:"Show Codes",
-                         onclick:jt.fs("app.tabular.codesdesc(event,'" + 
+        html.push(" ");
+        html.push(["a", {href:"#Details", title:app.qts[qt],
+                         onclick:jt.fs("app.tabular.ptdet(event,'" + 
                                        pt.instid + "')")},
-                   pt.codes]);
-        html.push(") ");
+                   qt]);
+        html.push(" ");
         return html;
     }
 
@@ -483,6 +450,57 @@ app.tabular = (function () {
     }
 
 
+    function updatePointWorkingSetValues (pt) {
+        if(pt.start.year < wsv.yr.min) {
+            wsv.yr.min = pt.start.year; }
+        if(pt.start.year > wsv.yr.max) {
+            wsv.yr.max = pt.start.year; }
+        app.keyflds.forEach(function (field) {
+            if(pt[field]) {
+                pt[field].csvarray().forEach(function (keyval) {
+                    wsv[field] = wsv[field] || {};
+                    wsv[field][keyval] = wsv[field][keyval] || 0;
+                    wsv[field][keyval] += 1; }); } });
+    }
+
+
+    function updatePointWorkingSetDisplay () {
+        var yrin, keyiconsrc = "keyicon.png";
+        yrin = jt.byId("yearstartin");
+        if(yrin) {
+            yrin.setAttribute("min", wsv.yr.min);
+            yrin.setAttribute("max", wsv.yr.max);
+            if(wsv.yr.matching === "off") {
+                yrin.value = wsv.yr.min; } }
+        yrin = jt.byId("yearendin");
+        if(yrin) {
+            yrin.setAttribute("min", wsv.yr.min);
+            yrin.setAttribute("max", wsv.yr.max);
+            if(wsv.yr.matching === "off") {
+                yrin.value = wsv.yr.max; } }
+        app.keyflds.forEach(function (field) {
+            if(mcr[field]) {
+                keyiconsrc = "keyicongold.png"; } });
+        jt.byId("keyiconimg").src = "img/" + keyiconsrc;
+    }
+
+
+    function resetPointWorkingSetValues (datematching) {
+        datematching = datematching || "on";
+        currpts = [];
+        wsv.yr = {min:5000, max:-25000, matching:datematching};
+        app.keyflds.forEach(function (field) {
+            wsv[field] = null; });
+    }
+
+
+    function initPointWorkingSetValues () {
+        resetPointWorkingSetValues("off");
+        app.allpts.forEach(function (pt) {
+            updatePointWorkingSetValues(pt); });
+    }
+
+
     function verifyDisplayElements () {
         var html, ps;
         if(jt.byId("pointsdispdiv")) {  //already set up
@@ -494,27 +512,32 @@ app.tabular = (function () {
         if(app.user && app.user.acc && app.user.acc.orgid && 
            app.user.acc.orgid !== "0") {
             ps.splice(1, 0, {value:"Org", text:"Organization Points"}); }
+        initPointWorkingSetValues();
         ptflds.selpool = makeSelect(
-            "ptdpsel", jt.fs("app.tabular.ptdisp()"), ps);
-        ptflds.selcode = makeSelect(
-            "ptcodesel", jt.fs("app.tabular.ptdisp()"), ptcodes);
+            "ptdpsel", jt.fs("app.tabular.ptdisp('reset')"), ps);
         html = [["div", {id:"tcontheaddiv"},
                  [["div", {id:"tlctxdiv"}, ""],  //timeline context
                   ["div", {id:"ptctxdiv"},       //points context
                    [["div", {id:"ptdispmodediv"},
-                     [ptflds.selpool.tac(), ptflds.selcode.tac()]],
-                    ["div", {id:"ptfilterdiv"},  //point filtering
-                     [["input", {type:"number", cla:"yearin",
+                     [ptflds.selpool.tac(),
+                      ["input", {type:"number", cla:"yearin",
                                  onchange:jt.fs("app.tabular.ptdisp()"),
                                  name:"yearstartin", id:"yearstartin",
-                                 min:-1200, max:2016, value:-1200}],
-                      ["span", {cla:"srchinspan"}, "&nbsp;to&nbsp;"],
+                                 min:wsv.yr.min, max:wsv.yr.max, 
+                                 value:wsv.yr.min}],
+                      ["span", {id:"srchinspan"}, "&nbsp;to&nbsp;"],
                       ["input", {type:"number", cla:"yearin",
                                  onchange:jt.fs("app.tabular.ptdisp()"),
                                  name:"yearendin", id:"yearendin",
-                                 min:-1200, max:2016, value:2016}],
-                      ["input", {type:"text", id:"srchin", size:18,
-                                 placeholder:"Filter text...",
+                                 min:wsv.yr.min, max:wsv.yr.max, 
+                                 value:wsv.yr.max}]]],
+                    ["div", {id:"ptfilterdiv"},  //point filtering
+                     [["div", {id:"ptkeyfiltlinkdiv"},
+                       ["a", {href:"#keywordfilter", title:"Keyword Selections",
+                              onclick:jt.fs("app.tabular.keysel(event)")},
+                        ["img", {src:"img/keyicon.png", id:"keyiconimg"}]]],
+                      ["input", {type:"text", id:"srchin", size:23,
+                                 placeholder:"Filter by text...",
                                  value:app.mode.searchstate().qstr, 
                                  oninput:jt.fs("app.tabular.ptdisp()")}],
                       ["div", {id:"downloadlinkdiv"}, ""]]]]]]],
@@ -561,6 +584,7 @@ app.tabular = (function () {
         //create select from timeline options
         btls.forEach(function (btl) {
             var selopt = {value:btl.tlid, text:btl.name};
+            //set selection default to most recently built
             if(app.user.acc.built.length &&
                selopt.value === app.user.acc.built[0].tlid) {
                 selopt.selected = "selected"; }
@@ -790,7 +814,7 @@ app.tabular = (function () {
                         app.db.prepData(tl);  //caches tl.points
                         app.user.tls[tl.instid] = tl; });
                     setStateToDatabaseTimeline(result[0]);
-                    app.tabular.ptdisp();
+                    app.tabular.ptdisp("reset");
                     app.tabular.tledchg("namechg"); },
                 function (code, errtxt) {
                     jt.log("tlefc " + code + " " + errtxt);
@@ -884,12 +908,15 @@ app.tabular = (function () {
     function timelineEditFieldChange (context) {
         notePointScrollPosition();
         hideTLTypeFields();  //hide all data dependent fields
-        if(context === "namechg" && !timelineNameChangeReady()) {
-            return; }  //fetching timeline, or "none", or otherwise done
+        if(context === "namechg") {
+            mcr = {};
+            app.dlg.closepop();
+            if(!timelineNameChangeReady()) {
+                return; } }  //fetching timeline, or "none", or otherwise done
         unhideTLTypeFields();  //unhide appropriate data dependent fields
         restorePointScrollPosition();
-        if(context !== "showsave") {  //redraw the points area since it might
-            app.tabular.ptdisp(); }   //need to show suppviz or timelines now.
+        if(context !== "showsave") {  //redraw the points display
+            app.tabular.ptdisp("reset"); }  //shows timelines or suppviz also
     }
 
 
@@ -932,49 +959,55 @@ app.tabular = (function () {
     }
 
 
-    function getPointMatchCriteria () {
-        var crit = {code: ptflds.selcode.getValue(),
-                    start: Number(jt.byId("yearstartin").value),
-                    end: Number(jt.byId("yearendin").value),
-                    srch: jt.byId("srchin").value}, dcon;
+    function verifyPointMatchCriteria () {
+        var dcon;
+        mcr.start = Number(jt.byId("yearstartin").value);
+        mcr.end = Number(jt.byId("yearendin").value);
+        mcr.srch = jt.byId("srchin").value;
         if(ptflds.selpool.getValue() === "Org") {
-            crit.orgid = app.user.acc.orgid; }
+            mcr.orgid = app.user.acc.orgid; }
         if(ptflds.selpool.getValue() === "Timeline") {
             if(currtl) {  //editing a timeline
-                crit.editingtimeline = true;
-                crit.ids = currtl.cids; }
+                mcr.editingtimeline = true;
+                mcr.ids = currtl.cids; }
             else {
                 dcon = app.db.displayContext();
                 if(!dcon.cids) {
                     dcon.cids = "";
                     dcon.points.forEach(function (pt) {
                         dcon.cids = dcon.cids.csvappend(pt.instid); }); }
-                crit.ids = dcon.cids; } }
-        // jt.log("getPointMatchCriteria:");
-        // Object.keys(crit).forEach(function (key) {
-        //     jt.log("    " + key + ": " + crit[key]); });
-        return crit;
+                mcr.ids = dcon.cids; } }
+        // jt.log("verifyPointMatchCriteria:");
+        // Object.keys(mcr).forEach(function (key) {
+        //     jt.log("    " + key + ": " + mcr[key]); });
     }
 
 
-    function isMatchingPoint (crit, pt) {
-        var srchtxt;
-        if(crit.orgid && pt.orgid !== crit.orgid) {
+    function isMatchingPoint (pt) {
+        var srchtxt, haveReqKeys = true;
+        if(mcr.orgid && pt.orgid !== mcr.orgid) {
             return false; }
-        if((crit.ids || crit.editingtimeline) && 
-           !crit.ids.csvcontains(pt.instid)) {
+        if((mcr.ids || mcr.editingtimeline) && 
+           !mcr.ids.csvcontains(pt.instid)) {
             return false; }
-        if(crit.code !== "All" && pt.codes.indexOf(crit.code) < 0) {
+        updatePointWorkingSetValues(pt);
+        if(wsv.yr.matching === "on" &&
+           (pt.start.year < mcr.start || pt.start.year > mcr.end)) {
             return false; }
-        if(pt.start.year < crit.start || pt.start.year > crit.end) {
-            return false; }
-        if(crit.srch) {
-            srchtxt = crit.srch.toLowerCase();
+        if(mcr.srch) {
+            srchtxt = mcr.srch.toLowerCase();
             if((pt.text.toLowerCase().indexOf(srchtxt) < 0) &&
-               (pt.keywords.toLowerCase().indexOf(srchtxt) < 0) &&
                (pt.instid.indexOf(srchtxt) < 0)) {
                 return false; } }
-        return true;
+        app.keyflds.forEach(function (field) {
+            if(mcr[field]) {
+                haveReqKeys = false;  //one or more checked keywords needed
+                mcr[field].csvarray().forEach(function (keyval) {
+                    var fcsv = pt[field];
+                    keyval = keyval.toLowerCase();
+                    if(fcsv && fcsv.toLowerCase().csvcontains(keyval)) {
+                        haveReqKeys = true; } }); } });
+        return haveReqKeys;
     }
 
 
@@ -983,8 +1016,10 @@ app.tabular = (function () {
             jt.byId("ptdpsel").style.display = val; }
         else if(val !== "none") {
             jt.byId("ptdpsel").style.display = val; }
-        jt.byId("ptcodesel").style.display = val;
         jt.byId("ptfilterdiv").style.display = val;
+        jt.byId("yearstartin").style.display = val;
+        jt.byId("srchinspan").style.display = val;
+        jt.byId("yearendin").style.display = val;
     }
 
 
@@ -1077,7 +1112,7 @@ app.tabular = (function () {
                     app.db.prepPointsArray(result);
                     app.db.cachePoints(result);
                     cacheSuppVizPoints();
-                    app.tabular.ptdisp(); },
+                    app.tabular.ptdisp("reset"); },
                 function (code, errtxt) {
                     jt.err("Fetch pubpts failed " + code + " " + errtxt); },
                 jt.semaphore("tabular.fetchPubPoints"));
@@ -1085,7 +1120,7 @@ app.tabular = (function () {
     }
 
 
-    function pointsDispHeaderHTML (mcrit, currpts) {
+    function pointsDispHeaderHTML (currpts) {
         var html = [],
             name = (currtl && currtl.name) || "",
             txt = "No points, ";
@@ -1097,7 +1132,7 @@ app.tabular = (function () {
                         ["a", {href:"#allpts", id:"allptslink",
                                onclick:jt.fs("app.tabular.shall()")},
                          "show all available datapoints"]]]); }
-        if(mcrit.editingtimeline) {
+        if(mcr.editingtimeline) {
             html.push(["div", {cla:"pointsdispline"},
                        ["a", {href:"#newpoint", id:"createpointlink",
                               onclick:jt.fs("app.dlg.ptedit('create')")},
@@ -1123,8 +1158,8 @@ app.tabular = (function () {
     }
 
 
-    function updatePointsDisplay () {
-        var mcrit, outdiv = jt.byId("pointsdispdiv");
+    function updatePointsDisplay (command) {
+        var outdiv = jt.byId("pointsdispdiv");
         jt.out("downloadlinkdiv", jt.tac2html(
             ["img", {src:"img/wait.png", cla:"downloadlinkimg"}]));
         outdiv.innerHTML = "";
@@ -1136,6 +1171,7 @@ app.tabular = (function () {
             displayPointFilters("none");
             return updateSuppvizDisplay(); }
         displayPointFilters("initial");
+        resetPointWorkingSetValues((command === "reset")? "off" : "on");
         if(!app.pubpts) {
             outdiv.innerHTML = jt.tac2html(["div", {cla:"pointsdispline"},
                                             "Fetching default points..."]);
@@ -1144,12 +1180,12 @@ app.tabular = (function () {
             outdiv.innerHTML = jt.tac2html(["div", {cla:"pointsdispline"},
                                             "Fetching organization points..."]);
             return fetchorg(updatePointsDisplay); }
-        mcrit = getPointMatchCriteria();
-        currpts = [];
+        verifyPointMatchCriteria();
         app.allpts.forEach(function (pt) {
-            if(isMatchingPoint(mcrit, pt)) {
+            if(isMatchingPoint(pt)) {
                 currpts.push(pt); } });
-        outdiv.innerHTML = pointsDispHeaderHTML(mcrit, currpts);
+        updatePointWorkingSetDisplay();
+        outdiv.innerHTML = pointsDispHeaderHTML(currpts);
         currpts.forEach(function (pt) {
             var linediv;
             if(!pt.stats || pt.stats.status !== "deleted") {
@@ -1218,7 +1254,54 @@ app.tabular = (function () {
         setTimeout(function () {
             jt.byId("ptdpsel").selectedIndex = 0;
             //setting selectedIndex does not trigger onchange (FF60.0)
-            app.tabular.ptdisp(); }, 50);
+            app.tabular.ptdisp("reset"); }, 50);
+    }
+
+
+    function toggleKeySelDisp (event) {
+        var html = [], pdiv, pos;
+        pdiv = jt.byId("popupdiv");
+        if(pdiv.style.visibility === "visible") {
+            pdiv.style.visibility = "hidden";
+            return; }
+        html.push(["div", {id:"dlgxdiv", 
+                           onclick:jt.fs("app.dlg.closepop()")}, "X"]);
+        app.keyflds.forEach(function (field) {
+            var tac = [];
+            if(wsv[field]) {
+                Object.keys(wsv[field]).forEach(function (key, idx) {
+                    var inid = "cb" + field + idx,
+                        chk = mcr[field] && mcr[field].csvcontains(key),
+                        cnt = wsv[field][key];
+                    tac.push(["div", {cla:"keycbdiv"},
+                              [["input", {type:"checkbox", id:inid,
+                                          value:key, checked:jt.toru(chk),
+                                          onchange:jt.fs(
+                                              "app.tabular.keychk('" +
+                                                  field + "'," + idx + ")")}],
+                               ["label", {fo:inid}, 
+                                key + "&nbsp;(" + cnt + ")"]]]); });
+                html.push(["div", {cla:"keyselcatdiv"}, field.capitalize()]);
+                html.push(tac); } });
+        if(html.length < 2) {
+            html.push(["span", {cla:"keycbspan"},
+                       "No keywords available &nbsp;"]); }
+        jt.out("popupdiv", jt.tac2html(html));
+        pos = jt.geoXY(event);
+        pdiv.style.left = pos.x + "px";
+        pdiv.style.top = pos.y + "px";
+        pdiv.style.visibility = "visible";
+    }
+
+
+    function toggleKeyword (field, idx) {
+        var key = Object.keys(wsv[field])[idx];
+        mcr[field] = mcr[field] || "";
+        if(mcr[field].csvcontains(key)) {
+            mcr[field] = mcr[field].csvremove(key); }
+        else {
+            mcr[field] = mcr[field].csvappend(key); }
+        updatePointsDisplay();
     }
 
 
@@ -1230,7 +1313,7 @@ app.tabular = (function () {
         tlset: function () { timelineSettings(); },
         tledchg: function (s) { timelineEditFieldChange(s); },
         savetl: function () { saveTimeline(); },
-        ptdisp: function () { updatePointsDisplay(); },
+        ptdisp: function (c) { updatePointsDisplay(c); },
         togptsel: function (ptid) { togglePointInclude(ptid); },
         togsvsel: function (svmn) { toggleSuppvizInclude(svmn); },
         togtlsel: function (tlid) { togglePointInclude(tlid); },
@@ -1242,6 +1325,8 @@ app.tabular = (function () {
         togseti: function () { toggleInfoSettings(); },
         shall: function () { changeToAllPointsDisplay(); },
         fetchorg: function (cbf) { fetchorg(cbf); },
-        codesdesc: function (event, ptid) { showCodesDescription(event, ptid); }
+        ptdet: function (event, ptid) { showPointDetails(event, ptid); },
+        keysel: function (event) { toggleKeySelDisp(event); },
+        keychk: function (field, idx) { toggleKeyword(field, idx); }
     };
 }());

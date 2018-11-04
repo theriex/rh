@@ -212,32 +212,6 @@ app.db = (function () {
     }
 
 
-    function describePoints (tl) {
-        if(!tl.points || !tl.points.length) {
-            return jt.log(tl.name + " has no points"); }
-        jt.log("Point distributions for " + tl.name + 
-               " (" + tl.points.length + " total)");
-        Object.keys(tl.stat).forEach(function (key) {
-            var stat = tl.stat[key];
-            jt.log(("    " + stat.count).slice(-4) + " " + stat.name); });
-    }
-
-
-    function notePointCounts (tl, pt) {
-        var i;
-        tl.stat = tl.stat || {
-            N: {count:0, name:"Native American"},
-            B: {count:0, name:"African American"},
-            L: {count:0, name:"Latino/as"},
-            A: {count:0, name:"Asian American"},
-            M: {count:0, name:"Middle East and North Africa"},
-            R: {count:0, name:"Multiracial"}};
-        for(i = 0; i < pt.codes.length; i += 1) {
-            if(tl.stat[pt.codes.charAt(i)]) {
-                tl.stat[pt.codes.charAt(i)].count += 1; } }
-    }
-
-
     function compareStartDate (a, b) {
         a.tc = a.tc || getTimeCode(a);
         b.tc = b.tc || getTimeCode(b);
@@ -251,7 +225,6 @@ app.db = (function () {
     //timeline data for a timeline is saved in edit order (not chronological).
     function prepPointsArray (pts) {
         pts.forEach(function (pt) {
-            pt.keywords = pt.keywords || "";
             app.db.deserialize("Point", pt); });  //calls parseDate
         pts.sort(function (a, b) {  //verify in chrono order
             return compareStartDate(a, b); });
@@ -285,9 +258,6 @@ app.db = (function () {
         tl.points = tl.preb || [];
         prepPointsArray(tl.points);
         app.db.cachePoints(tl.points);
-        tl.points.forEach(function (pt) {
-            notePointCounts(tl, pt); });
-        describePoints(tl);
         tl.dataPrepared = true;
     }
 

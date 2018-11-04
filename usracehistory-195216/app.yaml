@@ -42,8 +42,8 @@ handlers:
 ## -------------------- point --------------------
 
 ## Add or update a point (org contributor accounts only)
-## POST params: email, authtok, date, text, codes, orgid, source, [keywords,
-##              refs, srclang, translations, pic]
+## POST params: email, authtok, date, text, orgid, [refs, qtype, groups,
+##              regions, categories, tags, source, srclang, translations, pic]
 - url: .*/updpt.*
   script: src.py.point.app
 
@@ -69,6 +69,12 @@ handlers:
 ## Fetch public points (sys admin only). Public access: docs/pubpts.json
 ## GET params: email, authtok
 - url: .*/dbqpts.*
+  script: src.py.point.app
+
+
+## Batch process points (sys admin only).  Data conversion.
+## GET params: email, authtok
+- url: .*/batchpoints.*
   script: src.py.point.app
 
 

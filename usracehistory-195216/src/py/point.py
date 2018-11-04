@@ -13,15 +13,24 @@ import re
 #  - point: Y[YYY][ BCE], YYYY-MM, YYYY-MM-DD
 #  - range: YYYY's, YYYY's-YYYY's, YYYY+, YYYY-YYYY, YYYY-MM[-DD]-YYYY-MM[-DD]
 # Point text may reference another point using html anchor syntax and the 
-# point id. e.g. "<a href=\"#N35\">Pontiac</a> signs ..."
+# point id or source, e.g. "<a href=\"#N35\">Pontiac</a> signs ..."
+# Question types:
+#     S: Continue (default)
+#     U: Did You Know?
+#     D: Click correct year
+#     F: Firsts
 class Point(db.Model):
     """ A timeline data point """
-    date = db.StringProperty(required=True)  # see comment
+    date = db.StringProperty(required=True)  # date text, see class comment
     text = db.TextProperty()       # max 1200 chars, prefer < 400
-    codes = db.StringProperty()    # 1+ usrace codes (see point_codes)
-    orgid = db.IntegerProperty()   # Organization id, 1 is public
-    keywords = db.TextProperty()   # CSV of org defined keywords (reg/cat/key)
     refs = db.TextProperty()       # JSON array of reference source strings
+    qtype = db.StringProperty()    # question type (see class comment)
+    groups = db.TextProperty()     # CSV selected from org
+    regions = db.TextProperty()    # CSV selected from org
+    categories = db.TextProperty() # CSV selected from org
+    tags = db.TextProperty()       # CSV selected from org
+    codes = db.StringProperty()    # temp
+    orgid = db.IntegerProperty()   # Organization id (owner)
     source = db.StringProperty()   # Initial creation load source
     srclang = db.StringProperty()  # en-US or en-US-x-grade only
     translations = db.TextProperty()  # JSON array {lang, text}
@@ -32,40 +41,6 @@ class Point(db.Model):
     modified = db.StringProperty() # ISO datetime;TLAcc id
 
 
-def point_codes():
-    codes = { 
-        # At least one usrace code must be assigned for every point.
-        "usrace": [{"code": "N",
-                    "name": "Native American",
-                    "abbr": "Native" },
-                   {"code": "B",
-                    "name": "African American",
-                    "abbr": "Black"},
-                   {"code": "L",
-                    "name": "Latino/as",
-                    "abbr": "Latinx"},
-                   {"code": "A",
-                    "name": "Asian American",
-                    "abbr": "AsAm"},
-                   {"code": "M",
-                    "name": "Middle East and North Africa",
-                    "abbr": "MENA"},
-                   {"code": "R",
-                    "name": "Multiracial",
-                    "abbr": "Multi"}],
-        # Optional marker codes to trigger special presentation handling.
-        "marker": [{"code": "U",            # Did you know?
-                    "name": "Unusual",
-                    "abbr": "Unusual"},
-                   {"code": "F",            # Legacy
-                    "name": "Firsts",
-                    "abbr": "Firsts"},
-                   {"code": "D",            # Click the correct date
-                    "name": "Important Date",
-                    "abbr": "Date"}]}
-    return codes
-
-
 def is_deleted_point(pt):
     if pt.stats and "\"status\":\"deleted\"" in pt.stats:
         return True
@@ -74,9 +49,9 @@ def is_deleted_point(pt):
 
 def point_summary_dict(pt):
     d = {"instid":str(pt.key().id()), "orgid":str(pt.orgid), 
-         "created":pt.created, "modified":pt.modified,
-         "date":pt.date, "text":pt.text, "codes":pt.codes,
-         "keywords":pt.keywords, "refs":pt.refs,
+         "created":pt.created, "modified":pt.modified, "date":pt.date, 
+         "text":pt.text, "refs":pt.refs, "qtype":pt.qtype, "groups":pt.groups, 
+         "regions":pt.regions, "categories":pt.categories, "tags":pt.tags,
          "source":pt.source, "srclang":pt.srclang}
     return d
 
@@ -151,9 +126,12 @@ def update_or_create_point(handler, acc, params):
                    modified=tstamp)
     pt.date = params["date"] or pt.date
     pt.text = params["text"] or pt.text or ""
-    pt.codes = params["codes"] or pt.codes or ""
-    pt.keywords = params["keywords"] or pt.keywords or ""
     pt.refs = params["refs"] or pt.refs or ""
+    pt.qtype = params["qtype"] or pt.qtype or ""
+    pt.groups = params["groups"] or pt.groups or ""
+    pt.regions = params["regions"] or pt.regions or ""
+    pt.categories = params["categories"] or pt.categories or ""
+    pt.tags = params["tags"] or pt.tags or ""
     pt.source = params["source"] or pt.source or ""
     pt.srclang = params["srclang"] or pt.srclang or "en-US"
     pt.stats = params["stats"] or ""
@@ -217,8 +195,9 @@ class UpdatePoint(webapp2.RequestHandler):
         acc = appuser.get_authenticated_account(self, False)
         if not acc:
             return
-        params = appuser.read_params(self, ["ptid", "date", "text", "codes", 
-                                            "orgid", "keywords", "refs", 
+        params = appuser.read_params(self, ["ptid", "date", "text", "refs",
+                                            "qtype", "groups", "regions", 
+                                            "categories", "tags", "orgid", 
                                             "source", "srclang", "stats",
                                             "translations", "pic"]);
         # need to return proper content to form submission iframe regardless
@@ -280,10 +259,49 @@ class NukePointPic(webapp2.RequestHandler):
         self.response.out.write("Pic set to None for Point " + ptid)
 
 
+class BatchProcessPoints(webapp2.RequestHandler):
+    def get(self):
+        acc = appuser.get_authenticated_account(self, False)
+        if not acc:
+            return  # error already reported
+        if acc.orgid != 1 or acc.lev != 2:
+            return appuser.srverr(self, 403, "Admin access only.")
+        pts = Point.all()
+        for pt in pts:
+            pt.groups = ""
+            pt.regions = ""
+            pt.categories = ""
+            pt.tags = ""
+            cats = []
+            if "N" in pt.codes:
+                cats.append("Native American")
+            if "B" in pt.codes:
+                cats.append("African American")
+            if "L" in pt.codes:
+                cats.append("Latino/as")
+            if "A" in pt.codes:
+                cats.append("Asian American")
+            if "M" in pt.codes:
+                cats.append("Middle East/North Africa")
+            if "R" in pt.codes:
+                cats.append("Multiracial")
+            pt.qtype = ""
+            if "U" in pt.codes:
+                pt.qtype = "U"
+            if "F" in pt.codes:
+                pt.qtype = "F"
+            if "D" in pt.codes:
+                pt.qtype = "D"
+            pt.groups = ",".join(cats)
+            pt.put()  # individual points are not cached
+        self.response.out.write("BatchProcessPoints completed.")
+
+
 app = webapp2.WSGIApplication([('.*/recentpoints', RecentPoints),
                                ('.*/dbqpts', FetchPublicPoints),
                                ('.*/updpt', UpdatePoint),
                                ('.*/ptdat', FetchPoint),
                                ('.*/ptpic', GetPointPic),
-                               ('.*/nukepic', NukePointPic)],
+                               ('.*/nukepic', NukePointPic),
+                               ('.*/batchpoints', BatchProcessPoints)],
                               debug=True)

@@ -26,32 +26,7 @@ app.dlg = (function () {
              year: 1000},
             {id:"geanc", abbr:"Ancients", name:"Ancient Ancestors", 
              year: -90000}]},
-        edptflds = [
-            {field:"date", layout:"main", type:"text", 
-             descf:"app.db.describeDateFormat", place:"YYYY-MM-DD",
-             reqd:"Please enter a valid date value."},
-            {field:"text", layout:"main", type:"bigtext", 
-             place:"Point Description Text",
-             reqd:"Please provide some descriptive text."},
-            {field:"codes", layout:"detail", type:"codesel", hin:"codeshin",
-             multiple:true, options:[
-                {value:"N", text:"Native American"},
-                {value:"B", text:"African American"},
-                {value:"L", text:"Latino/as"},
-                {value:"A", text:"Asian American"},
-                {value:"M", text:"Middle East and North Africa"},
-                {value:"R", text:"Multiracial"},
-                {value:"U", text:"Did you know?"},
-                {value:"F", text:"Firsts"},
-                {value:"D", text:"What year?"}],
-             reqd:"Please select all applicable point codes."},
-            {field:"keywords", layout:"detail", type:"text", 
-             place:"tag1, tag2"},
-            {field:"refs", pname:"References", layout:"ref", type:"txtlst",
-             place:"reference citation and/or URL"},
-            {field:"source", layout:"detail", type:"text", 
-             place:"unique id for point"},
-            {field:"pic", layout:"pic", type:"image"}],
+        edptflds = null,
         upldmon = null,
         cookname = "userauth",
         cookdelim = "..pastkey..",
@@ -60,7 +35,8 @@ app.dlg = (function () {
         editpt = null,
         dlgstack = [],
         sip = {},  //sign-in prompting
-        popdim = null;
+        popdim = null,
+        orgtabs = ["contact", "keywords", "members"];
 
 
     function nextColorTheme () {
@@ -117,6 +93,8 @@ app.dlg = (function () {
             //pad 4 margin-top 2 === 10, extra in case === 12
             jt.byId("dlgcontentdiv").style.minHeight = (ph + 12) + "px"; }
         //Set max text area height equal to max dlg height - header/footer
+        if(!d) {
+            resids[0] = "dlgtitlediv"; }
         mh = dlgdim.h;
         resids.forEach(function (id) {
             var elem = jt.byId(id);
@@ -297,13 +275,13 @@ app.dlg = (function () {
     }
 
 
-    function pointCodeNamesCSV (pt) {
-        var csv = "", stat = app.db.displayContext().mrcl.tl.stat;
-        pt.codes.split("").forEach(function (code) {
-            //processing codes ('U', 'F', 'D') and uknown codes are ignored
-            if(stat[code]) {
-                csv = csv.csvappend(stat[code].name); } });
-        return csv;
+    function pointKeywords (pt) {
+        var keys = [];
+        app.keyflds.forEach(function (field) {
+            if(pt[field]) {
+                pt[field].csvarray().forEach(function (key) {
+                    keys.push(key); }); } });
+        return keys.join(", ");
     }
 
 
@@ -312,14 +290,14 @@ app.dlg = (function () {
         if(!inter) {
             ret.tac = [["div", {cla:"buttonptcodesdiv"},
                         [["span", {cla:"buttonptcodeslabelspan"}, 
-                          "Groups: "],
-                         pointCodeNamesCSV(d)]],
+                          "Keys: "],
+                         pointKeywords(d)]],
                        ["button", {type:"button", id:"backbutton",
                                    onclick:jt.fs("app.dlg.button('back')")},
                         "Return To Interactive"]];
             ret.focid = "backbutton";
             ret.date = ["span", {id:"dlgdatespan"}, d.dispdate]; }
-        else if(d.codes.indexOf("U") >= 0) {
+        else if(d.qtype === "U") {
             ret.tac = [["span", {cla:"buttonintrospan"}, "Did you know?"],
                        ["div", {id:"choicebuttonsdiv"},
                         [["button", {type:"button", id:"yesbutton",
@@ -332,7 +310,7 @@ app.dlg = (function () {
                          rememberCheckboxTAC(true)]]];
             ret.focid = "nobutton";
             ret.date = ["span", {id:"dlgdatespan"}, d.dispdate]; }
-        else if(d.codes.indexOf("D") >= 0) {
+        else if(d.qtype === "D") {
             ret.tac = [];
             d.yearguesses = getYearGuessOptions(d, 3);
             d.yearguesses.forEach(function (year) {
@@ -345,8 +323,8 @@ app.dlg = (function () {
         else {
             ret.tac = [["div", {cla:"buttonptcodesdiv"},
                         [["span", {cla:"buttonptcodeslabelspan"}, 
-                          "Groups: "],
-                         pointCodeNamesCSV(d)]],
+                          "Keys: "],
+                         pointKeywords(d)]],
                        ["button", {type:"button", id:"nextbutton",
                                    onclick:jt.fs("app.dlg.button()")},
                         "Continue"]];
@@ -528,12 +506,12 @@ app.dlg = (function () {
                 inter.end.toISOString() + ";1;";
             if(pt.remembered) {
                 pstr += "r"; }
-            if(pt.codes.indexOf("U") >= 0) {
+            if(pt.qtype === "U") {
                 if(inter.answer === "yes") {
                     pstr += "k"; }
                 if(inter.answer === "no") {
                     pstr += "u"; } }
-            if(pt.codes.indexOf("D") >= 0) {
+            if(pt.qtype === "D") {
                 if(!pt.yearmisscount || pt.yearmisscount === 1) {
                     pstr += "1"; }
                 else {
@@ -663,7 +641,8 @@ app.dlg = (function () {
 
     function disableFieldsIfNotOrgAdmin () {
         var disids = ["namein", "codein", "contacturlin", "projecturlin", 
-                      "regionsin", "categoriesin", "tagsin", "updorgbutton"];
+                      "groupsin", "regionsin", "categoriesin", "tagsin", 
+                      "updorgbutton"];
         if(app.user.acc.lev !== 2) {
             disids.forEach(function (id) {
                 var elem = jt.byId(id);
@@ -676,7 +655,7 @@ app.dlg = (function () {
         var url, oms = app.orgmembers || [app.user.acc],
             labels = ["Members:", "Contributors:", "Administrators:"],
             html = [];
-        if(!jt.byId("orgmembersdiv")) {
+        if(!jt.byId("orgedmembersdiv")) {
             return; }  //no output area so nothing to do
         oms.sort(function (a, b) {
             if(a.lev > b.lev) { return -1; }
@@ -698,7 +677,7 @@ app.dlg = (function () {
             html.push(["div", {cla:"dlgsubline", id:"om" + om.instid}, nh]);
             html.push(["div", {cla:"dlgsubline", id:"om" + om.instid + 
                                "detdiv"}]); });
-        jt.out("orgmembersdiv", jt.tac2html(html));
+        jt.out("orgedmembersdiv", jt.tac2html(html));
         if(!app.orgmembers) {
             jt.out("loginstatdiv", "Fetching members...");
             url = "orgmembers?" + app.auth() + "&orgid=" + app.user.acc.orgid + 
@@ -775,26 +754,6 @@ app.dlg = (function () {
     }
 
 
-    function orgEditMembersContent () {
-        var html, buttons;
-        html = [["div", {cla:"dlgformline", id:"orgemodediv"},
-                 ["a", {href:"#members", 
-                        onclick:jt.fs("app.dlg.editorg('details')")},
-                  "Show Details"]],
-                ["div", {cla:"dlgscrollarea", id:"orgmembersdiv"}],
-                ["div", {cla:"dlgformline"}, ["em", "Add user by email"]],
-                ["div", {cla:"dlgformline"},
-                 [["label", {fo:"emailin", cla:"liflab", id:"labemailin"},
-                   "Email"],
-                  ["input", {type:"text", cla:"lifin",
-                             name:"emailin", id:"emailin"}]]]];
-        buttons = [["button", {type:"button", id:"addmemberbutton",
-                               onclick:jt.fs("app.dlg.addmem()")},
-                    "Add"]];
-        return {html:html, buttons:buttons};
-    }
-
-
     function addOrgMemberByEmail () {
         var data;
         jt.out("loginstatdiv", "Adding...");
@@ -815,99 +774,121 @@ app.dlg = (function () {
     }
 
 
-    function orgEditDetailsContent () {
-        var html, buttons;
-        html = [["div", {cla:"dlgformline", id:"orgemodediv"},
-                 ["a", {href:"#members", 
-                        onclick:jt.fs("app.dlg.editorg('members')")},
-                  "Show Members"]],
-                ["div", {cla:"dlgformline"},
-                 [["label", {fo:"namein", cla:"liflab", id:"labnamein"},
-                   "Name"],
-                  ["input", {type:"text", cla:"lifin",
-                             name:"namein", id:"namein",
-                             value:app.user.org.name}]]],
-                ["div", {cla:"dlgformline"},
-                 [["label", {fo:"codein", cla:"liflab", id:"labcodein"},
-                   "Code"],
-                  ["input", {type:"text", cla:"lifin",
-                             name:"codein", id:"codein",
-                             placeholder:"Initials or short name",
-                             value:app.user.org.code}]]],
-                ["div", {cla:"dlgformline"},
-                 [["label", {fo:"contacturlin", cla:"liflab", 
-                             id:"labcontacturlin"},
-                   "Contact"],
-                  ["input", {type:"text", cla:"lifin",
-                             name:"contacturlin", id:"contacturlin",
-                             placeholder:"https://yoursite.org",
-                             value:app.user.org.contacturl}]]],
-                ["div", {cla:"dlgformline"},
-                 [["label", {fo:"projecturlin", cla:"liflab", 
-                             id:"labprojecturlin"},
-                   "Project"],
-                  ["input", {type:"text", cla:"lifin",
-                             name:"projecturlin", id:"projecturlin",
-                             placeholder:"https://.../projectpage",
-                             value:app.user.org.projecturl}]]],
-                ["div", {cla:"dlgformline"},
-                 [["label", {fo:"regionsin", cla:"liflab", id:"labregionsin"},
-                   "Regions"],
-                  ["input", {type:"text", cla:"lifin",
-                             name:"regionsin", id:"regionsin",
-                             placeholder:"Boston, West Coast, ...",
-                             value:app.user.org.regions}]]],
-                ["div", {cla:"dlgformline"},
-                 [["label", {fo:"categoriesin", cla:"liflab", 
-                             id:"labcategoriesin"},
-                   "Categories"],
-                  ["input", {type:"text", cla:"lifin",
-                             name:"categoriesin", id:"categoriesin",
-                             placeholder:"Core, Stats, Awards, ...",
-                             value:app.user.org.categories}]]],
-                ["div", {cla:"dlgformline"},
-                 [["label", {fo:"tagsin", cla:"liflab", id:"labtagsin"},
-                   "Tags"],
-                  ["input", {type:"text", cla:"lifin",
-                             name:"tagsin", id:"tagsin",
-                             placeholder:"Keyword1, Keyword2, ...",
-                             value:app.user.org.tags}]]]];
-        buttons = [["button", {type:"button", id:"updorgbutton",
-                               onclick:jt.fs("app.dlg.updorg()")},
-                    "Ok"]];
-        return {html:html, buttons:buttons};
+    function selectOrgTab (seltab) {
+        orgtabs.forEach(function (tab) {
+            var div = jt.byId("orged" + tab + "div"),
+                span = jt.byId("orgtab" + tab + "span");
+            if(tab === seltab) {
+                span.innerHTML = tab.capitalize();
+                div.style.display = "block"; }
+            else {
+                span.innerHTML = jt.tac2html(
+                    ["span", {id:"orgtab" + tab + "span"},
+                     ["a", {href:"#" + tab, 
+                            onclick:jt.fs("app.dlg.orgtab('" + tab + "')")},
+                      tab.capitalize()]]);
+                div.style.display = "none"; } });
+        if(seltab === "members") {
+            jt.byId("updorgbutton").style.display = "none";
+            jt.byId("addmemberbutton").style.display = "initial";
+            showOrgMembers(); }
+        else {
+            jt.byId("updorgbutton").style.display = "initial";
+            jt.byId("addmemberbutton").style.display = "none"; }
     }
 
 
-    function editOrganization (mode) {
-        var html, content;
-        mode = mode || "details";
-        if(mode === "members") {
-            content = orgEditMembersContent(); }
-        else {
-            content = orgEditDetailsContent(); }
-        html = [["div", {id:"dlgtitlediv"},
-                 [["a", {href:"#back", onclick:jt.fs("app.dlg.back()")},
-                   ["img", {src:"img/backward.png", cla:"dlgbackimg"}]],
-                  "Organization"]],
-                ["div", {cla:"dlgsignindiv", id:"orgecdiv"},
-                 content.html],
-                ["div", {id:"loginstatdiv"}],
-                ["div", {id:"dlgbuttondiv"},
-                 content.buttons]];
+    function orgFieldEditHTML (divid, fields) {
+        var html = [];
+        fields.forEach(function (fd) {
+            var fname = fd.field.capitalize();
+            if(fname.endsWith("url")) {
+                fname = fname.slice(0, -3); }
+            html.push(["div", {cla:"dlgformline"},
+                       [["label", {fo:fd.field + "in", cla:"liflab", 
+                                   id:"lab" + fd.field + "in"},
+                         fname],
+                        ["input", {type:"text", cla:"lifin",
+                                   name:fd.field + "in", id:fd.field + "in",
+                                   placeholder:fd.place || "",
+                                   value:app.user.org[fd.field]}]]]); });
+        html = ["div", {id:divid}, html];
+        return jt.tac2html(html);
+    }
+
+
+    function newMemberPopup (event) {
+        var html = [], pos, left, pdiv;
+        html.push(["div", {id:"dlgxdiv", 
+                           onclick:jt.fs("app.dlg.closepop()")}, "X"]);
+        html.push(["div", {cla:"edptpoptitle"}, "Add Member"]);
+        html.push(["div", {cla:"dlgformline"},
+                   [["label", {fo:"emailin", cla:"liflab"}, "Email"],
+                    ["input", {type:"text", cla:"lifin",
+                               name:"emailin", id:"emailin",
+                               placeholder:"name@example.com",
+                               value:""}]]]);
+        html.push(["div", {cla:"buttonsdiv"},
+                   ["button", {type:"button", 
+                               onclick:jt.fs("app.dlg.addmem()")}, "Add"]]);
+        jt.out("popupdiv", jt.tac2html(html));
+        pos = jt.geoXY(event);
+        left = Math.round(0.01 * tl.width) + tl.margin.left + 20;
+        pdiv = jt.byId("popupdiv");
+        pdiv.style.left = left + "px";
+        pdiv.style.top = pos.y + "px";
+        pdiv.style.visibility = "visible";
+    }
+
+
+    function editOrganization (tab) {
+        var html = [], th = [];
+        tab = tab || orgtabs[0];
+        orgtabs.forEach(function (tab) {
+            th.push(["span", {id:"orgtab" + tab + "span"},
+                     ["a", {href:"#" + tab, 
+                            onclick:jt.fs("app.dlg.orgtab('" + tab + "')")},
+                      tab.capitalize()]]); });
+        html.push(["div", {id:"dlgtitlediv"},
+                   [["a", {href:"#back", onclick:jt.fs("app.dlg.back()")},
+                     ["img", {src:"img/backward.png", cla:"dlgbackimg"}]],
+                    "Organization",
+                    ["div", {id:"dlgorgtabsdiv"}, jt.tac2html(th)]]]);
+        html.push(["div", {cla:"dlgsignindiv", id:"dlgcontentdiv"},
+                   [orgFieldEditHTML("orgedcontactdiv", [
+                       {field:"name"},
+                       {field:"code", place:"Initials or short name"},
+                       {field:"contacturl", place:"https://yoursite.org"},
+                       {field:"projecturl", place:"https://.../projectpage"}]),
+                    orgFieldEditHTML("orgedkeywordsdiv", [
+                        {field:"groups", place:"African American, Latinx, ..."},
+                        {field:"regions", place:"Boston, West Coast, ..."},
+                        {field:"categories", place:"Core, Stats, Awards, ..."},
+                        {field:"tags", place:"Keyword1, Keyword2, ..."}]),
+                    ["div", {id:"orgedmembersdiv"}]]]);
+        html.push(["div", {id:"loginstatdiv"}]);
+        html.push(["div", {id:"dlgbuttondiv"},
+                   [["button", {type:"button", id:"updorgbutton",
+                                onclick:jt.fs("app.dlg.updorg()")},
+                     "Ok"],
+                    ["button", {type:"button", id:"addmemberbutton",
+                                onclick:jt.fs("app.dlg.orgmemp(event)")},
+                     "Add Member"]]]);
+        //container to constrain width of content so the tabs look ok.
+        html = ["div", {id:"orgeditcontentdiv"}, html];
         displayDialog(null, jt.tac2html(html));
         dlgstack.push(app.dlg.myacc);
         disableFieldsIfNotOrgAdmin();
-        showOrgMembers();
+        selectOrgTab(tab);
     }
 
 
     function updateOrganization () {
         var data = readInputFieldValues(
-            ["namein", "codein", "contacturlin", "projecturlin", "regionsin", 
-             "categoriesin", "tagsin"],
-            [null,     "none",   "none",         "none",         "none",
-             "none", "none"]);
+            ["namein", "codein", "contacturlin", "projecturlin", 
+             "groupsin", "regionsin", "categoriesin", "tagsin"],
+            [null, "none", "none", "none", 
+             "none", "none", "none", "none"]);
         if(data) {
             data.orgid = app.user.org.instid;
             jt.out("loginstatdiv", "Updating organization...");
@@ -1283,10 +1264,37 @@ app.dlg = (function () {
     }
 
 
+    function buildEditPointFields () {
+        var qtos = [], efs = [
+            {field:"date", layout:"main", type:"text",
+             descf:"app.db.describeDateFormat", place:"YYYY-MM-DD",
+             reqd:"Please enter a valid date value."},
+            {field:"text", layout:"main", type:"bigtext",
+             place:"Point Description Text",
+             reqd:"Please provide some descriptive text."},
+            {field:"refs", pname:"References", layout:"ref", type:"txtlst",
+             place:"reference citation and/or URL"},
+            {field:"pic", layout:"pic", type:"image"}];
+        Object.keys(app.qts).forEach(function (key) {
+            qtos.push({value:key, text:app.qts[key]}); });
+        efs.push({field:"qtype", layout:"detail", type:"select", options:qtos});
+        app.keyflds.forEach(function (field) {
+            var opts = [];
+            if(app.user.org[field]) {
+                app.user.org[field].csvarray().forEach(function (key) {
+                    opts.push(key); }); }
+            efs.push({field:field, layout:"detail", type:"cbsel", 
+                      options:opts}); });
+        efs.push({field:"source", layout:"detail", type:"text", 
+                  place:"unique id for point"});
+        edptflds = efs;
+    }
+
+
     function textInputTAC (fs, mode, vo) {
         var inid, label, html;
         if(mode === "list") {
-            return ["div", {cla:"fldvaldiv"}, vo[fs.field]]; }
+            return ["div", {cla:"edptvaldiv"}, vo[fs.field]]; }
         inid = fs.field + "in";
         label = fs.label || fs.field.capitalize();
         if(fs.descf) {
@@ -1311,7 +1319,7 @@ app.dlg = (function () {
     function largeTextInputTAC (fs, mode, vo) {
         var html;
         if(mode === "list") {
-            return ["div", {cla:"fldvaldiv"}, vo[fs.field]]; }
+            return ["div", {cla:"edptvaldiv"}, vo[fs.field]]; }
         html = ["div", {cla:"dlgformline"},
                 ["div", {cla:"textareacontainerdiv"},
                  ["textarea", {id:fs.field + "ta",
@@ -1351,6 +1359,12 @@ app.dlg = (function () {
                 break;
             case "bigtext": 
                 obj[fspec.field] = jt.byId(fspec.field + "ta").value;
+                break;
+            case "select":
+                obj[fspec.field] = editpt[fspec.field];
+                break;
+            case "cbsel":
+                obj[fspec.field] = editpt[fspec.field];
                 break;
             case "codesel":
                 obj[fspec.field] = "";
@@ -1406,6 +1420,105 @@ app.dlg = (function () {
     }
 
 
+    function selectInputTAC (fs, mode, vo) {
+        var html = [], inid, val;
+        if(mode === "list") {
+            val = vo[fs.field] || "";
+            fs.options.forEach(function (opt) {
+                if(val === opt.value) {
+                    val = opt.text; } });
+            return ["div", {cla:"edptvaldiv"}, val]; }
+        inid = fs.field + "sel";
+        fs.options.forEach(function (opt, idx) {
+            var oao = {value:opt.value, id:fs.field + "opt" + idx};
+            if(vo && vo[fs.field] === opt.value) {
+                oao.selected = "selected"; }
+            html.push(["option", oao, opt.text]); });
+        html = [["div", {cla:"dlgformline"},
+                 [["label", {fo:inid, cla:"liflab", id:"lab" + inid},
+                   fs.label || fs.field.capitalize()],
+                  ["select", {id:inid, onchange:jt.fs("app.dlg.selchg('" + 
+                                                      fs.field + "')")},
+                   html]]],
+                ["input", {type:"hidden", id:fs.field + "hin", name:fs.field,
+                           value:vo[fs.field]}]];  //form submit value
+        return html;
+    }
+
+
+    function checkboxInputTAC (fs, mode, vo) {
+        var html, val;
+        vo[fs.field] = vo[fs.field] || "";  //verify initialized
+        val = vo[fs.field].csvarray().join(", ");
+        if(mode === "list") {
+            return ["div", {cla:"edptvaldiv"}, val]; }
+        html = [["div", {cla:"dlgformline"},
+                 ["a", {href:"#" + fs.field,
+                        onclick:jt.fs("app.dlg.cbpop(event,'" + 
+                                      fs.field + "')")},
+                  [["span", {cla:"edptfldspan"}, fs.field.capitalize()],
+                   ["span", {cla:"edptvalspan", id:fs.field + "valspan"}, 
+                    val]]]],
+                ["input", {type:"hidden", id:fs.field + "hin", name:fs.field,
+                           value:vo[fs.field]}]];  //form submit value
+        return html;
+    }
+
+
+    function checkboxPopup (event, field) {
+        var html = [], pos, left, pdiv;
+        html.push(["div", {id:"dlgxdiv", 
+                           onclick:jt.fs("app.dlg.closepop()")}, "X"]);
+        html.push(["div", {cla:"edptpoptitle"}, field]);
+        app.user.org[field] = app.user.org[field] || "";  //verify initialized
+        app.user.org[field].csvarray().forEach(function (key, idx) {
+            var checked = editpt[field].csvcontains(key.trim());
+            html.push(["div", {cla:"keywordcheckboxdiv"},
+                       [["input", {type:"checkbox", id:field + idx,
+                                   value:key, checked:jt.toru(checked)}],
+                        ["label", {fo:field + idx, id:field + idx + "lab"},
+                         key]]]); });
+        if(app.user.org[field]) {
+            html.push(["div", {cla:"buttonsdiv"},
+                       ["button", {type:"button", 
+                                   onclick:jt.fs("app.dlg.cbproc('" + field + 
+                                                 "')")}, "Ok"]]); }
+        else { 
+            html.push(app.user.org.name + " has no " + field + " set up." +
+                      " Edit the organization to define possible values."); }
+        jt.out("popupdiv", jt.tac2html(html));
+        pos = jt.geoXY(event);
+        left = Math.round(0.01 * tl.width) + tl.margin.left + 20;
+        pdiv = jt.byId("popupdiv");
+        pdiv.style.left = left + "px";
+        pdiv.style.top = pos.y + "px";
+        pdiv.style.visibility = "visible";
+    }
+
+
+    function updatePointKeywords (field) {
+        var valcsv = "", fin = jt.byId(field + "hin");
+        app.user.org[field].csvarray().forEach(function (key, idx) {
+            var cb = jt.byId(field + idx);
+            if(cb && cb.checked) {
+                valcsv = valcsv.csvappend(key); } });
+        editpt[field] = valcsv;
+        if(fin) {  //reflect value in input form field for submit processing
+            fin.value = valcsv; }
+        app.dlg.closepop();
+        jt.out(field + "valspan", valcsv.csvarray().join(", "));
+    }
+
+
+    function updateSelectedValue (field) {
+        var sel = jt.byId(field + "sel"),
+            fin = jt.byId(field + "hin");
+        editpt[field] = sel.options[sel.selectedIndex].value;
+        if(fin) {  //reflect value in input form field for submit processing
+            fin.value = editpt[field]; }
+    }
+
+
     function imageInputTAC (fs, mode, vo) {
         var src, html;
         src = (vo && vo[fs.field]) || "";
@@ -1414,7 +1527,7 @@ app.dlg = (function () {
         else {
             src = "/img/picplaceholder.png"; }
         if(mode === "list") {
-            return ["div", {cla:"fldvaldiv"}, 
+            return ["div", {cla:"edptvaldiv"}, 
                     ["img", {src:src, cla:"txtpicimg"}]]; }
         html = ["div", {cla:"dlgformline", style:"text-align:center;"},
                 [["input", {type:"file", id:fs.field + "in", name:fs.field}],
@@ -1480,10 +1593,12 @@ app.dlg = (function () {
         switch(fspec.type) {
         case "text": return textInputTAC(fspec, mode, pt);
         case "bigtext": return largeTextInputTAC(fspec, mode, pt);
+        case "select": return selectInputTAC(fspec, mode, pt);
+        case "cbsel": return checkboxInputTAC(fspec, mode, pt);
         case "codesel": return codeselInputTAC(fspec, mode, pt);
         case "image": return imageInputTAC(fspec, mode, pt);
         case "txtlst": return textListInputTAC(fspec, mode, pt);
-        default: jt.log("fieldTAC unknown fspec " + fspec); }
+        default: jt.log("fieldTAC unknown fspec " + fspec.type); }
         return "";
     }
 
@@ -1521,6 +1636,7 @@ app.dlg = (function () {
         if(pt.instid) {  //restore original edit link text in case altered
             jt.out("editlink" + pt.instid, "[edit]"); }
         editpt = pt;  //for form check access
+        buildEditPointFields(pt);
         html = [
             ["div", {id:"dlgdatediv"}, "Edit Point"],
             ["div", {id:"dlgcontentdiv"},
@@ -1623,6 +1739,9 @@ app.dlg = (function () {
 
     function editPoint (pt) {
         var locp;
+        if(!app.user.org) {
+            return app.tabular.fetchorg(function () {
+                editPoint(pt); }); }
         if(pt === "create") {
             pt = {};
             return editLoadedPoint(pt); }
@@ -1795,11 +1914,16 @@ app.dlg = (function () {
         ptsubclick: function () { ptsubclick(); },
         ptdelclick: function () { ptdelclick(); },
         togfdesc: function (field, desc) { toggleFieldDesc(field, desc); },
+        cbpop: function (event, field) { checkboxPopup(event, field); },
+        cbproc: function (field) { updatePointKeywords(field); },
+        selchg: function (field) { updateSelectedValue(field); },
         codeselchg: function () { codeselchg(); },
         editorg: function (mode) { editOrganization(mode); },
+        orgtab: function (tab) { selectOrgTab(tab); },
         updorg: function () { updateOrganization(); },
         omexp: function (instid) { expandOrganizationMember(instid); },
         modmem: function (instid, chg) { modifyMemberLevel(instid, chg); },
+        orgmemp: function (event) { newMemberPopup(event); },
         addmem: function () { addOrgMemberByEmail(); },
         togptdet: function (sect, req) { togglePointDetailSection(sect, req); },
         addtxt: function (field) { addTextListElement(field); },

@@ -12,6 +12,7 @@ class Organization(db.Model):
     contacturl = db.StringProperty()  # main site
     projecturl = db.StringProperty()  # optional page describing timelines work
     # search filtering keyword definitions
+    groups = db.TextProperty()     # e.g. African American, Asian American
     regions = db.TextProperty()    # e.g. National, Boston, Puerto Rico, Hawai'i
     categories = db.TextProperty() # e.g. Statistics, Awards, Stereotypes
     tags = db.TextProperty()       # other org grouping keywords
@@ -34,7 +35,7 @@ def update_organization(org, params):
             if val.lower() == "none":
                 val = ""
             setattr(org, attr, val)
-    appuser.cached_put(str(org.key().id), org)
+    appuser.cached_put(str(org.key().id()), org)
     return org
 
 
@@ -69,7 +70,7 @@ class UpdateOrg(webapp2.RequestHandler):
         if not acc:
             return
         fields = ["orgid", "name", "code", "contacturl", "projecturl", 
-                  "regions", "categories", "tags"]
+                  "groups", "regions", "categories", "tags"]
         params = appuser.read_params(self, fields)
         orgid = int(params["orgid"])
         org = Organization.get_by_id(orgid)
@@ -179,7 +180,7 @@ class VerifyPlaceholderOrg(webapp2.RequestHandler):
 
 
 app = webapp2.WSGIApplication([('.*/getorg', GetOrgById),
-                               (',*/orgmembers', FetchOrgMembers),
+                               ('.*/orgmembers', FetchOrgMembers),
                                ('.*/updorg', UpdateOrg),
                                ('.*/updmembership', UpdateOrgMembership),
                                ('.*/addmember', AddNewMember),

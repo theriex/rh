@@ -28,6 +28,12 @@ var app = {},  //Global container for application level funcs and values
                    {name:"miscegenation", type:"sv", title:"Anti-Miscegenation",
                     desc:"Anti-Miscegenation legislation by state"}];
 
+    app.keyflds = ["groups", "regions", "categories", "tags"];
+    app.qts = {C:"Continue",
+               U:"Did you know?",
+               F:"Firsts",
+               D:"What year?"};
+
 
     app.init2 = function () {
         app.amdtimer.load.end = new Date();

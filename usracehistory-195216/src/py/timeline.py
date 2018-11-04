@@ -107,11 +107,14 @@ def rebuild_prebuilt_timeline_points(tl):
         jtxt += json.dumps({"instid": ptid,
                             "date": pt.date,
                             "text": pt.text,
-                            "codes": pt.codes,
-                            "orgid": str(pt.orgid),
-                            "keywords": pt.keywords,
-                            "source": pt.source,
                             "refs":pt.refs,
+                            "qtype":pt.qtype,
+                            "groups":pt.groups,
+                            "regions":pt.regions,
+                            "categories":pt.categories,
+                            "tags":pt.tags,
+                            "orgid": str(pt.orgid),
+                            "source": pt.source,
                             "pic": picval,
                             # an org contributor may edit only if point owner.
                             # that's determined from the created accID
