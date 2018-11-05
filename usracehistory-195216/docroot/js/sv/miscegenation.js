@@ -213,10 +213,10 @@ app.miscegenation = (function () {
         idprefix = idprefix || "";
         app.db.parseDate(pt);  //need start.year
         pt.sv = "miscegenation";
-        if(!pt.codes) {
-            pt.codes = "NBR";
+        if(!pt.groups) {
+            pt.groups = "Native American,African American,Multiracial";
             if(pt.color === cm2 || pt.color === cmx) {
-                pt.codes += "A"; } }
+                pt.groups += ",Asian American"; } }
         pt.instid = "miscegenation" + idprefix + idx;
     }
 

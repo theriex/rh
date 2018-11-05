@@ -1366,12 +1366,6 @@ app.dlg = (function () {
             case "cbsel":
                 obj[fspec.field] = editpt[fspec.field];
                 break;
-            case "codesel":
-                obj[fspec.field] = "";
-                fspec.options.forEach(function (opt, idx) {
-                    if(jt.byId(fspec.field + "opt" + idx).selected) {
-                        obj[fspec.field] += opt.value; } });
-                break;
             case "image":
                 if(ptid && jt.byId(fspec.field + "in").files.length) {
                     obj[fspec.field] = "/ptpic?pointid=" + ptid; }
@@ -1382,41 +1376,6 @@ app.dlg = (function () {
                 break;
             default: jt.err("formValuesToObject unknown fspec " + fspec); } });
         return obj;
-    }
-
-
-    function codeselchg () {
-        var pt;
-        if(jt.byId("codeshin")) {
-            pt = formValuesToObject(edptflds);
-            jt.byId("codeshin").value = pt.codes; }
-    }
-
-
-    function codeselInputTAC (fs, mode, vo) {
-        var inid, selopts, html = [];
-        if(mode === "list") {
-            fs.options.forEach(function (opt) {
-                if(vo && vo[fs.field] && vo[fs.field].indexOf(opt.value) >= 0) {
-                    html.push(["div", {cla:"buttonptcodesdiv"}, 
-                               opt.text]); } });
-            return html; }
-        inid = fs.field + "sel";
-        selopts = {id:inid, onchange:jt.fs("app.dlg.codeselchg()")};
-        if(fs.multiple) {
-            selopts.multiple = true; }
-        fs.options.forEach(function (opt, idx) {
-            var oao = {value:opt.value, id:fs.field + "opt" + idx};
-            if(vo && vo[fs.field] && vo[fs.field].indexOf(opt.value) >= 0) {
-                oao.selected = "selected"; }
-            html.push(["option", oao, opt.text]); });
-        html = [["div", {cla:"dlgformline"},
-                 [["label", {fo:inid, cla:"liflab", id:"lab" + inid},
-                   fs.label || fs.field.capitalize()],
-                  ["select", selopts, html]]],
-                ["input", {type:"hidden", id:"codeshin", name:"codes",
-                           value:vo.codes}]];  //updated in codeselchg
-        return html;
     }
 
 
@@ -1595,7 +1554,6 @@ app.dlg = (function () {
         case "bigtext": return largeTextInputTAC(fspec, mode, pt);
         case "select": return selectInputTAC(fspec, mode, pt);
         case "cbsel": return checkboxInputTAC(fspec, mode, pt);
-        case "codesel": return codeselInputTAC(fspec, mode, pt);
         case "image": return imageInputTAC(fspec, mode, pt);
         case "txtlst": return textListInputTAC(fspec, mode, pt);
         default: jt.log("fieldTAC unknown fspec " + fspec.type); }
@@ -1702,12 +1660,11 @@ app.dlg = (function () {
 
 
     function pointChanged (pt, dbpt) {
-        //Only compare fields included in the tl.preb instance data or the
-        //separately fetched point will always be different.  Could probably
-        //get by just comparing the modified time, but may as well be
-        //comprehensive for now.
-        var ptflds = ["date", "text", "codes", "orgid", "keywords",
-                      "source", "refs", "modified"];
+        //True if the points differ in some noticeable way.  Only compare
+        //fields included in the tl.preb instance data or anything fetched
+        //will always be different.
+        var ptflds = ["date", "text", "refs", "qtype", "groups", "regions",
+                      "categories", "tags", "orgid", "source"];
         return !ptflds.every(function (fld) { return pt[fld] === dbpt[fld]; });
     }
 
@@ -1917,7 +1874,6 @@ app.dlg = (function () {
         cbpop: function (event, field) { checkboxPopup(event, field); },
         cbproc: function (field) { updatePointKeywords(field); },
         selchg: function (field) { updateSelectedValue(field); },
-        codeselchg: function () { codeselchg(); },
         editorg: function (mode) { editOrganization(mode); },
         orgtab: function (tab) { selectOrgTab(tab); },
         updorg: function () { updateOrganization(); },

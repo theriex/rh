@@ -236,12 +236,16 @@ app.db = (function () {
     //    instid: The database point instance id.  Aka "citation id"
     //    date: Date or range.  See README.md for allowed formats.
     //    text: Description of the point (max 1200 chars)
-    //    codes: NBLAMRUFD (see point.py point_codes)
-    //    orgid: Organization id, 1 is bootstrap org
-    //    keywords: CSV of org defined keywords (regions, categories, tags)
-    //    source: Arbitrary source tag used when the point was loaded.
     //    refs: Zero or more reference citation strings
+    //    qtype: see app.qts
+    //    groups: CSV of keywords selected from those defined by org
+    //    regions: CSV of keywords selected from those defined by org
+    //    categories: CSV of keywords selected from those defined by org
+    //    tags: CSV of keywords selected from those defined by org
+    //    orgid: Organization id, 1 is bootstrap org
+    //    source: Arbitrary source tag used when the point was loaded.
     //    pic: instid if an image exists, empty string otherwise
+    //    created: ISO when the point was first created
     //    modified: ISO when the point was last updated
     //These fields added from calculations and user data:
     //    start: {year: number, month?, day?}

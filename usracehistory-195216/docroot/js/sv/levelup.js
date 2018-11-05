@@ -38,49 +38,74 @@ app.levelup = (function () {
     }
 
 
-    function makeStackData (yg) {
-        var rd = [], xg, gd = [], cg = null, stat;
-        yg = yg || 10;  //by default group years into decades
-        stat = levinf.tl.stat;
+    function noteField(fields, field, value, pname) {
+        var key = field + value;
+        if(!fields[key]) {
+            fields[key] = {name:field, value:value, count:0, 
+                           pname:pname || value}; }
+        fields[key].count += 1;
+    }
+
+
+    function findHighDifferenceFields () {
+        var fields = {}, hdfs = [];
+        //go through the points and note the fields to differentiate with
         levinf.tl.points.forEach(function (pt) {
-            var dp = {tc:pt.tc};
-            rd.push(dp);
-            Object.keys(stat).forEach(function (code) {
-                dp[code] = (pt.codes.indexOf(code) >= 0)? 1 : 0; }); });
-        rd.sort(function (a, b) { return a.tc - b.tc; });
-        xg = 1600;  //everything before this year is lumped together
-        rd.forEach(function (dat) {
-            var push = dat.tc > xg;
-            if(!cg) {
-                cg = {tc:xg};
-                Object.keys(stat).forEach(function (code) {
-                    cg[code] = dat[code]; }); }
-            else {
-                Object.keys(stat).forEach(function (code) {
-                    cg[code] += dat[code]; }); } 
-            if(push) {
-                gd.push(cg);
-                cg = null;
-                xg = Math.floor(dat.tc) + yg; } });
-        //convert data to percentages
-        gd.forEach(function (dat) {
+            Object.keys(app.qts).forEach(function (key) {
+                if(pt.qtype === key) {
+                    noteField(fields, "qtype", key, app.qts[key]); } });
+            app.keyflds.forEach(function (key) {
+                pt[key] = pt[key] || "";
+                pt[key].csvarray().forEach(function (val) {
+                    noteField(fields, key, val); }); }); });
+        Object.keys(fields).forEach(function (key) {
+            var fdef = fields[key];
+            fdef.missing = levinf.tl.points.length - fdef.count;
+            fdef.diff = Math.abs(fdef.count - fdef.missing);
+            hdfs.push(fdef); });
+        hdfs.sort(function (a, b) { return a.diff - b.diff; });
+        sa.fields = hdfs.slice(0, sa.cs.length);  //one field per color
+        sa.ks = sa.fields.map((x) => x.pname);
+        jt.log("levelup.findHighDifferenceFields:");
+        sa.fields.forEach(function (field) {
+            jt.log("    " + field.name + " " + field.value + " " + 
+                   field.count + " " + field.missing + " " + field.diff); });
+    }
+
+
+    function makeStackData () {
+        var dat = [], currd = {}, pts = levinf.tl.points,
+            grp = Math.ceil(pts.length / 20), count = 0;
+        pts.forEach(function (pt) {
+            currd.tc = currd.tc || pt.tc;
+            sa.fields.forEach(function (fd) {
+                currd[fd.pname] = currd[fd.pname] || 0;
+                if(pt[fd.name].csvcontains(fd.value)) {
+                    currd[fd.pname] += 1; } });
+            count += 1;
+            if(count >= grp) {
+                dat.push(currd);
+                currd = {};
+                count = 0; } });
+        //convert data values to percentages of total
+        dat.forEach(function (dp) {
             var ttl = 0;
-            Object.keys(stat).forEach(function (code) {
-                ttl += dat[code]; });
-            Object.keys(stat).forEach(function (code) {
-                var val = dat[code];
+            sa.fields.forEach(function (fd) {
+                ttl += dp[fd.pname]; });
+            sa.fields.forEach(function (fd) {
+                var val = dp[fd.pname];
                 val = Math.round((val / ttl) * 10000) / 10000;
-                dat[code] = val; }); });
-        return gd;
+                dp[fd.pname] = val; }); });
+        return dat;
     }
 
 
     //Background graphic is a stacked area chart covering the timeline point
-    //distributions across the race codes. Ambient info.
+    //distributions across the more differential point classifications.
     function displayStacked () {
-        sa.dat = makeStackData(5);
-        sa.ks = ["N",      "B",      "L",      "A",      "M",      "R"];
         sa.cs = ["#ff0000","#700000","#5caf79","#ffff00","#800080","#9191ff"];
+        findHighDifferenceFields();  //sets sa.fields, sa.ks
+        sa.dat = makeStackData();
         sa.x = d3.scaleLinear()
             .domain([sa.dat[0].tc, sa.dat[sa.dat.length - 1].tc])
             .range([0, tl.width2]);
@@ -163,74 +188,6 @@ app.levelup = (function () {
             .transition().duration(sb.timing)
             .attr("opacity", 1.0);
     }
-
-
-    // function makeRect (cname, dims, xtra) {
-    //     var rect = chart.vg.append("rect")
-    //         .attr("class", cname)
-    //         .attr("x", dims.x)
-    //         .attr("y", dims.y)
-    //         .attr("width", dims.w)
-    //         .attr("height", dims.h);
-    //     if(xtra && xtra.r) {
-    //         rect.attr("rx", xtra.r).attr("ry", xtra.r); }
-    //     if(xtra && xtra.fill) {
-    //         rect.attr("fill", xtra.fill); }
-    //     if(xtra && xtra.opa) {
-    //         rect.attr("opacity", xtra.opa); }
-    //     return rect;
-    // }
-
-
-    // function transRect (rect, dims, duration) {
-    //     rect.transition().duration(duration)
-    //         .attr("x", dims.x)
-    //         .attr("y", dims.y)
-    //         .attr("width", dims.w)
-    //         .attr("height", dims.h);
-    // }
-
-
-    // function displayReturnLink () {
-    //     var dim = {pad: 8, border: 4, ro: 8, ri: 6, drop: 4,
-    //                x: chart.tp.xc, y: Math.round(4.2 * chart.tp.h),
-    //                defw: 20, defh: 10},
-    //         ele = {};
-    //     dim.defbox = {x: dim.x - Math.round(dim.defw / 2),
-    //                   y: dim.y - Math.round(dim.defw / 2),
-    //                   w: dim.defw, h: dim.defh};
-    //     ele.drop = makeRect("sbShadowRect", dim.defbox, 
-    //                   {r: dim.ro, fill:"#333333", opa:0.6});
-    //     ele.or = makeRect("sbOuterRect", dim.defbox, 
-    //                       {r: dim.ro, fill: chart.colors.bb});
-    //     ele.ir = makeRect("sbInnerRect", dim.defbox, 
-    //                       {r: dim.ri, fill: chart.colors.bbg});
-    //     ele.txt = chart.vg.append("text")
-    //         .attr("class", "svintext")
-    //         .attr("text-anchor", "middle")
-    //         .attr("x", dim.x)
-    //         .attr("y", dim.y)
-    //         .attr("font-size", chart.tp.fs)
-    //         .text("I'm ready");
-    //     dim.bb = ele.txt.node().getBBox();
-    //     dim.ib = {x: dim.bb.x - dim.pad,
-    //               y: dim.bb.y - dim.pad,
-    //               h: dim.bb.height + (2 * dim.pad), 
-    //               w: dim.bb.width + (2 * dim.pad)};
-    //     dim.ob = {x: dim.ib.x - dim.border, 
-    //               y: dim.ib.y - dim.border,
-    //               h: dim.ib.h + (2 * dim.border), 
-    //               w: dim.ib.w + (2 * dim.border)};
-    //     ele.click = makeRect("sbClickRect", dim.ob);
-    //     ele.click.on("click", closeAndReturn);
-    //     ele.txt.on("click", closeAndReturn);
-    //     ele.ir.on("click", closeAndReturn);
-    //     transRect(ele.ir, dim.ib, 400);
-    //     transRect(ele.or, dim.ob, 400);
-    //     dim.ob.x += dim.drop;
-    //     dim.ob.y += dim.drop;
-    //     transRect(ele.drop, dim.ob, 400);
-    // }
 
 
     function displayCompletionText () {
