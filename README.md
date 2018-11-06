@@ -1,13 +1,10 @@
 # rh
 
-Set up a webserver to run on locally on your own computer:
-1. Install node.js
-2. From the command line: 
-sudo npm install http-server -g
-cd docroot
-http-server
+This is a Google App Engine project.  Pure JavaScript client, D3
+visualizations, Python server.  Contact me if you have the GAE devenv
+working and need help getting started.
 
-Accepted date formats:
-- point: Y[YYY][ BCE], YYYY-MM, YYYY-MM-DD
-- range: YYYY's, YYYY's-YYYY's, YYYY+, YYYY-YYYY, YYYY-MM[-DD]-YYYY-MM[-DD],
+If you are a social justice oriented organization and want your own data and
+timelines with no development required, also get in touch.
+
 
