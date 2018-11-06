@@ -284,12 +284,9 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 
 /* support */
 
-#suppcontdiv h2 { margin:0px; }
-#suppcontdiv p { margin:10px 0px 0px 0px; }
-#suppokbuttondiv { text-align:center; padding:10px 0px 5px 0px; }
 #suppxdiv { position:absolute; right:0px; top:0px; padding:8px 10px; }
 #supptitlediv { font-size:x-large; font-weight:bold; text-align:center; }
-
+#suppcontentdiv { background:no-repeat 50% 0% url('../img/pastkeywash.png'); }
 
 /* sv Intro */
 #sv0contdiv { }
