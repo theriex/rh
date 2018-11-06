@@ -50,7 +50,7 @@ app.levelup = (function () {
     function findHighDifferenceFields () {
         var fields = {}, hdfs = [];
         //go through the points and note the fields to differentiate with
-        levinf.tl.points.forEach(function (pt) {
+        levinf.lev.points.forEach(function (pt) {
             Object.keys(app.qts).forEach(function (key) {
                 if(pt.qtype === key) {
                     noteField(fields, "qtype", key, app.qts[key]); } });
@@ -60,7 +60,7 @@ app.levelup = (function () {
                     noteField(fields, key, val); }); }); });
         Object.keys(fields).forEach(function (key) {
             var fdef = fields[key];
-            fdef.missing = levinf.tl.points.length - fdef.count;
+            fdef.missing = levinf.lev.points.length - fdef.count;
             fdef.diff = Math.abs(fdef.count - fdef.missing);
             hdfs.push(fdef); });
         hdfs.sort(function (a, b) { return a.diff - b.diff; });
@@ -74,8 +74,14 @@ app.levelup = (function () {
 
 
     function makeStackData () {
-        var dat = [], currd = {}, pts = levinf.tl.points,
-            grp = Math.ceil(pts.length / 20), count = 0;
+        var dat = [], currd = {}, pts = levinf.lev.points,
+            //Setting the number of chart x ticks to a higher number
+            //accentuates the jaggedness on the right as point density and
+            //diversity increases.  Setting it low doesn't look like much.
+            //Exceeding the number of points in the level breaks the last
+            //stack.  Tried 10, 20, 30, 60.
+            ncxt = 20,
+            grp = Math.ceil(pts.length / ncxt), count = 0;
         pts.forEach(function (pt) {
             currd.tc = currd.tc || pt.tc;
             sa.fields.forEach(function (fd) {
