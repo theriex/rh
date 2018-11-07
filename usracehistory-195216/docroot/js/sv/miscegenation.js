@@ -23,7 +23,7 @@ app.miscegenation = (function () {
                    { date:"1850", source:"ksep: R34", text:"California prohibits intermarriage between Whites and Negroes or mulattos.", nodisp:true },
                    { date:"1880", text:"California expands its anti-miscegenation law to explicitely prohibit marriage between Whites and “Mongolians”", nodisp:true, color:cm2 },
                    { date:"1933", source:"ksep: A47", text:"California’s anti-miscegenation law is amended again to explicitely exclude \"members of the Malay race\" in order to illegalize Filipino-White marriages.", nodisp:true, color:cm2 },
-                   { date:"1948", source:"ksep: R78", text:"California legalizes interracial marriage.", nodisp:true, color:cmx }]},
+                   { date:"1948", source:"ksep: R78", text:"California legalizes interracial marriage. In Perez v. Sharp the California State Supreme court held that state anti-miscegenation law violated due process and equal protection of the laws.", nodisp:true, color:cmx }]},
                {state:"CO", name:"Colorado", points:[
                    { date:"1864", text:"Colorado prohibits intermarriage between Whites and Negroes or mulattos", nodisp:true },
                    { date:"1957", text:"Colorado legalizes interracial marriage.", nodisp:true, color:cmx }]},
