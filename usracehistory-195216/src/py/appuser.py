@@ -115,7 +115,7 @@ def read_params(handler, params):
         # logging.info("read_params " + param + ": " + str(val))
         if val != 0:
             val = val or ""
-        if param == "email":
+        if param == "email" or param == "updemail":
             # normalize to lower case and undo extra encoding if needed
             val = val.lower()
             re.sub('%40', '@', val)
@@ -260,13 +260,15 @@ def get_authenticated_account(handler, create):
     else: # have acc
         if not params["password"] and not params["authtok"]:
             return srverr(handler, 403, "password or authtok required.")
-        # if password sent, that has precedence over a possibly outdated token
-        if params["password"]:
-            if params["password"] != acc.password:
-                return srverr(handler, 403, "Password authentication failed.")
-        else: # authtok
-            if not match_token_to_acc(params["authtok"], acc):
-                return srverr(handler, 403, "Token authentication failed.")
+        # if the token is valid, use it.  Might be updating the password.
+        tok = match_token_to_acc(params["authtok"], acc)
+        # if the password is valid, use it.  Token might be outdated.
+        pok = False
+        if params["password"] and params["password"] == acc.password:
+            pok = True
+        # if neither the token nor the password is correct, then fail
+        if not (tok or pok):
+            return srverr(handler, 403, "Authentication failed.")
     return acc
 
 
@@ -354,9 +356,11 @@ class UpdateAccount(webapp2.RequestHandler):
         if "actcode" in params:
             if params["actcode"] == acc.actcode:
                 acc.status = "Active"
-        params = read_params(self, ["updemail", "updpassword", "name", "url",
-                                    "shoutout", "lang", "settings", 
-                                    "remtls", "completed", "started", "built"])
+        params = read_params(self, ["updemail", "updpassword", "name", "title",
+                                    "web", "lang", "settings", "remtls", 
+                                    "completed", "started", "built"])
+        if params["updemail"] and params["updemail"] != acc.email:
+            memcache.delete(acc.email)
         for fieldname in params:
             attr = fieldname
             val = params[fieldname]

@@ -22,8 +22,8 @@ handlers:
 
 
 ## Create account or update if authtok provided.
-## POST params: email, [authtok], password, [actcode, name, url, shoutout,
-##              lang, settings, remtls, completed, started, built]
+## POST params: email, [authtok], password, [name, title, web, lang, settings, 
+##              remtls, completed, started, built]
 - url: .*/updacc.*
   script: src.py.appuser.app
 

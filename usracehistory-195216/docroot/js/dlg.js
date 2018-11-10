@@ -983,8 +983,9 @@ app.dlg = (function () {
 
 
     function updateAccount () {
-        var data = readInputFieldValues(["namein", "titlein", "webin"],
-                                        ["none",   "none",    "none"]);
+        var data = readInputFieldValues(
+            ["updemailin", "updpasswordin", "namein", "titlein", "webin"],
+            ["none",       "none",          "none",   "none",    "none"]);
         if(data) {
             jt.out("loginstatdiv", "Updating account...");
             jt.byId("updaccbutton").disabled = true;
@@ -1023,7 +1024,10 @@ app.dlg = (function () {
                         jt.log("processSignIn: " + code + " " + errtxt);
                         setTimeout(function () {
                             if(!app.domfield("cbnewacc", "checked")) {
-                                jt.out("loginstatdiv", errtxt); } }, 200); },
+                                if(jt.byId("loginstatdiv")) {
+                                    jt.out("loginstatdiv", errtxt); }
+                                else {
+                                    app.dlg.logout(); } } }, 200); },
                     jt.semaphore("dlg.processSignIn")); }
     }
 
