@@ -363,6 +363,8 @@ class UpdateAccount(webapp2.RequestHandler):
                                     "completed", "started", "built"])
         if params["updemail"] and params["updemail"] != acc.email:
             memcache.delete(acc.email)
+        if params["updpassword"] == "none":
+            params["updpassword"] = acc.password
         for fieldname in params:
             attr = fieldname
             val = params[fieldname]

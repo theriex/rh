@@ -977,6 +977,9 @@ app.tabular = (function () {
                     dcon.points.forEach(function (pt) {
                         dcon.cids = dcon.cids.csvappend(pt.instid); }); }
                 mcr.ids = dcon.cids; } }
+        else {  //not viewing timeline points
+            mcr.editingtimeline = false;
+            mcr.ids = ""; }
         // jt.log("verifyPointMatchCriteria:");
         // Object.keys(mcr).forEach(function (key) {
         //     jt.log("    " + key + ": " + mcr[key]); });
