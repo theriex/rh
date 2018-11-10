@@ -132,10 +132,12 @@ def valid_email_address(emaddr):
 
 
 def cached_put(ckey, dbobj):
+    # Write to db first to guarantee there is a key for the object
+    dbobj.put()
+    # If no ckey was provided, use the string version of the unique id
     if not ckey:
         ckey = str(dbobj.key().id())
     # logging.info("cached_put: " + str(dbobj.kind()) + " " + ckey)
-    dbobj.put()
     if not memcache.set(ckey, pickle.dumps(dbobj)):
         logging.warn("memcache set fail " + str(dbobj.kind()) + " " + ckey)
     # logging.info("cached_put: " + str(memcache.get_stats()))
