@@ -421,7 +421,10 @@ app.mode = (function () {
                     displayCompletionCertificate(user, params.compcert); },
                 function (code, errtxt) {
                     jt.out("rhcontentdiv", "Fetch failed. Error code " + code +
-                           ": " + errtxt); },
+                           ": " + errtxt);
+                    if(code === 404) {
+                        jt.out("rhcontentdiv", "Certificate unavailable." + 
+                               " No account found."); }},
                 jt.semaphore("mode.showCompletionCertificate"));
     }
 
