@@ -1137,9 +1137,11 @@ app.tabular = (function () {
                          "show all available datapoints"]]]); }
         if(mcr.editingtimeline) {
             html.push(["div", {cla:"pointsdispline"},
-                       ["a", {href:"#newpoint", id:"createpointlink",
-                              onclick:jt.fs("app.dlg.ptedit('create')")},
-                        "Create New DataPoint"]]); }
+                       [["a", {href:"#newpoint", id:"createpointlink",
+                               onclick:jt.fs("app.dlg.ptedit('create')")},
+                         "Create New DataPoint"],
+                        ["span", {id:"ptscountspan"}, 
+                         currpts.length || ""]]]); }
         return jt.tac2html(html);
     }
 
