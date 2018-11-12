@@ -771,7 +771,8 @@ app.tabular = (function () {
             tlflds.seltype.setValue("Timelines"); }
         else {
             tlflds.seltype.setValue("Points");
-            jt.byId("ppsin").value = elems[1] || 6;
+            tlflds.pps = Number(elems[1]) || 6
+            jt.byId("ppsin").value = tlflds.pps;
             if(elems[0] === "Random") {
                 tlflds.selseq.setValue("Random");
                 jt.byId("tlrndmaxin").value = elems[2] || 18; }
