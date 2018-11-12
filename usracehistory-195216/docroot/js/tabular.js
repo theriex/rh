@@ -1126,6 +1126,7 @@ app.tabular = (function () {
     function pointsDispHeaderHTML (currpts) {
         var html = [],
             name = (currtl && currtl.name) || "",
+            counts = {pts:0, pics:0},
             txt = "No points, ";
         if(name) {
             txt = name + " has no points, "; }
@@ -1135,13 +1136,17 @@ app.tabular = (function () {
                         ["a", {href:"#allpts", id:"allptslink",
                                onclick:jt.fs("app.tabular.shall()")},
                          "show all available datapoints"]]]); }
+        currpts.forEach(function (pt) {
+            counts.pts += 1;
+            if(pt.pic) {
+                counts.pics += 1; } });
         if(mcr.editingtimeline) {
             html.push(["div", {cla:"pointsdispline"},
                        [["a", {href:"#newpoint", id:"createpointlink",
                                onclick:jt.fs("app.dlg.ptedit('create')")},
                          "Create New DataPoint"],
-                        ["span", {id:"ptscountspan"}, 
-                         currpts.length || ""]]]); }
+                        ["span", {id:"ptscountspan"},
+                         counts.pts + " points, " + counts.pics + " pics"]]]); }
         return jt.tac2html(html);
     }
 
