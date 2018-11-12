@@ -606,7 +606,10 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
             return "";
         }
         //strip any common trailing punctuation on the url if found
-        if (/[\.\,\)]$/.test(url)) {
+        //e.g. "(blah blah https://epinova.com)"
+        //e.g. "ok https://en.wikipedia.org/wiki/Thanksgiving_(United_States)"
+        if (/[\.\,]$/.test(url) || 
+            (url.endsWith(")") && url.indexOf("(") < 0)) {
             suffix = url.slice(-1);
             url = url.slice(0, -1);
         }
