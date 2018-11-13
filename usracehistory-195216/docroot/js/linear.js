@@ -30,6 +30,13 @@ app.linear = (function () {
         tl.focus.selectAll("circle")
             .attr("cx", function(d) { return tl.x(d.tc); })
             .attr("cy", function(d) { return tl.y(d.vc); });
+        tl.pts.forEach(function (pt) {
+            d3.select("#lp" + pt.instid)
+                .attr("x1", tl.x(pt.tc))
+                .attr("x2", tl.x(pt.tc)); });
+        d3.select("#centerline")
+            .attr("x1", tl.x(tl.pts[0].tc))
+            .attr("x2", tl.x(tl.pts[tl.pts.length - 1].tc));
     }
 
 
@@ -76,13 +83,37 @@ app.linear = (function () {
     }
 
 
-    function addFocusInteractiveElements () {
+    function addFocusDecorativeElements () {
+        var pa = tl.pts[0], pz = tl.pts[tl.pts.length - 1];
+        //add a text element to use during mouseover on circles
         tl.focus.append("text")
             .attr("id", "mouseoverLabel")
             .attr("text-anchor", "middle")
             .attr("x", 0)
             .attr("y", 0)
             .text("");
+        //add lollipop stick lines connecting all points to center line
+        //tl.focus.selectAll("line") doesn't work, lines not first class
+        tl.pts.forEach(function (pt) {
+            tl.focus.append("line")
+                .attr("class", "lpline")
+                .attr("id", "lp" + pt.instid)
+                .attr("x1", tl.x(pt.tc))
+                .attr("y1", tl.y(pt.vc))
+                .attr("x2", tl.x(pt.tc))
+                .attr("y2", tl.y(pa.vc))
+                .style("stroke", "black")
+                .style("fill", "black"); });
+        //add a line connecting the first point (always vertically centered)
+        //and where the last point would be if it were vertically centered.
+        tl.focus.append("line")
+            .attr("id", "centerline")
+            .attr("x1", tl.x(pa.tc))
+            .attr("y1", tl.y(pa.vc))
+            .attr("x2", tl.x(pz.tc))
+            .attr("y2", tl.y(pa.vc))
+            .style("stroke", "black")
+            .style("fill", "black");
     }
 
 
@@ -172,7 +203,7 @@ app.linear = (function () {
     }
 
 
-    function updateChromaTimescale (hc, nowiso) {
+    function updateChromaTimescale (hc) {
         var now = jt.isoString2Time(),  //microseconds can bump outside range
             window;
         if(hc && hc.upd && now.getTime() - hc.upd.getTime() < 30 * 1000) {
@@ -211,7 +242,7 @@ app.linear = (function () {
         var fc = "#000", shown;
         if(!tl.hc) {
             tl.hc = chromacoding(); }
-        updateChromaTimescale(tl.hc, new Date().toISOString());
+        updateChromaTimescale(tl.hc);
         if(pt.isoShown) {
             shown = pt.isoShown;
             if(shown > tl.hc.newest) {
@@ -223,35 +254,35 @@ app.linear = (function () {
     }
 
 
-    function testChromaBuckets () {
-        var now = new Date().getTime();
-        tl.hc.tests = [new Date(now - 1*60*1000),         //5 minutes
-                       new Date(now - 2*60*1000),
-                       new Date(now - 3*60*1000),
-                       new Date(now - 4*60*1000),
-                       new Date(now - 5*60*1000),
-                       new Date(now - 10*60*1000),        //30 minutes
-                       new Date(now - 15*60*1000),
-                       new Date(now - 20*60*1000),
-                       new Date(now - 25*60*1000),
-                       new Date(now - 30*60*1000),
-                       new Date(now - 1*60*60*1000),      //hours
-                       new Date(now - 2*60*60*1000),
-                       new Date(now - 6*60*60*1000),
-                       new Date(now - 12*60*60*1000),
-                       new Date(now - 18*60*60*1000),
-                       new Date(now - 24*60*60*1000),
-                       new Date(now - 2*24*60*60*1000),   //days
-                       new Date(now - 3*24*60*60*1000),
-                       new Date(now - 4*24*60*60*1000),
-                       new Date(now - 5*24*60*60*1000),
-                       new Date(now - 6*24*60*60*1000)];
-        tl.hc.tests.forEach(function (date, idx) {
-            var pt = tl.pts[idx], color;
-            color = fillColorForDate(date);
-            tl.focus.select("#" + pt.id)
-                .style("fill", color); });
-    }
+    // function testChromaBuckets () {
+    //     var now = Date.now();
+    //     tl.hc.tests = [new Date(now - 1*60*1000),         //5 minutes
+    //                    new Date(now - 2*60*1000),
+    //                    new Date(now - 3*60*1000),
+    //                    new Date(now - 4*60*1000),
+    //                    new Date(now - 5*60*1000),
+    //                    new Date(now - 10*60*1000),        //30 minutes
+    //                    new Date(now - 15*60*1000),
+    //                    new Date(now - 20*60*1000),
+    //                    new Date(now - 25*60*1000),
+    //                    new Date(now - 30*60*1000),
+    //                    new Date(now - 1*60*60*1000),      //hours
+    //                    new Date(now - 2*60*60*1000),
+    //                    new Date(now - 6*60*60*1000),
+    //                    new Date(now - 12*60*60*1000),
+    //                    new Date(now - 18*60*60*1000),
+    //                    new Date(now - 24*60*60*1000),
+    //                    new Date(now - 2*24*60*60*1000),   //days
+    //                    new Date(now - 3*24*60*60*1000),
+    //                    new Date(now - 4*24*60*60*1000),
+    //                    new Date(now - 5*24*60*60*1000),
+    //                    new Date(now - 6*24*60*60*1000)];
+    //     tl.hc.tests.forEach(function (date, idx) {
+    //         var pt = tl.pts[idx], color;
+    //         color = fillColorForDate(date);
+    //         tl.focus.select("#" + pt.id)
+    //             .style("fill", color); });
+    // }
 
 
     function recolorPoints () {
@@ -279,7 +310,7 @@ app.linear = (function () {
             tl.focus.select("#mouseoverLabel")
                 .attr("x", tl.x(d.tc))
                 .attr("y", tl.y(d.vc) - 14)  //above circle
-                .text(d.id); }
+                .text(jt.ellipsis(d.text, 40)); }
         else {
             highlightPoint(d, false);
             tl.focus.select("#mouseoverLabel")
@@ -378,6 +409,7 @@ app.linear = (function () {
         tl.focus.append("g")
             .attr("class", "axis axis--y")
             .call(tl.yAxis);
+        addFocusDecorativeElements();  //lines underneath circles..
         tl.focus.selectAll("circle")
             .data(tl.pts)
             .enter().append("circle")
@@ -392,7 +424,6 @@ app.linear = (function () {
             .on("click", function(d) { clickCircle(d); });
         d3.select(".zoom").on("click", function () {
             handlePicMouseClick(d3.mouse(this)); });
-        addFocusInteractiveElements();
         addContextDecorativeElements();
         adjustTickTextVisibility();
         //testChromaBuckets();
@@ -483,6 +514,11 @@ app.linear = (function () {
     }
 
 
+    function candidateNotOnWall (wall) {  //lint factoring..
+        return wall.selpts.every((pt) => pt.instid !== wall.cand.instid);
+    }
+
+
     function paintWallpaper (divid) {
         var html, picpts = [], grid, idx, div, sd, cs, i, j;
         wall = {selpts:[]};
@@ -503,7 +539,7 @@ app.linear = (function () {
         while(wall.selpts.length < (grid.x * grid.y)) {
             idx = Math.floor(Math.random() * picpts.length);
             wall.cand = picpts.splice(idx, 1)[0];
-            if(wall.selpts.every(pt => pt.instid !== wall.cand.instid)) {
+            if(candidateNotOnWall(wall)) {
                 wall.selpts.push(wall.cand); } }
         div = jt.byId(divid);
         wall.dd = {w:div.offsetWidth, h:div.offsetHeight};
