@@ -198,8 +198,8 @@ app.levelup = (function () {
 
     function displayCompletionText () {
         var words = ["Level " + levinf.lev.num, "Completed"];
-        if(levinf.levs.length === 1) {
-            words = ["Level Complete"]; }
+        if(levinf.levs.length === levinf.lev.num) {
+            words = ["Done!"]; }
         words.forEach(function (word, idx) {
             chart.vg.append("text")
                 .attr("x", chart.tp.xc)
@@ -330,7 +330,7 @@ app.levelup = (function () {
                 return "#ccc";
             })
             .attr("fill-opacity", function (d) { 
-                return (d.data.stat < 0)? 1.0 : 0.6; 
+                return ((d.data.stat < 0)? 1.0 : 0.6); 
             })
             .attr("stroke", "#333");
         pc.g.transition().duration(timing)
