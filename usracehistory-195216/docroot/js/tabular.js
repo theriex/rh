@@ -146,6 +146,10 @@ app.tabular = (function () {
         if(!pt) {
             jt.log("showPointDetails pt " + ptid + " not found");
             return; }
+        pdiv = jt.byId("popupdiv");
+        if(pdiv.style.visibility === "visible") {
+            pdiv.style.visibility = "hidden";  //already displayed, toggle off
+            return; }
         qt = pt.qtype || "C";
         html.push(["div", {id:"dlgxdiv", 
                            onclick:jt.fs("app.dlg.closepop()")}, "X"]);
@@ -164,7 +168,6 @@ app.tabular = (function () {
         html.push(spdAttrVal("timecode", pt.tc));
         jt.out("popupdiv", jt.tac2html(html));
         pos = jt.geoXY(event);
-        pdiv = jt.byId("popupdiv");
         pdiv.style.left = pos.x + "px";
         pdiv.style.top = pos.y + "px";
         pdiv.style.visibility = "visible";
