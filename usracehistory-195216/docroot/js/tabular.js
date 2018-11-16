@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge */
+/*jslint browser, multivar, white, fudge, for */
 /*global app, window, jt, d3 */
 
 app.tabular = (function () {
@@ -30,7 +30,7 @@ app.tabular = (function () {
         if(!dobj || !dobj.year) {
             return ""; }
         prefix = prefix || "";
-        sc = prefix? "tdspan" : "tdspanyo";
+        sc = (prefix? "tdspan" : "tdspanyo");
         if(dobj.year > 0) {
             pd = prefix + dobj.year; }
         else {
@@ -192,6 +192,21 @@ app.tabular = (function () {
     }
 
 
+    function pointTextTAC (pt) {
+        //onclick function won't work if standalone html, but href anchors
+        //should still work if anchor available.
+        var txt = app.db.ptlinktxt(pt, currpts, "app.tabular.scr2pt"),
+            words = txt.split(/\s/), i, mtw = 5;
+        for(i = 0; i < mtw; i += 1) {
+            if(words[i].endsWith(":")) {
+                break; } }
+        if(i < mtw) {  //found a colon
+            txt = "<em class=\"titleem\">" + txt.replace(/\:/, function () {
+                return ":</em>"; }); }
+        return txt;
+    }
+
+
     function pointTAC (pt, deco) {
         var html = "";
         html = ["div", {cla:"trowdiv", id:"trowdiv" + pt.instid},
@@ -204,9 +219,7 @@ app.tabular = (function () {
                    pointCheckboxTAC(pt, deco)]],
                  ["div", {cla:"trowdescdiv"}, 
                   [pointPicTAC(pt, deco),
-                   //onclick function won't work if standalone html, but
-                   //anchors should still work if anchor available.
-                   app.db.ptlinktxt(pt, currpts, "app.tabular.scr2pt"),
+                   pointTextTAC(pt),
                    " &nbsp;",
                    pointButtonsTAC(pt, deco)]]]];
         return html;
@@ -774,7 +787,7 @@ app.tabular = (function () {
             tlflds.seltype.setValue("Timelines"); }
         else {
             tlflds.seltype.setValue("Points");
-            tlflds.pps = Number(elems[1]) || 6
+            tlflds.pps = Number(elems[1]) || 6;
             jt.byId("ppsin").value = tlflds.pps;
             if(elems[0] === "Random") {
                 tlflds.selseq.setValue("Random");
