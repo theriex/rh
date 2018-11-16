@@ -192,21 +192,6 @@ app.tabular = (function () {
     }
 
 
-    function pointTextTAC (pt) {
-        //onclick function won't work if standalone html, but href anchors
-        //should still work if anchor available.
-        var txt = app.db.ptlinktxt(pt, currpts, "app.tabular.scr2pt"),
-            words = txt.split(/\s/), i, mtw = 5;
-        for(i = 0; i < mtw; i += 1) {
-            if(words[i].endsWith(":")) {
-                break; } }
-        if(i < mtw) {  //found a colon
-            txt = "<em class=\"titleem\">" + txt.replace(/\:/, function () {
-                return ":</em>"; }); }
-        return txt;
-    }
-
-
     function pointTAC (pt, deco) {
         var html = "";
         html = ["div", {cla:"trowdiv", id:"trowdiv" + pt.instid},
@@ -219,7 +204,9 @@ app.tabular = (function () {
                    pointCheckboxTAC(pt, deco)]],
                  ["div", {cla:"trowdescdiv"}, 
                   [pointPicTAC(pt, deco),
-                   pointTextTAC(pt),
+                   //onclick function won't work if standalone html, but 
+                   //href anchors  should still work if anchor available.
+                   app.db.ptlinktxt(pt, currpts, "app.tabular.scr2pt"),
                    " &nbsp;",
                    pointButtonsTAC(pt, deco)]]]];
         return html;

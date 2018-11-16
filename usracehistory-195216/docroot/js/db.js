@@ -97,8 +97,8 @@ app.db = (function () {
         //adjacent points.  If the previous point was adjusted above the
         //center line, then the next is adjusted below for visual balance.
         var xbs = 32,  //x bands, how many columns to divide the x-axis into
-            sy = pts.length? pts[0].start.year : 0,
-            ey = pts.length? pts[pts.length - 1].start.year : 0,
+            sy = (pts.length? pts[0].start.year : 0),
+            ey = (pts.length? pts[pts.length - 1].start.year : 0),
             iw = Math.ceil((ey - sy) / xbs),
             ctx = {iw:iw,    //horizontal interaction width (in years)
                    lq:[],    //LIFO queue of pts within iw (most recent first)
@@ -665,7 +665,7 @@ app.db = (function () {
 
 
     function pointLinkedText (pt, pts, fname) {
-        var txt = pt.text;
+        var txt = pt.text, words, i, mtw = 5;
         txt = txt.replace(/<a\shref\s*=\s*"#([^"]+)">([^<]+)<\/a>/gi,
             function (match, p1, p2) {
                 var refid, oc, link;
@@ -679,6 +679,13 @@ app.db = (function () {
                 link = "<a href=\"#" + p1 + "\"" +
                     " onclick=\"" + oc + "\">" + p2 + "</a>";
                 return link; });
+        words = txt.split(/\s/);
+        for(i = 0; i < mtw; i += 1) {
+            if(words[i].endsWith(":")) {
+                break; } }
+        if(i < mtw) {  //found a colon
+            txt = "<em class=\"titleem\">" + txt.replace(/\:/, function () {
+                return ":</em>"; }); }
         return txt;
     }
 
