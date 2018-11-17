@@ -311,34 +311,57 @@ app.finale = (function () {
 
     function tdaInit() {
         tda.x = chart.cx - 120;
-        tda.y = 246;  //y offset for share text
+        tda.y = 256;  //y offset for share text
         tda.cx = chart.cx;
         jt.log("tda x:" + tda.x + ", y:" + tda.y + ", cx:" + tda.cx);
+    }
+
+
+    function showCompletionCertificate () {
+        var email = "unknown";
+        if(app.user && app.user.acc) {
+            email = app.user.acc.email; }
+        d3.event.preventDefault();
+        window.open(app.baseurl + 
+                    "?compcert=" + app.db.displayContext().tlid + 
+                    "&email=" + email);
+    }
+
+
+    function nextTimeline () {
+        //eventually need a list of recommended timelines defined in app to
+        //drive both main page suggestions and this suggestion.
+        var url = app.baseurl + "/timeline/default";  //U.S. Race History
+        if(window.location.href.indexOf("/default") >= 0) {
+            url = app.baseurl; }  //main page
+        d3.event.preventDefault();
+        window.open(url);
+    }
+
+
+    function appendLink (field, dim, hash, func, text) {
+        chart.cg[field] = chart.cg.append("foreignObject")
+            .attr("x", dim.x)
+            .attr("y", dim.y)
+            .attr("width", 240)
+            .attr("height", dim.h)
+            .style("opacity", 0.0);
+        chart.cg[field].append("xhtml:a")
+            .attr("href", hash)
+            .on("click", func)
+            .text(text);
+        chart.cg[field].transition().delay(1000).duration(4000)
+            .style("opacity", 1.0);
     }
 
 
     function appendClosureText () {
         tdaInit();
         chart.cg = d3.select("#svgf").append("g");
-        chart.cg.lfo = chart.cg.append("foreignObject")
-            .attr("x", tda.x)
-            .attr("y", tda.y - 56)
-            .attr("width", 240)
-            .attr("height", 24)
-            .style("opacity", 0.0);
-        chart.cg.lfo.append("xhtml:a")
-            .attr("href", "#compcert")
-            .on("click", function () {
-                var email = "unknown";
-                if(app.user && app.user.acc) {
-                    email = app.user.acc.email; }
-                d3.event.preventDefault();
-                window.open(app.baseurl + 
-                            "?compcert=" + app.db.displayContext().tlid + 
-                            "&email=" + email); })
-            .text("Show Completion Certificate");
-        chart.cg.lfo.transition().delay(1000).duration(4000)
-            .style("opacity", 1.0);
+        appendLink("lfo", {x:tda.x, y:tda.y - 66, h:24}, "#compcert",
+                   showCompletionCertificate, "Show Completion Certificate");
+        appendLink("lf2", {x:tda.x, y:tda.y - 42, h:24}, "nextTimeline",
+                   nextTimeline, "Next Timeline");
         chart.cg.append("text")
             .attr("class", "finexplore")
             .attr("text-anchor", "left")
