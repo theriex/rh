@@ -194,11 +194,14 @@ app.linear = (function () {
                         var prog = app.db.parseProgStr(ps);
                         if(prog.isoClosed < hc.oldest) {
                             hc.oldest = prog.isoClosed; } }); } }); }
+        //going with the fast color changes since most timelines are short
+        //and it looks ok even for the long one.  Was previously using 5,
+        //30, 24*60, 7*24*60 minutes.
         hc.buckets = [
-            {name:"5min",   tdm:5,       cool:"#ffdd26", hot:"#ff7200"},
-            {name:"30min",  tdm:30,      cool:"#00fe74", hot:"#effe00"},
-            {name:"day",    tdm:24*60,   cool:"#00d5fe", hot:"#00fe74"},
-            {name:"week",   tdm:7*24*60, cool:"#0000ff", hot:"#00d5fe"}];
+            {name:"1min",   tdm:1,       cool:"#ffdd26", hot:"#ff7200"},
+            {name:"2min",   tdm:2,       cool:"#00fe74", hot:"#deef82"},
+            {name:"3min",   tdm:3,       cool:"#00d5fe", hot:"#00fe74"},
+            {name:"4min",   tdm:4,       cool:"#0000ff", hot:"#00d5fe"}];
         return hc;
     }
 
