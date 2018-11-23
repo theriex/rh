@@ -457,7 +457,7 @@ app.mode = (function () {
                         [["td", 
                           ["a", {href:app.baseurl + "/timeline/thanksgiving"},
                            "Thanksgiving (U.S.)"]], 
-                         ["td", 20], ["td", 0]]],
+                         ["td", 21], ["td", 0]]],
                        ["tr",
                         [["td", 
                           ["a", {href:app.baseurl + "/timeline/default"},
