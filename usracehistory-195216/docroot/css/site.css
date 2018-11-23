@@ -150,9 +150,9 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 .clickable { cursor:pointer; }
 
 #abgdiv { position:absolute; left:0px; top:0px; line-height:0px; 
-  background:#fffae5; opacity:0.5; }
+  background:#f2e6b9; opacity:0.5; }
 .bgpicdiv { display:inline-block; overflow:hidden; text-align:center; }
-.bgpicimg { opacity:0.6; }
+.bgpicimg { opacity:0.8; }
 
 #refdiv { padding:8px 10px 0px 10px; font-weight:bold; font-style:italic; 
   color:#555; }

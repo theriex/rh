@@ -45,9 +45,14 @@ app.dlg = (function () {
     }
 
 
-    function setDialogColors () {
-        var ct = lnfs[lnfidx];
-        d3.select("#itemdispdiv").style("background", ct.dlgbg);
+    function styleDialog (d) {
+        var ct = lnfs[lnfidx], div = jt.byId("itemdispdiv");
+        if(d) {
+            div.style.borderRadius = "50px 5px 30px 5px";
+            div.style.background = ct.dlgbg; }
+        else {
+            div.style.borderRadius = "50px";
+            div.style.background = ct.textbg; }
         d3.select(".dlgtextdiv").style("background", ct.textbg);
         d3.select("#dlgdatespan").style("background", ct.datebg);
         d3.select("#choicebuttonsdiv").style("background", ct.textbg);
@@ -147,7 +152,7 @@ app.dlg = (function () {
         jt.out("itemdispdiv", html);
         constrainTextToDialogHeight(d, dim);
         verticallyPositionDialog(d, dim);
-        setDialogColors();
+        styleDialog(d);
         //give the content a few millis to render so it's not ignored
         setTimeout(function () {
             d3.select("#itemdispdiv")
@@ -1251,7 +1256,7 @@ app.dlg = (function () {
                     jt.out("dlgbuttondiv", buttons([
                         ["skipbutton", "Skip", "app.dlg.contnosave()"],
                         ["retrybutton", "Retry", "app.dlg.saveprog()"]]));
-                    setDialogColors(); },  //match buttons
+                    styleDialog(); },  //match color for buttons
                 jt.semaphore("dlg.saveProgress"));
     }
 
