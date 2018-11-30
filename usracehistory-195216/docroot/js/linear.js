@@ -522,8 +522,8 @@ app.linear = (function () {
     }
 
 
-    function paintWallpaper (divid) {
-        var html, picpts = [], grid, idx, div, sd, cs, i, j;
+    function selectWallpaperPoints () {
+        var picpts = [], grid, idx;
         wall = {selpts:[]};
         tl.pts.forEach(function (pt) {
             if(pt.pic) {
@@ -537,42 +537,57 @@ app.linear = (function () {
         else if(picpts.length >= 4) { grid = {x:2, y:2}; }
         else if(picpts.length >= 2) { grid = {x:2, y:1}; }
         else if(picpts.length >= 1) { grid = {x:1, y:1}; }
-        else { jt.log("Not enough pic points to display. " + picpts.length +
-                     " of " + tl.pts.length + "."); return; }
+        else { 
+            jt.log("Not enough pic points to display. " + picpts.length +
+                   " of " + tl.pts.length + "."); 
+            return false;}
         while(wall.selpts.length < (grid.x * grid.y)) {
             idx = Math.floor(Math.random() * picpts.length);
             wall.cand = picpts.splice(idx, 1)[0];
             if(candidateNotOnWall(wall)) {
                 wall.selpts.push(wall.cand); } }
-        div = jt.byId(divid);
+        wall.selpts.sort(app.db.compareStartDate);  //put in chrono order
+        wall.grid = grid;
+        return true;
+    }
+
+
+    function determineWallpaperDimensions (divid) {
+        var div = jt.byId(divid);
+        //wall display dimensions
         wall.dd = {w:div.offsetWidth, h:div.offsetHeight};
         if(wall.dd.h > wall.dd.w) {  //invert grid to be tall instead of wide
-            grid = {x:grid.y, y:grid.x}; }
-        sd = {w: Math.floor(wall.dd.w / grid.x), wm: (wall.dd.w % grid.x) - 1,
-              h: Math.floor(wall.dd.h / grid.y), hm: (wall.dd.h % grid.y) - 1};
-        cs = {w: 0, h: 0};
-        html = [];
-        for(i = 0; i < grid.y; i += 1) {
-            for(j = 0; j < grid.x; j += 1) {
-                cs.w = sd.w;
-                if(j < sd.wm) {
-                    cs.w += 1; }
-                cs.h = sd.h;
-                if(i < sd.hm) {
-                    cs.h += 1; }
-                idx = (i * grid.x) + j;
+            wall.grid = {x:wall.grid.y, y:wall.grid.x}; }
+        //wall standard dimensions
+        wall.sd = {w: Math.floor(wall.dd.w / wall.grid.x), 
+                   h: Math.floor(wall.dd.h / wall.grid.y)};
+    }
+
+
+    function paintWallpaper (divid) {
+        var html = [], i, j, idx;
+        if(!selectWallpaperPoints()) {
+            return; }  //nothing to make wallpaper out of
+        determineWallpaperDimensions(divid);
+        //fill top to bottom, then left to right (earlier points leftwards)
+        jt.log("wall.grid.x: " + wall.grid.x + ", y: " + wall.grid.y);
+        for(i = 0; i < wall.grid.y; i += 1) {
+            for(j = 0; j < wall.grid.x; j += 1) {
+                idx = (j * wall.grid.y) + i;
+                jt.log("i: " + i + ", j: " + j + ", idx: " + idx);
                 html.push(
-                    ["div", {id:"pdx" + j + "y" + i, cla:"bgpicdiv",
-                             style:"width:" + cs.w + "px;" +
-                                   "height:" + cs.h + "px;"},
-                     ["img", {src: "/ptpic?pointid=" + wall.selpts[idx].instid,
+                    ["div", {id:"pdx" + i + "y" + j, cla:"bgpicdiv",
+                             style:"width:" + wall.sd.w + "px;" +
+                                   "height:" + wall.sd.h + "px;"},
+                     ["img", {src: "/ptpic?pointid=" + 
+                                   wall.selpts[idx].instid,
                               cla: "bgpicimg",
-                              style: "max-width:" + cs.w + "px;" +
-                                     "max-height:" + cs.h + "px;" +
+                              style: "max-width:" + wall.sd.w + "px;" +
+                                     "max-height:" + wall.sd.h + "px;" +
                                      //Safari inconsistent image top...
                                      "vertical-align:top;"}]]); } }
         jt.out(divid, jt.tac2html(html));
-        wall.grid = grid;
+        jt.log("wallpaper painted");
     }
 
 
