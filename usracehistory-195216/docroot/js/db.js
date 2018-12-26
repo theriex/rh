@@ -665,7 +665,7 @@ app.db = (function () {
 
 
     function pointLinkedText (pt, pts, fname) {
-        var txt = pt.text, words, i, mtw = 5;
+        var txt = pt.text, words, i, mtw = 5;  //max title words
         txt = txt.replace(/<a\shref\s*=\s*"#([^"]+)">([^<]+)<\/a>/gi,
             function (match, p1, p2) {
                 var refid, oc, link;
@@ -679,11 +679,13 @@ app.db = (function () {
                 link = "<a href=\"#" + p1 + "\"" +
                     " onclick=\"" + oc + "\">" + p2 + "</a>";
                 return link; });
+        //if the first few words end with a ':', then treat them as a title.
         words = txt.split(/\s/);
-        for(i = 0; i < mtw; i += 1) {
-            if(words[i].endsWith(":")) {
+        for(i = 0; i < mtw && i < words.length; i += 1) {
+            if(words[i].endsWith(":")) {  //treat first few words as a title
                 break; } }
-        if(i < mtw) {  //found a colon
+        //avoiding creating the replacement function within the loop...
+        if(i < mtw && i < words.length) {  //found a ':' in the first words
             txt = "<em class=\"titleem\">" + txt.replace(/\:/, function () {
                 return ":</em>"; }); }
         return txt;

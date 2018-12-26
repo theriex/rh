@@ -570,11 +570,11 @@ app.linear = (function () {
             return; }  //nothing to make wallpaper out of
         determineWallpaperDimensions(divid);
         //fill top to bottom, then left to right (earlier points leftwards)
-        jt.log("wall.grid.x: " + wall.grid.x + ", y: " + wall.grid.y);
+        //jt.log("wall.grid.x: " + wall.grid.x + ", y: " + wall.grid.y);
         for(i = 0; i < wall.grid.y; i += 1) {
             for(j = 0; j < wall.grid.x; j += 1) {
                 idx = (j * wall.grid.y) + i;
-                jt.log("i: " + i + ", j: " + j + ", idx: " + idx);
+                //jt.log("i: " + i + ", j: " + j + ", idx: " + idx);
                 html.push(
                     ["div", {id:"pdx" + i + "y" + j, cla:"bgpicdiv",
                              style:"width:" + wall.sd.w + "px;" +
@@ -587,7 +587,7 @@ app.linear = (function () {
                                      //Safari inconsistent image top...
                                      "vertical-align:top;"}]]); } }
         jt.out(divid, jt.tac2html(html));
-        jt.log("wallpaper painted");
+        //jt.log("wallpaper painted");
     }
 
 
