@@ -1728,8 +1728,8 @@ app.dlg = (function () {
     function monitorPointUpdateSubmit () {
         var seconds, subframe, fc, txt, ptid,
             okpre = "ptid: ", errpre = "failed: ";
-        seconds = Math.round(upldmon.count / 10);
-        if(upldmon.count > 20) {
+        seconds = Math.round(upldmon.count / 2);
+        if(upldmon.count > 2) {
             jt.out("updatestatdiv", "Waiting for server response " + seconds); }
         subframe = jt.byId("subframe");
         if(subframe) {
@@ -1748,8 +1748,9 @@ app.dlg = (function () {
                     fc.body.innerHTML = "Reset.";  //reset status iframe
                     jt.byId("savebutton").disabled = false;
                     jt.out("savebutton", "Save");
-                    return; } } }
-        setTimeout(monitorPointUpdateSubmit, 100);
+                    return; }
+                upldmon.count += 1; } }
+        setTimeout(monitorPointUpdateSubmit, 500);
     }
 
 
