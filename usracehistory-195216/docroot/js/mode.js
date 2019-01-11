@@ -272,6 +272,10 @@ app.mode = (function () {
             setTimeout(function () {
                 app.dlg.verifyClosed();
                 app.tabular.runsv(ms.params.sv); }, 200); }
+        else if(ms.params.dbg === "levelup") {
+            setTimeout(function () {
+                app.dlg.verifyClosed();
+                app.levelup.display(currlev); }, 200); }
     }
 
 
