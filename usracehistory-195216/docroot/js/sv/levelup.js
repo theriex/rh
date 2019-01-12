@@ -102,6 +102,8 @@ app.levelup = (function () {
                 var val = dp[fd.pname];
                 if(ttl) {
                     val = Math.round((val / ttl) * 10000) / 10000; }
+                else { 
+                    val = 1; }
                 dp[fd.pname] = val; }); });
         return dat;
     }
