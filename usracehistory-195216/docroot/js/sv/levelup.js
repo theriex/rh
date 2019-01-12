@@ -100,7 +100,8 @@ app.levelup = (function () {
                 ttl += dp[fd.pname]; });
             sa.fields.forEach(function (fd) {
                 var val = dp[fd.pname];
-                val = Math.round((val / ttl) * 10000) / 10000;
+                if(ttl) {
+                    val = Math.round((val / ttl) * 10000) / 10000; }
                 dp[fd.pname] = val; }); });
         return dat;
     }
