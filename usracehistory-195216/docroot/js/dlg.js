@@ -1066,20 +1066,28 @@ app.dlg = (function () {
 
 
     function displayEmailSent (emaddr) {
-        var html;
+        var html, mh, subj = "Forgot Password email didn't arrive",
+            body = "Hi,\n\n" +
+            "I clicked \"forgot password\" but didn't get a response. " +
+            "Could you please look into it and get back to me?\n\n" +
+            "Thanks\n\n";
+        mh = "mailto:support@pastkey.org?subject=" + jt.dquotenc(subj) +
+            "&body=" + jt.dquotenc(body);
         html = ["div", {id:"passemdiv"},
                 [["p", "Your password has been emailed to " + emaddr +
                  " and should arrive in a few minutes.  If it doesn't" +
                  " show up, please"],
-                ["ol",
-                 [["li", "Make sure your email address is spelled correctly"],
-                  ["li", "Check your spam folder"],
-                  ["li", "Confirm the email address you entered is the same" +
-                        " one you used when you created your account."]]],
-                ["div", {id: "dlgbuttondiv"},
-                 ["button", {type: "button", id: "okbutton",
-                             onclick: jt.fs("app.dlg.close()")},
-                  "Ok"]]]];
+                 ["ol",
+                  [["li", "Make sure your email address is spelled correctly"],
+                   ["li", "Check your spam folder"]]],
+                 ["p", 
+                  ["If the email doesn't arrive in a timely fashion, ",
+                   ["a", {href:mh}, "contact support@pastkey.org"],
+                   " so we can look into it."]],
+                 ["div", {id: "dlgbuttondiv"},
+                  ["button", {type: "button", id: "okbutton",
+                              onclick: jt.fs("app.dlg.close()")},
+                   "Ok"]]]];
         displayDialog(null, jt.tac2html(html));
     }
 

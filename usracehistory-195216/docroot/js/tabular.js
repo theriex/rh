@@ -224,7 +224,7 @@ app.tabular = (function () {
         var txt = "<!doctype html>\n<html>\n<head>\n" +
             "<meta http-equiv=\"Content-Type\"" + 
             " content=\"text/html; charset=UTF-8\" />\n" +
-            "<title>U.S. Race History Data</title>\n" +
+            "<title>PastKey Data</title>\n" +
             "<style>\n" +
             ".trowdiv { padding-bottom:10px; }\n" +
             ".trowdatediv { display:table-cell; min-width:80px;\n" +

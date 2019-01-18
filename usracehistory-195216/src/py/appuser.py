@@ -412,7 +412,7 @@ class MailCredentials(webapp2.RequestHandler):
                     "\nEither you have not signed up yet, or you used" +\
                     " a different email address."
             content += "\n\nhttps://pastkey.org\n\n"
-            mailgun_send(self, eaddr, "U.S. Race History login", content)
+            mailgun_send(self, eaddr, "PastKey login", content)
         return_json(self, "[]")
 
 
