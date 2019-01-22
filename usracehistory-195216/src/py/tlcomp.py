@@ -50,8 +50,9 @@ def recent_completions(thresh):
         if "svs" in data:
             savg, sttl, scount = stats_from_data(data["svs"])
         ttl = pttl + sttl
-        cs += (tc.username + " (" + str(tc.userid) + ") completed " + 
-               tc.tlname + " (" + str(tc.tlid) + ") " + tc.created + 
+        uname = tc.username or "NONAME"
+        cs += (uname + " (uid: " + str(tc.userid) + ") completed " + 
+               tc.tlname + " (tlid: " + str(tc.tlid) + ") on " + tc.created + 
                " ptavg: " + usec(pavg, "s") + 
                ", time: " + usec(ttl, "m") + "\n")
     return cs
