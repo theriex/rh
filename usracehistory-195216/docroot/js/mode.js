@@ -220,6 +220,7 @@ app.mode = (function () {
                  ["a", {href:"#menu", onclick:jt.fs("app.mode.menu(" + 
                                                     !expand + ")")},
                   ["img", {src:"img/menuicon.png", //50x38
+                           id:"menuiconimg",
                            style:"max-height:20px;max-width:30px;"}]]],
                 ["div", {id:"menulinesdiv", style:"display:none;"},
                  html]];

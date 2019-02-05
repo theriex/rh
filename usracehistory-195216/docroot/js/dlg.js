@@ -435,11 +435,15 @@ app.dlg = (function () {
 
 
     function setFocus (elemid) {
-        jt.byId(elemid).focus();
+        var elem = jt.byId(elemid);
+        if(elem) {
+            elem.focus(); }
         //try again in a moment in case the element wasn't ready.  Typically
         //isn't due to displayDialog transitions and timeouts.
         setTimeout(function () {
-            jt.byId(elemid).focus(); }, 1200);
+            elem = jt.byId(elemid);
+            if(elem) {
+                jt.byId(elemid).focus(); }}, 1200);
     }
 
 
@@ -1007,9 +1011,8 @@ app.dlg = (function () {
     }
 
 
+    //local storage notes: https://github.com/theriex/rh/issues/13
     function processSignIn (cred, contf) {
-        //PENDING: Go with localStorage user instance if found, then redisplay
-        //if any significant changes found after db retrieval.
         var params;
         cred = cred || readInputFieldValues(["emailin", "passwordin"]);
         params = inputsToParams(cred);
@@ -1160,44 +1163,36 @@ app.dlg = (function () {
 
     function showSignInToSaveDialog () {
         var html;
-        if(!sip || !sip.count) {
-            sip = {count:0,
-                   prompts:["Sign in to keep your progress.",
-                            "Sign in to keep your progress.<br/>" +
-                            "(Account info for app use only.)"]}; }
-        sip.idx = Math.min(sip.count, sip.prompts.length - 1);
+        sip = {noprompt:true};  //only show dialog once.
         html = [["div", {id:"dlgtitlediv"}, "Save Progress"],
                 ["div", {cla:"dlgsignindiv"},
                  ["div", {cla:"dlgformline", style:"text-align:center;"},
-                  sip.prompts[sip.idx]]]];
-        if(sip.count > 0) {
-            html.push(["div", {cla:"dlgformline"},
-                       [["input", {type:"checkbox", id:"cbnosi"}],
-                        ["label", {fo:"cbnosi"},
-                         "Don't keep progress, don't ask again."]]]); }
-        html.push(["div", {id:"dlgbuttondiv"},
-                   [["button", {type:"button", id:"skipbutton",
-                                onclick:jt.fs("app.dlg.contnosave()")},
-                     "Skip"],
-                    " &nbsp; ",
-                    ["button", {type:"button", id:"signinbutton",
-                                onclick:jt.fs("app.dlg.signin()")},
-                     "Sign In"]]]);
+                  "If you want to save your progress for this timeline and others, sign in from the menu."]],
+                ["div", {id:"dlgbuttondiv"},
+                 ["button", {type:"button", id:"signinokbutton",
+                             onclick:jt.fs("app.dlg.contnosave()")},
+                 "Ok"]]];
         displayDialog(null, jt.tac2html(html));
-        setFocus("signinbutton");
+        setFocus("signinokbutton");
         dlgstack.push(app.dlg.saveprog);
-        sip.count += 1;
+    }
+
+
+    function indicateMenu (color) {
+        var source;
+        color = color || "";
+        source = "img/menuicon" + color + ".png";
+        jt.byId("menuiconimg").src = source;
+        jt.log("indicateMenu source " + source);
     }
 
 
     function continueToNext () {
-        var chdet = app.support.chapter(),
-            cbnosi = jt.byId("cbnosi");
-        if(cbnosi && cbnosi.checked) {
-            sip.noprompt = true; }
+        var chdet = app.support.chapter();
         if(jt.byId("savestatspan")) {
             jt.out("savestatspan", "Continuing..."); }
         tl.pendingSaves = 0;
+        indicateMenu();
         nextColorTheme();
         app.dlg.verifyClosed();  //otherwise can end up overlayed over chapter
         //The cutoff here is for timelines resembling a book.  Shorter
@@ -1238,7 +1233,9 @@ app.dlg = (function () {
     function saveProgress () {
         var html, data, savestat = "Saving your progress...";
         if(!app.user.email) {  //not signed in
+            indicateMenu("Yellow");
             return promptSignIn(); }
+        indicateMenu("Green");
         html = [["div", {id:"dlgtitlediv"}, "Save Progress"],
                 ["div", {cla:"dlgsignindiv"},
                  ["div", {cla:"dlgformline"},
