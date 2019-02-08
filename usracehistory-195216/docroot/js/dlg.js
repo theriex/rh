@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge, for, long */
+/*jslint browser, white, fudge, for, long */
 /*global app, jt, d3, confirm */
 
 app.dlg = (function () {
@@ -10,11 +10,11 @@ app.dlg = (function () {
         {name: "slate", dlgbg: "#beddb9", textbg: "#d8f2d3", 
          datebg: "#ddfad8", buttonbg: "#aec8aa"},
         {name: "sky", dlgbg: "#c6deff", textbg: "#e7f1ff",
-         datebg: "#e9f5f8", buttonbg: "#c0e3eb"}],
-        buttonText = {yes:"Yes", no:"No"},
-        birthyeardefault = (new Date()).getFullYear() - 27,
-        generationyrs = 30,
-        gendat = {accepted:false, gens:[
+         datebg: "#e9f5f8", buttonbg: "#c0e3eb"}];
+    var buttonText = {yes:"Yes", no:"No"};
+    var birthyeardefault = (new Date()).getFullYear() - 27;
+    var generationyrs = 30;
+    var gendat = {accepted:false, gens:[
             {id:"geyou", abbr:"You", name: "You", year: birthyeardefault},
             {id:"gepar", abbr:"Parents", name: "Parents", 
              year: birthyeardefault - generationyrs},
@@ -25,18 +25,18 @@ app.dlg = (function () {
             {id:"geold", abbr:"Ancestors", name: "Ancestors", 
              year: 1000},
             {id:"geanc", abbr:"Ancients", name:"Ancient Ancestors", 
-             year: -90000}]},
-        edptflds = null,
-        upldmon = null,
-        cookname = "userauth",
-        cookdelim = "..pastkey..",
-        lnfidx = 0,
-        tl = null,
-        editpt = null,
-        dlgstack = [],
-        sip = {},  //sign-in prompting
-        popdim = null,
-        orgtabs = ["contact", "keywords", "members"];
+             year: -90000}]};
+    var edptflds = null;
+    var upldmon = null;
+    var cookname = "userauth";
+    var cookdelim = "..pastkey..";
+    var lnfidx = 0;
+    var tl = null;
+    var editpt = null;
+    var dlgstack = [];
+    var sip = {};  //sign-in prompting
+    var popdim = null;
+    var orgtabs = ["contact", "keywords", "members"];
 
 
     function nextColorTheme () {
@@ -46,7 +46,8 @@ app.dlg = (function () {
 
 
     function styleDialog (d) {
-        var ct = lnfs[lnfidx], div = jt.byId("itemdispdiv");
+        var ct = lnfs[lnfidx];
+        var div = jt.byId("itemdispdiv");
         if(d) {
             div.style.borderRadius = "50px 5px 30px 5px";
             div.style.background = ct.dlgbg; }
@@ -86,12 +87,11 @@ app.dlg = (function () {
 
 
     function constrainTextToDialogHeight (d, dlgdim) {
-        var ph = 166,  //default infopic max-height from css
-            resids = ["dlgdatediv", "dlgbuttondiv"],
-            img, mh;
+        var ph = 166;  //default infopic max-height from css
+        var resids = ["dlgdatediv", "dlgbuttondiv"];
         //Set min text area height equal img height so pic not squished.
         if(d && d.pic) {
-            img = jt.byId("dlgpicimg");
+            var img = jt.byId("dlgpicimg");
             if(img && img.offsetHeight) {
                 ph = img.offsetHeight; }
             jt.byId("dlgtextdiv").style.minHeight = ph + "px";
@@ -100,7 +100,7 @@ app.dlg = (function () {
         //Set max text area height equal to max dlg height - header/footer
         if(!d) {
             resids[0] = "dlgtitlediv"; }
-        mh = dlgdim.h;
+        var mh = dlgdim.h;
         resids.forEach(function (id) {
             var elem = jt.byId(id);
             if(elem) {
@@ -112,15 +112,14 @@ app.dlg = (function () {
 
 
     function verticallyPositionDialog (d, dim) {
-        var y = dim.myt,
-            dd = jt.byId("itemdispdiv"),
-            xa, bump;
+        var y = dim.myt;
+        var dd = jt.byId("itemdispdiv");
         if(d && dd && ((dd.offsetHeight - 10) < dim.h)) {
-            xa = tl.y(tl.pts[0].vc);  //first point should be on x-axis
+            var xa = tl.y(tl.pts[0].vc);  //first point should be on x-axis
             y = tl.y(d.vc) - xa;  //start with logical offset value
             y *= -1;  //invert so more chance circle is visible
             y = xa + y;
-            //if y is close to the x-axis, then bump it upwards or downwards
+            var bump; //if y is close to x-axis, bump it upwards or downwards
             if(y > xa) {
                 bump = Math.round(0.2 * (2 * xa));
                 if(y < xa + bump) {
@@ -135,7 +134,8 @@ app.dlg = (function () {
             y = Math.min(y, dim.myb - (dd.offsetHeight + 10)); }
         d3.select("#itemdispdiv")
             .style("top", y + "px");
-        popdim = {x:dim.x, y:y, w:dim.w, h:dim.h};  //popup over dialog
+        var yval = y;  //variable avoids lint tool complaint...
+        popdim = {x:dim.x, y:yval, w:dim.w, h:dim.h};  //popup over dialog
     }
 
 
@@ -166,7 +166,9 @@ app.dlg = (function () {
 
 
     function wrapText (txt, cc, minw) {
-        var line = "", res = [], words = txt.split(/\s/);
+        var line = "";
+        var res = []; 
+        var words = txt.split(/\s/);
         words.forEach(function (word) {
             if(line.length + word.length < cc) {
                 line += " " + word; }
@@ -243,7 +245,7 @@ app.dlg = (function () {
 
 
     function getYearGuessOptions (pt, flank) {
-        var pti, idx = 0, dp, off, years = [pt.start.year];
+        var pti = 0; var idx = 0; var dp; var off; var years = [pt.start.year];
         for(pti = 0; pti < tl.pts.length; pti += 1) {
             if(tl.pts[pti].instid === pt.instid) {
                 break; } }
@@ -340,7 +342,7 @@ app.dlg = (function () {
 
 
     function cascadeGenerationInfo (id) {
-        var cascading = -1, val = 0;
+        var cascading = -1; var val = 0;
         gendat.gens.forEach(function (gen, idx) {
             var input = null;
             if(gen.id === id) {
@@ -384,7 +386,7 @@ app.dlg = (function () {
 
 
     function generationIndicator (d) {
-        var html, genobj = null, i, label;
+        var html; var genobj = null; var i;
         if(!gendat.accepted) {
             html = ["button", {type:"button", cla:"genbutton",
                                onclick:jt.fs("app.dlg.genentry()")},
@@ -393,7 +395,7 @@ app.dlg = (function () {
             for(i = 0; !genobj && i < gendat.gens.length; i += 1) {
                 if(gendat.gens[i].year <= d.start.year) {
                     genobj = gendat.gens[i]; } }
-            label = jt.byId("rhcontentdiv");
+            var label = jt.byId("rhcontentdiv");
             if(label && label.offsetWidth > 600) {
                 label = genobj.name; }
             else {
@@ -458,7 +460,7 @@ app.dlg = (function () {
 
 
     function showInfoDialog (d, inter) {
-        var buttons, pichtml = "", refshtml, html;
+        var buttons; var pichtml = ""; var refshtml; var html;
         tl.dlgdat = d;
         if(d.pic) {
             pichtml = ["div", {cla:"dlgpicdiv", id:"dlgpicdiv"},
@@ -495,11 +497,11 @@ app.dlg = (function () {
 
 
     function closeInteractionTimeTracking () {
-        var pt = tl.dlgdat,
-            inter = pt.interact,
-            ptid = pt.instid,
-            prog = app.db.displayContext().prog,
-            pstr = "";
+        var pt = tl.dlgdat;
+        var inter = pt.interact;
+        var ptid = pt.instid;
+        var prog = app.db.displayContext().prog;
+        var pstr = "";
         inter.end = new Date();
         if(prog.pts.csvcontains(ptid)) {
             prog.pts.csvarray().forEach(function (ps) {
@@ -556,7 +558,7 @@ app.dlg = (function () {
 
 
     function yearGuessButtonPress (year) {
-        var pt = tl.dlgdat, button;
+        var pt = tl.dlgdat;
         if(pt.start.year === year) {
             app.mode.updqrc(-1);
             closeInteractionTimeTracking();
@@ -566,7 +568,7 @@ app.dlg = (function () {
                 jt.byId(yearButtonId(year)).disabled = true; });
             setTimeout(transitionToNext, 1000); }
         else {
-            button = jt.byId(yearButtonId(year));
+            var button = jt.byId(yearButtonId(year));
             button.disabled = true;
             button.innerHTML = "x";
             pt.yearmisscount = pt.yearmisscount || 0;
@@ -575,7 +577,7 @@ app.dlg = (function () {
 
 
     function readInputFieldValues (fields, defaultvals) {
-        var vals = {}, filled = true;
+        var vals = {}; var filled = true;
         fields.forEach(function (field) {
             var lv = jt.byId("lab" + field);
             lv.innerHTML = lv.innerHTML.replace("*", "");
@@ -661,9 +663,9 @@ app.dlg = (function () {
 
 
     function showOrgMembers () {
-        var url, oms = app.orgmembers || [app.user.acc],
-            labels = ["Members:", "Contributors:", "Administrators:"],
-            html = [];
+        var oms = app.orgmembers || [app.user.acc];
+        var labels = ["Members:", "Contributors:", "Administrators:"];
+        var html = [];
         if(!jt.byId("orgedmembersdiv")) {
             return; }  //no output area so nothing to do
         oms.sort(function (a, b) {
@@ -689,8 +691,8 @@ app.dlg = (function () {
         jt.out("orgedmembersdiv", jt.tac2html(html));
         if(!app.orgmembers) {
             jt.out("loginstatdiv", "Fetching members...");
-            url = "orgmembers?" + app.auth() + "&orgid=" + app.user.acc.orgid + 
-                jt.ts("&cb=", "second");
+            var url = "orgmembers?" + app.auth() + "&orgid=" + 
+                app.user.acc.orgid + jt.ts("&cb=", "second");
             jt.call("GET", url, null,
                     function (members) {
                         jt.out("loginstatdiv", "");
@@ -721,7 +723,7 @@ app.dlg = (function () {
 
 
     function modifyMemberLevel (instid, chg) {
-        var om = app.omids[instid], verified = true, data;
+        var om = app.omids[instid]; var verified = true;
         if(chg === -1 && instid === app.user.acc.instid &&
            !confirm("Are you sure you want to resign as an Administrator?")) {
             verified = false; }
@@ -731,8 +733,8 @@ app.dlg = (function () {
         if(verified) {
             app.dlg.omexp(instid);  //hide buttons so no double click.
             jt.out("loginstatdiv", "Updating membership...");
-            data = jt.objdata({orgid:app.user.acc.orgid,
-                               userid:instid, lev:om.lev + chg});
+            var data = jt.objdata({orgid:app.user.acc.orgid,
+                                   userid:instid, lev:om.lev + chg});
             jt.call("POST", "/updmembership?" + app.auth(), data,
                     function () {  //nothing returned on success
                         jt.out("loginstatdiv", "");
@@ -745,12 +747,13 @@ app.dlg = (function () {
 
 
     function expandOrganizationMember (instid) {
-        var div, user = app.omids[instid], html = [];
-        div = jt.byId("om" + instid + "detdiv");
+        var div = jt.byId("om" + instid + "detdiv");
         if(!div) { return; }
         if(div.innerHTML) {  //have content, toggle off
             div.innerHTML = "";
             return; }
+        var html = [];
+        var user = app.omids[instid];
         if(user.lev < 2) {
             html.push(["button", {type:"button",
                                   onclick:jt.fs("app.dlg.modmem('" + instid + 
@@ -785,8 +788,8 @@ app.dlg = (function () {
 
     function selectOrgTab (seltab) {
         orgtabs.forEach(function (tab) {
-            var div = jt.byId("orged" + tab + "div"),
-                span = jt.byId("orgtab" + tab + "span");
+            var div = jt.byId("orged" + tab + "div");
+            var span = jt.byId("orgtab" + tab + "span");
             if(tab === seltab) {
                 span.innerHTML = tab.capitalize();
                 div.style.display = "block"; }
@@ -827,7 +830,7 @@ app.dlg = (function () {
 
 
     function newMemberPopup (event) {
-        var html = [], pos, left, pdiv;
+        var html = [];
         html.push(["div", {id:"dlgxdiv", 
                            onclick:jt.fs("app.dlg.closepop()")}, "X"]);
         html.push(["div", {cla:"edptpoptitle"}, "Add Member"]);
@@ -841,9 +844,9 @@ app.dlg = (function () {
                    ["button", {type:"button", 
                                onclick:jt.fs("app.dlg.addmem()")}, "Add"]]);
         jt.out("popupdiv", jt.tac2html(html));
-        pos = jt.geoXY(event);
-        left = Math.round(0.01 * tl.width) + tl.margin.left + 20;
-        pdiv = jt.byId("popupdiv");
+        var pos = jt.geoXY(event);
+        var left = Math.round(0.01 * tl.width) + tl.margin.left + 20;
+        var pdiv = jt.byId("popupdiv");
         pdiv.style.left = left + "px";
         pdiv.style.top = pos.y + "px";
         pdiv.style.visibility = "visible";
@@ -851,7 +854,7 @@ app.dlg = (function () {
 
 
     function editOrganization (tab) {
-        var html = [], th = [];
+        var html = []; var th = [];
         tab = tab || orgtabs[0];
         orgtabs.forEach(function (tab) {
             th.push(["span", {id:"orgtab" + tab + "span"},
@@ -1069,28 +1072,28 @@ app.dlg = (function () {
 
 
     function displayEmailSent (emaddr) {
-        var html, mh, subj = "Forgot Password email didn't arrive",
-            body = "Hi,\n\n" +
+        var subj = "Forgot Password email didn't arrive";
+        var body = "Hi,\n\n" +
             "I clicked \"forgot password\" but didn't get a response. " +
             "Could you please look into it and get back to me?\n\n" +
             "Thanks\n\n";
-        mh = "mailto:support@pastkey.org?subject=" + jt.dquotenc(subj) +
+        var mh = "mailto:support@pastkey.org?subject=" + jt.dquotenc(subj) +
             "&body=" + jt.dquotenc(body);
-        html = ["div", {id:"passemdiv"},
-                [["p", "Your password has been emailed to " + emaddr +
-                 " and should arrive in a few minutes.  If it doesn't" +
-                 " show up, please"],
-                 ["ol",
-                  [["li", "Make sure your email address is spelled correctly"],
-                   ["li", "Check your spam folder"]]],
-                 ["p", 
-                  ["If the email doesn't arrive in a timely fashion, ",
-                   ["a", {href:mh}, "contact support@pastkey.org"],
-                   " so we can look into it."]],
-                 ["div", {id: "dlgbuttondiv"},
-                  ["button", {type: "button", id: "okbutton",
-                              onclick: jt.fs("app.dlg.close()")},
-                   "Ok"]]]];
+        var html = ["div", {id:"passemdiv"},
+                    [["p", "Your password has been emailed to " + emaddr +
+                      " and should arrive in a few minutes.  If it doesn't" +
+                      " show up, please"],
+                     ["ol",
+                      [["li", "Make sure your email address is spelled right,"],
+                       ["li", "Check your spam folder"]]],
+                     ["p", 
+                      ["If the email doesn't arrive in a timely fashion, ",
+                       ["a", {href:mh}, "contact support@pastkey.org"],
+                       " so we can look into it."]],
+                     ["div", {id: "dlgbuttondiv"},
+                      ["button", {type: "button", id: "okbutton",
+                                  onclick: jt.fs("app.dlg.close()")},
+                       "Ok"]]]];
         displayDialog(null, jt.tac2html(html));
     }
 
@@ -1112,10 +1115,10 @@ app.dlg = (function () {
 
 
     function showSignInDialog () {
-        var html, hd, cbi, fpd;
-        cbi = {type:"checkbox", id:"cbnewacc", value:"na",
-               onclick:jt.fs("app.dlg.signin()")};
-        fpd = {id:"forgotpassdiv"};
+        var html; var hd;
+        var cbi = {type:"checkbox", id:"cbnewacc", value:"na",
+                   onclick:jt.fs("app.dlg.signin()")};
+        var fpd = {id:"forgotpassdiv"};
         if(app.domfield("cbnewacc", "checked")) {
             hd = {f:jt.fs("app.dlg.newacc()"), b:"Sign Up"};
             cbi.checked = "checked";
@@ -1231,22 +1234,23 @@ app.dlg = (function () {
 
 
     function saveProgress () {
-        var html, data, savestat = "Saving your progress...";
+        var savestat = "Saving your progress...";
         if(!app.user.email) {  //not signed in
             indicateMenu("Yellow");
             return promptSignIn(); }
         indicateMenu("Green");
-        html = [["div", {id:"dlgtitlediv"}, "Save Progress"],
-                ["div", {cla:"dlgsignindiv"},
-                 ["div", {cla:"dlgformline"},
-                  ["span", {id:"savestatspan"}, savestat]]],
-                ["div", {id:"dlgbuttondiv"},
-                 buttons([["skipbutton", "Skip", "app.dlg.contnosave()"],
-                          ["contbutton", "Continue", "app.dlg.signin()"]])]];
+        var html = [["div", {id:"dlgtitlediv"}, "Save Progress"],
+                    ["div", {cla:"dlgsignindiv"},
+                     ["div", {cla:"dlgformline"},
+                      ["span", {id:"savestatspan"}, savestat]]],
+                    ["div", {id:"dlgbuttondiv"},
+                     buttons([["skipbutton", "Skip", "app.dlg.contnosave()"],
+                              ["contbutton", "Continue", "app.dlg.signin()"]])
+                    ]];
         displayDialog(null, jt.tac2html(html));
         jt.byId("contbutton").disabled = true;
         app.db.mergeProgToAccount();  //normalize current prog with db state
-        data = app.db.postdata("AppUser", app.user.acc);
+        var data = app.db.postdata("AppUser", app.user.acc);
         jt.call("POST", "updacc?" + app.auth(), data,
                 function (result) {
                     jt.byId("contbutton").disabled = false;
@@ -1279,7 +1283,8 @@ app.dlg = (function () {
 
 
     function buildEditPointFields () {
-        var qtos = [], efs = [
+        var qtos = []; 
+        var efs = [
             {field:"date", layout:"main", type:"text",
              descf:"app.db.describeDateFormat", place:"YYYY-MM-DD",
              reqd:"Please enter a valid date value."},
@@ -1292,12 +1297,12 @@ app.dlg = (function () {
         Object.keys(app.qts).forEach(function (key) {
             qtos.push({value:key, text:app.qts[key]}); });
         efs.push({field:"qtype", layout:"detail", type:"select", options:qtos});
-        app.keyflds.forEach(function (field) {
+        app.keyflds.forEach(function (fld) {
             var opts = [];
-            if(app.user.org[field]) {
-                app.user.org[field].csvarray().forEach(function (key) {
+            if(app.user.org[fld]) {
+                app.user.org[fld].csvarray().forEach(function (key) {
                     opts.push(key); }); }
-            efs.push({field:field, layout:"detail", type:"cbsel", 
+            efs.push({field:fld, layout:"detail", type:"cbsel", 
                       options:opts}); });
         efs.push({field:"source", layout:"detail", type:"text", 
                   place:"unique id for point"});
@@ -1306,11 +1311,10 @@ app.dlg = (function () {
 
 
     function textInputTAC (fs, mode, vo) {
-        var inid, label, html;
         if(mode === "list") {
             return ["div", {cla:"edptvaldiv"}, vo[fs.field]]; }
-        inid = fs.field + "in";
-        label = fs.label || fs.field.capitalize();
+        var inid = fs.field + "in";
+        var label = fs.label || fs.field.capitalize();
         if(fs.descf) {
             label = ["a", {href:"#describe_" + label,
                            onclick:jt.fs("app.dlg.togfdesc('" +
@@ -1319,13 +1323,13 @@ app.dlg = (function () {
                      [label + "&nbsp;",
                       ["img", {src:"img/info.png"}],
                       "&nbsp;"]]; }
-        html = ["div", {cla:"dlgformline"},
-                [["div", {cla:"fieldhelpdiv", id:"fhdiv" + fs.field}],
-                 ["label", {fo:inid, cla:"liflab", 
-                            id:"lab" + inid}, label],
-                 ["input", {type:fs.type, cla:"lifin", name:fs.field, id:inid,
-                            value:(vo && vo[fs.field]) || "",
-                            placeholder:fs.place || ""}]]];
+        var html = ["div", {cla:"dlgformline"},
+                    [["div", {cla:"fieldhelpdiv", id:"fhdiv" + fs.field}],
+                     ["label", {fo:inid, cla:"liflab", 
+                                id:"lab" + inid}, label],
+                     ["input", {type:fs.type, cla:"lifin", name:fs.field, 
+                                id:inid, value:(vo && vo[fs.field]) || "",
+                                placeholder:fs.place || ""}]]];
         return html;
     }
 
@@ -1348,8 +1352,8 @@ app.dlg = (function () {
     }
 
 
-    function readTextListInputFields (field) {
-        var i, count, inel, val, txts = [];
+    function readTextListInputFields (field, ndq) {
+        var i; var count; var inel; var val; var txts = [];
         for(i = 0; i < 50; i += 1) {
             count = i + 1;
             inel = jt.byId(field + count + "in");
@@ -1357,6 +1361,8 @@ app.dlg = (function () {
                 break; }
             val = inel.value.trim();
             if(val) {
+                if(ndq) {  //html escape embedded double quotes
+                    val = jt.ndq(val); }
                 txts.push(val); } }
         editpt[field] = txts;
     }
@@ -1394,14 +1400,14 @@ app.dlg = (function () {
 
 
     function selectInputTAC (fs, mode, vo) {
-        var html = [], inid, val;
+        var html = [];
         if(mode === "list") {
-            val = vo[fs.field] || "";
+            var val = vo[fs.field] || "";
             fs.options.forEach(function (opt) {
                 if(val === opt.value) {
                     val = opt.text; } });
             return ["div", {cla:"edptvaldiv"}, val]; }
-        inid = fs.field + "sel";
+        var inid = fs.field + "sel";
         fs.options.forEach(function (opt, idx) {
             var oao = {value:opt.value, id:fs.field + "opt" + idx};
             if(vo && vo[fs.field] === opt.value) {
@@ -1420,9 +1426,9 @@ app.dlg = (function () {
 
 
     function checkboxInputTAC (fs, mode, vo) {
-        var html, val;
+        var html;
         vo[fs.field] = vo[fs.field] || "";  //verify initialized
-        val = vo[fs.field].csvarray().join(", ");
+        var val = vo[fs.field].csvarray().join(", ");
         if(mode === "list") {
             return ["div", {cla:"edptvaldiv"}, val]; }
         html = [["div", {cla:"dlgformline"},
@@ -1439,7 +1445,7 @@ app.dlg = (function () {
 
 
     function checkboxPopup (event, field) {
-        var html = [], pos, left, pdiv;
+        var html = [];
         html.push(["div", {id:"dlgxdiv", 
                            onclick:jt.fs("app.dlg.closepop()")}, "X"]);
         html.push(["div", {cla:"edptpoptitle"}, field]);
@@ -1460,9 +1466,9 @@ app.dlg = (function () {
             html.push(app.user.org.name + " has no " + field + " set up." +
                       " Edit the organization to define possible values."); }
         jt.out("popupdiv", jt.tac2html(html));
-        pos = jt.geoXY(event);
-        left = Math.round(0.01 * tl.width) + tl.margin.left + 20;
-        pdiv = jt.byId("popupdiv");
+        var pos = jt.geoXY(event);
+        var left = Math.round(0.01 * tl.width) + tl.margin.left + 20;
+        var pdiv = jt.byId("popupdiv");
         pdiv.style.left = left + "px";
         pdiv.style.top = pos.y + "px";
         pdiv.style.visibility = "visible";
@@ -1470,7 +1476,8 @@ app.dlg = (function () {
 
 
     function updatePointKeywords (field) {
-        var valcsv = "", fin = jt.byId(field + "hin");
+        var valcsv = ""; 
+        var fin = jt.byId(field + "hin");
         app.user.org[field].csvarray().forEach(function (key, idx) {
             var cb = jt.byId(field + idx);
             if(cb && cb.checked) {
@@ -1484,8 +1491,8 @@ app.dlg = (function () {
 
 
     function updateSelectedValue (field) {
-        var sel = jt.byId(field + "sel"),
-            fin = jt.byId(field + "hin");
+        var sel = jt.byId(field + "sel");
+        var fin = jt.byId(field + "hin");
         editpt[field] = sel.options[sel.selectedIndex].value;
         if(fin) {  //reflect value in input form field for submit processing
             fin.value = editpt[field]; }
@@ -1493,24 +1500,25 @@ app.dlg = (function () {
 
 
     function imageInputTAC (fs, mode, vo) {
-        var src, html;
-        src = (vo && vo[fs.field]) || "";
-        if(src) {
-            src = "/ptpic?pointid=" + src; }
+        var imgsrc = (vo && vo[fs.field]) || "";
+        if(imgsrc) {
+            imgsrc = "/ptpic?pointid=" + imgsrc; }
         else {
-            src = "/img/picplaceholder.png"; }
+            imgsrc = "/img/picplaceholder.png"; }
         if(mode === "list") {
             return ["div", {cla:"edptvaldiv"}, 
-                    ["img", {src:src, cla:"txtpicimg"}]]; }
-        html = ["div", {cla:"dlgformline", style:"text-align:center;"},
-                [["input", {type:"file", id:fs.field + "in", name:fs.field}],
-                 ["img", {src:src, cla:"txtpicimg"}]]];
+                    ["img", {src:imgsrc, cla:"txtpicimg"}]]; }
+        var html = ["div", {cla:"dlgformline", style:"text-align:center;"},
+                    [["input", {type:"file", id:fs.field + "in", 
+                                name:fs.field}],
+                     ["img", {src:imgsrc, cla:"txtpicimg"}]]];
         return html;
     }
 
 
     function textListEditContentTAC (fs, txts) {
-        var html = [], fname = fs.pname || fs.field.capitalize();
+        var html = []; 
+        var fname = fs.pname || fs.field.capitalize();
         html.push(["div", {cla:"dlgformline"},
                    [fname,
                     ["button", {type:"button", id:"addbutton",
@@ -1534,7 +1542,8 @@ app.dlg = (function () {
 
 
     function textListInputTAC (fs, mode, pt) {
-        var html, txts = pt[fs.field] || [];
+        var html;
+        var txts = pt[fs.field] || [];
         if(mode === "list") {
             html = refsListHTML(txts); }
         else {  //edit
@@ -1549,7 +1558,7 @@ app.dlg = (function () {
         //delete is accomplished by automatically filtering out empty inputs
         //and can't have it both ways.  Auto delete filtering is simpler.
         var fs;
-        readTextListInputFields(field);  //updates editpt[field] contents
+        readTextListInputFields(field, true);  //updates editpt[field] contents
         editpt[field].push("");
         //find the field spec for rendering
         edptflds.forEach(function (epf) {
@@ -1731,19 +1740,18 @@ app.dlg = (function () {
 
 
     function monitorPointUpdateSubmit () {
-        var seconds, subframe, fc, txt, ptid,
-            okpre = "ptid: ", errpre = "failed: ";
-        seconds = Math.round(upldmon.count / 2);
+        var okpre = "ptid: "; var errpre = "failed: ";
+        var seconds = Math.round(upldmon.count / 2);
         if(upldmon.count > 2) {
             jt.out("updatestatdiv", "Waiting for server response " + seconds); }
-        subframe = jt.byId("subframe");
-        if(subframe) {
-            fc = subframe.contentDocument || subframe.contentWindow.document;
+        var subfrm = jt.byId("subframe");
+        if(subfrm) {
+            var fc = subfrm.contentDocument || subfrm.contentWindow.document;
             if(fc && fc.body) {  //body unavailable if error write in progress
-                txt = fc.body.innerHTML;
+                var txt = fc.body.innerHTML;
                 if(txt.indexOf(okpre) === 0) {  //successful update
                     jt.out("savebutton", "Saved.");
-                    ptid = txt.slice(okpre.length);
+                    var ptid = txt.slice(okpre.length);
                     app.dlg.close();
                     fetchPointFromServer(ptid, noteUpdatedPoint);
                     return; }
@@ -1781,9 +1789,9 @@ app.dlg = (function () {
 
 
     function ptsubclick () {
-        var subobj, i, fs, nopictxt, picin;
-        subobj = makePointFormSubmitObject();
+        var subobj = makePointFormSubmitObject();
         jt.out("updatestatdiv", "");
+        var i; var fs;
         for(i = 0; i < edptflds.length; i += 1) {
             fs = edptflds[i];
             if(fs.reqd && !subobj[fs.field]) {
@@ -1791,8 +1799,8 @@ app.dlg = (function () {
                 if(fs.layout === "detail") {
                     app.dlg.togptdet("detail", true); }
                 return;  } }
-        nopictxt = "Uploading a public domain picture for your point will give it more impact and help people remember it. Are you sure you want to save without a pic?";
-        picin = jt.byId("picin");
+        var nopictxt = "Uploading a public domain picture for your point will give it more impact and help people remember it. Are you sure you want to save without a pic?";
+        var picin = jt.byId("picin");
         if(picin && !picin.value && editpt && !editpt.instid && !editpt.pic && 
            !confirm(nopictxt)) {
             app.dlg.togptdet("pic", true);
@@ -1807,11 +1815,10 @@ app.dlg = (function () {
 
 
     function ptdelclick () {
-        var subobj, vertext;
-        vertext = "Timelines with this point will still have the data available until they are next edited.  Are you sure you want to delete this point?";
+        var vertext = "Timelines with this point will still have the data available until they are next edited.  Are you sure you want to delete this point?";
         if(!confirm(vertext)) {
             return; }
-        subobj = makePointFormSubmitObject();
+        var subobj = makePointFormSubmitObject();
         subobj.stats = JSON.parse(subobj.stats);
         subobj.stats.status = "deleted";
         subobj.stats = JSON.stringify(subobj.stats);
@@ -1844,8 +1851,8 @@ app.dlg = (function () {
 
 
     function searchForPoint () {
-        var qstr = tl.dlgdat.text.split(" ").slice(0, 10).join("+"),
-            url = "https://duckduckgo.com/?q=" + qstr;
+        var qstr = tl.dlgdat.text.split(" ").slice(0, 10).join("+");
+        var url = "https://duckduckgo.com/?q=" + qstr;
         window.open(url);
     }
 
