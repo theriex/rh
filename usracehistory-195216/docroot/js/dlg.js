@@ -1352,7 +1352,7 @@ app.dlg = (function () {
     }
 
 
-    function readTextListInputFields (field, ndq) {
+    function readTextListInputFields (field) {
         var i; var count; var inel; var val; var txts = [];
         for(i = 0; i < 50; i += 1) {
             count = i + 1;
@@ -1361,8 +1361,7 @@ app.dlg = (function () {
                 break; }
             val = inel.value.trim();
             if(val) {
-                if(ndq) {  //html escape embedded double quotes
-                    val = jt.ndq(val); }
+                val = jt.ndq(val); //html escape embedded double quotes
                 txts.push(val); } }
         editpt[field] = txts;
     }
@@ -1558,7 +1557,7 @@ app.dlg = (function () {
         //delete is accomplished by automatically filtering out empty inputs
         //and can't have it both ways.  Auto delete filtering is simpler.
         var fs;
-        readTextListInputFields(field, true);  //updates editpt[field] contents
+        readTextListInputFields(field);  //updates editpt[field] contents
         editpt[field].push("");
         //find the field spec for rendering
         edptflds.forEach(function (epf) {
@@ -1733,8 +1732,7 @@ app.dlg = (function () {
         locp = app.db.pt4id(pt.instid);
         if(pointChanged(locp, pt)) {
             noteUpdatedPoint(pt);
-            jt.out("editlink" + pt.instid, "[edit updated point]");
-            return; }  //click updated link to edit updated point
+            jt.out("editlink" + pt.instid, "[edit updated point]"); }
         editLoadedPoint(pt);
     }
 
