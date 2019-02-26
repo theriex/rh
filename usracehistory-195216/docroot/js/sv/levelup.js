@@ -68,8 +68,9 @@ app.levelup = (function () {
         sa.ks = sa.fields.map((x) => x.pname);
         jt.log("levelup.findHighDifferenceFields:");
         sa.fields.forEach(function (field) {
-            jt.log("    " + field.name + " " + field.value + " " + 
-                   field.count + " " + field.missing + " " + field.diff); });
+            jt.log("    " + field.name + " " + field.value + " count:" + 
+                   field.count + ", missing:" + field.missing + ", diff:" + 
+                   field.diff); });
     }
 
 
