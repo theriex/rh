@@ -1131,7 +1131,8 @@ app.tabular = (function () {
         var html = [],
             name = (currtl && currtl.name) || "",
             counts = {pts:0, pics:0},
-            txt = "No points, ";
+            txt = "No points, ",
+            create = "";
         if(name) {
             txt = name + " has no points, "; }
         if(!currpts.length) {
@@ -1145,10 +1146,12 @@ app.tabular = (function () {
             if(pt.pic) {
                 counts.pics += 1; } });
         if(mcr.editingtimeline) {
+            if(app.user.acc.orgid && app.user.acc.orgid !== "0") {
+                create = ["a", {href:"#newpoint", id:"createpointlink",
+                                onclick:jt.fs("app.dlg.ptedit('create')")},
+                          "Create New DataPoint"]; }
             html.push(["div", {cla:"pointsdispline"},
-                       [["a", {href:"#newpoint", id:"createpointlink",
-                               onclick:jt.fs("app.dlg.ptedit('create')")},
-                         "Create New DataPoint"],
+                       [create,
                         ["span", {id:"ptscountspan"},
                          counts.pts + " points, " + counts.pics + " pics"]]]); }
         return jt.tac2html(html);
