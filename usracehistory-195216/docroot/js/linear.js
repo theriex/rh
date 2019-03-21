@@ -379,7 +379,7 @@ app.linear = (function () {
             my = mouseinfo[1],
             pb = {x: Math.floor(wall.grid.x * (mx / wall.dd.w)),
                   y: Math.floor(wall.grid.y * (my / wall.dd.h))},
-            pt = wall.selpts[(pb.y * wall.grid.x) + pb.x],
+            pt = wall.selpts[(pb.x * wall.grid.y) + pb.y],
             currpt = app.mode.currpt();
         if(currpt) {  //return to current interactive point after
             app.db.unvisitPoint(currpt);
