@@ -1170,7 +1170,7 @@ app.dlg = (function () {
         html = [["div", {id:"dlgtitlediv"}, "Save Progress"],
                 ["div", {cla:"dlgsignindiv"},
                  ["div", {cla:"dlgformline", style:"text-align:center;"},
-                  "If you want to save your progress for this timeline and others, sign in from the menu."]],
+                  "To save your progress for this timeline, sign in from the menu."]],
                 ["div", {id:"dlgbuttondiv"},
                  ["button", {type:"button", id:"signinokbutton",
                              onclick:jt.fs("app.dlg.contnosave()")},
