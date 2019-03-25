@@ -192,14 +192,15 @@ app.mode = (function () {
 
 
     function verifyMenuContent (expand) {
-        //best to make sure one of the default menu items has the longest
-        //name so offsetWidth of the menu contents doesn't vary.
+        //Make sure one of the default menu items has the longest name so
+        //offsetWidth of the menu contents doesn't vary.  Avoiding c:"dis"
+        //to keep the initial guest menu as simple as possible.
         var menu = [{m:"visual",  n:"Interactive&nbsp;Mode"},
                     {m:"refmode", n:"Reference&nbsp;Mode"},
-                    {m:"myacc",   n:"My&nbsp;Account",      c:"dis"},
-                    {m:"newtl",   n:"Create&nbsp;Timeline", c:"dis"},
+                    {m:"myacc",   n:"My&nbsp;Account",      c:"acc"},
                     {m:"signout", n:"Sign&nbsp;Out",        c:"acc"},
                     {m:"signin",  n:"Sign&nbsp;In",         c:"noacc"},
+                    {m:"newtl",   n:"Create&nbsp;Timeline", c:"acc"},
                     {m:"support", n:"Support"},
                     {m:"about",   n:"About"}],
             acc = app.user && app.user.tok,
