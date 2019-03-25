@@ -201,11 +201,13 @@ app.levelup = (function () {
 
 
     function displayCompletionText () {
+        var timing = {delay:2000, duration:1000};
         var words = ["Level " + levinf.lev.num, "Completed"];
         if(levinf.levs.length === levinf.lev.num) {
             words = ["Done!"]; }
+        chart.tdg = chart.vg.append("g").attr("opacity", 1);
         words.forEach(function (word, idx) {
-            chart.vg.append("text")
+            chart.tdg.append("text")
                 .attr("x", chart.tp.xc)
                 .attr("y", Math.round(0.4 * tl.height) + (idx * 60))
                 .attr("text-anchor", "middle")
@@ -213,8 +215,12 @@ app.levelup = (function () {
                 .attr("font-size", 52)
                 .text(word)
                 .attr("opacity", 1)
-                .transition().delay(2000).duration(1000)
+            //this next transition used to work but is now ignored 25mar19
+                .transition().delay(timing.delay).duration(timing.duration)
                 .attr("opacity", 0); });
+        //fade entire group in case individual word fading ignored.
+        chart.tdg.transition().delay(timing.delay).duration(timing.duration)
+            .attr("opacity", 0);
     }
 
 
@@ -229,8 +235,9 @@ app.levelup = (function () {
             wdel = 1000,
             wft = 1000,
             tv = 3000;
+        chart.krcg = chart.vg.append("g").attr("opacity", 1);
         words.forEach(function (word, idx) {
-            chart.vg.append("text")
+            chart.krcg.append("text")
                 .attr("x", word.x)
                 .attr("y", word.y)
                 .attr("text-anchor", word.ta)
@@ -244,7 +251,11 @@ app.levelup = (function () {
                 .attr("x", word.x2)
                 .attr("opacity", 0); 
         });
-        return idel + (wdel * words.length) + wft;
+        var total = idel + (wdel * words.length) + wft;
+        //fade entire group in case individual word fading ignored.
+        chart.krcg.transition().delay(total).duration(wft)
+            .attr("opacity", 0);
+        return total;
     }
 
 
