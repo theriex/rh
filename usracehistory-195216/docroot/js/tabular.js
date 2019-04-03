@@ -278,18 +278,26 @@ app.tabular = (function () {
 
 
     function getJSONDataURI () {
+        //provide the full url for each pic to allow for easier retrieval
+        currpts.forEach(function (pt) {
+            var base = window.location.protocol + "//" + window.location.host
+            pt.picurl = "";
+            if(pt.pic) {
+                pt.picurl = base + "/ptpic?pointid=" + pt.pic; } });
         var txt = JSON.stringify(currpts);
         return "data:text/plain;charset=utf-8," + encodeURIComponent(txt);
     }
 
 
     function selectDownloadOption (idx) {
-        var dlopt = dnld.opts[idx];
+        var dlopt = dnld.opts[idx], filebase = "pastkey";  //all lower like slug
+        if(currtl && currtl.slug) {
+            filebase = currtl.slug; }
         switch(dlopt.format) {
         case "html":
             jt.out("downloadactiondiv", jt.tac2html(
                 ["a", {id:"downloadactionlink", href:getHTMLDataURI(),
-                       download:"rh.html",
+                       download:filebase + ".html",
                        onclick:jt.fsd("app.dlg.close()")},
                  [["img", {src: "img/download.png"}],
                   ["span", {id:"downloadactiontextspan"}, 
@@ -306,7 +314,7 @@ app.tabular = (function () {
         case "tsv":
             jt.out("downloadactiondiv", jt.tac2html(
                 ["a", {id:"downloadactionlink", href:getTSVDataURI(),
-                       download:"rh.tsv",
+                       download:filebase + ".tsv",
                        onclick:jt.fsd("app.dlg.close()")},
                  [["img", {src: "img/download.png"}],
                   ["span", {id:"downloadactiontextspan"}, 
@@ -315,7 +323,7 @@ app.tabular = (function () {
         case "txt":
             jt.out("downloadactiondiv", jt.tac2html(
                 ["a", {id:"downloadactionlink", href:getTXTDataURI(),
-                       download:"rh.txt",
+                       download:filebase + ".txt",
                        onclick:jt.fsd("app.dlg.close()")},
                  [["img", {src: "img/download.png"}],
                   ["span", {id:"downloadactiontextspan"}, 
@@ -324,7 +332,7 @@ app.tabular = (function () {
         case "json":
             jt.out("downloadactiondiv", jt.tac2html(
                 ["a", {id:"downloadactionlink", href:getJSONDataURI(),
-                       download:"rh.json",
+                       download:filebase + ".json",
                        onclick:jt.fsd("app.dlg.close()")},
                  [["img", {src: "img/download.png"}],
                   ["span", {id:"downloadactiontextspan"}, 
