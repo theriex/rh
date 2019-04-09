@@ -52,7 +52,8 @@ def point_summary_dict(pt):
          "created":pt.created, "modified":pt.modified, "date":pt.date, 
          "text":pt.text, "refs":pt.refs, "qtype":pt.qtype, "groups":pt.groups, 
          "regions":pt.regions, "categories":pt.categories, "tags":pt.tags,
-         "source":pt.source, "srclang":pt.srclang}
+         "source":pt.source, "srclang":pt.srclang, "codes":pt.codes or ""}
+    # codes included for mapping of points on import.  Normally empty.
     return d
 
 
@@ -132,6 +133,7 @@ def update_or_create_point(handler, acc, params):
     pt.regions = params["regions"] or pt.regions or ""
     pt.categories = params["categories"] or pt.categories or ""
     pt.tags = params["tags"] or pt.tags or ""
+    pt.codes = params["codes"] or pt.codes or ""
     pt.source = params["source"] or pt.source or ""
     pt.srclang = params["srclang"] or pt.srclang or "en-US"
     pt.stats = params["stats"] or ""
@@ -197,9 +199,9 @@ class UpdatePoint(webapp2.RequestHandler):
             return
         params = appuser.read_params(self, ["ptid", "date", "text", "refs",
                                             "qtype", "groups", "regions", 
-                                            "categories", "tags", "orgid", 
-                                            "source", "srclang", "stats",
-                                            "translations", "pic"]);
+                                            "categories", "tags", "codes",
+                                            "orgid", "source", "srclang", 
+                                            "stats", "translations", "pic"]);
         # need to return proper content to form submission iframe regardless
         self.response.headers['Content-Type'] = 'text/html;charset=UTF-8'
         try:
