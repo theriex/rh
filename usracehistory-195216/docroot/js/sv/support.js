@@ -13,7 +13,7 @@ app.support = (function () {
         share:{title:"Share", content:[
             ["div", {id:"tlnamediv", cla:"suppheadingdiv"}],
             ["div", {id:"socsharediv"}],
-            ["p", "Questions or comments? Issues are tracked on <span id=\"supghsp\">github</span>, or you can <span id=\"supiemsp\">email us</span>."],
+            ["p", "Questions or comments? Issues are tracked on <span id=\"supghsp\">github</span>, or you can <span id=\"supiemsp\">email us</span>. You are free to download data or embed any timeline using an iframe."],
             ["div", {id:"donatediv"}]],
                repls:[
                    {id:"tlnamediv", func:"tlnameHTML"},
