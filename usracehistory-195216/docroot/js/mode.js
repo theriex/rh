@@ -197,11 +197,11 @@ app.mode = (function () {
         //to keep the initial guest menu as simple as possible.
         var menu = [{m:"visual",  n:"Interactive&nbsp;Mode"},
                     {m:"refmode", n:"Reference&nbsp;Mode"},
+                    {m:"share",   n:"Share"},
                     {m:"myacc",   n:"My&nbsp;Account",      c:"acc"},
                     {m:"signout", n:"Sign&nbsp;Out",        c:"acc"},
                     {m:"signin",  n:"Sign&nbsp;In",         c:"noacc"},
                     {m:"newtl",   n:"Create&nbsp;Timeline", c:"acc"},
-                    {m:"support", n:"Support"},
                     {m:"about",   n:"About"}],
             acc = app.user && app.user.tok,
             html = [], item = "";
@@ -244,7 +244,7 @@ app.mode = (function () {
             switch(select) {  //next action
             case "visual": changeMode("interactive"); break;
             case "refmode": changeMode("reference"); break;
-            case "support": app.support.display(ms.tl, "support"); break; 
+            case "share": app.support.display(ms.tl, "share"); break; 
             case "about": app.support.display(ms.tl, "about"); break; 
             case "signin": app.dlg.signin(); break;
             case "myacc": app.dlg.myacc(); break;

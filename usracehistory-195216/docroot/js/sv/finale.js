@@ -156,7 +156,7 @@ app.finale = (function () {
             return toggleHonorScrolling("stop"); }
         hr.updcount += 1;
         if(hr.updcount > 1) {
-            d3.select("#finctitle").text("* Honor Roll *"); }
+            d3.select("#finctitle").text("Honor Roll"); }
         jt.log("updateHonorRoll updcount: " + hr.updcount);
         hrto = setTimeout(updateHonorRoll, hr.trt);
     }
@@ -212,103 +212,6 @@ app.finale = (function () {
     }
 
 
-    function openDonationPage () {
-        window.open("docs/interimdonation.html");
-    }
-
-
-    function appendDonateButton () {
-        chart.cg.append("ellipse")
-            .attr("cx", tda.cx + 71)
-            .attr("cy", tda.y + 61)
-            .attr("rx", 44)
-            .attr("ry", 20)
-            .attr("stroke", "none")
-            .attr("fill", "5656b7")
-            .style("opacity", 0.0)
-            .transition().delay(4000).duration(1800)
-            .style("opacity", 1.0);
-        chart.cg.append("ellipse")
-            .attr("cx", tda.cx + 70)
-            .attr("cy", tda.y + 60)
-            .attr("rx", 40)
-            .attr("ry", 16)
-            .attr("stroke", "none")
-            .attr("fill", "#ffff75")  //yellow
-            .style("opacity", 0.0)
-            .transition().delay(4000).duration(1800)
-            .style("opacity", 1.0);
-        chart.cg.append("text")
-            .attr("id", "findontxt")
-            .attr("text-anchor", "middle")
-            .attr("x", tda.cx + 70)
-            .attr("y", tda.y + 65)
-            .attr("font-size", 16)
-            .attr("stroke", "none")
-            .attr("fill", "#444")
-            .text("Donate")
-            .on("click", openDonationPage)
-            .style("opacity", 0.0)
-            .transition().delay(4000).duration(1800)
-            .style("opacity", 1.0);
-    }
-
-
-    function copyTimelineURLToClipboard () {
-        var ta = jt.byId("urlta");
-        try {
-            ta.focus();
-            ta.select();
-            if(document.execCommand("copy")) {
-                chart.cg.cbtxt.text("Copied"); }
-            else {
-                chart.cg.cbtxt.text("---"); }
-        } catch (e) {
-            chart.cg.cbtxt.text("***");
-            jt.log("copyTimelineURLToClipboard " + e);
-        }
-        setTimeout(function () {
-            chart.cg.cbtxt.text("Copy Link"); }, 1000);
-    }
-
-
-    function appendCopyURLButton () {
-        chart.cg.append("ellipse")
-            .attr("cx", tda.cx + 87)
-            .attr("cy", tda.y - 17)
-            .attr("rx", 48)
-            .attr("ry", 16)
-            .attr("stroke", "none")
-            .attr("fill", "5656b7")
-            .style("opacity", 0.0)
-            .transition().delay(2000).duration(1800)
-            .style("opacity", 1.0);
-        chart.cg.append("ellipse")
-            .attr("cx", tda.cx + 86)
-            .attr("cy", tda.y - 18)
-            .attr("rx", 44)
-            .attr("ry", 12)
-            .attr("stroke", "none")
-            .attr("fill", "#ffff75")  //yellow
-            .style("opacity", 0.0)
-            .transition().delay(2000).duration(1800)
-            .style("opacity", 1.0);
-        chart.cg.cbtxt = chart.cg.append("text")
-            .attr("id", "findontxt")
-            .attr("text-anchor", "middle")
-            .attr("x", tda.cx + 86)
-            .attr("y", tda.y - 13)
-            .attr("font-size", 14)
-            .attr("stroke", "none")
-            .attr("fill", "#444")
-            .text("Copy Link")
-            .on("click", copyTimelineURLToClipboard)
-            .style("opacity", 0.0);
-        chart.cg.cbtxt.transition().delay(2000).duration(1800)
-            .style("opacity", 1.0);
-    }
-
-
     function tdaInit() {
         tda.x = chart.cx - 120;
         tda.y = 256;  //y offset for share text
@@ -328,17 +231,6 @@ app.finale = (function () {
     }
 
 
-    function nextTimeline () {
-        //eventually need a list of recommended timelines defined in app to
-        //drive both main page suggestions and this suggestion.
-        var url = app.baseurl + "/timeline/default";  //U.S. Race History
-        if(window.location.href.indexOf("/default") >= 0) {
-            url = app.baseurl; }  //main page
-        d3.event.preventDefault();
-        window.open(url);
-    }
-
-
     function appendLink (field, dim, hash, func, text) {
         chart.cg[field] = chart.cg.append("foreignObject")
             .attr("x", dim.x)
@@ -355,53 +247,40 @@ app.finale = (function () {
     }
 
 
+    function appendDiv (foid, dim, divid) {
+        chart.cg[foid] = chart.cg.append("foreignObject")
+            .attr("x", dim.x)
+            .attr("y", dim.y)
+            .attr("width", 240)
+            .attr("height", dim.h)
+            .style("opacity", 0.0);
+        chart.cg[foid].append("xhtml:div")
+            .attr("id", divid);
+        chart.cg[foid].transition().delay(1000).duration(4000)
+            .style("opacity", 1.0);
+    }
+
+
     function appendClosureText () {
         tdaInit();
         chart.cg = d3.select("#svgf").append("g");
-        appendLink("lfo", {x:tda.x, y:tda.y - 66, h:24}, "#compcert",
-                   showCompletionCertificate, "Show Completion Certificate");
-        appendLink("lf2", {x:tda.x, y:tda.y - 42, h:24}, "nextTimeline",
-                   nextTimeline, "Next Timeline");
-        chart.cg.append("text")
-            .attr("class", "finexplore")
+        chart.cg.sharetxt = chart.cg.append("text")
+            .attr("id", "sharetxt")
+            .attr("class", "finhrn")
             .attr("text-anchor", "left")
-            .attr("x", tda.x)
-            .attr("y", tda.y)
-            .attr("font-size", 18)
-            .text("Share this timeline!")
+            .attr("x", tda.x + 20)
+            .attr("y", tda.y - 42)
+            .text("Share this timeline")
+            .attr("font-size", 20)
+            .attr("stroke", "none")
+            .attr("fill", "#000")
             .style("opacity", 0.0)
             .transition().delay(1000).duration(4000)
             .style("opacity", 1.0);
-        chart.cg.fo = chart.cg.append("foreignObject")
-            .attr("x", tda.x)
-            .attr("y", tda.y + 6)
-            .attr("width", 240)
-            .attr("height", 24)
-            .style("opacity", 0.0);
-        chart.cg.ta = chart.cg.fo.append("xhtml:textarea")
-            .attr("wrap", "off")  //"soft" + render as single line
-            .attr("id", "urlta")
-            .style("width", "240px")
-            .style("height", "24px")
-            .style("padding", "3px")
-            .style("color", "#666")
-            .text(app.db.timelineURL(app.db.displayContext().lastTL));
-        chart.cg.fo.transition().delay(1000).duration(4000)
-            .style("opacity", 1.0);
-        appendCopyURLButton();
-        chart.cg.append("text")
-            .attr("class", "findonate")
-            .attr("text-anchor", "left")
-            .attr("x", tda.x)
-            .attr("y", tda.y + 60)
-            .attr("font-size", 18)
-            .attr("stroke", "none")
-            .attr("fill", "#666")
-            .text("Support this site!")
-            .style("opacity", 0.0)
-            .transition().delay(3000).duration(4000)
-            .style("opacity", 1.0);
-        appendDonateButton();
+        appendDiv("foshare", {x:tda.x, y:tda.y - 42, h:60}, "socsharediv");
+        app.support.socshareHTML("socsharediv");
+        appendLink("lfo", {x:tda.x, y:tda.y + 20, h:24}, "#compcert",
+                   showCompletionCertificate, "Show Completion Certificate");
     }
 
 
