@@ -18,6 +18,17 @@ import pickle
 # and may filter other fields not directly necessary for timeline display.
 # GAE has a 1mb total storage limit for any field or object instance.
 #
+# Featuring a timeline for recommendation:
+#     Unlisted: Don't display in listings or recommend.  Possibly in progress.
+#     Listed: Ok to display in listings and recommend.
+#     -mm-dd: Feature annually on and around this date.
+#     -mm-Dn-Wn: Feature annually on the given day and week of the month.
+#     Promoted: Only settable from the db.  Prioritizes specific timelines.
+# Here's a few examples of annual observations:
+#    -01-D1-W3  Third Monday of January  (Martin Luther King, Jr. Day)
+#    -11-D4-W4  Fourth Thursday in November  (U.S. Thanksgiving)
+#    -03-31     March 31  (Cesar Chavez day)
+#
 # A timeline is language specific.  Translated timelines have translated
 # names and are separate instances.  Timelines can be created by anyone, but
 # only timelines created by a Contributor have an associated Organization
@@ -41,6 +52,7 @@ class Timeline(db.Model):
     slug = db.StringProperty()     # unique permalink label, Contributors only
     title = db.StringProperty()    # title for start dialog, not unique
     subtitle = db.StringProperty(indexed=False)  # text for start dialog
+    featured = db.StringProperty() # See class comment on featuring
     lang = db.StringProperty(indexed=False)  # e.g. en-US, en-US-x-grade etc
     comment = db.TextProperty()    # text at startup (see db.js parseComment)
     about = db.TextProperty()      # html to include in about (see support.js)
@@ -146,6 +158,7 @@ def update_or_create_timeline(handler, acc, params):
     timeline.slug = params["slug"] or ""
     timeline.title = params["title"] or ""
     timeline.subtitle = params["subtitle"] or ""
+    timeline.featured = params["featured"] or ""
     timeline.lang = params["lang"] or "en-US"
     timeline.comment = params["comment"] or ""
     timeline.about = params["about"] or ""
@@ -231,7 +244,8 @@ class UpdateTimeline(webapp2.RequestHandler):
             return
         params = appuser.read_params(self, ["instid", "name", "ctype", "cids", 
                                             "svs", "slug", "title", "subtitle",
-                                            "lang", "comment", "about"]);
+                                            "featured", "lang", "comment", 
+                                            "about"]);
         timeline = update_or_create_timeline(self, acc, params)
         if timeline:
             updated = update_timeline_list(acc.built, timeline)

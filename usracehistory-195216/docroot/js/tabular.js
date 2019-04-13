@@ -1,32 +1,33 @@
-/*jslint browser, multivar, white, fudge, for */
+/*jslint browser, white, fudge, for */
 /*global app, window, jt, d3 */
 
 app.tabular = (function () {
     "use strict";
 
     var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
-                  "Sep", "Oct", "Nov", "Dec"],
-        dnld = {srchst:"", opts:[{format:"html", name:"Document (HTML)"},
+                  "Sep", "Oct", "Nov", "Dec"];
+    var dnld = {srchst:"", opts:[{format:"html", name:"Document (HTML)"},
                                  {format:"pdf", name:"Document (PDF)"},
                                  {format:"tsv", name:"Spreadsheet (TSV)"},
                                  {format:"txt", name:"Slides Outline (TXT)"},
                                  {format:"json", name:"JavaScript (JSON)"},
-                                 {format:"none", name:"Nevermind"}]},
-        tlflds = {},
-        currtl = null,
-        dbtl = null,
-        ptflds = {},
-        tlsetflds = null,
-        tlsetfldopts = [],
-        mode = "refdisp",  //tledit
-        currpts = null,
-        edcmds = ["new", "copy", "cpsrc"],
-        wsv = {},  //working set values (keywords and year range from points)
-        mcr = {};  //match criteria for points to display
+                                 {format:"none", name:"Nevermind"}]};
+    var tlflds = {};
+    var currtl = null;
+    var dbtl = null;
+    var ptflds = {};
+    var pf = null;
+    var tlsetflds = null;
+    var tlsetfldopts = [];
+    var mode = "refdisp";  //tledit
+    var currpts = null;
+    var edcmds = ["new", "copy", "cpsrc"];
+    var wsv = {};  //working set values (keywords and year range from points)
+    var mcr = {};  //match criteria for points to display
 
 
     function dateSpan (dobj, prefix) {
-        var sc, pd;
+        var sc; var pd;
         if(!dobj || !dobj.year) {
             return ""; }
         prefix = prefix || "";
@@ -79,7 +80,7 @@ app.tabular = (function () {
 
 
     function pointButtonsTAC (pt, deco) {
-        var buttons = [], divs = [];
+        var buttons = []; var divs = [];
         //refs
         if(pt.refs && pt.refs.length) {
             buttons.push([" &nbsp;",
@@ -113,7 +114,7 @@ app.tabular = (function () {
 
 
     function pointCheckboxTAC(pt, deco) {
-        var html = "", si;
+        var html = ""; var si;
         if(mode === "tledit" && deco !== "solohtml") {
             if(pt.sv) {
                 html = ["div", {cla:"ptseldiv"}, 
@@ -141,8 +142,8 @@ app.tabular = (function () {
 
 
     function showPointDetails (event, ptid) {
-        var pt = app.db.pt4id(ptid, currpts),
-            html = [], qt, pdiv, pos;
+        var pt = app.db.pt4id(ptid, currpts);
+        var html = []; var qt; var pdiv; var pos;
         if(!pt) {
             jt.log("showPointDetails pt " + ptid + " not found");
             return; }
@@ -175,7 +176,7 @@ app.tabular = (function () {
 
 
     function pointCodesTAC (pt) {
-        var html = [], qt = pt.qtype || "C";
+        var html = []; var qt = pt.qtype || "C";
         if(pt.tagCodes && pt.tagCodes.indexOf("r") >= 0) {
             html.push(" ");
             html.push(["a", {href:"#Remember", title:"Remembered",
@@ -219,6 +220,11 @@ app.tabular = (function () {
             trowdiv.scrollIntoView(); }
     }
 
+
+
+    ////////////////////////////////////////
+    // Data Download 
+    ////////////////////////////////////////
 
     function getHTMLDataURI () {
         var txt = "<!doctype html>\n<html>\n<head>\n" +
@@ -280,7 +286,7 @@ app.tabular = (function () {
     function getJSONDataURI () {
         //provide the full url for each pic to allow for easier retrieval
         currpts.forEach(function (pt) {
-            var base = window.location.protocol + "//" + window.location.host
+            var base = window.location.protocol + "//" + window.location.host;
             pt.picurl = "";
             if(pt.pic) {
                 pt.picurl = base + "/ptpic?pointid=" + pt.pic; } });
@@ -290,7 +296,7 @@ app.tabular = (function () {
 
 
     function selectDownloadOption (idx) {
-        var dlopt = dnld.opts[idx], filebase = "pastkey";  //all lower like slug
+        var dlopt = dnld.opts[idx]; var filebase = "pastkey";
         if(currtl && currtl.slug) {
             filebase = currtl.slug; }
         switch(dlopt.format) {
@@ -368,6 +374,161 @@ app.tabular = (function () {
     }
 
 
+    ////////////////////////////////////////
+    // Publishing and Featuring 
+    ////////////////////////////////////////
+
+    function initPubFeatDef () {
+        var pubopts = ["Unlisted", "Listed", "Obs M/D", "Obs M/W", "Promoted"];
+        var mpre = {Jan:"-01", Feb:"-02", Mar:"-03", Apr:"-04",
+                    May:"-05", Jun:"-06", Jul:"-07", Aug:"-08",
+                    Sep:"-09", Oct:"-10", Nov:"-11", Dec:"-12"};
+        var wpre = {"1st":"-W1", "2nd":"-W2", "3rd":"-W3", "4th":"-W4"};
+        var dpre = {Sun:"-D0", Mon:"-D1", Tue:"-D2", Wed:"-D3",
+                    Thu:"-D4", Fri:"-D5", Sat:"-D6"};
+        pf = {
+            keys: ["featype", "obmonth", "obdate", "obon", "obweek", "obday"],
+            vizval:function (key) {
+                var sel = jt.byId(key + "sel");
+                if(sel.style.display !== "none") {
+                    return sel.options[sel.selectedIndex].value; }
+                return ""; },
+            featype:{
+                opts:pubopts,
+                selmf:function (opt, tl) {
+                    var ft = tl.featured || "";
+                    switch(opt) {
+                        case "Obs M/D": return ft.match(/\-\d\d\-\d\d?/);
+                        case "Obs M/W": return ft.indexOf("-D") >= 0;
+                        default: return ft === opt; } },
+                vizf:function () {
+                    return true; }},
+            obmonth:{
+                opts:Object.keys(mpre),
+                selmf:function (opt, tl) {
+                    var cv = tl.featured;
+                    if(cv && cv.indexOf(mpre[opt]) >= 0) {
+                        return true; } },
+                vizf:function () {
+                    return pf.vizval("featype").indexOf("M/") >= 0; }},
+            obdate:{
+                type:"daynuminput",
+                vizf:function () {
+                    return pf.vizval("featype") === "Obs M/D"; }},
+            obon:{
+                type:"texton",
+                vizf:function () {
+                    return pf.vizval("featype") === "Obs M/W"; }},
+            obweek:{
+                opts:Object.keys(wpre),
+                selmf:function (opt, tl) {
+                    var cv = tl.featured;
+                    if(cv && cv.indexOf(wpre[opt]) >= 0) {
+                        return true; } },
+                vizf:function () {
+                    return pf.vizval("featype") === "Obs M/W"; }},
+            obday:{
+                opts:Object.keys(dpre),
+                selmf:function (opt, tl) {
+                    var cv = tl.featured;
+                    if(cv && cv.indexOf(dpre[opt]) >= 0) {
+                        return true; } },
+                vizf:function () {
+                    return pf.vizval("featype") === "Obs M/W"; }}};
+        pf.mpre = mpre;
+        pf.wpre = wpre; 
+        pf.dpre = dpre;
+        return pf;
+    }
+    
+
+    function makeFeaturedSel (key) {
+        var html = [];
+        pf[key].opts.forEach(function (opt, idx) {
+            var optattrs = {id:key + "opt" + idx, value:opt};
+            if(pf[key].selmf(opt, currtl)) {
+                optattrs.selected = "selected"; }
+            html.push(["option", optattrs, opt]); });
+        var selattrs = {id:key + "sel", cla:"pubobsel", style:"display:none",
+                        onchange:jt.fs("app.tabular.featchg()")};
+        return jt.tac2html(["select", selattrs, html]);
+    }
+
+
+    function featuredSettingsHTML () {
+        pf = pf || initPubFeatDef();
+        var html = [];
+        pf.keys.forEach(function (key) {
+            if(pf[key].type === "daynuminput") {
+                html.push(["input", {id:key + "in", cla:"daynumin", value:1, 
+                                     min:1, max:31, style:"display:none"}]); }
+            else if(pf[key].type === "texton") {
+                html.push(["em", {id:key + "em", style:"display:none"}, 
+                           "on"]); }
+            else if(pf[key].opts) {
+                html.push(makeFeaturedSel(key)); } });
+        return jt.tac2html(html);
+    }
+
+
+    function setFeaturedInputsFromTimeline (tl) {
+        pf = pf || initPubFeatDef();
+        var fv = tl.featured || "";
+        pf.keys.forEach(function (key) {
+            if(pf[key].type === "daynuminput") {
+                var val = fv.match(/\-\d\d\-(\d\d?)/);
+                if(val) {
+                    val = Number(val[1]); }
+                else {
+                    val = 1; }
+                jt.byId(key + "in").value = val; }
+            else if(pf[key].opts) {
+                pf[key].opts.forEach(function (opt, idx) {
+                    var optelem = jt.byId(key + "opt" + idx);
+                    var selval = false;
+                    if(pf[key].selmf(opt, tl)) {
+                        selval = true; }
+                    //jt.log("setFeatured... " + opt + " " + selval);
+                    optelem.selected = selval; }); } });
+        var promopt = jt.byId("featypeopt4");  //Promoted
+        if(tl.svs) {
+            promopt.disabled = false; }
+        else {
+            promopt.disabled = true; }
+        app.tabular.featchg();
+    }
+
+
+    function featuredSelChange () {
+        pf.keys.forEach(function (key) {
+            var sel = jt.byId(key + "sel");
+            if(!sel) {
+                sel = jt.byId(key + "in"); }
+            if(!sel) {
+                sel = jt.byId(key + "em"); }
+            if(sel) {
+                if(pf[key].vizf()) {
+                    sel.style.display = "initial"; }
+                else {
+                    sel.style.display = "none"; } } });
+    }
+
+
+    function getFeaturedValueFromInputs () {
+        var ft = pf.vizval("featype");
+        switch(ft) {
+        case "Obs M/D": return pf.mpre[pf.vizval("obmonth")] + "-" +
+                jt.byId("obdatein").value;
+        case "Obs M/W": return pf.mpre[pf.vizval("obmonth")] +
+                pf.wpre[pf.vizval("obweek")] + pf.dpre[pf.vizval("obday")];
+        default: return ft; }
+    }
+
+
+    ////////////////////////////////////////
+    // Timeline Editing
+    ////////////////////////////////////////
+
     function makeSelect (domid, onchangestr, options) {
         var spec = {id:domid, chgstr:onchangestr, opts:options};
         return {
@@ -385,7 +546,7 @@ app.tabular = (function () {
             setValue: function (val) {
                 jt.byId(spec.id).value = val; },
             getValue: function () {
-                var val = "", sel = jt.byId(spec.id);
+                var val = ""; var sel = jt.byId(spec.id);
                 if(sel) {  //display might not be ready yet
                     val = sel.options[sel.selectedIndex].value; }
                 return val; }};
@@ -393,7 +554,7 @@ app.tabular = (function () {
 
 
     function pointTotals (tl) {
-        var sum = {pts:0, words:0, minutes:0}, ids;
+        var sum = {pts:0, words:0, minutes:0}; var ids;
         if(tl.cids && tl.cids.length) {
             //as points are added or removed, only cids field is updated
             ids = tl.cids.split(",");
@@ -411,7 +572,7 @@ app.tabular = (function () {
 
 
     function pointsTotalSummary (tl) {
-        var ts = {pts:0, words:0, minutes:0}, tls = [];
+        var ts = {pts:0, words:0, minutes:0}; var tls = [];
         if(tl.ctype === "Timelines" && tl.cids) {
             tl.cids.split(",").forEach(function (tlid) {
                 tls.push(app.user.tls[tlid]); }); }
@@ -437,6 +598,7 @@ app.tabular = (function () {
             {field:"slug", type:"text"},
             {field:"title", type:"text"},
             {field:"subtitle", type:"text"},
+            {field:"featured", type:"ui"},
             {field:"lang", type:"text"},
             {field:"comment", type:"text"},
             {field:"about", type:"text"},
@@ -476,7 +638,7 @@ app.tabular = (function () {
 
 
     function updatePointWorkingSetDisplay () {
-        var yrin, keyiconsrc = "keyicon.png";
+        var yrin; var keyiconsrc = "keyicon.png";
         yrin = jt.byId("yearstartin");
         if(yrin) {
             yrin.setAttribute("min", wsv.yr.min);
@@ -513,7 +675,7 @@ app.tabular = (function () {
 
 
     function verifyDisplayElements () {
-        var html, ps;
+        var html; var ps;
         if(jt.byId("pointsdispdiv")) {  //already set up
             return; }
         initTimelineSettingsFields();
@@ -574,7 +736,7 @@ app.tabular = (function () {
 
 
     function timelineSelectHTML () {
-        var btls = [], selopts = [], dcon;
+        var btls = []; var selopts = []; var dcon;
         app.user.acc.built.forEach(function (tl) {
             btls.push(tl); });
         btls.sort(function (a, b) {
@@ -660,7 +822,11 @@ app.tabular = (function () {
         var html = [];
         tlsetflds.forEach(function (sf) {
             var inobj;
-            if(isEditSettingsField(sf)) {
+            if(sf.field === "featured") {
+                html.push(["tr", {id:"tlsetfeaturedtr"},
+                           ["td", {colspan:2},
+                            featuredSettingsHTML()]]); }
+            else if(isEditSettingsField(sf)) {
                 inobj = {type:sf.type, value:sf.getf(currtl),
                          id:sf.field + "in", name:sf.field + "in",
                          cla:"av" + sf.type + "in"};
@@ -691,9 +857,9 @@ app.tabular = (function () {
 
 
     function toggleInfoSettings () {
-        var setdiv = jt.byId("tlsettingsdispdiv"),
-            infodiv = jt.byId("tlinfodispdiv"),
-            img = jt.byId("setinfoimg");
+        var setdiv = jt.byId("tlsettingsdispdiv");
+        var infodiv = jt.byId("tlinfodispdiv");
+        var img = jt.byId("setinfoimg");
         if(setdiv.style.display === "block") {
             infodiv.style.height = setdiv.offsetHeight + "px";
             img.src = "img/infolit.png";
@@ -745,12 +911,13 @@ app.tabular = (function () {
                  timelineSettingsHTML()]];
         jt.out("tlctxdiv", jt.tac2html(html));
         app.tabular.tledchg("namechg");  //init dependent fields for name sel
+        app.tabular.featchg();  //hide irrelevant publishing and obs fields
         app.tabular.ptdisp();
     }
 
 
     function timelineSettings (spec) {
-        var div, st = {};
+        var div; var st = {};
         div = jt.byId("etlsetdiv");
         if(!div) {  //not editing timeline, probably editing point directly
             return; }
@@ -776,8 +943,8 @@ app.tabular = (function () {
 
 
     function setDisplayInputFieldsFromTimeline (tl) {
-        var ctype = tl.ctype || "Points:6",
-            elems = ctype.split(":");
+        var ctype = tl.ctype || "Points:6";
+        var elems = ctype.split(":");
         if(elems[0] === "Timelines") {
             tlflds.seltype.setValue("Timelines"); }
         else {
@@ -789,6 +956,7 @@ app.tabular = (function () {
                 jt.byId("tlrndmaxin").value = elems[2] || 18; }
             else {
                 tlflds.selseq.setValue("Sequential"); } }
+        setFeaturedInputsFromTimeline(tl);
         tlsetflds.forEach(function (sf) {
             if(isEditSettingsField(sf)) {
                 jt.byId(sf.field + "in").value = sf.getf(currtl); }
@@ -880,7 +1048,7 @@ app.tabular = (function () {
 
 
     function timelineNameChangeReady () {
-        var tlid, newtl, dcon;
+        var tlid; var newtl; var dcon;
         tlflds.name = tlflds.selname.getValue();
         if(tlflds.name === "none") {
             currtl = null;
@@ -939,6 +1107,7 @@ app.tabular = (function () {
             currtl.slug = jt.byId("slugin").value; }
         currtl.title = jt.byId("titlein").value;
         currtl.subtitle = jt.byId("subtitlein").value;
+        currtl.featured = getFeaturedValueFromInputs();
         currtl.comment = jt.byId("commentin").value;
         currtl.about = jt.byId("aboutin").value;
         currtl.ctype = tlflds.seltype.getValue();
@@ -999,7 +1168,7 @@ app.tabular = (function () {
 
 
     function isMatchingPoint (pt) {
-        var srchtxt, haveReqKeys = true;
+        var srchtxt; var haveReqKeys = true;
         if(mcr.orgid && pt.orgid !== mcr.orgid) {
             return false; }
         if((mcr.ids || mcr.editingtimeline) && 
@@ -1039,14 +1208,15 @@ app.tabular = (function () {
 
 
     function updateTimelinesDisplay () {
-        var tls = [], accflds = ["remtls", "built", "completed"], html = [];
+        var tls = []; var accflds = ["remtls", "built", "completed"]; 
+        var html = [];
         accflds.forEach(function (fld) {
             app.user.acc[fld].forEach(function (tl) {
                 if(tl.tlid !== currtl.instid) {
                     tls.push({tlid:tl.tlid, name:tl.name}); } }); });
         tls.sort(function (a, b) {
-            var aidx = currtl.cids.indexOf(a.tlid),
-                bidx = currtl.cids.indexOf(b.tlid);
+            var aidx = currtl.cids.indexOf(a.tlid);
+            var bidx = currtl.cids.indexOf(b.tlid);
             if(aidx >= 0 && bidx < 0) { return -1; }
             if(aidx < 0 && bidx >= 0) { return 1; }
             if(aidx < bidx) { return -1; }
@@ -1106,7 +1276,7 @@ app.tabular = (function () {
 
     function cacheSuppVizPoints () {
         app.modules.forEach(function (md) {
-            var sv, pts;
+            var sv; var pts;
             if(md.type === "sv") {
                 sv = app[md.name];
                 if(sv.datapoints) {
@@ -1136,11 +1306,11 @@ app.tabular = (function () {
 
 
     function pointsDispHeaderHTML (currpts) {
-        var html = [],
-            name = (currtl && currtl.name) || "",
-            counts = {pts:0, pics:0},
-            txt = "No points, ",
-            create = "";
+        var html = [];
+        var name = (currtl && currtl.name) || "";
+        var counts = {pts:0, pics:0};
+        var txt = "No points, ";
+        var create = "";
         if(name) {
             txt = name + " has no points, "; }
         if(!currpts.length) {
@@ -1284,7 +1454,7 @@ app.tabular = (function () {
 
 
     function toggleKeySelDisp (event) {
-        var html = [], pdiv, pos;
+        var html = []; var pdiv; var pos;
         pdiv = jt.byId("popupdiv");
         if(pdiv.style.visibility === "visible") {
             pdiv.style.visibility = "hidden";
@@ -1295,9 +1465,9 @@ app.tabular = (function () {
             var tac = [];
             if(wsv[field]) {
                 Object.keys(wsv[field]).forEach(function (key, idx) {
-                    var inid = "cb" + field + idx,
-                        chk = mcr[field] && mcr[field].csvcontains(key),
-                        cnt = wsv[field][key];
+                    var inid = "cb" + field + idx;
+                    var chk = mcr[field] && mcr[field].csvcontains(key);
+                    var cnt = wsv[field][key];
                     tac.push(["div", {cla:"keycbdiv"},
                               [["input", {type:"checkbox", id:inid,
                                           value:key, checked:jt.toru(chk),
@@ -1352,6 +1522,7 @@ app.tabular = (function () {
         fetchorg: function (cbf) { fetchorg(cbf); },
         ptdet: function (event, ptid) { showPointDetails(event, ptid); },
         keysel: function (event) { toggleKeySelDisp(event); },
-        keychk: function (field, idx) { toggleKeyword(field, idx); }
+        keychk: function (field, idx) { toggleKeyword(field, idx); },
+        featchg: function () { featuredSelChange(); }
     };
 }());

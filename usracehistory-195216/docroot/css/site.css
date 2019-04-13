@@ -259,6 +259,10 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 .svlistdescdiv { padding-left:10px; }
 .svlistdiv { padding:5px 0px; }
 
+.pubobsel option { padding:0px 0px; }
+.daynumin { width:2em; }
+#obonem { font-size:small; margin:0px 3px 0px 1px; }
+
 /* -------------------- */
 /* dlg */
 
