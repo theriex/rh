@@ -7,3 +7,4 @@ build/node_modules
 build/fetchedlocptids.csv
 build/fetchedpubptids.csv
 usracehistory-195216/docroot/docs/locpts.json
+usracehistory-195216/docroot/docs/tldev.json

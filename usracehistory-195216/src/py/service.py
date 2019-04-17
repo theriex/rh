@@ -8,6 +8,7 @@ import tlcomp
 import daycount
 import datetime
 import json
+from google.appengine.api import urlfetch
 
 class AppService(db.Model):
     name = db.StringProperty(required=True)   # Unique service name
@@ -164,6 +165,54 @@ def recent_timeline_edits(thresh):
     return tlsums
 
 
+def vlt_strval_comp(idx, v1, v2):
+    if str(v1) != str(v2):
+        return str(idx) + " " + str(v1) + " != " + str(v2)
+    return ""
+
+
+def verify_listed_timelines(handler):
+    url = "https://pastkey.org/docs/tlviz.json"
+    misms = ""
+    if appuser.is_local_devenv:
+        # example handler request.url http://0.0.0.0:9080/periodic
+        ru = handler.request.url
+        url = ru[0:ru.rfind("/")] + "/docs/tldev.json"
+    jts = "[]"
+    try:
+        result = urlfetch.fetch(url, deadline=10)
+        if not result or result.status_code != 200:
+            misms += "vlt fetch status " + result.status_code + "\n"
+        else:
+            jts = result.content
+    except Exception as e:
+        misms += "vlt fetch fail: " + str(e)
+    jts = json.loads(jts)
+    rj = ""
+    vq = appuser.VizQuery(timeline.Timeline, "ORDER BY featured")
+    dts = vq.fetch(200, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
+    for idx, dt in enumerate(dts):
+        if idx >= len(jts):
+            misms += "idx " + str(idx) + " json len " + str(len(jts)) + "\n"
+        else:
+            jt = jts[idx]
+            misms += vlt_strval_comp(idx, dt.key().id(), jt["instid"])
+            misms += vlt_strval_comp(idx, dt.featured, jt["featured"])
+        if rj:
+            rj += ",\n"
+        rj += appuser.dbo2json(dt)
+    rj = "[" + rj + "]\n"
+    msg = "Listed Timelines up to date. Compared db to " + url
+    if misms:
+        msg = "Listed Timelines OUTDATED. Compared db to " + url
+        msg += "\n" + misms
+        try:
+            appuser.mailgun_send(None, "support@pastkey.org", msg, rj)
+        except Exception as e:
+            logging.warn("verify_listed_timelines send fail: " + str(e))
+    return msg
+
+
 class PeriodicProcessing(webapp2.RequestHandler):
     def get(self):
         daysback = 1
@@ -178,6 +227,7 @@ class PeriodicProcessing(webapp2.RequestHandler):
             body += "***Recent Completions:\n"
             body += tlcomp.recent_completions(thresh) + "\n"
             body += "***Recent Timeline Edits:\n"
+            body += verify_listed_timelines(self) + "\n"
             body += recent_timeline_edits(thresh) + "\n"
             body += "***Recent Point Edits:\n"
             body += recent_point_edits(thresh) + "\n"

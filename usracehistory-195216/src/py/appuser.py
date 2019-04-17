@@ -313,9 +313,15 @@ def return_json(handler, data):
     response.out.write(jsontxt)
 
 
-def mailgun_send(handler, eaddr, subj, body):
+def is_local_devenv(handler):
     if ((not os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'))
         or (handler and re.search("\:[0-9][0-9]80", handler.request.url))):
+        return True
+    return False
+
+
+def mailgun_send(handler, eaddr, subj, body):
+    if is_local_devenv(handler):
         logging.info("Mail not sent to " + eaddr + " from local dev" +
                      "\n\n" + body)
         return
