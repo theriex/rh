@@ -495,6 +495,23 @@ app.mode = (function () {
     }
 
 
+    function showTimelinesFailure (code, errtxt) {
+        var subj = "Recommended Timelines not displaying";
+        var body = "The recommended timelines display on the main page is" +
+            " currently showing " + code + " " + errtxt + "\n" +
+            "You might want to get that fixed...\n\n";
+        var mh = "mailto:support@pastkey.org?subject=" + jt.dquotenc(subj) +
+            "&body=" + jt.dquotenc(body);
+        var html = [["p", "Recommended Timelines fetch failed: " + 
+                     code + " " + errtxt],
+                    ["p",
+                     ["If this message persists, please ",
+                      ["a", {href:mh}, "let support know."],
+                      " Thanks!"]]];
+        jt.out("recomTLsdiv", jt.tac2html(html));
+    }
+
+
     function showTimelineLinks () {
         var url = "/docs/tlrec.json";
         if(app.localdev()) {
@@ -506,8 +523,7 @@ app.mode = (function () {
                                sortRecommendedTimelines();
                                showTimelineLinks(); },
                            function (code, errtxt) {
-                               jt.out("recomTLsdiv", "Recommended Timelines" +
-                                      " fetch fail: " + code + " " + errtxt); },
+                               showTimelinesFailure(code, errtxt); },
                            jt.semaphore("mode.showTimelineLinks")); }
         var html = [["tr",
                      [["th", "name"], ["th", "pts"], ["th", "svs"]]]];
