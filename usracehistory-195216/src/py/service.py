@@ -182,7 +182,7 @@ def verify_listed_timelines(handler):
     try:
         result = urlfetch.fetch(url, deadline=10)
         if not result or result.status_code != 200:
-            misms += "vlt fetch status " + result.status_code + "\n"
+            misms += "vlt fetch status " + str(result.status_code) + "\n"
         else:
             jts = result.content
     except Exception as e:
