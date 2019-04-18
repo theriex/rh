@@ -1,8 +1,8 @@
-/*jslint browser, multivar, white, fudge, for */
+/*jslint browser, white, fudge, for */
 /*global window jtminjsDecorateWithUtilities */
 
-var app = {},  //Global container for application level funcs and values
-    jt = {};   //Global access to general utility methods
+var app = {};  //Global container for application level funcs and values
+var jt = {};   //Global access to general utility methods
 
 (function () {
     "use strict";
@@ -59,8 +59,8 @@ var app = {},  //Global container for application level funcs and values
                     "http://usracehistory.com",
                     "http://www.usracehistory.com",
                     "https://usracehistory.com",
-                    "https://www.usracehistory.com"],
-            href = window.location.href, i;
+                    "https://www.usracehistory.com"];
+        var href = window.location.href; var i;
         href = href.toLowerCase();  //just in case
         app.baseurl = "https://pastkey.org";
         for(i = 0; i < subs.length; i += 1) {
@@ -74,7 +74,7 @@ var app = {},  //Global container for application level funcs and values
 
 
     app.init = function () {
-        var modules, splash;
+        var modules; var splash;
         jtminjsDecorateWithUtilities(jt);
         if(!app.validURL()) {  //sets app.baseurl or redirects as needed
             return; }
@@ -111,6 +111,13 @@ var app = {},  //Global container for application level funcs and values
                 div.style.display = "none"; }
             else {
                 div.style.display = "block"; } }
+    };
+
+
+    app.localdev = function () {
+        if(window.location.href.match(/\:\d\d80/)) {
+            return true; }
+        return false;
     };
 
 

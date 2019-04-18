@@ -172,7 +172,7 @@ def vlt_strval_comp(idx, v1, v2):
 
 
 def verify_listed_timelines(handler):
-    url = "https://pastkey.org/docs/tlviz.json"
+    url = "https://pastkey.org/docs/tlrec.json"
     misms = ""
     if appuser.is_local_devenv:
         # example handler request.url http://0.0.0.0:9080/periodic

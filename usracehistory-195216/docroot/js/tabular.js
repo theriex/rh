@@ -1288,7 +1288,7 @@ app.tabular = (function () {
 
     function fetchPubPoints () {
         var ptsfile = "docs/pubpts.json";
-        if(window.location.href.indexOf("localhost") >= 0) {
+        if(app.localdev()) {
             ptsfile = "docs/locpts.json"; }
         jt.call("GET", ptsfile, null,
                 function (result) {

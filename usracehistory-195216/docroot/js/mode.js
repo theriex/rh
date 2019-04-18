@@ -1,13 +1,13 @@
-/*jslint browser, multivar, white, fudge, for */
+/*jslint browser, white, fudge, for */
 /*global app, window, jt, d3 */
 
 //Menu and other top nav area functionality.
 app.mode = (function () {
     "use strict";
 
-    var mode = "interactive",  //linear only. "reference" is linear or text
-        ms = null,  //mode state detail variables
-        srchst = null;
+    var mode = "interactive";  //linear only. "reference" is linear or text
+    var ms = null;  //mode state detail variables
+    var srchst = null;
 
 
     function clearSearchState () {
@@ -89,16 +89,16 @@ app.mode = (function () {
     function updateLevelDisplay (currlev) {
         var ti = {fs: 18,   //font size for level number
                   p: {t: 1, r: 2, b: 1, l: 2},  //padding top right bottom left
-                  m: {t: 3, r: 2, b: 0, l: 3}}, //margin  top right bottom left
-            tc = {x: ti.m.l + ti.p.l,    //text coordinates (level number)
+                  m: {t: 3, r: 2, b: 0, l: 3}}; //margin  top right bottom left
+        var tc = {x: ti.m.l + ti.p.l,    //text coordinates (level number)
                   y: ti.m.t + ti.p.t + ti.fs,
                   h: ti.p.t + ti.fs + ti.p.b,
-                  w: ti.p.l + ti.fs + ti.p.r},
-            rc = {x: tc.x + tc.w + ti.m.r,   //rect coordinates (prog bar)
+                  w: ti.p.l + ti.fs + ti.p.r};
+        var rc = {x: tc.x + tc.w + ti.m.r,   //rect coordinates (prog bar)
                   y: Math.floor(tc.h / 2),
                   h: Math.floor(tc.h / 4),
-                  w: ms.w - (tc.x + tc.w)},
-            calc = {pcnt:currlev.lev.levpcnt};
+                  w: ms.w - (tc.x + tc.w)};
+        var calc = {pcnt:currlev.lev.levpcnt};
         if(!ms.prog) {
             initProgBarElements(currlev, ti, tc, rc); }
         if(ms.currlev && ms.currlev.lev.remptcounter >= 0) {
@@ -132,8 +132,8 @@ app.mode = (function () {
 
 
     function highlightCircles (points, task) {
-        var tl = app.linear.tldata(),
-            dur = Math.round(0.8 * task.dur);  //finish trans before task ends
+        var tl = app.linear.tldata();
+        var dur = Math.round(0.8 * task.dur);  //finish trans before task ends
         points.forEach(function (d) {
             //jt.log("highlight " + d.id + ": " + jt.byId("d.id"));
             tl.focus.select("#" + d.id)
@@ -149,8 +149,8 @@ app.mode = (function () {
 
 
     function normalizeCircles (points, task) {
-        var tl = app.linear.tldata(),
-            dur = Math.round(0.8 * task.dur);  //finish trans before task ends
+        var tl = app.linear.tldata();
+        var dur = Math.round(0.8 * task.dur);  //finish trans before task ends
         points.forEach(function (d) {
             tl.focus.select("#" + d.id)
                 .style("fill", app.linear.fillColorForPoint(d))
@@ -202,9 +202,9 @@ app.mode = (function () {
                     {m:"signout", n:"Sign&nbsp;Out",        c:"acc"},
                     {m:"signin",  n:"Sign&nbsp;In",         c:"noacc"},
                     {m:"newtl",   n:"Create&nbsp;Timeline", c:"acc"},
-                    {m:"about",   n:"About"}],
-            acc = app.user && app.user.tok,
-            html = [], item = "";
+                    {m:"about",   n:"About"}];
+        var acc = app.user && app.user.tok;
+        var html = []; var item = "";
         menu.forEach(function (mi) {
             if(!mi.c || ((mi.c === "acc" && acc) ||
                          (mi.c === "noacc" && !acc) ||
@@ -254,8 +254,8 @@ app.mode = (function () {
 
 
     function start (tl, currlev) {
-        ms = {divid:tl.divid, tl:tl, h:30,    //reset mode state
-              w:tl.width - 10};  //leave space for right menu
+        ms = {divid:tl.divid, h:30, w:tl.width - 10};  //reset, right menu space
+        ms.tl = tl;  //set separately to avoid lint scope complaints 
         jt.byId("tcontdiv").style.top = String(ms.h) + "px";
         ms.disp = "linear";  //other option is "text"
         verifyDisplayElements();
@@ -375,7 +375,7 @@ app.mode = (function () {
 
 
     function getCompletionStats (user, tlid) {
-        var html, ce = null, cs, st = "";
+        var html; var ce = null; var cs; var st = "";
         user.completed.forEach(function (comp) {
             if(comp.tlid === tlid) {
                 ce = comp; } });
@@ -402,7 +402,7 @@ app.mode = (function () {
 
 
     function displayCompletionCertificate (user, tlid) {
-        var html, website = user.web || "";
+        var html; var website = user.web || "";
         if(user.web) {
             website = ["a", {href:user.web, 
                              onclick:jt.fs("window.open('" + user.web + "')")},
@@ -435,10 +435,101 @@ app.mode = (function () {
     }
 
 
+    function findDay (y, m, d, w) {
+        if(!w) {
+            return d; }  //not a relative day
+        var wd = 1;
+        var date = new Date(y, m, wd);
+        while(date.getDay() !== d) {
+            wd += 1;
+            date = new Date(y, m, wd); }
+        wd += (w - 1) * 7;
+        return wd;
+    }
+
+
+    function diffDays (now, y, m, d) {
+        var then = new Date(y, m, d);
+        var diff = Math.abs(now.getTime() - then.getTime());
+        diff = Math.ceil(diff / (1000 * 60 * 60 * 24));
+        return diff;
+    }
+
+
+    function getAnniversaryDistance (spec) {
+        var now = new Date();
+        var res = spec.match(/\-(\d\d)\-(W?)(\d\d?)\-?D?(\d?\d?)/);
+        var midx = parseInt(res[1], 10) - 1;
+        var day = parseInt(res[3], 10);
+        var week = 0;
+        if(res[2]) {  //"W" indicates this is a week/daynum anniversary
+            week = day;
+            day = parseInt(res[4]); }
+        var anv = {prev:{m:midx}, next:{m:midx}};
+        //if current month, then prev/next are the same, never a year away
+        if(now.getMonth() >= midx) {
+            anv.prev.y = now.getFullYear();
+            anv.next.y = now.getFullYear() + 1; }
+        else if(now.getMonth() <= midx) {
+            anv.prev.y = now.getFullYear() - 1;
+            anv.next.y = now.getFullYear(); }
+        anv.prev.d = findDay(anv.prev.y, anv.prev.m, day, week);
+        anv.next.d = findDay(anv.next.y, anv.next.m, day, week);
+        anv.prev.days = diffDays(now, anv.prev.y, anv.prev.m, anv.prev.d);
+        anv.next.days = diffDays(now, anv.next.y, anv.next.m, anv.next.d);
+        return anv;
+    }
+
+
+    function sortRecommendedTimelines () {
+        app.rectls.forEach(function (tl) {
+            if(tl.featured.startsWith("-")) {
+                var anv = getAnniversaryDistance(tl.featured);
+                tl.prio = Math.min(anv.prev.days, anv.next.days); }
+            else if(tl.featured === "Promoted") {
+                tl.prio = 40; }  //anv closer than 40 days is higher prio
+            else {  //"Listed" and anything else
+                tl.prio = 500; } });
+        app.rectls.sort(function (a, b) {
+            return a.prio - b.prio; });
+    }
+
+
+    function showTimelineLinks () {
+        var url = "/docs/tlrec.json";
+        if(app.localdev()) {
+            url = "/docs/tldev.json"; }
+        if(!app.rectls) {
+            return jt.call("GET", url, null,
+                           function (tls) {
+                               app.rectls = tls;
+                               sortRecommendedTimelines();
+                               showTimelineLinks(); },
+                           function (code, errtxt) {
+                               jt.out("recomTLsdiv", "Recommended Timelines" +
+                                      " fetch fail: " + code + " " + errtxt); },
+                           jt.semaphore("mode.showTimelineLinks")); }
+        var html = [["tr",
+                     [["th", "name"], ["th", "pts"], ["th", "svs"]]]];
+        app.rectls.forEach(function (tl) {
+            html.push(["tr",
+                       [["td",
+                         ["a", {href:app.baseurl + "/timeline/" + 
+                                (tl.slug || tl.instid)},
+                          tl.name]],
+                        ["td", tl.cids.csvarray().length],
+                        ["td", tl.svs.csvarray().length || ""]]]); });
+        html = ["Recommended Timelines:",
+                ["table", {cla:"tltable"}, html]];
+        jt.out("recomTLsdiv", jt.tac2html(html));
+    }
+
+
     function showLandingPage () {
         //The core html for the landing page is in index.html
-        var i, html, mt, p, ps = document.getElementsByTagName("p"),
-            ghu = "https://github.com/theriex/rh";
+        var i; var html; var mt; var p; 
+        var ps = document.getElementsByTagName("p");
+        var ghu = "https://github.com/theriex/rh";
         for(i = 0; i < ps.length; i += 1) {
             p = ps[i];
             html = p.innerHTML;
@@ -452,44 +543,8 @@ app.mode = (function () {
                     ["a", {href:ghu, 
                            onclick:jt.fs("window.open('" + ghu + "')")},
                      mt])); }
-            mt = "timelines you can try:";
-            if(html.indexOf(mt) >= 0) {
-                html = html.replace(mt, jt.tac2html(
-                    [mt,
-                     ["table", {cla:"tltable"},
-                      [["tr",
-                        [["th", "name"], ["th", "pts"], ["th", "svs"]]],
-                       ["tr",
-                        [["td", 
-                          ["a", {href:app.baseurl + "/timeline/chavez"},
-                           "César Estrada Chávez"]], 
-                         ["td", 24], ["td", 0]]],
-                       ["tr",
-                        [["td", 
-                          ["a", {href:app.baseurl + "/timeline/default"},
-                           "U.S. Race History"]], 
-                         ["td", 344], ["td", 3]]],
-                       ["tr",
-                        [["td", 
-                          ["a", {href:app.baseurl + "/timeline/mlk"},
-                           "Martin Luther King, Jr."]], 
-                         ["td", 43], ["td", 0]]],
-                       ["tr",
-                        [["td", 
-                          ["a", {href:app.baseurl + "/timeline/tubman"},
-                           "Harriet Tubman"]], 
-                         ["td", 30], ["td", 0]]],
-                       ["tr",
-                        [["td", 
-                          ["a", {href:app.baseurl + "/timeline/thanksgiving"},
-                           "Thanksgiving (U.S.)"]], 
-                         ["td", 21], ["td", 0]]],
-                       ["tr",
-                        [["td", 
-                          ["a", {href:app.baseurl + "/timeline/ellabaker"},
-                           "Ella Baker"]],
-                         ["td", 9], ["td", 0]]] ]]])); }
             p.innerHTML = html; }
+        showTimelineLinks();
     }
 
 

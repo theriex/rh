@@ -23,10 +23,10 @@ import pickle
 #     Listed: Ok to display in listings and recommend.
 #     -mm-dd: Feature annually on and around this date.
 #     -mm-Dn-Wn: Feature annually on the given day and week of the month.
-#     Promoted: Only settable from the db.  Prioritizes specific timelines.
+#     Promoted: Optional priority consideration for suppviz timelines.
 # Here's a few examples of annual observations:
-#    -01-D1-W3  Third Monday of January  (Martin Luther King, Jr. Day)
-#    -11-D4-W4  Fourth Thursday in November  (U.S. Thanksgiving)
+#    -01-W3-D1  Third Monday of January  (Martin Luther King, Jr. Day)
+#    -11-W4-D4  Fourth Thursday in November  (U.S. Thanksgiving)
 #    -03-31     March 31  (Cesar Chavez day)
 #
 # A timeline is language specific.  Translated timelines have translated

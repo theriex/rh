@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge, for, long */
+/*jslint browser, white, fudge, for, long */
 /*global app, window, jt, d3, confirm */
 
 app.db = (function () {
@@ -8,8 +8,8 @@ app.db = (function () {
 
 
     function makeDisplayDate (pt) {
-        var dd = "",
-            months = ["January", "February", "March", "April", "May", "June",
+        var dd = "";
+        var months = ["January", "February", "March", "April", "May", "June",
                       "July", "August", "September", "October", "November",
                       "December"];
         if(pt.start.month) {
@@ -46,7 +46,7 @@ app.db = (function () {
 
 
     function parseDate (pt) {
-        var date, mres;
+        var date; var mres;
         date = pt.date;
         pt.start = {};
         //start year
@@ -96,14 +96,14 @@ app.db = (function () {
         //center line) and are adjusted up or down to avoid overlap with
         //adjacent points.  If the previous point was adjusted above the
         //center line, then the next is adjusted below for visual balance.
-        var xbs = 32,  //x bands, how many columns to divide the x-axis into
-            sy = (pts.length? pts[0].start.year : 0),
-            ey = (pts.length? pts[pts.length - 1].start.year : 0),
-            iw = Math.ceil((ey - sy) / xbs),
-            ctx = {iw:iw,    //horizontal interaction width (in years)
-                   lq:[],    //LIFO queue of pts within iw (most recent first)
+        var xbs = 32;  //x bands, how many columns to divide the x-axis into
+        var sy = (pts.length? pts[0].start.year : 0);
+        var ey = (pts.length? pts[pts.length - 1].start.year : 0);
+        var iw = Math.ceil((ey - sy) / xbs);
+        var ctx = {lq:[],    //LIFO queue of pts within iw (most recent first)
                    zz:1,     //zigzag direction (alternates 1/-1)
                    maxy:0};  //max vertical (either up or down)
+        ctx.iw = iw;  //horizontal direction width (in years)
         //jt.log("coordinate context iw: " + iw);
         return ctx;
     }
@@ -127,11 +127,11 @@ app.db = (function () {
                    244, //Sep
                    274, //Oct
                    305, //Nov
-                   335], //Dec
-            y = pt.start.year,
-            m = pt.start.month || 0,
-            d = pt.start.day || 0,
-            tc;
+                   335]; //Dec
+        var y = pt.start.year;
+        var m = pt.start.month || 0;
+        var d = pt.start.day || 0;
+        var tc;
         if(m) {
             m -= 1; }  //switch from one-based month to array index
         tc = Math.round(((mds[m] + d) / 366) * 1000) / 1000;
@@ -140,7 +140,7 @@ app.db = (function () {
 
 
     function makeCoordinates (pt, ctx) {
-        var vm, i, pp;
+        var vm; var i; var pp;
         pt.tc = getTimeCode(pt);
         //vertical code defaults to zero, representing the center line
         pt.vc = 0;
@@ -186,7 +186,7 @@ app.db = (function () {
 
     //return time difference in tenths of seconds, max 99999
     function getElapsedTime (startDate, endDate) {
-        var start, end, elap;
+        var start; var end; var elap;
         start = Math.round(startDate.getTime() / 100);
         end = Math.round(endDate.getTime() / 100);
         elap = Math.min(end - start, 99999);
@@ -195,7 +195,7 @@ app.db = (function () {
 
 
     function wallClockTimeStamp (date) {
-        var idx, ts;
+        var idx; var ts;
         date = date || new Date();
         ts = date.toISOString();
         idx = ts.indexOf(".");
@@ -277,7 +277,8 @@ app.db = (function () {
 
 
     function parseProgStr (str) {
-        var ces, pes = {isoShown:"", isoClosed:"", viewCount:0, tagCodes:""};
+        var ces; 
+        var pes = {isoShown:"", isoClosed:"", viewCount:0, tagCodes:""};
         if(str) {
             ces = str.split(";");
             pes.isoShown = ces[1];
@@ -291,7 +292,7 @@ app.db = (function () {
 
 
     function getProgressElements (csv, id) {
-        var idx, str;
+        var idx; var str;
         idx = csv.indexOf(id);
         if(idx < 0) {
             return parseProgStr(); }
@@ -374,7 +375,7 @@ app.db = (function () {
 
 
     function verifyProgressInfo () {
-        var acc, proginst;
+        var acc; var proginst;
         if(!dcon.prog) {
             dcon.prog = {tlid:dcon.lastTL.instid,
                          st:new Date().toISOString(),
@@ -427,7 +428,9 @@ app.db = (function () {
                             else if(lev.svShown && lev.levelupShown) {
                                 lev.visited = lev.levelupShown; } }
                         if(!currlev && !lev.visited) {
-                            currlev = {tl:tl, lev:lev}; } }
+                            currlev = {};
+                            currlev.tl = tl;
+                            currlev.lev = lev; } }
                     tl.visited = tl.visited && lev.visited; }); } });
         if(!currlev) {  //return last level of final timeline for display
             currlev = {tl:dcon.lastTL, lev:dcon.lastLev};
@@ -439,7 +442,7 @@ app.db = (function () {
 
     function makeTimelineLevels () {
         dcon.ds.forEach(function (tl, idx) {
-            var levs = [], ppl;
+            var levs = []; var ppl;
             tl.svs.csvarray().forEach(function (svn) {
                 levs.push({svname:svn,
                            svShown:"",       //suppviz not displayed yet
@@ -493,7 +496,7 @@ app.db = (function () {
 
 
     function rebuildRandomPointsSelection(tl, ctc) {
-        var idx, prog = getTimelineProgressRecord();
+        var idx; var prog = getTimelineProgressRecord();
         ctc.rndmax = Number(ctc.rndmax);
         tl.randpts = [];
         tl.unused = tl.preb.slice();
@@ -547,11 +550,11 @@ app.db = (function () {
 
 
     function initTimelinesContent () {
-        var ny = new Date().getFullYear(), ptids = {};
+        var ny = new Date().getFullYear(); var ptids = {};
         if(!dcon || !dcon.ds) { return; }  //timelines not loaded yet
         dcon.points = [];  //all points for all timelines in series
         dcon.ds.forEach(function (tl, ix) {
-            var ctc, idx;
+            var ctc; var idx;
             ctc = tl.ctype.split(":");
             ctc = {type:ctc[0], levcnt:ctc[1] || 6, rndmax:ctc[2] || 18};
             tl.pointsPerSave = Number(ctc.levcnt);
@@ -604,8 +607,8 @@ app.db = (function () {
 
 
     function nextInteraction () {
-        var currlev = recalcProgress(),
-            points = currlev.lev.rempts.slice(0, currlev.tl.pointsPerSave);
+        var currlev = recalcProgress();
+        var points = currlev.lev.rempts.slice(0, currlev.tl.pointsPerSave);
         dcon.mrcl = currlev;  //most recent currlev, non-critical reference
         if(currlev.tl.dsindex === 0 && currlev.lev.num === 1 &&
            currlev.lev.levpcnt === 0 && !currlev.lev.startbuttonshown) {
@@ -629,7 +632,7 @@ app.db = (function () {
 
 
     function findPointById (ptid, points) {
-        var i, pt;
+        var i; var pt;
         if(app.mpac && app.mpac[ptid]) {
             return app.mpac[ptid]; }
         //allpts is the largest repository of available points merged for
@@ -647,9 +650,8 @@ app.db = (function () {
 
 
     function pointIdFromReference (point, points, ref) {
-        var src = "", i, pt;
-        if(point.orgid === "5757715179634688" ||
-           window.location.href.indexOf("localhost") >= 0) {
+        var src = ""; var i; var pt;
+        if(point.orgid === "5757715179634688" || app.localdev()) {
             src = "ksep: "; }  //legacy link reference mismatch
         src += ref;
         dcon.refs = dcon.refs || {};
@@ -665,10 +667,10 @@ app.db = (function () {
 
 
     function pointLinkedText (pt, pts, fname) {
-        var txt = pt.text, words, i, mtw = 5;  //max title words
+        var txt = pt.text; var words; var i; var mtw = 5;  //max title words
         txt = txt.replace(/<a\shref\s*=\s*"#([^"]+)">([^<]+)<\/a>/gi,
             function (match, p1, p2) {
-                var refid, oc, link;
+                var refid; var oc; var link;
                 refid = pointIdFromReference(pt, pts, p1);
                 if(!refid) {
                     //jt.log(pt.instid + " link ref not found " + p1);
@@ -693,7 +695,7 @@ app.db = (function () {
 
 
     function mergeProgToAccount () {
-        var prog = dcon.prog, i, stp, update = false;
+        var prog = dcon.prog; var i; var stp; var update = false;
         prog.latestsave = new Date().toISOString();
         prog.reminder = "";
         app.user.acc.started = app.user.acc.started || [];
@@ -737,10 +739,8 @@ app.db = (function () {
 
 
     function getTimelineSlug () {
-        var slug = "", params,
-            href = window.location.href,
-            tlmarker = "/timeline/",
-            idx = href.indexOf(tlmarker);
+        var slug = ""; var params; var href = window.location.href;
+        var tlmarker = "/timeline/"; var idx = href.indexOf(tlmarker);
         if(idx >= 0) {
             slug = href.slice(idx + tlmarker.length);
             if(slug.indexOf("?") > 0) {
@@ -757,7 +757,7 @@ app.db = (function () {
 
 
     function fetchDisplayTimeline () {
-        var url, slug = getTimelineSlug();
+        var url; var slug = getTimelineSlug();
         if(!slug) {  //no timeline specified, alt display already handled
             return; }
         jt.log("fetchDisplayTimeline slug: " + slug);
@@ -784,7 +784,7 @@ app.db = (function () {
 
 
     function noteSuppvizDone (svid, start, end) {
-        var svs = dcon.prog.svs, upd = "";
+        var svs = dcon.prog.svs; var upd = "";
         if(!svs || !svs.csvcontains(svid)) {
             svs = svs.csvappend(svid + ";" + start.toISOString() + ";" +
                                 end.toISOString() + ";0"); }
@@ -825,7 +825,7 @@ app.db = (function () {
 
 
     function bleepParseJSON (jtxt, dval) {
-        var ds, unserializedMarker = "[object Object]";
+        var ds; var unserializedMarker = "[object Object]";
         dval = dval || "[]";   //assume array if no dval
         if(!jtxt) {
             jtxt = dval; }
@@ -889,8 +889,8 @@ app.db = (function () {
 
 
     function userIdParam () {
-        var td = app.amdtimer.load.end,
-            uid = td.toISOString() + td.getTimezoneOffset();
+        var td = app.amdtimer.load.end;
+        var uid = td.toISOString() + td.getTimezoneOffset();
         if(app.user && app.user.acc) {
             uid = app.user.acc.instid; }
         return "uidp=" + uid;
