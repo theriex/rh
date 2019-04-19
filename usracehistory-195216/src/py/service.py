@@ -198,6 +198,7 @@ def verify_listed_timelines(handler):
             jt = jts[idx]
             misms += vlt_strval_comp(idx, dt.key().id(), jt["instid"])
             misms += vlt_strval_comp(idx, dt.featured, jt["featured"])
+            misms += vlt_strval_comp(idx, dt.modified, jt["modified"])
         if rj:
             rj += ",\n"
         rj += appuser.dbo2json(dt)
