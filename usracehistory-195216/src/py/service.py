@@ -174,7 +174,7 @@ def vlt_strval_comp(idx, v1, v2):
 def verify_listed_timelines(handler):
     url = "https://pastkey.org/docs/tlrec.json"
     misms = ""
-    if appuser.is_local_devenv(self):
+    if appuser.is_local_devenv(handler):
         # example handler request.url http://0.0.0.0:9080/periodic
         ru = handler.request.url
         url = ru[0:ru.rfind("/")] + "/docs/tldev.json"
@@ -201,7 +201,7 @@ def verify_listed_timelines(handler):
             misms += vlt_strval_comp(idx, dt.modified, jt["modified"])
         if rj:
             rj += ",\n"
-        rj += appuser.dbo2json(dt)
+        rj += appuser.dbo2json(dt, skips=["preb"])
     rj = "[" + rj + "]\n"
     msg = "Listed Timelines up to date. Compared db to " + url
     if misms:

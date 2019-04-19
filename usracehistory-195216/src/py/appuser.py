@@ -274,11 +274,12 @@ def get_authenticated_account(handler, create):
     return acc
 
 
-def dbo2json(dbo):
+def dbo2json(dbo, skips=[]):
     write_only_fields = ["email", "password"]
     props = db.to_dict(dbo)
     for prop, val in props.iteritems():
-        if prop in write_only_fields:
+        if prop in write_only_fields or prop in skips:
+            props[prop] = ""  # leave key in dict so it is clear it was nuked
             continue
         # Associated images are fetched separately, not via JSON
         if(isinstance(val, Blob)):
