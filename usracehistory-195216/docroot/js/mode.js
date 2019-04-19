@@ -512,6 +512,20 @@ app.mode = (function () {
     }
 
 
+    function signInLinkHTML () {
+        if(app.user && app.user.email) {
+            return ""; }  //already signed in
+        if(!app.rectls) {
+            return ""; }  //no timelines to link to for starting context
+        var tl = app.rectls[0];
+        var link = app.baseurl + "/timeline/" + (tl.slug || tl.instid) +
+            "?menu=signin";
+        var html = ["&nbsp;",
+                    ["a", {id:"splsigninlink", href:link}, "Sign In"]];
+        return jt.tac2html(html);
+    }
+
+
     function showTimelineLinks () {
         var url = "/docs/tlrec.json";
         if(app.localdev()) {
@@ -535,8 +549,10 @@ app.mode = (function () {
                           tl.name]],
                         ["td", tl.cids.csvarray().length],
                         ["td", tl.svs.csvarray().length || ""]]]); });
-        html = ["Recommended Timelines:",
-                ["table", {cla:"tltable"}, html]];
+        html = [["div", {id:"rectltitdiv"}, 
+                 ["Recommended Timelines:",
+                  signInLinkHTML()]],
+                ["table", {cla:"tltable", id:"rectlstable"}, html]];
         jt.out("recomTLsdiv", jt.tac2html(html));
     }
 

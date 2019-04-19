@@ -1164,6 +1164,18 @@ app.dlg = (function () {
     }
 
 
+    function checkAndShowSignInDialog () {
+        var hr = window.location.href;
+        if(app.user.email) {
+            jt.log("showSignInDialog not displaying since already signed in");
+            if(hr.endsWith("?menu=signin")) {
+                hr = hr.slice(0, hr.indexOf("?"));
+                window.location.href = hr;
+                return; } }  //above line redirects, but takes time...
+        showSignInDialog();
+    }
+
+
     function showSignInToSaveDialog () {
         var html;
         sip = {noprompt:true};  //only show dialog once.
@@ -1872,7 +1884,7 @@ app.dlg = (function () {
         button: function (answer) { buttonPress(answer); },
         guessyear: function (year) { yearGuessButtonPress(year); },
         nextColorTheme: function () { nextColorTheme(); },
-        signin: function () { showSignInDialog(); },
+        signin: function () { checkAndShowSignInDialog(); },
         genentry: function () { showGenerationEntryForm(); },
         cascgen: function (id) { cascadeGenerationInfo(id); },
         closegenentry: function () { closeGenerationEntry(); },
