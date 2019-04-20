@@ -526,6 +526,31 @@ app.mode = (function () {
     }
 
 
+    function tlCompletionStat (tl) {
+        if(!app.user || !app.user.acc) {
+            return ""; }
+        var ret = "";
+        app.user.acc.started.forEach(function (st) {
+            if(st.tlid === tl.instid) {
+                var comp = st.pts.csvarray().length;
+                var ttl = tl.cids.csvarray().length;
+                ret = String(Math.round(comp/ttl * 100)) + "%";
+                var link = app.baseurl + "/timeline/" + (tl.slug || tl.instid);
+                var html = ["a", {href:link},
+                            ["span", {cla:"pcntcompspan"}, ret]];
+                ret = jt.tac2html(html); } });
+        app.user.acc.completed.forEach(function (ct) {
+            if(ct.tlid === tl.instid) {
+                var link = app.baseurl + "?compcert=" + tl.instid + 
+                    "&email=" + app.user.acc.email;
+                var html = ["a", {href:"#showcomp",
+                                  onclick:jt.fs("window.open('" + link + "')")},
+                            "&#x2713;"]; //checkmark
+                ret = jt.tac2html(html); } });
+        return ret;
+    }
+
+
     function showTimelineLinks () {
         var url = "/docs/tlrec.json";
         if(app.localdev()) {
@@ -540,7 +565,7 @@ app.mode = (function () {
                                showTimelinesFailure(code, errtxt); },
                            jt.semaphore("mode.showTimelineLinks")); }
         var html = [["tr",
-                     [["th", "name"], ["th", "pts"], ["th", "svs"]]]];
+                     [["th", "name"], ["th", "pts"], ["th", ""]]]];
         app.rectls.forEach(function (tl) {
             html.push(["tr",
                        [["td",
@@ -548,7 +573,7 @@ app.mode = (function () {
                                 (tl.slug || tl.instid)},
                           tl.name]],
                         ["td", tl.cids.csvarray().length],
-                        ["td", tl.svs.csvarray().length || ""]]]); });
+                        ["td", tlCompletionStat(tl)]]]); });
         html = [["div", {id:"rectltitdiv"}, 
                  ["Recommended Timelines:",
                   signInLinkHTML()]],

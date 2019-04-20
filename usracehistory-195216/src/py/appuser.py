@@ -275,7 +275,10 @@ def get_authenticated_account(handler, create):
 
 
 def dbo2json(dbo, skips=[]):
-    write_only_fields = ["email", "password"]
+    # email is not write only because it needs to be retrieved by the user
+    # for their completion certificate links.  For members, the admin
+    # already has the email address when they added them so that's also ok.
+    write_only_fields = ["password"]
     props = db.to_dict(dbo)
     for prop, val in props.iteritems():
         if prop in write_only_fields or prop in skips:
