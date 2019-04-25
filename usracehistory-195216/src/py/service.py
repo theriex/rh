@@ -189,7 +189,8 @@ def verify_listed_timelines(handler):
         misms += "vlt fetch fail: " + str(e)
     jts = json.loads(jts)
     rj = ""
-    vq = appuser.VizQuery(timeline.Timeline, "ORDER BY featured")
+    vq = appuser.VizQuery(timeline.Timeline, 
+                          "WHERE featured < 'Unlisted' ORDER BY featured")
     dts = vq.fetch(200, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
     for idx, dt in enumerate(dts):
         if idx >= len(jts):
