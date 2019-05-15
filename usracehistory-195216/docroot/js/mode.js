@@ -555,6 +555,7 @@ app.mode = (function () {
         var url = "/docs/tlrec.json";
         if(app.localdev()) {
             url = "/docs/tldev.json"; }
+        url += jt.ts("?cb=", "hour");
         if(!app.rectls) {
             return jt.call("GET", url, null,
                            function (tls) {
