@@ -1172,6 +1172,11 @@ app.dlg = (function () {
                 hr = hr.slice(0, hr.indexOf("?"));
                 window.location.href = hr;
                 return; } }  //above line redirects, but takes time...
+        //normally a popup goes over the dialog, but if there is one visible
+        //in this case ten it needs to be hidden so the signin form shows.
+        jt.byId("popupdiv").style.visibility = "hidden";
+        setTimeout(function () {
+            jt.byId("popupdiv").style.visibility = "hidden"; }, 800);
         showSignInDialog();
     }
 
