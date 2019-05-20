@@ -10,7 +10,7 @@ var ptupld = (function () {
     "use strict";
 
     var server = "http://localhost:9080",
-        jsonfn = "pastkey.json",
+        jsonfn = "",
         email = "",
         password = "",
         slug = "",
@@ -187,7 +187,11 @@ var ptupld = (function () {
 
 
     function processImportFile () {
-        fs.readFile(slug + ".json", "utf8", function (err, content) {
+        jsonfn = jsonfn || slug + ".json";
+        if(!fs.existsSync(jsonfn)) {
+            console.log("    " + jsonfn + " not found, trying pastkey.json");
+            jsonfn = "pastkey.json"; }
+        fs.readFile(jsonfn, "utf8", function (err, content) {
             if(err) {
                 return console.log("processImportFile: " + err); }
             impts = JSON.parse(content);
