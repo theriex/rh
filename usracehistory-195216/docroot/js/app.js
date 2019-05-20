@@ -121,4 +121,11 @@ var jt = {};   //Global access to general utility methods
     };
 
 
+    app.ptimgsrc = function (pt) {
+        var src = "/ptpic?pointid=" + pt.instid + "&mod=" +
+            jt.canonize(pt.modified || "unspecified");
+        return src;
+    };
+
+
 }());

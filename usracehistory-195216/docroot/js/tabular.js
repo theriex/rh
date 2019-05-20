@@ -73,8 +73,7 @@ app.tabular = (function () {
         var ph = "";
         if(pt.pic && deco !== "solohtml") {
             ph = ["div", {cla:"txtpicdiv"},
-                  ["img", {src:"/ptpic?pointid=" + pt.instid, 
-                           cla:"txtpicimg"}]]; }
+                  ["img", {src:app.ptimgsrc(pt), cla:"txtpicimg"}]]; }
         return ph;
     }
 
@@ -289,7 +288,7 @@ app.tabular = (function () {
             var base = window.location.protocol + "//" + window.location.host;
             pt.picurl = "";
             if(pt.pic) {
-                pt.picurl = base + "/ptpic?pointid=" + pt.pic; } });
+                pt.picurl = base + "/ptpic?pointid=" + pt.pic; } }); //nodeco
         var txt = JSON.stringify(currpts);
         return "data:text/plain;charset=utf-8," + encodeURIComponent(txt);
     }

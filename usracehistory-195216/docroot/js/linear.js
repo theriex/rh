@@ -1,15 +1,15 @@
-/*jslint browser, multivar, white, fudge, this, for */
+/*jslint browser, white, fudge, this, for */
 /*global app, window, jt, d3 */
 
 app.linear = (function () {
     "use strict";
 
-    var tl, //timeline data object
-        wall; //pic wallpaper variables
+    var tl; //timeline data object
+    var wall; //pic wallpaper variables
 
     function setChartWidthAndHeight () {
-        var over, minw = 320,      //full width of a standard phone
-            rat = {w: 3, h: 2};    //default to nice 3:2 aspect ratio
+        var over; var minw = 320;  //full width of a standard phone
+        var rat = {w: 3, h: 2};    //default to nice 3:2 aspect ratio
         if(window.innerWidth < 700) {
             rat = {w: 2, h: 3}; }  //switch to long and tall (phone/portrait)
         tl.chart = {w: 0, h: 0};
@@ -84,7 +84,7 @@ app.linear = (function () {
 
 
     function addFocusDecorativeElements () {
-        var pa = tl.pts[0], pz = tl.pts[tl.pts.length - 1];
+        var pa = tl.pts[0]; var pz = tl.pts[tl.pts.length - 1];
         //add a text element to use during mouseover on circles
         tl.focus.append("text")
             .attr("id", "mouseoverLabel")
@@ -139,9 +139,9 @@ app.linear = (function () {
 
     function addContextDecorativeElements () {
         var label = {pad: 10, fs: Math.round(0.4 * tl.height2),
-                     y: tl.margin2.top + Math.round(0.64 * tl.height2)},
-            rightx = tl.margin2.left + tl.width2,
-            tri = {midy: tl.margin2.top + Math.round(0.5 * tl.height2),
+                     y: tl.margin2.top + Math.round(0.64 * tl.height2)};
+        var rightx = tl.margin2.left + tl.width2;
+        var tri = {midy: tl.margin2.top + Math.round(0.5 * tl.height2),
                    ttly: tl.margin2.top + tl.height2,
                    rightmost: tl.margin.left + tl.width};
         label.start = tl.pts[0].start.year;
@@ -207,8 +207,8 @@ app.linear = (function () {
 
 
     function updateChromaTimescale (hc) {
-        var now = jt.isoString2Time(),  //microseconds can bump outside range
-            window;
+        var now = jt.isoString2Time();  //microseconds can bump outside range
+        var window;
         if(hc && hc.upd && now.getTime() - hc.upd.getTime() < 30 * 1000) {
             return; }  //still fresh enough
         hc.upd = now;
@@ -229,7 +229,7 @@ app.linear = (function () {
 
 
     function fillColorForDate (date) {
-        var fc = "#000", dstr;
+        var fc = "#000"; var dstr;
         if(typeof date === "string") {
             date = jt.isoString2Time(date); }
         dstr = date.toISOString();
@@ -242,7 +242,7 @@ app.linear = (function () {
 
 
     function fillColorForPoint (pt) {
-        var fc = "#000", shown;
+        var fc = "#000"; var shown;
         if(!tl.hc) {
             tl.hc = chromacoding(); }
         updateChromaTimescale(tl.hc);
@@ -375,12 +375,12 @@ app.linear = (function () {
 
 
     function handlePicMouseClick (mouseinfo) {
-        var mx = mouseinfo[0],
-            my = mouseinfo[1],
-            pb = {x: Math.floor(wall.grid.x * (mx / wall.dd.w)),
-                  y: Math.floor(wall.grid.y * (my / wall.dd.h))},
-            pt = wall.selpts[(pb.x * wall.grid.y) + pb.y],
-            currpt = app.mode.currpt();
+        var mx = mouseinfo[0];
+        var my = mouseinfo[1];
+        var pb = {x: Math.floor(wall.grid.x * (mx / wall.dd.w)),
+                  y: Math.floor(wall.grid.y * (my / wall.dd.h))};
+        var pt = wall.selpts[(pb.x * wall.grid.y) + pb.y];
+        var currpt = app.mode.currpt();
         if(currpt) {  //return to current interactive point after
             app.db.unvisitPoint(currpt);
             app.mode.requeue(currpt); }
@@ -523,7 +523,7 @@ app.linear = (function () {
 
 
     function selectWallpaperPoints () {
-        var picpts = [], grid, idx;
+        var picpts = []; var grid; var idx;
         wall = {selpts:[]};
         tl.pts.forEach(function (pt) {
             if(pt.pic) {
@@ -565,7 +565,7 @@ app.linear = (function () {
 
 
     function paintWallpaper (divid) {
-        var html = [], i, j, idx;
+        var html = []; var i; var j; var idx;
         if(!selectWallpaperPoints()) {
             return; }  //nothing to make wallpaper out of
         determineWallpaperDimensions(divid);
@@ -579,8 +579,7 @@ app.linear = (function () {
                     ["div", {id:"pdx" + i + "y" + j, cla:"bgpicdiv",
                              style:"width:" + wall.sd.w + "px;" +
                                    "height:" + wall.sd.h + "px;"},
-                     ["img", {src: "/ptpic?pointid=" + 
-                                   wall.selpts[idx].instid,
+                     ["img", {src: app.ptimgsrc(wall.selpts[idx]),
                               cla: "bgpicimg",
                               style: "max-width:" + wall.sd.w + "px;" +
                                      "max-height:" + wall.sd.h + "px;" +

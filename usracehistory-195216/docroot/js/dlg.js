@@ -465,7 +465,7 @@ app.dlg = (function () {
         if(d.pic) {
             pichtml = ["div", {cla:"dlgpicdiv", id:"dlgpicdiv"},
                        ["img", {cla:"infopic", id:"dlgpicimg",
-                                src:"/ptpic?pointid=" + d.instid}]]; }
+                                src:app.ptimgsrc(d)}]]; }
         refshtml = [["a", {onclick:jt.fs("app.dlg.search()")},
                      ["img", {cla:"searchicoimg", src:"img/search.png"}]]];
         if(d.refs && d.refs.length) {
@@ -1404,7 +1404,7 @@ app.dlg = (function () {
                 break;
             case "image":
                 if(ptid && jt.byId(fspec.field + "in").files.length) {
-                    obj[fspec.field] = "/ptpic?pointid=" + ptid; }
+                    obj[fspec.field] = "/ptpic?pointid=" + ptid; }  //nodeco
                 break;
             case "txtlst":
                 readTextListInputFields(fspec.field);
@@ -1518,7 +1518,7 @@ app.dlg = (function () {
     function imageInputTAC (fs, mode, vo) {
         var imgsrc = (vo && vo[fs.field]) || "";
         if(imgsrc) {
-            imgsrc = "/ptpic?pointid=" + imgsrc; }
+            imgsrc = app.ptimgsrc(vo); }
         else {
             imgsrc = "/img/picplaceholder.png"; }
         if(mode === "list") {
