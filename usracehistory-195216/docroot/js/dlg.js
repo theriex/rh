@@ -1709,9 +1709,9 @@ app.dlg = (function () {
 
 
     function noteUpdatedPoint (pt) {
-        app.db.mergeUpdatedPointData(pt);
+        var datechg = app.db.mergeUpdPtData(pt);
         app.dbpts[pt.instid] = pt;
-        app.tabular.redispt(pt);
+        app.tabular.redispt(pt, datechg);
     }
 
 

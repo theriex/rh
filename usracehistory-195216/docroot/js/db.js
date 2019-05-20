@@ -716,16 +716,21 @@ app.db = (function () {
         //updpt may be incomplete
         Object.keys(updpt).forEach(function (field) {
             pt[field] = updpt[field]; });
+        pt.tc = getTimeCode(pt);  //date may have changed, so recalculate
     }
 
 
     function mergeUpdatedPointData (updpt) {
         var found = false;
+        var datechg = false;
         if(app.allpts) {
             app.allpts.forEach(function (pt) {
                 if(pt.instid === updpt.instid) {
                     found = true;
-                    mergePointDataToPoint(pt, updpt); } }); }
+                    datechg = (pt.date !== updpt.date);
+                    mergePointDataToPoint(pt, updpt); } });
+            if(datechg) {
+                app.allpts.sort(compareStartDate); } }
         if(!found) {
             cachePoints([updpt]); }
         if(app.user.tls) {
@@ -734,7 +739,9 @@ app.db = (function () {
                 if(tlpts) {
                     tlpts.forEach(function (pt) {
                         if(pt.instid === updpt.instid) {
-                            mergePointDataToPoint(pt, updpt); } }); } }); }
+                            mergePointDataToPoint(pt, updpt); } });
+                    tlpts.sort(compareStartDate); } }); }
+        return datechg;
     }
 
 
@@ -918,7 +925,7 @@ app.db = (function () {
         nextInteraction: function () { nextInteraction(); },
         mergeProgToAccount: function () { mergeProgToAccount(); },
         pt4id: function (ptid, points) { return findPointById(ptid, points); },
-        mergeUpdatedPointData: function (pt) { mergeUpdatedPointData(pt); },
+        mergeUpdPtData: function (pt) { return mergeUpdatedPointData(pt); },
         initTimelines: function () { initTimelinesContent(); },
         ptlinktxt: function (p, s, f) { return pointLinkedText(p, s, f); },
         getOrgId: function (obj) { return getOrgId(obj); },

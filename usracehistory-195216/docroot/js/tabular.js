@@ -1410,23 +1410,24 @@ app.tabular = (function () {
     }
 
 
-    function redisplayPoint (pt) {
+    function redisplayPoint (pt, datechg) {
         var ptdiv;
         ptdiv = jt.byId("trowdiv" + pt.instid);
-        if(ptdiv) {  //point already displayed, redisplay content
+        if(!datechg && ptdiv) {  //point already displayed, redisplay content
             ptdiv = ptdiv.parentElement;  //enclosing div
             if(pt.stats && pt.stats.status === "deleted") {
                 ptdiv.style.display = "none"; }
             ptdiv.innerHTML = jt.tac2html(pointTAC(pt)); }
-        else { //point not currently displayed
+        else { //point not currently displayed, or sorting needed
             //If currently displaying the timeline points, and this point
-            //was not included, then it was added.  Update the timeline
-            //points and rebuild the points display.
+            //was not included, then it was added, so update the timeline
+            //points before rebuilding the display.
             if(currtl && ptflds.selpool.getValue() === "Timeline") {
                 currtl.cids = currtl.cids || "";
                 if(!currtl.cids.csvcontains(pt.instid)) {
-                    currtl.cids = currtl.cids.csvappend(pt.instid);
-                    app.tabular.ptdisp(); } } }
+                    currtl.cids = currtl.cids.csvappend(pt.instid); } }
+            //rebuild the display 
+            app.tabular.ptdisp(); }
         timelineSettings("required");  //prompt to save timeline changes
     }
 
@@ -1516,7 +1517,7 @@ app.tabular = (function () {
         runsv: function (svmodule) { app[svmodule].display(); },
         scr2pt: function (id) { scrollToPointId(id); },
         dfltslug: function () { provideDefaultSlugValue(); },
-        redispt: function (pt) { redisplayPoint(pt); },
+        redispt: function (pt, datechg) { redisplayPoint(pt, datechg); },
         togseti: function () { toggleInfoSettings(); },
         shall: function () { changeToAllPointsDisplay(); },
         fetchorg: function (cbf) { fetchorg(cbf); },
