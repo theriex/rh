@@ -1,5 +1,5 @@
 /*jslint browser, white, fudge, for */
-/*global app, window, jt, d3 */
+/*global app, window, jt, d3, alert */
 
 app.tabular = (function () {
     "use strict";
@@ -513,14 +513,22 @@ app.tabular = (function () {
     }
 
 
-    function getFeaturedValueFromInputs () {
+    function getFeaturedValueFromInputs (tl) {
         var ft = pf.vizval("featype");
         switch(ft) {
-        case "Obs M/D": return pf.mpre[pf.vizval("obmonth")] + "-" +
+        case "Obs M/D": 
+            ft = pf.mpre[pf.vizval("obmonth")] + "-" + 
                 jt.byId("obdatein").value;
-        case "Obs M/W": return pf.mpre[pf.vizval("obmonth")] +
+            break;
+        case "Obs M/W": 
+            ft = pf.mpre[pf.vizval("obmonth")] +
                 pf.wpre[pf.vizval("obweek")] + pf.dpre[pf.vizval("obday")];
-        default: return ft; }
+            break; }
+        if(tl.featured !== ft && !app.featuredTLManualUpdate) {
+            alert("It can take up to 48 hours for the change to " + ft +
+                  " to take effect.");
+            app.featuredTLManualUpdate = true; }  //note we told them
+        return ft;
     }
 
 
@@ -1106,7 +1114,7 @@ app.tabular = (function () {
             currtl.slug = jt.byId("slugin").value; }
         currtl.title = jt.byId("titlein").value;
         currtl.subtitle = jt.byId("subtitlein").value;
-        currtl.featured = getFeaturedValueFromInputs();
+        currtl.featured = getFeaturedValueFromInputs(currtl);
         currtl.comment = jt.byId("commentin").value;
         currtl.about = jt.byId("aboutin").value;
         currtl.ctype = tlflds.seltype.getValue();
