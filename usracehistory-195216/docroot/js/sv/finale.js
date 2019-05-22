@@ -1,17 +1,15 @@
-/*jslint browser, multivar, white, fudge, for */
+/*jslint browser, white, fudge, for */
 /*global app, window, jt, d3 */
 
 app.finale = (function () {
     "use strict";
 
-    var tl = null,       //grab useful geometry from linear timeline display
-        chart = {},      //container for svg references
-        hr = {},         //honor roll working variables
-        //PENDING: stop running the dynamic stuff after 400 times or whatever
-        //so you don't chew up battery power
-        hrto = null,     //honor roll timeout reference
-        slto = null,     //searchlights timeout reference
-        tda = {};        //text area display attributes
+    var tl = null;       //grab useful geometry from linear timeline display
+    var chart = {};      //container for svg references
+    var hr = {};         //honor roll working variables
+    var hrto = null;     //honor roll timeout reference
+    var slto = null;     //searchlights timeout reference
+    var tda = {};        //text area display attributes
 
 
     function moveSearchlights () {
@@ -61,8 +59,10 @@ app.finale = (function () {
             .attr("y", 0)
             .attr("width", tl.width2)
             .attr("height", tl.height)
-            .attr("preserveAspectRatio", "none")
-            .attr("href", "img/rhlogoFilled.png")
+            //.attr("preserveAspectRatio", "none")
+            //.attr("href", "img/rhlogoFilled.png")
+            .attr("preserveAspectRatio", "xMidyMid meet")
+            .attr("href", "img/pastkey.png")
             .style("opacity", 0.2);
     }
 
@@ -133,7 +133,7 @@ app.finale = (function () {
 
 
     function updateHonorRoll () {
-        var i, te, txt, transdef;
+        var i; var te; var txt; var transdef;
         for(i = 0; i < hr.ldefs.length; i += 1) {
             txt = hr.names[(hr.nidx + i) % hr.names.length];
             if(i === 0) {
@@ -166,9 +166,13 @@ app.finale = (function () {
         var fillnames = ["Ryan", "Olivia", "Michael", "Sophia", "Emily", "Joe",
                          "Grace", "Alex", "Isabella", "Chris", "Mia", "Lucas"];
         hr.names = ["", "", "* Honor Roll *", hr.username];
-        hr.updmax = 120;  //pause after this to avoid wasting batteries
+        hr.updmax = 56;  //pause after this to avoid wasting batteries
         hr.updcount = 0;
         comps.forEach(function (comp) {
+            if(app.user && app.user.acc && 
+               app.user.acc.instid === comp.userid) {
+                //use their most up-to-date name in case they changed it
+                comp.username = app.user.acc.name; }
             if(hr.names.indexOf(comp.username) < 0) {
                 hr.names.push(comp.username); } });
         fillnames.forEach(function (name) {
@@ -183,7 +187,7 @@ app.finale = (function () {
 
 
     function initHonorRoll () {
-        var url, tlid = app.db.displayContext().tlid;
+        var url; var tlid = app.db.displayContext().tlid;
         hr = {x:chart.cx - 120, y:30, lh:30, nidx:0, trt:2400};
         hr.username = "No Account (You)";
         if(app.user && app.user.acc) {
@@ -228,6 +232,12 @@ app.finale = (function () {
         window.open(app.baseurl + 
                     "?compcert=" + app.db.displayContext().tlid + 
                     "&email=" + email);
+    }
+
+
+    function signInToSaveProgress () {
+        d3.event.preventDefault();
+        app.dlg.signin();
     }
 
 
@@ -279,8 +289,13 @@ app.finale = (function () {
             .style("opacity", 1.0);
         appendDiv("foshare", {x:tda.x, y:tda.y - 42, h:60}, "socsharediv");
         app.support.socshareHTML("socsharediv");
-        appendLink("lfo", {x:tda.x, y:tda.y + 20, h:24}, "#compcert",
-                   showCompletionCertificate, "Show Completion Certificate");
+        var linkdims = {x:tda.x, y:tda.y + 20, h:24};
+        if(app.user && app.user.acc) {
+            appendLink("lfo", linkdims, "#compcert", showCompletionCertificate, 
+                       "Show Completion Certificate"); }
+        else {
+            appendLink("lfo", linkdims, "#saveprog", signInToSaveProgress,
+                       "Save Timeline Completion"); }
     }
 
 
@@ -310,10 +325,11 @@ app.finale = (function () {
 
 
     function display (record) {
-        var ds, tinst, auth = "", data;
+        var ds; var tinst; var auth = ""; var data;
         app.dlg.close();  //in case left open
         tl = app.linear.timeline();
-        chart.colors = {bg:"#eefeff"};
+        //chart.colors = {bg:"#eefeff"};  /light blue
+        chart.colors = {bg:"#fffee0"};  //light yellow
         initDisplayElements();
         if(record) {
             d3.select("#finctitle").text("Saving...");
