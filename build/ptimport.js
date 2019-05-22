@@ -52,29 +52,36 @@ var ptupld = (function () {
     }
 
 
-    function createOrUpdatePoint (pt, contf) {
+    function createOrUpdatePoint (ipt, contf) {
         var formdat, posturl = server + "/updpt", verb = "Updated ",
-            upt = findPointByField("codes", pt.instid, tl.points);
+            upt = findPointByField("codes", ipt.instid, tl.points);
         if(!upt) {
             var rp = org.recpre[0];
-            upt = findPointByField("codes", pt.instid, org.recpre); }
+            upt = findPointByField("codes", ipt.instid, org.recpre); }
         if(!upt) {
             verb = "  Added ";
-            upt = JSON.parse(JSON.stringify(pt));
-            upt.codes = pt.instid;
+            upt = JSON.parse(JSON.stringify(ipt));
+            upt.codes = ipt.instid;
             upt.instid = ""; }
-        formdat = {email:email, authtok:authtok,
-                   ptid:upt.instid, date:upt.date, text:upt.text, refs:upt.refs,
-                   qtype:upt.qtype, groups:upt.groups, regions:upt.regions,
-                   categories:upt.categories, tags:upt.tags, codes:upt.codes,
-                   orgid:acc.orgid, source:upt.source || "", 
-                   srclang:upt.srclang || "", 
-                   stats:JSON.stringify(upt.stats || ""), 
-                   translations:upt.translations || ""};
+        formdat = {email:email, authtok:authtok, ptid:upt.instid,
+                   date:ipt.date, 
+                   text:ipt.text,
+                   refs:JSON.stringify(ipt.refs || []),
+                   qtype:ipt.qtype, 
+                   groups:ipt.groups,
+                   regions:ipt.regions,
+                   categories:ipt.categories, 
+                   tags:ipt.tags, 
+                   codes:upt.codes,
+                   orgid:acc.orgid,
+                   source:ipt.source || "",
+                   srclang:ipt.srclang || "", 
+                   translations:JSON.stringify(ipt.translations || []),
+                   stats:JSON.stringify(ipt.stats || {})};
         // Object.keys(formdat).forEach(function (key) {
         //     console.log(key + ": " + formdat[key]); });
-        if(fs.existsSync(pt.instid + ".png")) {
-            formdat.pic = fs.createReadStream(pt.instid + ".png"); }
+        if(fs.existsSync(ipt.instid + ".png")) {
+            formdat.pic = fs.createReadStream(ipt.instid + ".png"); }
         var pc = {url:posturl, formData:formdat};
         request.post(pc, function (error, response, body) {
             if(error) {
