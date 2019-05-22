@@ -60,8 +60,9 @@ class Timeline(db.Model):
     cids = db.TextProperty()       # CSV of Point ids or Timeline ids
     svs = db.TextProperty()        # CSV of SuppViz module names
     preb = db.TextProperty()       # JSON prebuilt point data
-    created = db.StringProperty()  # ISO datetime;TLAcc id (owner)
-    modified = db.StringProperty() # ISO datetime;TLAcc id
+    orgid = db.IntegerProperty()   # Organization id (if any)
+    created = db.StringProperty()  # ISO datetime
+    modified = db.StringProperty() # ISO datetime
 
 
 def canonize(cankey):
@@ -136,6 +137,25 @@ def rebuild_prebuilt_timeline_points(tl):
     return jtxt
 
 
+def may_edit_timeline(handler, acc, timeline):
+    # sys admin may edit any timeline (restore a pic, or other maintenance)
+    if acc.orgid == 1 and acc.lev == 2:
+        return True
+    # check org level access.  org may be zero for public user but still matched
+    if not timeline.orgid or acc.orgid == timeline.orgid:
+        # org admin may edit any timeline for their org
+        if acc.lev == 2:
+            return True
+        # if they have edited the timeline before (either created it or were
+        # given access to edit it by an org admin) then they can edit it.
+        # PENDING: interface for admin to allow edit access to timeline
+        # Interim is to promote a user to admin, then demote them back to 
+        # contributor after they have it in their built list.
+        if str(timeline.key().id()) in acc.built:
+            return True
+    return False
+
+
 def update_or_create_timeline(handler, acc, params):
     timeline = None
     now = appuser.nowISO()
@@ -151,6 +171,8 @@ def update_or_create_timeline(handler, acc, params):
         timeline = Timeline.get_by_id(int(instid))
         if not timeline:
             return appuser.srverr(handler, 404, "No Timeline " + instid)
+        if not may_edit_timeline(handler, acc, timeline):
+            return
     if not timeline:  # not found, create new
         timeline = Timeline(name=params["name"], created=now)
     timeline.name = params["name"]
@@ -166,6 +188,7 @@ def update_or_create_timeline(handler, acc, params):
     timeline.cids = params["cids"] or ""
     timeline.svs = params["svs"] or ""
     timeline.preb = rebuild_prebuilt_timeline_points(timeline)
+    timeline.orgid = timeline.orgid or acc.orgid
     timeline.modified = now
     appuser.cached_put(None, timeline)
     return timeline
