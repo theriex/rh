@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge, long */
+/*jslint browser, white, fudge, long */
 /*global app, window, jt, d3 */
 
 app.support = (function () {
@@ -7,8 +7,8 @@ app.support = (function () {
     var chdet = {remind:{enabled:"Email me a reminder if I don't finish today.",
                          tron:"Enabling...",
                          troff:"Disabling...",
-                         disabled:"Enable reminders."}},
-        dispdef = {
+                         disabled:"Enable reminders."}};
+    var dispdef = {
         ////////////////////////////////////////
         share:{title:"Share", content:[
             ["div", {id:"tlnamediv", cla:"suppheadingdiv"}],
@@ -23,7 +23,9 @@ app.support = (function () {
                    {id:"supiemsp", em:"support", delay:1000}]},
         ////////////////////////////////////////
         about:{title:"About", content:[
-            ["p", "PastKey was created to promote understanding and respect for the context of people whose histories are frequently ignored.  You are encouraged to check points for yourself, knowledge evolves over time and history has multiple perspectives."],
+            //This hard link is a way to get back to the main landing page
+            //if you are viewing a timeline.
+            ["p", "<a href=\"https://pastkey.org\">PastKey</a> was created to promote understanding and respect for the context of people whose histories are frequently ignored.  You are encouraged to check points for yourself, knowledge evolves over time and history has multiple perspectives."],
             ["div", {id:"tlaboutdiv", cla:"timelineaboutdiv"}],
             ["p", "Thanks to our member organizations for their essential contributions and guidance."],
             ["If your organization would like to manage its own data, or commission a visualization, <span id=\"suporgesp\">get in touch</span>."]],
@@ -71,7 +73,7 @@ app.support = (function () {
 
 
     function display (tl, dc) {
-        var def = dispdef[dc], currpt, html, svd, contheight;
+        var def = dispdef[dc]; var currpt; var html; var svd; var contheight;
         currpt = app.mode.currpt();
         if(currpt) {  //return to the same point after this display is done.
             app.db.unvisitPoint(currpt);
@@ -110,11 +112,11 @@ app.support = (function () {
 
 
     function updateChapterDetails () {
-        var dcon = app.db.displayContext(),
-            ttl = dcon.points.length,  //total number of all points in timeline
-            ppc = Math.ceil(ttl / 10),  //points per chapter (no leftover pts)
-            cpl = dcon.prog.pts.csvarray().length,  //completed points length
-            cch = Math.floor(cpl / ppc); //set or calc chapter num
+        var dcon = app.db.displayContext();
+        var ttl = dcon.points.length;  //total number of all points in timeline
+        var ppc = Math.ceil(ttl / 10);  //points per chapter (no leftover pts)
+        var cpl = dcon.prog.pts.csvarray().length;  //completed points length
+        var cch = Math.floor(cpl / ppc); //set or calc chapter num
         if(!chdet.chn && chdet.chn !== 0) {
             jt.log("updateChapterDetails initializing chapter num to " + cch);
             chdet.chn = cch; }
@@ -136,11 +138,11 @@ app.support = (function () {
 
 
     function toggleReminderSetting () {
-        var cbrem = jt.byId("cbrem"), data,
-            remval = "no",
-            trans = chdet.remind.troff,
-            compl = chdet.remind.disabled,
-            fail = chdet.remind.enabled;
+        var cbrem = jt.byId("cbrem"); var data;
+        var remval = "no";
+        var trans = chdet.remind.troff;
+        var compl = chdet.remind.disabled;
+        var fail = chdet.remind.enabled;
         if(cbrem.checked) {  //previously unchecked, now checked
             remval = "yes";
             trans = chdet.remind.tron;
@@ -170,7 +172,7 @@ app.support = (function () {
 
 
     function chapterSummary (contf) {
-        var progpts = [], yi = {};
+        var progpts = []; var yi = {};
         updateChapterDetails();
         progpts = chdet.dcon.prog.pts.csvarray();
         if(!contf) {
@@ -207,7 +209,7 @@ app.support = (function () {
     }
 
 
-    function socshareHTML (divid, tl) {
+    function socshareHTML (divid) {
         //thanks to https://sharingbuttons.io/
         var dca = "resp-sharing-button resp-sharing-button--small";
         var dcb = "resp-sharing-button__icon resp-sharing-button__icon--solid";
@@ -251,7 +253,7 @@ app.support = (function () {
     }
 
 
-    function donateHTML (divid, tl) {
+    function donateHTML (divid) {
         var durl = "https://www.paypal.me/epinova";  //interim
         var html = [
             "Support the PastKey project ",
@@ -262,7 +264,7 @@ app.support = (function () {
     }
 
 
-    function tlnameHTML (divid, tl) {
+    function tlnameHTML (divid) {
         var dcon = app.db.displayContext();
         if(dcon && dcon.lastTL) {
             jt.out(divid, dcon.lastTL.name); }
