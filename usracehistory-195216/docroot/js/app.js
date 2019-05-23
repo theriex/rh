@@ -92,7 +92,7 @@ var jt = {};   //Global access to general utility methods
         jt.out("loadstatdiv", "Loading app modules...");
         app.amdtimer = {};
         app.amdtimer.load = { start: new Date() };
-        jt.loadAppModules(app, modules, app.baseurl, app.init2, "?cbp=190521");
+        jt.loadAppModules(app, modules, app.baseurl, app.init2, "?cbp=190522");
     };
 
 
