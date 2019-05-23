@@ -1515,19 +1515,42 @@ app.dlg = (function () {
     }
 
 
+    function reflectDeletePicCheckbox () {
+        var cb = jt.byId("piccbdel");
+        var img = jt.byId("editpicimg");
+        if(cb.checked) {
+            img.style.visibility = "hidden"; }
+        else {
+            img.style.visibility = "visible"; }
+    }
+
     function imageInputTAC (fs, mode, vo) {
         var imgsrc = (vo && vo[fs.field]) || "";
+        var dph = "";
         if(imgsrc) {
-            imgsrc = app.ptimgsrc(vo); }
+            imgsrc = app.ptimgsrc(vo);
+            dph = ["div", {id:"picdelcbdiv"},
+                   [["input", {type:"checkbox", id:fs.field + "cbdel",
+                               name:"picdelcb", value:"picdelcb",
+                               onclick:jt.fsd("app.dlg.cbdelpic()")}],
+                    ["label", {fo:fs.field + "cbdel", id:"picdellabel"},
+                     "Delete pic"]]]; }
         else {
             imgsrc = "/img/picplaceholder.png"; }
         if(mode === "list") {
             return ["div", {cla:"edptvaldiv"}, 
                     ["img", {src:imgsrc, cla:"txtpicimg"}]]; }
         var html = ["div", {cla:"dlgformline", style:"text-align:center;"},
-                    [["input", {type:"file", id:fs.field + "in", 
-                                name:fs.field}],
-                     ["img", {src:imgsrc, cla:"txtpicimg"}]]];
+                    ["table", {style:"margin:auto;"},
+                     ["tr",
+                      [["td",
+                        [["div", {id:"picinputdiv"},
+                          ["input", {type:"file", id:fs.field + "in", 
+                                     name:fs.field}]],
+                         dph]],
+                       ["td",
+                        ["img", {src:imgsrc, cla:"txtpicimg", 
+                                 id:"editpicimg"}]]]]]];
         return html;
     }
 
@@ -1803,6 +1826,23 @@ app.dlg = (function () {
     }
 
 
+    function confirmAbsentPicIntentional () {
+        var picin = jt.byId("picin");
+        var delcb = jt.byId("piccbdel");
+        var nopictxt = "Uploading a public domain picture for your point will give it more impact and help people remember it. Are you sure you want to save without a pic?";
+        var delpictxt = "Deleting the picture for this point will leave it without any image to help remember it. Are you sure you want to save without a pic?";
+        if(picin && !picin.value && editpt && !editpt.instid && !editpt.pic && 
+           !confirm(nopictxt)) {
+            app.dlg.togptdet("pic", true);
+            return false; }
+        if(editpt && editpt.pic && delcb && delcb.checked &&
+           !confirm(delpictxt)) {
+            app.dlg.togptdet("pic", true);
+            return false; }
+        return true;
+    }
+
+
     function ptsubclick () {
         var subobj = makePointFormSubmitObject();
         jt.out("updatestatdiv", "");
@@ -1814,11 +1854,7 @@ app.dlg = (function () {
                 if(fs.layout === "detail") {
                     app.dlg.togptdet("detail", true); }
                 return;  } }
-        var nopictxt = "Uploading a public domain picture for your point will give it more impact and help people remember it. Are you sure you want to save without a pic?";
-        var picin = jt.byId("picin");
-        if(picin && !picin.value && editpt && !editpt.instid && !editpt.pic && 
-           !confirm(nopictxt)) {
-            app.dlg.togptdet("pic", true);
+        if(!confirmAbsentPicIntentional()) {
             return; }
         jt.byId("refshin").value = subobj.refs;
         disablePointEditButtons();
@@ -1923,6 +1959,7 @@ app.dlg = (function () {
         search: function () { searchForPoint(); },
         refsListHTML: function (refs) { return refsListHTML(refs); },
         gendat: function (gen) { return getOrSetGenerationData(gen); },
-        closepop: function () { closePopup(); }
+        closepop: function () { closePopup(); },
+        cbdelpic: function () { reflectDeletePicCheckbox(); }
     };
 }());

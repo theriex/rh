@@ -138,6 +138,8 @@ def update_or_create_point(handler, acc, params):
     pt.srclang = params["srclang"] or pt.srclang or "en-US"
     pt.stats = params["stats"] or ""
     pt.translations = params["translations"] or pt.translations or ""
+    if params["picdelcb"]:
+        pt.pic = None
     if params["pic"]:
         pt.pic = db.Blob(params["pic"])
         pt.pic = images.resize(pt.pic, 160, 160)
@@ -197,11 +199,13 @@ class UpdatePoint(webapp2.RequestHandler):
         acc = appuser.get_authenticated_account(self, False)
         if not acc:
             return
+        appuser.dump_params(self)
         params = appuser.read_params(self, ["ptid", "date", "text", "refs",
                                             "qtype", "groups", "regions", 
                                             "categories", "tags", "codes",
                                             "orgid", "source", "srclang", 
-                                            "stats", "translations", "pic"]);
+                                            "stats", "translations", 
+                                            "pic", "picdelcb"]);
         # need to return proper content to form submission iframe regardless
         self.response.headers['Content-Type'] = 'text/html;charset=UTF-8'
         try:

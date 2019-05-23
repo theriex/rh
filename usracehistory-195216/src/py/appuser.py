@@ -104,6 +104,11 @@ class VizQuery(object):
         return self.gql.fetch(*args, **kwargs)
 
 
+def dump_params(handler):
+    for param in handler.request.params:
+        logging.info(str(param))
+
+
 # If param not found in input then it is set to "". Simpler value testing.
 def read_params(handler, params):
     pd = {}
