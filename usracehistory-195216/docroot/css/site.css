@@ -191,6 +191,7 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 #orgeditcontentdiv { max-width:400px; }
 #dlgorgtabsdiv { display:table; width:100%; table-layout:fixed; }
 #dlgorgtabsdiv span { display:table-cell; text-align:center; font-size:medium; }
+#tlnoticeslabel { font-size:small; }
 
 /* -------------------- */
 /* tabular */

@@ -378,7 +378,7 @@ class UpdateAccount(webapp2.RequestHandler):
                                     "completed", "started", "built"])
         if params["updemail"] and params["updemail"] != acc.email:
             memcache.delete(acc.email)
-        if params["updpassword"] == "none":
+        if params["updpassword"] == "noval":
             params["updpassword"] = acc.password
         for fieldname in params:
             attr = fieldname
@@ -386,7 +386,7 @@ class UpdateAccount(webapp2.RequestHandler):
             if attr.startswith("upd"):
                 attr = attr[3:]
             if val: 
-                if val.lower() == "none":
+                if val.lower() == "noval":
                     val = ""
                 setattr(acc, attr, val)
         update_account(self, acc)

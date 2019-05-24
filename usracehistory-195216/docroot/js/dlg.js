@@ -576,24 +576,28 @@ app.dlg = (function () {
     }
 
 
-    function readInputFieldValues (fields, defaultvals) {
-        var vals = {}; var filled = true;
+    function readInputFieldValues (fields) {
+        var vals = {}; var havereqs = true;
         fields.forEach(function (field) {
-            var lv = jt.byId("lab" + field);
-            lv.innerHTML = lv.innerHTML.replace("*", "");
-            lv.style.fontWeight = "normal";
-            vals[field] = jt.byId(field).value; });
-        fields.forEach(function (field, idx) {
-            var lv = jt.byId("lab" + field);
-            if(!vals[field] || ((field.indexOf("mail") >= 0) &&
-                                (!jt.isProbablyEmail(vals[field])))) {
-                if(!defaultvals || !defaultvals[idx]) {
+            //field can be {fieldname:"x", required:true} or just "x"
+            var fin = field.fieldname || field;
+            var inelem = jt.byId(fin);
+            if(inelem) {
+                vals[fin] = inelem.value; }
+            else {
+                jt.log("readInputFieldValues " + fin + " element not found"); }
+            if(field.required) {
+                var lv = jt.byId("lab" + fin);
+                if(vals[fin]) {  //have value, clear emphasis
+                    lv.innerHTML = lv.innerHTML.replace("*", "");
+                    lv.style.fontWeight = "normal"; }
+                else {  //no value provided, emphasize field and note it
                     lv.innerHTML += "*";
                     lv.style.fontWeight = "bold";
-                    filled = false; }
-                else {
-                    vals[field] = defaultvals[idx]; } } });
-        if(!filled) {
+                    havereqs = false; } }
+            else if(!vals[fin]) {  //not required, force no value
+                vals[fin] = "noval"; } });
+        if(!havereqs) {
             return null; }
         return vals;
     }
@@ -631,7 +635,9 @@ app.dlg = (function () {
 
 
     function createAccount () {
-        var cred = readInputFieldValues(["emailin", "passwordin"]);
+        var cred = readInputFieldValues([
+            {fieldname:"emailin", required:true},
+            {fieldname:"passwordin", required:true}]);
         if(cred) {
             jt.out("loginstatdiv", "Creating account...");
             jt.call("POST", "updacc", inputsToParams(cred),
@@ -896,11 +902,10 @@ app.dlg = (function () {
 
 
     function updateOrganization () {
-        var data = readInputFieldValues(
-            ["namein", "codein", "contacturlin", "projecturlin", 
-             "groupsin", "regionsin", "categoriesin", "tagsin"],
-            [null, "none", "none", "none", 
-             "none", "none", "none", "none"]);
+        var data = readInputFieldValues([
+            {fieldname:"namein", required:true},
+            "codein", "contacturlin", "projecturlin", 
+            "groupsin", "regionsin", "categoriesin", "tagsin"]);
         if(data) {
             data.orgid = app.user.org.instid;
             jt.out("loginstatdiv", "Updating organization...");
@@ -928,6 +933,18 @@ app.dlg = (function () {
     }
 
 
+    function formInputTAC (lab, field, intype, val, place) {
+        var html = ["div", {cla:"dlgformline"},
+                    [["label", {fo:field + "in", cla:"liflab", 
+                                id:"lab" + field + "in"},
+                      lab],
+                     ["input", {type:intype, cla:"lifin",
+                                name:field + "in", id:field + "in",
+                                placeholder:place, value:val}]]];
+        return html;
+    }
+
+
     function myAccount () {
         var html;
         html = [["div", {id:"dlgtitlediv"},
@@ -938,46 +955,30 @@ app.dlg = (function () {
                  [["div", {cla:"dlgformline"},
                    ["em",
                     "Private information:"]],
-                  ["div", {cla:"dlgformline"},
-                   [["label", {fo:"updemailin", cla:"liflab", 
-                               id:"labupdemailin"},
-                     "Email"],
-                    ["input", {type:"text", cla:"lifin",
-                               name:"updemailin", id:"updemailin",
-                               value:app.user.email}]]],
-                  ["div", {cla:"dlgformline"},
-                   [["label", {fo:"updpasswordin", cla:"liflab", 
-                               id:"labupdpasswordin"},
-                     "Password"],
-                    ["input", {type:"password", cla:"lifin",
-                               name:"updpasswordin", id:"updpasswordin"}]]],
+                  formInputTAC("Email", "updemail", "text", app.user.email, ""),
+                  formInputTAC("Password", "updpassword", "password", "", ""),
                   ["div", {cla:"dlgformline", id:"orglinkdiv"}],
                   ["div", {cla:"dlgformline"},
                    ["em",
                     "Public information:"]],
+                  formInputTAC("Name", "name", "text", app.user.acc.name,
+                               "For Honor Roll..."),
+                  formInputTAC("Title", "title", "text", app.user.acc.title,
+                               "Optional"),
+                  formInputTAC("Website", "web", "text", app.user.acc.web,
+                               "Optional"),
                   ["div", {cla:"dlgformline"},
-                   [["label", {fo:"namein", cla:"liflab", id:"labnamein"},
-                     "Name"],
-                    ["input", {type:"text", cla:"lifin",
-                               name:"namein", id:"namein",
-                               value:app.user.acc.name}]]],
-                  ["div", {cla:"dlgformline"},
-                   [["label", {fo:"titlein", cla:"liflab", id:"labtitlein"},
-                     "Title"],
-                    ["input", {type:"text", cla:"lifin",
-                               name:"titlein", id:"titlein",
-                               value:app.user.acc.title}]]],
-                  ["div", {cla:"dlgformline"},
-                   [["label", {fo:"webin", cla:"liflab", id:"labwebin"},
-                     "Website"],
-                    ["input", {type:"text", cla:"lifin",
-                               name:"webin", id:"webin",
-                               value:app.user.acc.web}]]]]],
-                ["div", {id:"loginstatdiv"}],
-                ["div", {id:"dlgbuttondiv"},
-                 [["button", {type:"button", id:"updaccbutton",
-                              onclick:jt.fs("app.dlg.updacc()")},
-                   "Ok"]]]];
+                   [["input", {type:"checkbox", id:"cbtlnotices",
+                               value:"sendtlnotices", 
+                               checked:jt.toru(
+                                   app.user.acc.settings.tlnotices)}],
+                    ["label", {fo:"cbtlnotices", id:"tlnoticeslabel"},
+                     "Send me new timelines"]]],
+                  ["div", {id:"loginstatdiv"}],
+                  ["div", {id:"dlgbuttondiv"},
+                   [["button", {type:"button", id:"updaccbutton",
+                                onclick:jt.fs("app.dlg.updacc()")},
+                     "Ok"]]]]]];
         displayDialog(null, jt.tac2html(html));
         setFocus("namein");
         if(app.db.getOrgId(app.user.acc)) {
@@ -995,10 +996,17 @@ app.dlg = (function () {
 
 
     function updateAccount () {
-        var data = readInputFieldValues(
-            ["updemailin", "updpasswordin", "namein", "titlein", "webin"],
-            ["none",       "none",          "none",   "none",    "none"]);
+        var data = readInputFieldValues([
+            "updemailin", "updpasswordin", "namein", "titlein", "webin"]);
         if(data) {
+            var cbntl = jt.byId("cbtlnotices");
+            if(cbntl) {
+                app.user.acc.settings = app.user.acc.settings || {};
+                if(cbntl.checked) {
+                    app.user.acc.settings.tlnotices = true; }
+                else {
+                    app.user.acc.settings.tlnotices = false; }
+                data.settings = JSON.stringify(app.user.acc.settings); }
             jt.out("loginstatdiv", "Updating account...");
             jt.byId("updaccbutton").disabled = true;
             jt.call("POST", "updacc?" + app.auth(), inputsToParams(data),
@@ -1017,7 +1025,9 @@ app.dlg = (function () {
     //local storage notes: https://github.com/theriex/rh/issues/13
     function processSignIn (cred, contf) {
         var params;
-        cred = cred || readInputFieldValues(["emailin", "passwordin"]);
+        cred = cred || readInputFieldValues([
+            {fieldname:"emailin", required:true},
+            {fieldname:"passwordin", required:true}]);
         params = inputsToParams(cred);
         jt.log("processSignIn params: " + params);
         if(cred) {
@@ -1099,7 +1109,7 @@ app.dlg = (function () {
 
 
     function forgotPassword () {
-        var cred = readInputFieldValues(["emailin"]);
+        var cred = readInputFieldValues([{fieldname:"emailin", required:true}]);
         if(!cred || !jt.isProbablyEmail(cred.emailin)) {
             jt.out("loginstatdiv", "Please fill in your email address...");
             return; }
