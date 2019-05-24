@@ -32,7 +32,7 @@ def update_organization(org, params):
         if attr.startswith("upd"):
             attr = attr[3:]
         if val:
-            if val.lower() == "none":
+            if val.lower() == "noval":
                 val = ""
             setattr(org, attr, val)
     appuser.cached_put(str(org.key().id()), org)
