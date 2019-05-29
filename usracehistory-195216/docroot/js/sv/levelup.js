@@ -1,15 +1,19 @@
-/*jslint browser, multivar, white, fudge */
+/*jslint browser, white, fudge */
 /*global app, window, jt, d3 */
+
+//for stacked chart dev, modify db.nextInteraction to unconditionally return
+//levelup, then comment out the call to displayPie.  Set chart.mouseovers.
 
 app.levelup = (function () {
     "use strict";
 
-    var tl = null,  //grab useful geometry from linear timeline display
-        levinf = null,
-        chart = {colors: {bg: "#fff5ce", bbg: "#fdd53a", bb: "#7d6a22"},
-                 exited:false},
-        sa = {},  //stacked area chart vars
-        pc = {};  //pie chart vars
+    var tl = null;  //grab useful geometry from linear timeline display
+    var levinf = null;
+    var chart = {colors: {bg: "#fff5ce", bbg: "#fdd53a", bb: "#7d6a22"},
+                 mouseovers:false,
+                 exited:false};
+    var sa = {};  //stacked area chart vars
+    var pc = {};  //pie chart vars
 
 
     function initDisplayElements () {
@@ -38,75 +42,172 @@ app.levelup = (function () {
     }
 
 
-    function noteField(fields, field, value, pname) {
-        var key = field + value;
-        if(!fields[key]) {
-            fields[key] = {name:field, value:value, count:0, 
-                           pname:pname || value}; }
-        fields[key].count += 1;
+    function noteSummaryField (fieldname, accum) {
+        sa.fldsum = sa.fldsum || {};
+        sa.fldsum[fieldname] = sa.fldsum[fieldname] || {};
+        sa.fldsum[fieldname].accum = accum;
+    }
+
+
+    function flattenDifferenceFields () {
+        sa.pts = [];  //init holder for unpacked point field data
+        levinf.lev.points.forEach(function (pt) {
+            var fp = {tc:pt.tc};  //flattened point with just attr vals
+            Object.keys(app.qts).forEach(function (key) {
+                var fieldname = app.qts[key];
+                noteSummaryField(fieldname, "binary");
+                fp[fieldname] = 0;
+                if(pt.qtype === key) {
+                    fp[fieldname] = 1; } });
+            //If the point has the same value in two different CSV fields,
+            //then only the last one is getting counted.  That's ok.
+            app.keyflds.forEach(function (key) {
+                pt[key] = pt[key] || "";
+                pt[key].csvarray().forEach(function (val) {
+                    var fieldname = val;
+                    noteSummaryField(fieldname, "binary");
+                    fp[fieldname] = 1; }); });
+            app.pqls.forEach(function (field) {
+                var fieldname = field;
+                noteSummaryField(fieldname, "scalar");
+                fp[fieldname] = pt[fieldname] || "";
+                fp[fieldname] = fp[fieldname].length; });
+            sa.pts.push(fp); });
+        // jt.log("flattenDifferenceFields --------------------");
+        // jt.log(JSON.stringify(sa.pts));
+        // jt.log(JSON.stringify(sa.fldsum));
+        // jt.log("--------------------");
+    }
+
+
+    function normalizeAndSummarizePoints () {
+        Object.keys(sa.fldsum).forEach(function (key) {
+            var sum = sa.fldsum[key];
+            if(sum.accum === "binary") {
+                sum.present = 0;
+                sum.missing = 0; }
+            else if(sum.accum === "scalar") {
+                sum.max = 0;
+                sum.min = 0; } });
+        sa.pts.forEach(function (fp) {
+            Object.keys(sa.fldsum).forEach(function (key) {
+                fp[key] = fp[key] || 0;
+                var sum = sa.fldsum[key];
+                if(sum.accum === "binary") {
+                    if(fp[key]) {
+                        sum.present += 1; }
+                    else {
+                        sum.missing += 1; } }
+                else if(sum.accum === "scalar") {
+                    sum.max = Math.max(sum.max, fp[key]);
+                    sum.min = Math.min(sum.min, fp[key]); } }); });
+        // jt.log("normalizeAndSummarizePoints  --------------------");
+        // jt.log(JSON.stringify(sa.pts))
+        // jt.log(JSON.stringify(sa.fldsum))
+        // jt.log("--------------------");
     }
 
 
     function findHighDifferenceFields () {
-        var fields = {}, hdfs = [];
-        //go through the points and note the fields to differentiate with
-        levinf.lev.points.forEach(function (pt) {
-            Object.keys(app.qts).forEach(function (key) {
-                if(pt.qtype === key) {
-                    noteField(fields, "qtype", key, app.qts[key]); } });
-            app.keyflds.forEach(function (key) {
-                pt[key] = pt[key] || "";
-                pt[key].csvarray().forEach(function (val) {
-                    noteField(fields, key, val); }); }); });
-        Object.keys(fields).forEach(function (key) {
-            var fdef = fields[key];
-            fdef.missing = levinf.lev.points.length - fdef.count;
-            fdef.diff = Math.abs(fdef.count - fdef.missing);
-            hdfs.push(fdef); });
-        hdfs.sort(function (a, b) { return a.diff - b.diff; });
+        flattenDifferenceFields();  //inits sa.pts and sa.fldsum
+        normalizeAndSummarizePoints();
+        var hdfs = [];
+        Object.keys(sa.fldsum).forEach (function (key) {
+            var sum = sa.fldsum[key];
+            sum.field = key;
+            if(sum.accum === "binary") {
+                var ttl = sum.present + sum.missing;
+                sum.diff = ttl - Math.abs(sum.present - sum.missing); }
+            else if(sum.accum === "scalar") {
+                sum.diff = sum.max - sum.min; }
+            hdfs.push(sum); });
+        // jt.log("findHighDifferenceFields  --------------------");
+        // jt.log(JSON.stringify(hdfs))
+        // jt.log("--------------------");
+        hdfs.sort(function (a, b) { return b.diff - a.diff; });
         sa.fields = hdfs.slice(0, sa.cs.length);  //one field per color
-        sa.ks = sa.fields.map((x) => x.pname);
-        jt.log("levelup.findHighDifferenceFields:");
-        sa.fields.forEach(function (field) {
-            jt.log("    " + field.name + " " + field.value + " count:" + 
-                   field.count + ", missing:" + field.missing + ", diff:" + 
-                   field.diff); });
+        sa.ks = sa.fields.map((x) => x.field);
     }
 
 
-    function makeStackData () {
-        var dat = [], currd = {}, pts = levinf.lev.points,
-            //Setting the number of chart x ticks to a higher number
-            //accentuates the jaggedness on the right as point density and
-            //diversity increases.  Setting it low doesn't look like much.
-            //Exceeding the number of points in the level breaks the last
-            //stack.  Tried 10, 20, 30, 60.
-            ncxt = 20,
-            grp = Math.ceil(pts.length / ncxt), count = 0;
-        pts.forEach(function (pt) {
+    function calculatePointGroupingForChart (pts) {
+        //Setting the number of chart x ticks to a higher number accentuates
+        //the jaggedness on the right as point density and diversity
+        //increases.  Setting it low doesn't look like much.  Exceeding the
+        //number of points in the level breaks the last stack.  Tried 10,
+        //20, 30, 60.
+        var ncxt = 20;
+        var grp = Math.ceil(pts.length / ncxt);
+        return grp;
+    }
+
+
+    function groupPointsIntoChartData (grp) {
+        var dat = [];
+        var currd = {};
+        var count = 0;
+        sa.pts.forEach(function (pt) {
             currd.tc = currd.tc || pt.tc;
-            sa.fields.forEach(function (fd) {
-                currd[fd.pname] = currd[fd.pname] || 0;
-                if(pt[fd.name].csvcontains(fd.value)) {
-                    currd[fd.pname] += 1; } });
+            sa.fields.forEach(function (sum) {
+                var field = sum.field;
+                currd[field] = currd[field] || 0;
+                currd[field] += pt[field]; });
             count += 1;
             if(count >= grp) {
                 dat.push(currd);
                 currd = {};
                 count = 0; } });
+        //adjust the field summaries to account for the grouping
+        sa.fields.forEach(function (sum) {
+            if(sum.accum === "scalar") {
+                sum.max = grp * sum.max; } });
+        return dat;
+    }
+
+
+    function makeStackData () {
+        var pts = levinf.lev.points;
+        var grp = calculatePointGroupingForChart(pts);
+        var dat = groupPointsIntoChartData(grp);
         //convert data values to percentages of total
         dat.forEach(function (dp) {
-            var ttl = 0;
             sa.fields.forEach(function (fd) {
-                ttl += dp[fd.pname]; });
-            sa.fields.forEach(function (fd) {
-                var val = dp[fd.pname];
-                if(ttl) {
-                    val = Math.round((val / ttl) * 10000) / 10000; }
-                else { 
-                    val = 1; }
-                dp[fd.pname] = val; }); });
+                var val = dp[fd.field];
+                if(fd.accum === "binary") {
+                    var ttl = fd.present + fd.missing;
+                    val = Math.floor((val / ttl) * 10000) / 10000;
+                    dp[fd.field] = val; }
+                else if(fd.accum === "scalar") {
+                    val = Math.floor((val / fd.max) * 10000) / 10000;
+                    dp[fd.field] = val; } }); });
+        // jt.log("makeStackData (post percentage) --------------------");
+        // jt.log(JSON.stringify(dat));
+        // jt.log("--------------------");
         return dat;
+    }
+
+
+    function consoleKeyForStackedArea () {
+        jt.log("consoleKeyForStackedArea:");
+        sa.fields.forEach(function (sum, idx) {
+            jt.log("    " + sa.vs[idx] + ": " + sum.field + " (" + sum.accum + 
+                   ") diff:" + sum.diff); });
+    }
+
+
+    function areaMouseover (d) {
+        if(chart.mouseovers) {
+            chart.tdg.attr("opacity", 1);
+            d3.select("#maintext")
+                .text(d.key)
+                .attr("font-size", 22)
+                .attr("opacity", 1); }
+    }
+
+
+    function areaMouseout () {
+        if(chart.mouseovers) {
+            d3.select("#maintext").text("").attr("opacity", 0); }
     }
 
 
@@ -114,8 +215,10 @@ app.levelup = (function () {
     //distributions across the more differential point classifications.
     function displayStacked () {
         sa.cs = ["#ff0000","#700000","#5caf79","#ffff00","#800080","#9191ff"];
+        sa.vs = ["    red","darkred","  green"," yellow"," purple","skyblue"];
         findHighDifferenceFields();  //sets sa.fields, sa.ks
         sa.dat = makeStackData();
+        consoleKeyForStackedArea();
         sa.x = d3.scaleLinear()
             .domain([sa.dat[0].tc, sa.dat[sa.dat.length - 1].tc])
             .range([0, tl.width2]);
@@ -132,6 +235,8 @@ app.levelup = (function () {
             .enter().append("g").attr("class", "layer");
         sa.layer.append("path")
             .attr("class", "area")
+            .on("mouseover", areaMouseover)
+            .on("mouseout", areaMouseout)
             .style("fill", function (d) { return sa.z(d.key); })
             .attr("d", sa.area);
         sa.g.transition().delay(1500).duration(3000)
@@ -208,6 +313,7 @@ app.levelup = (function () {
         chart.tdg = chart.vg.append("g").attr("opacity", 1);
         words.forEach(function (word, idx) {
             chart.tdg.append("text")
+                .attr("id", "maintext")
                 .attr("x", chart.tp.xc)
                 .attr("y", Math.round(0.4 * tl.height) + (idx * 60))
                 .attr("text-anchor", "middle")
@@ -230,11 +336,11 @@ app.levelup = (function () {
                      {x:chart.tp.xc, y:chart.tp.ym, ta:"middle",
                       txt:"Respect", x2:chart.tp.xc},
                      {x:chart.tp.xr, y:chart.tp.yb, ta:"end",
-                      txt:"Community", x2:chart.tp.xl}],
-            idel = 2500,
-            wdel = 1000,
-            wft = 1000,
-            tv = 3000;
+                      txt:"Community", x2:chart.tp.xl}];
+        var idel = 2500;
+        var wdel = 1000;
+        var wft = 1000;
+        var tv = 3000;
         chart.krcg = chart.vg.append("g").attr("opacity", 1);
         words.forEach(function (word, idx) {
             chart.krcg.append("text")
@@ -270,10 +376,10 @@ app.levelup = (function () {
 
 
     function displayLevText () {
-        var lines = [],
-            nextlev = levinf.levs[levinf.lev.num],  //last level calls finale
-            txty = Math.round(0.4 * pc.y), ys, ye,
-            nextf = displayStartButton;
+        var lines = [];
+        var nextlev = levinf.levs[levinf.lev.num];  //last level calls finale
+        var txty = Math.round(0.4 * pc.y); var ys; var ye;
+        var nextf = displayStartButton;
         if(!nextlev || !nextlev.points || !nextlev.points.length) {
             lines.push("");
             lines.push("All points completed!");
@@ -303,9 +409,9 @@ app.levelup = (function () {
 
 
     function makePieData () {
-        var ttl = levinf.tl.points.length,
-            pcttl = 0, 
-            data = [];
+        var ttl = levinf.tl.points.length;
+        var pcttl = 0;
+        var data = [];
         levinf.levs.forEach(function (lev, idx) {
             var datum = {label:"Level " + lev.num,
                          stat:idx - levinf.lev.num,

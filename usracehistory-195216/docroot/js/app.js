@@ -33,6 +33,7 @@ var jt = {};   //Global access to general utility methods
                U:"Did you know?",
                F:"Firsts",
                D:"What year?"};
+    app.pqls = ["text", "refs"];
 
 
     app.init2 = function () {
