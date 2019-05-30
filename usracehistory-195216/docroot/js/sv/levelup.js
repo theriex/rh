@@ -49,6 +49,26 @@ app.levelup = (function () {
     }
 
 
+    function appendInteractionTime (fp, pt) {
+        var fieldname = "interaction time";
+        sa.progpts = app.db.displayContext().prog.pts;
+        //if running levelup outside of the normal app flow, then progpts
+        //may not have anything in it.  Don't add the field then.
+        if(!sa.progpts) {
+            return; }
+        var val = 0;
+        var idx = sa.progpts.indexOf(pt.instid);
+        if(idx >= 0) {
+            val = sa.progpts.slice(idx);
+            val = val.split(";");
+            val = {start:jt.isoString2Time(val[1]).getTime(),
+                   end:jt.isoString2Time(val[2]).getTime()};
+            val = val.end - val.start; }
+        noteSummaryField(fieldname, "scalar");
+        fp[fieldname] = val;
+    }
+
+
     function flattenDifferenceFields () {
         sa.pts = [];  //init holder for unpacked point field data
         levinf.lev.points.forEach(function (pt) {
@@ -72,6 +92,7 @@ app.levelup = (function () {
                 noteSummaryField(fieldname, "scalar");
                 fp[fieldname] = pt[fieldname] || "";
                 fp[fieldname] = fp[fieldname].length; });
+            appendInteractionTime(fp, pt);
             sa.pts.push(fp); });
         // jt.log("flattenDifferenceFields --------------------");
         // jt.log(JSON.stringify(sa.pts));
