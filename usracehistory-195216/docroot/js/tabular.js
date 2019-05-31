@@ -1315,7 +1315,7 @@ app.tabular = (function () {
     function pointsDispHeaderHTML (currpts) {
         var html = [];
         var name = (currtl && currtl.name) || "";
-        var counts = {pts:0, pics:0};
+        var counts = {pts:0, pics:0, dates:0, unusual:0};
         var txt = "No points, ";
         var create = "";
         if(name) {
@@ -1328,6 +1328,10 @@ app.tabular = (function () {
                          "show all available datapoints"]]]); }
         currpts.forEach(function (pt) {
             counts.pts += 1;
+            if(pt.qtype === "D") {
+                counts.dates += 1; }
+            if(pt.qtype === "U") {
+                counts.unusual += 1; }
             if(pt.pic) {
                 counts.pics += 1; } });
         if(mcr.editingtimeline) {
@@ -1338,7 +1342,10 @@ app.tabular = (function () {
             html.push(["div", {cla:"pointsdispline"},
                        [create,
                         ["span", {id:"ptscountspan"},
-                         counts.pts + " points, " + counts.pics + " pics"]]]); }
+                         counts.pts + " points" +
+                         ", " + counts.pics + " pics" +
+                         ", " + counts.dates + " date required" +
+                         ", " + counts.unusual + " lesser known"]]]); }
         return jt.tac2html(html);
     }
 
