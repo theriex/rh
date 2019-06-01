@@ -292,10 +292,48 @@ app.dlg = (function () {
     }
 
 
+    function prevButtonTAC (d) {
+        var html = "";
+        var tlpts = app.linear.tldata().pts;
+        var idx = 0;
+        while(idx < tlpts.length && tlpts[idx].instid !== d.instid) {
+            idx += 1; }
+        if(idx > 0 && idx < tlpts.length) {  //found it, and not first point
+            html = ["div", {id:"prevlinkdiv"},
+                    ["a", {href:"#previous",
+                           onclick:jt.fs("app.linear.byPtId('" + 
+                                         tlpts[idx - 1].instid + "','" +
+                                         d.instid + "')")},
+                     "&#8678;"]]; }  //Leftwards White Arrow U+21E6
+        return html;
+    }
+
+
+    function forwardButtonTAC (d) {
+        var html = "";
+        var currpt = app.mode.currpt();
+        var tlpts = app.linear.tldata().pts;
+        var idx = tlpts.length - 1;
+        while(idx > 0 && tlpts[idx].instid !== d.instid) {
+            idx -= 1; }
+        if(idx < tlpts.length - 1 && 
+           (!currpt || currpt.instid !== tlpts[idx + 1].instid)) {
+            html = ["div", {id:"forwardlinkdiv"},
+                    ["a", {href:"#next",
+                           onclick:jt.fs("app.linear.byPtId('" +
+                                         tlpts[idx + 1].instid + "','" +
+                                         d.instid + "')")},
+                     "&#8680;"]]; }  //Rightwards White Arrow U+21E8
+        return html;
+    }
+
+
     function infoButtons (d, inter) {
         var ret = {tac:[], focid:"", date:""};
         if(!inter) {
-            ret.tac = [["div", {cla:"buttonptcodesdiv"},
+            ret.tac = [prevButtonTAC(d),
+                       forwardButtonTAC(d),
+                       ["div", {cla:"buttonptcodesdiv"},
                         [["span", {cla:"buttonptcodeslabelspan"}, 
                           "Keys: "],
                          pointKeywords(d)]],
@@ -305,7 +343,8 @@ app.dlg = (function () {
             ret.focid = "backbutton";
             ret.date = ["span", {id:"dlgdatespan"}, d.dispdate]; }
         else if(d.qtype === "U") {
-            ret.tac = [["span", {cla:"buttonintrospan"}, "Did you know?"],
+            ret.tac = [prevButtonTAC(d),
+                       ["span", {cla:"buttonintrospan"}, "Did you know?"],
                        ["div", {id:"choicebuttonsdiv"},
                         [["button", {type:"button", id:"yesbutton",
                                      onclick:jt.fs("app.dlg.button('yes')")},
@@ -318,7 +357,7 @@ app.dlg = (function () {
             ret.focid = "nobutton";
             ret.date = ["span", {id:"dlgdatespan"}, d.dispdate]; }
         else if(d.qtype === "D") {
-            ret.tac = [];
+            ret.tac = [prevButtonTAC(d)];
             d.yearguesses = getYearGuessOptions(d, 3);
             d.yearguesses.forEach(function (year) {
                 ret.tac.push(["button", {type:"button", id:yearButtonId(year),
@@ -328,7 +367,8 @@ app.dlg = (function () {
             ret.date = ["span", {id:"dlgdatespan"}, 
                         ["span", {id:"dlgdatequestion"}, "When?"]]; }
         else {
-            ret.tac = [["div", {cla:"buttonptcodesdiv"},
+            ret.tac = [prevButtonTAC(d),
+                       ["div", {cla:"buttonptcodesdiv"},
                         [["span", {cla:"buttonptcodeslabelspan"}, 
                           "Keys: "],
                          pointKeywords(d)]],
@@ -503,6 +543,7 @@ app.dlg = (function () {
         var prog = app.db.displayContext().prog;
         var pstr = "";
         inter.end = new Date();
+        pt.isoClosed = inter.end.toISOString();
         if(prog.pts.csvcontains(ptid)) {
             prog.pts.csvarray().forEach(function (ps) {
                 if(ps.startsWith(ptid)) {
