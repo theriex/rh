@@ -1147,11 +1147,32 @@ app.tabular = (function () {
     }
 
 
+    function makeMatchFromSearch(str) {
+        var patsubs = ["i.?i"];
+        var charsubs = ["[e,é]", "[a,á]", "[n,ñ]"];
+        var idx; var jdx;
+        if(!str) {
+            return null; }
+        str = str.toLowerCase();
+        patsubs.forEach(function (sub) {
+            var regx = new RegExp(sub, "g");
+            str = str.replace(regx, sub); });
+        str = str.split("");
+        for(idx = 0; idx < str.length; idx += 1) {
+            for(jdx = 0; jdx < charsubs.length; jdx += 1) {
+                if(charsubs[jdx].indexOf(str[idx]) >= 0) {
+                    str[idx] = charsubs[jdx]; } } }
+        str = str.join("");
+        return new RegExp(str, "igu");
+    }
+
+
     function verifyPointMatchCriteria () {
         var dcon;
         mcr.start = Number(jt.byId("yearstartin").value);
         mcr.end = Number(jt.byId("yearendin").value);
         mcr.srch = jt.byId("srchin").value;
+        mcr.regx = makeMatchFromSearch(mcr.srch);
         if(ptflds.selpool.getValue() === "Org") {
             mcr.orgid = app.user.acc.orgid; }
         if(ptflds.selpool.getValue() === "Timeline") {
@@ -1175,7 +1196,7 @@ app.tabular = (function () {
 
 
     function isMatchingPoint (pt) {
-        var srchtxt; var haveReqKeys = true;
+        var haveReqKeys = true;
         if(mcr.orgid && pt.orgid !== mcr.orgid) {
             return false; }
         if((mcr.ids || mcr.editingtimeline) && 
@@ -1185,11 +1206,8 @@ app.tabular = (function () {
         if(wsv.yr.matching === "on" &&
            (pt.start.year < mcr.start || pt.start.year > mcr.end)) {
             return false; }
-        if(mcr.srch) {
-            srchtxt = mcr.srch.toLowerCase();
-            if((pt.text.toLowerCase().indexOf(srchtxt) < 0) &&
-               (pt.instid.indexOf(srchtxt) < 0)) {
-                return false; } }
+        if(mcr.regx && !pt.text.match(mcr.regx)) {
+            return false; }
         app.keyflds.forEach(function (field) {
             if(mcr[field]) {
                 haveReqKeys = false;  //one or more checked keywords needed
