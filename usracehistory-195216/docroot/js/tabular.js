@@ -600,15 +600,15 @@ app.tabular = (function () {
         tlsetflds = [
             {field:"instid", type:"info", 
              getf:function (tl) { return "id# " + tl.instid; }},
-            {field:"name", type:"text", 
+            {field:"name", type:"text", place:"main page timeline name",
              oninput:jt.fs("app.tabular.dfltslug()")},
-            {field:"slug", type:"text"},
-            {field:"title", type:"text"},
-            {field:"subtitle", type:"text"},
+            {field:"slug", type:"text", place:"shortandunique"},
+            {field:"title", type:"text", place:"start dialog large text"},
+            {field:"subtitle", type:"text", place:"start dialog other text"},
             {field:"featured", type:"ui"},
-            {field:"lang", type:"text"},
-            {field:"comment", type:"text"},
-            {field:"about", type:"text"},
+            {field:"lang", type:"text", place:"en-US"},
+            {field:"comment", type:"text", place:"optional overlay start text"},
+            {field:"about", type:"text", place:"closing acknowledge text"},
             {field:"ctype", type:"ui"},
             {field:"cids", type:"ui"},
             {field:"svs", type:"ui"},
@@ -837,6 +837,8 @@ app.tabular = (function () {
                 inobj = {type:sf.type, value:sf.getf(currtl),
                          id:sf.field + "in", name:sf.field + "in",
                          cla:"av" + sf.type + "in"};
+                if(sf.place) {
+                    inobj.placeholder = sf.place; }
                 tlsetfldopts.forEach(function (opt) {
                     if(sf[opt]) {
                         inobj[opt] = sf[opt]; } });
