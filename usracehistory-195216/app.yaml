@@ -6,7 +6,7 @@ threadsafe: yes
 
 libraries:
 - name: pycrypto
-  version: "2.3"
+  version: "2.6.1"
 
 handlers:
 ######################################################################
