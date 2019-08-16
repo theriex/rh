@@ -40,8 +40,7 @@ class AppUser(db.Model):
     """ User authorization account with optional public fields """
     # login fields
     email = db.EmailProperty(required=True)
-    phash = db.StringProperty()
-    password = db.StringProperty()
+    phash = db.StringProperty(required=True)
     status = db.StringProperty()        # Pending|Active|Inactive|Unreachable
     actsends = db.TextProperty(indexed=False)  # isodate;emaddr,d2;e2...
     actcode = db.StringProperty(indexed=False) # account activation code
