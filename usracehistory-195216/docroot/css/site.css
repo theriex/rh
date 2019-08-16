@@ -180,7 +180,7 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 .refin { width:260px; }
 .refslist { margin:0px; padding-left:25px; max-width:280px; overflow:hidden; }
 .refslist li { font-size:small; }
-#forgotpassdiv { text-align:center; font-size:medium; padding:6px 0px 0px 0px; }
+#resetpassdiv { text-align:center; font-size:medium; padding:6px 0px 0px 0px; }
 .dlgbackimg { max-height:27px; opacity:0.5; }
 #loginstatdiv { padding:5px 0 0 0; }
 #cbnewacclabel { font-size:medium; }

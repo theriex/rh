@@ -73,9 +73,9 @@ def completion_stats(prog):
 # user can complete a timeline more than once if they want.
 class NoteTimelineCompletion(webapp2.RequestHandler):
     def post(self):
-        acc = appuser.get_authenticated_account(self, False)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return
+            return srverr(self, 401, "Authentication failed")
         params = appuser.read_params(self, ["tlid", "tlname", "tltitle", 
                                             "tlsubtitle"]);
         tlid = params["tlid"]
@@ -111,14 +111,15 @@ class NoteTimelineCompletion(webapp2.RequestHandler):
         completed.append(compinst)
         acc.started = json.dumps(started)
         acc.completed = json.dumps(completed)
-        appuser.update_account(self, acc)
+        cached_put(acc.email, acc)
+        appuser.return_json(self, [acc, {"token":appuser.token_for_user(acc)}])
 
 
 class FindCompletions(webapp2.RequestHandler):
     def get(self):
-        acc = appuser.get_authenticated_account(self, False)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return
+            return srverr(self, 401, "Authentication failed")
         params = appuser.read_params(self, ["tlid"]);
         tlid = int(params["tlid"])
         vq = appuser.VizQuery(TLComp, "WHERE tlid=:1 LIMIT 50", tlid)
@@ -128,9 +129,9 @@ class FindCompletions(webapp2.RequestHandler):
 
 class CompletionStats(webapp2.RequestHandler):
     def get(self):
-        acc = appuser.get_authenticated_account(self, False)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return
+            return srverr(self, 401, "Authentication failed")
         if acc.orgid != 1 or acc.lev != 2:
             return appuser.srverr(self, 403, "Admin access only.")
         text = recent_completions("2018-01-01T00:00:00Z")

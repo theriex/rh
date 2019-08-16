@@ -878,10 +878,10 @@ app.db = (function () {
     }
 
 
-    function postdata (dbc, dbo) {
+    function postdata (dbc, dbo, skips) {
         var dat;
         serialize(dbc, dbo);
-        dat = jt.objdata(dbo);
+        dat = jt.objdata(dbo, skips);
         deserialize(dbc, dbo);
         return dat;
     }

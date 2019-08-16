@@ -680,8 +680,9 @@ app.dlg = (function () {
             {fieldname:"emailin", required:true},
             {fieldname:"passwordin", required:true}]);
         if(cred) {
+            cred.updemail = cred.emailin;  //pass email without "in"
             jt.out("loginstatdiv", "Creating account...");
-            jt.call("POST", "updacc", inputsToParams(cred),
+            jt.call("POST", "newacct", inputsToParams(cred),
                     function (result) {
                         app.db.deserialize("AppUser", result[0]);
                         setAuthentication(cred.emailin, result);
@@ -1050,13 +1051,20 @@ app.dlg = (function () {
                 data.settings = JSON.stringify(app.user.acc.settings); }
             jt.out("loginstatdiv", "Updating account...");
             jt.byId("updaccbutton").disabled = true;
+            if(app.user.acc.email === data.updemailin &&
+               data.updpasswordin === "noval") {  //not changing auth info
+                delete data.updpasswordin;        //so don't send
+                delete data.updemailin; }
             jt.call("POST", "updacc?" + app.auth(), inputsToParams(data),
                     function (result) {
                         app.db.deserialize("AppUser", result[0]);
+                        if(data.updpasswordin) {
+                            setAuthentication(data.updemailin, result); }
                         app.user.acc = result[0];
                         app.dlg.close();
                         popBack(app.db.nextInteraction); },
                     function (code, errtxt) {
+                        jt.byId("updaccbutton").disabled = false;
                         jt.log("updateAccount " + code + ": " + errtxt);
                         jt.out("loginstatdiv", errtxt); },
                     jt.semaphore("dlg.updateAccount")); }
@@ -1123,9 +1131,9 @@ app.dlg = (function () {
 
 
     function displayEmailSent (emaddr) {
-        var subj = "Forgot Password email didn't arrive";
+        var subj = "Reset Password email didn't arrive";
         var body = "Hi,\n\n" +
-            "I clicked \"forgot password\" but didn't get a response. " +
+            "I clicked \"reset password\" but didn't get a response. " +
             "Could you please look into it and get back to me?\n\n" +
             "Thanks\n\n";
         var mh = "mailto:support@pastkey.org?subject=" + jt.dquotenc(subj) +
@@ -1138,8 +1146,9 @@ app.dlg = (function () {
                       [["li", "Make sure your email address is spelled right,"],
                        ["li", "Check your spam folder"]]],
                      ["p", 
-                      ["If the email doesn't arrive in a timely fashion, ",
-                       ["a", {href:mh}, "contact support@pastkey.org"],
+                      ["If the email doesn't arrive in a timely fashion,",
+                       " contact ",
+                       ["a", {href:mh}, "support@pastkey.org"],
                        " so we can look into it."]],
                      ["div", {id: "dlgbuttondiv"},
                       ["button", {type: "button", id: "okbutton",
@@ -1149,19 +1158,19 @@ app.dlg = (function () {
     }
 
 
-    function forgotPassword () {
+    function resetPassword () {
         var cred = readInputFieldValues([{fieldname:"emailin", required:true}]);
         if(!cred || !jt.isProbablyEmail(cred.emailin)) {
             jt.out("loginstatdiv", "Please fill in your email address...");
             return; }
-        jt.call("POST", "mailcred", inputsToParams(cred),
+        jt.call("POST", "mailpwr", inputsToParams(cred),
                 function () {
                     jt.out("loginstatdiv", "");
                     displayEmailSent(cred.emailin); },
                 function (code, errtxt) {
-                    jt.log("mailcred call failed " + code + " " + errtxt);
-                    jt.out("loginstatdiv", "mail send failed: " + errtxt); },
-                jt.semaphore("forgotPassword"));
+                    jt.log("mailpwr call failed " + code + " " + errtxt);
+                    jt.out("loginstatdiv", "Mail send failed: " + errtxt); },
+                jt.semaphore("resetPassword"));
     }
 
 
@@ -1169,7 +1178,7 @@ app.dlg = (function () {
         var html; var hd;
         var cbi = {type:"checkbox", id:"cbnewacc", value:"na",
                    onclick:jt.fs("app.dlg.signin()")};
-        var fpd = {id:"forgotpassdiv"};
+        var fpd = {id:"resetpassdiv"};
         if(app.domfield("cbnewacc", "checked")) {
             hd = {f:jt.fs("app.dlg.newacc()"), b:"Sign Up"};
             cbi.checked = "checked";
@@ -1207,9 +1216,9 @@ app.dlg = (function () {
                               onclick:hd.f},
                    hd.b]]],
                 ["div", fpd,
-                 ["a", {href:"#forgotpassword",
-                        onclick:jt.fs("app.dlg.forgotpw()")},
-                  "forgot password"]]];
+                 ["a", {href:"#resetpassword",
+                        onclick:jt.fs("app.dlg.resetpw()")},
+                  "reset password"]]];
         displayDialog(null, jt.tac2html(html));
         setFocus("emailin");
     }
@@ -1318,7 +1327,7 @@ app.dlg = (function () {
         displayDialog(null, jt.tac2html(html));
         jt.byId("contbutton").disabled = true;
         app.db.mergeProgToAccount();  //normalize current prog with db state
-        var data = app.db.postdata("AppUser", app.user.acc);
+        var data = app.db.postdata("AppUser", app.user.acc, ["email"]);
         jt.call("POST", "updacc?" + app.auth(), data,
                 function (result) {
                     jt.byId("contbutton").disabled = false;
@@ -1988,7 +1997,7 @@ app.dlg = (function () {
         login: function () { processSignIn(); },
         logout: function () { processSignOut(); },
         chkcook: function (cf) { checkCookieSignIn(cf); },
-        forgotpw: function () { forgotPassword(); },
+        resetpw: function () { resetPassword(); },
         saveprog: function () { saveProgress(); },
         contnosave: function () { continueToNext(); },
         ptedit: function (ptid) { editPoint(ptid); },

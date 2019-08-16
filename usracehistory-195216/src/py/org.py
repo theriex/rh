@@ -53,9 +53,9 @@ class GetOrgById(webapp2.RequestHandler):
     def get(self):
         if not appuser.verify_secure_comms(self):
             return
-        acc = appuser.get_authenticated_account(self, True)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return
+            return srverr(self, 401, "Authentication failed")
         params = appuser.read_params(self, ["orgid"])
         orgid = params["orgid"]  # str
         org = appuser.cached_get(orgid, {"dboc": Organization, "byid": orgid})
@@ -66,9 +66,9 @@ class UpdateOrg(webapp2.RequestHandler):
     def post(self):
         if not appuser.verify_secure_comms(self):
             return
-        acc = appuser.get_authenticated_account(self, True)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return
+            return srverr(self, 401, "Authentication failed")
         fields = ["orgid", "name", "code", "contacturl", "projecturl", 
                   "groups", "regions", "categories", "tags"]
         params = appuser.read_params(self, fields)
@@ -85,9 +85,9 @@ class FetchOrgMembers(webapp2.RequestHandler):
     def get(self):
         if not appuser.verify_secure_comms(self):
             return
-        acc = appuser.get_authenticated_account(self, True)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return
+            return srverr(self, 401, "Authentication failed")
         params = appuser.read_params(self, ["orgid"])
         if not params["orgid"] or int(params["orgid"]) != acc.orgid:
             return appuser.srverr(self, 403, "Not your Organization")
@@ -106,9 +106,9 @@ class UpdateOrgMembership(webapp2.RequestHandler):
     def post(self):
         if not appuser.verify_secure_comms(self):
             return
-        acc = appuser.get_authenticated_account(self, True)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return
+            return srverr(self, 401, "Authentication failed")
         params = appuser.read_params(self, ["orgid", "userid", "lev"])
         if not params["orgid"] or int(params["orgid"]) != acc.orgid:
             return appuser.srverr(self, 403, "Not your Organization")
@@ -133,13 +133,13 @@ class AddNewMember(webapp2.RequestHandler):
     def post(self):
         if not appuser.verify_secure_comms(self):
             return
-        acc = appuser.get_authenticated_account(self, True)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return
+            return srverr(self, 401, "Authentication failed")
         if not acc.orgid or acc.lev != 2:
             return appuser.srverr(self, 403, "Not an Administrator")
         params = appuser.read_params(self, ["membermail"])
-        mem = appuser.find_user_by_email(params["membermail"])
+        mem = appuser.account_from_email(params["membermail"])
         if not mem:
             return appuser.srverr(self, 404, "User not found")
         if mem.orgid:
@@ -163,9 +163,9 @@ class VerifyPlaceholderOrg(webapp2.RequestHandler):
     def get(self):
         if not appuser.verify_secure_comms(self):
             return
-        acc = appuser.get_authenticated_account(self, True)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return
+            return srverr(self, 401, "Authentication failed")
         if acc.orgid != 1 or acc.lev != 2:
             return appuser.srverr(self, 403, "System admin access only.")
         pn = "Placeholder"

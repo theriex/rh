@@ -21,22 +21,41 @@ handlers:
   script: src.py.appuser.app
 
 
-## Create account or update if authtok provided.
-## POST params: email, [authtok], password, [name, title, web, lang, settings, 
+## Create a new account
+## POST params: email, password
+- url: .*/newacct.*
+  script: src.py.appuser.app
+
+
+## Update an existing account
+## POST params: email, [authtok | password], [name, title, web, lang, settings,
 ##              remtls, completed, started, built]
 - url: .*/updacc.*
   script: src.py.appuser.app
 
 
-## Email forgotten native account credentials
+## Email account access link to reset password
 ## POST params: emailin
-- url: .*/mailcred.*
+- url: .*/mailpwr.*
   script: src.py.appuser.app
+
 
 ## Return public information like timeline completions, given an email address
 ## GET params: email
 - url: .*/pubuser.*
   script: src.py.appuser.app
+
+
+## AppUser password conversion
+- url: .*/convau.*
+  script: src.py.appuser.app
+  login: admin
+
+
+## Tech support help for ?user=email
+- url: .*/supphelp.*
+  script: src.py.appuser.app
+  login: admin
 
 
 ## -------------------- point --------------------

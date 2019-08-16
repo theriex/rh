@@ -262,9 +262,9 @@ def contained_timelines (tl):
 
 class UpdateTimeline(webapp2.RequestHandler):
     def post(self):
-        acc = appuser.get_authenticated_account(self, False)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return
+            return srverr(self, 401, "Authentication failed")
         params = appuser.read_params(self, ["instid", "name", "ctype", "cids", 
                                             "svs", "slug", "title", "subtitle",
                                             "featured", "lang", "comment", 

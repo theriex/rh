@@ -58,7 +58,7 @@
     if (!String.prototype.csvarray) {
         String.prototype.csvarray = function () {
             if (this && this.trim()) {
-                return this.split(",");
+                return this.split(/,\s*/);
             }
             return [];
         };
@@ -70,14 +70,14 @@
             var va = [], vo = {};
             if(this && this.trim()) {
                 va = this.split(",");
-                console.log("va: " + va);
+                //console.log("va: " + va);
                 va.forEach(function (val, idx) {
                     if (!vo[val]) {
                         console.log("  " + val + ": " + (idx + 1));
                         vo[val] = idx + 1; } });
                 va = [];
                 Object.keys(vo).forEach(function (key) {
-                    console.log("va: " + va);
+                    //console.log("va: " + va);
                     va.push(key); });
                 va.sort(function (a, b) { return vo[a] - vo[b]; }); }
             return va;
@@ -448,13 +448,19 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
                   "November", "December" ];
 
     uo.tz2human = function (zd) {
-        var ds;
         if(typeof zd === "string") {
             zd = uo.ISOString2Time(zd); }
         zd = uo.tz2loc(zd);  //convert back to local time
-        ds = uo.days[zd.getDay()].slice(0, 3) + " " + 
-            zd.getDate() + " " + uo.months[zd.getMonth()].slice(0, 3) + " " +
-            zd.getFullYear() + " " + zd.getHours() + ":" + zd.getMinutes();
+        //having adjusted the time, have to fetch all the date components as
+        //UTC to avoid having them automatically adjusted again.
+        var minutes = String(zd.getUTCMinutes());
+        if(zd.getUTCMinutes() < 10) {
+            minutes = "0" + minutes; }
+        var ds = uo.days[zd.getUTCDay()].slice(0, 3) + " " +
+            zd.getUTCDate() + " " +
+            uo.months[zd.getUTCMonth()].slice(0, 3) + " " +
+            zd.getUTCFullYear() + " " +
+            zd.getUTCHours() + ":" + minutes;
         return ds;
     };
 

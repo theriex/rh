@@ -162,9 +162,9 @@ class RecentPoints(webapp2.RequestHandler):
 
 class FetchPublicPoints(webapp2.RequestHandler):
     def get(self):
-        acc = appuser.get_authenticated_account(self, False)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return  # error already reported
+            return srverr(self, 401, "Authentication failed")
         if acc.orgid != 1 or acc.lev != 2:
             return appuser.srverr(self, 403, "Admin access only.")
         vq = appuser.VizQuery(service.AppService, "WHERE name=:1", "pubpts")
@@ -196,9 +196,9 @@ class UpdatePoint(webapp2.RequestHandler):
         # ptupld could be sending password in params so refuse if not secured
         if not appuser.verify_secure_comms(self):
             return
-        acc = appuser.get_authenticated_account(self, False)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return
+            return srverr(self, 401, "Authentication failed")
         appuser.dump_params(self)
         params = appuser.read_params(self, ["ptid", "date", "text", "refs",
                                             "qtype", "groups", "regions", 
@@ -239,9 +239,9 @@ class FetchPoint(webapp2.RequestHandler):
         # PENDING: verify caller is an org contributor
         if not appuser.verify_secure_comms(self):
             return
-        acc = appuser.get_authenticated_account(self, False)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return
+            return srverr(self, 401, "Authentication failed")
         ptid = self.request.get('pointid')
         if not ptid:
             return appuser.srverr(self, 400, "pointid required for lookup")
@@ -253,9 +253,9 @@ class FetchPoint(webapp2.RequestHandler):
 
 class NukePointPic(webapp2.RequestHandler):
     def get(self):
-        acc = appuser.get_authenticated_account(self, False)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return
+            return srverr(self, 401, "Authentication failed")
         if acc.orgid != 1 or acc.lev != 2:
             return appuser.srverr(self, 403, "Admin access only.")
         ptid = self.request.get('pointid')
@@ -267,9 +267,9 @@ class NukePointPic(webapp2.RequestHandler):
 
 class BatchProcessPoints(webapp2.RequestHandler):
     def get(self):
-        acc = appuser.get_authenticated_account(self, False)
+        acc = appuser.authenticated(self.request)
         if not acc:
-            return  # error already reported
+            return srverr(self, 401, "Authentication failed")
         if acc.orgid != 1 or acc.lev != 2:
             return appuser.srverr(self, 403, "Admin access only.")
         pts = Point.all()

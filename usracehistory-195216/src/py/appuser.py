@@ -5,7 +5,7 @@ from google.appengine.api.datastore_types import Blob
 from google.appengine.api import memcache
 from google.appengine.api import mail
 import logging
-from Crypto.Cipher import AES
+from Crypto.Hash import HMAC, SHA512
 import base64
 import httplib
 import urllib
@@ -14,6 +14,7 @@ import json
 import re
 import pickle
 import string
+import random
 import os
 import service
 
@@ -39,7 +40,8 @@ class AppUser(db.Model):
     """ User authorization account with optional public fields """
     # login fields
     email = db.EmailProperty(required=True)
-    password = db.StringProperty(required=True)
+    phash = db.StringProperty()
+    password = db.StringProperty()
     status = db.StringProperty()        # Pending|Active|Inactive|Unreachable
     actsends = db.TextProperty(indexed=False)  # isodate;emaddr,d2;e2...
     actcode = db.StringProperty(indexed=False) # account activation code
@@ -132,8 +134,12 @@ def read_params(handler, params):
 def valid_email_address(emaddr):
     # something @ something . something
     if not re.match(r"[^@]+@[^@]+\.[^@]+", emaddr):
+        logging.info("invalid email address: " + emaddr)
         return False
     return True
+
+
+logging_cache_actions = False
 
 
 def cached_put(ckey, dbobj):
@@ -142,7 +148,8 @@ def cached_put(ckey, dbobj):
     # If no ckey was provided, use the string version of the unique id
     if not ckey:
         ckey = str(dbobj.key().id())
-    # logging.info("cached_put: " + str(dbobj.kind()) + " " + ckey)
+    if logging_cache_actions:
+        logging.info("cached_put: " + str(dbobj.kind()) + " " + ckey)
     if not memcache.set(ckey, pickle.dumps(dbobj)):
         logging.warn("memcache set fail " + str(dbobj.kind()) + " " + ckey)
     # logging.info("cached_put: " + str(memcache.get_stats()))
@@ -152,9 +159,12 @@ def cached_get(ckey, qps):
     instance = memcache.get(ckey)
     if instance:
         instance = pickle.loads(instance)
-        # logging.info("cached_get found cached instance: " + str(instance))
+        if logging_cache_actions:
+            logging.info("cached_get " + ckey + " found cached instance")
         return instance
     if "byid" in qps:
+        if logging_cache_actions:
+            logging.info("cached_get " + qps["dboc"].kind() + " " + qps["byid"])
         instance = qps["dboc"].get_by_id(int(qps["byid"]))
         if instance:
             cached_put(ckey, instance)
@@ -169,62 +179,142 @@ def cached_get(ckey, qps):
     return None
 
 
-def find_user_by_email(email):
-    qp = {"dboc": AppUser, "where": "WHERE email=:1 LIMIT 1", "wags": email}
-    return cached_get(email, qp)
+# Favoring setting the ckey to "" rather than calling memcache.delete since
+# it is equivalent in logic and easier to debug.
+def cache_bust(ckey):
+    if logging_cache_actions:
+        logging.info("cache_bust " + ckey)
+    memcache.set(ckey, "")
 
 
-def asciienc(val):
-    val = unicode(val)
-    return val.encode('utf8')
+# Apparently on some devices/browsers it is possible for the email
+# address used for login to be sent encoded.  Decode and lowercase.
+def normalize_email(emaddr):
+    emaddr = emaddr.lower()
+    emaddr = re.sub('%40', '@', emaddr)
+    return emaddr
 
 
-def pwd2key(password):
-    pwd = unicode(password)
-    pwd = asciienc(pwd)
-    # passwords have a min length of 6 so get at least 32 by repeating it
-    key = str(pwd) * 6
-    key = key[:32]
-    return key
+def account_from_email(emaddr):
+    emaddr = emaddr or ""
+    emaddr = normalize_email(emaddr)
+    # logging.info("account_from_email looking up " + emaddr)
+    qp = {"dboc": AppUser, "where": "WHERE email=:1 LIMIT 1", "wags": emaddr}
+    return cached_get(emaddr, qp)
 
 
-def acctoken(email, password):
-    key = pwd2key(password)
-    token = ":" + str(int(round(time.time()))) + ":" + asciienc(email)
-    token = token.rjust(48, 'X')
-    token = token[:48]
-    token = AES.new(key, AES.MODE_CBC).encrypt(token)
-    token = base64.b64encode(token)
-    # make base64 encoding url safe
+def make_password_hash(emaddr, pwd, cretime):
+    hmac = HMAC.new(pwd.encode("utf8"), digestmod=SHA512)
+    hmac.update((emaddr + "_" + cretime).encode("utf8"))
+    return hmac.hexdigest()
+    
+
+def token_for_user(appuser):
+    ts = service.get_service_info("TokenSvc")
+    hmac = HMAC.new(ts.csec.encode("utf8"), digestmod=SHA512)
+    hmac.update((appuser.email + "_" + appuser.phash).encode("utf8"))
+    token = hmac.hexdigest()
     token = token.replace("+", "-")
     token = token.replace("/", "_")
     token = token.replace("=", ".")
     return token
 
 
-def dectoken(key, token):
-    token = token.replace("-", "+")
-    token = token.replace("_", "/")
-    token = token.replace(".", "=")
-    token = base64.b64decode(token)
-    token = AES.new(key, AES.MODE_CBC).decrypt(token)
-    return token
+def authenticated(request):
+    """ Return an account for the given auth type if the token is valid """
+    emaddr = normalize_email(request.get('email') or "")
+    reqtok = request.get('authtok')
+    appuser = account_from_email(emaddr)
+    if not appuser:
+        logging.info("authenticated appuser not found emaddr: " + emaddr)
+        return None
+    srvtok = token_for_user(appuser)
+    if reqtok != srvtok:  # possible the TokenSvc ckey changed, try password
+        pwd = request.get('password')
+        if pwd:
+            phash = make_password_hash(emaddr, pwd, appuser.created)
+            if phash == appuser.phash:  # authenticated
+                reqtok = token_for_user(appuser)
+    if reqtok != srvtok:
+        logging.info("authenticated token did not match\n" +
+                     "  reqtok: " + reqtok + "\n" +
+                     "  srvtok: " + srvtok)
+        return None
+    logging.info("appuser.py authenticated " + emaddr)
+    return appuser
 
 
-def match_token_to_acc(token, acc):
-    key = pwd2key(acc.password)
-    decoded = dectoken(key, token)
-    if not decoded:
-        return None
-    emidx = -1
-    try:
-        emidx = decoded.index(asciienc(acc.email))
-    except:
-        emidx = -1
-    if emidx <= 2:
-        return None
-    # Not enforcing token expiration. Check the time here if that's needed
-    return acc
+def valid_new_email_address(handler, emaddr):
+    if not (valid_email_address(emaddr)):
+        return srverr(handler, 412, "Invalid email address")
+    existing = account_from_email(emaddr)
+    if existing:
+        return srverr(handler, 422, "Email address used already")
+    return emaddr
+
+
+def get_request_value(request, params):
+    val = ""
+    for param in params:
+        val = val or request.get(param)
+    if val == "noval":
+        val = ""
+    return val
+
+
+# Password is required for updating email since we need to rebuild phash
+# before rebuilding the access token.
+def update_email_and_password(handler, acc):
+    # do not read "email" as a parameter here, it's part of the authentication
+    emaddr = get_request_value(handler.request, ["emailin", "updemail"])
+    emaddr = normalize_email(emaddr)
+    pwd = get_request_value(handler.request, ["password", "updpassword"])
+    logging.info("update_email_and_password " + emaddr + " " + pwd)
+    if not emaddr and not pwd and acc.email != "placeholder":
+        return "nochange"  # not updating credentials so done
+    # updating email+password or password
+    if emaddr and emaddr != acc.email and not pwd:
+        return srverr(handler, 400, "Password required to change email")
+    if len(pwd) < 6:
+        return srverr(handler, 412, "Password must be at least 6 characters")
+    change = "password"
+    if emaddr != acc.email:
+        if not valid_new_email_address(handler, emaddr):
+            return False  # error already reported
+        cache_bust(acc.email)  # clear out the current cached version
+        acc.email = emaddr
+        change = "email"
+    acc.phash = make_password_hash(acc.email, pwd, acc.created)
+    if change == "email":
+        cache_bust(acc.email)  # shouldn't be necessary, but just in case
+        acc.status = "Pending"
+        acc.actsends = ""
+        chars = string.ascii_letters + string.digits
+        acc.actcode = "".join(random.choice(chars) for _ in range(30))
+    return change
+
+
+def update_account_fields(handler, acc):
+    params = read_params(handler, ["name", "title", "web", "lang", "settings",
+                                   "remtls", "completed", "started", "built"])
+    for fieldname in params:
+        attr = fieldname
+        val = params[fieldname]
+        if val:
+            if val.lower() == "noval":
+                val = ""
+            setattr(acc, attr, val)
+    return True
+
+
+def update_access_time(acc):
+    count = "1"
+    stamp = acc.accessed or ""
+    stamp = stamp.split(";")
+    if len(stamp) > 1:
+        count = stamp[1]
+    count = int(count) + 1
+    acc.accessed = nowISO() + ";" + str(count)
 
 
 def dt2ISO(dt):
@@ -244,39 +334,6 @@ def iso2DT(isostr):
     dt = datetime.datetime.utcnow()
     dt = dt.strptime(isostr, "%Y-%m-%dT%H:%M:%SZ")
     return dt
-
-
-# The email parameter is required. Then either password or authok.
-def get_authenticated_account(handler, create):
-    params = read_params(handler, ["email", "authtok", "password"])
-    if not params["email"] or not(params["authtok"] or params["password"]):
-        return srverr(handler, 401, "email and password or authtok required.")
-    if not valid_email_address(params["email"]):
-        return srverr(handler, 401, "email not recognized as valid.")
-    acc = find_user_by_email(params["email"])
-    if not acc:
-        if create and params["password"]:
-            now = nowISO()
-            acc = AppUser(email=params["email"], password=params["password"],
-                          status="Pending", actsends="", actcode="", name="",
-                          title="", web="", lang="en-US", settings="",
-                          remtls="", completed="", started="", built="", 
-                          orgid=0, lev=0, created=now, accessed=now + ";1")
-        else:
-            return srverr(handler, 404, "Account not found.")
-    else: # have acc
-        if not params["password"] and not params["authtok"]:
-            return srverr(handler, 403, "password or authtok required.")
-        # if the token is valid, use it.  Might be updating the password.
-        tok = match_token_to_acc(params["authtok"], acc)
-        # if the password is valid, use it.  Token might be outdated.
-        pok = False
-        if params["password"] and params["password"] == acc.password:
-            pok = True
-        # if neither the token nor the password is correct, then fail
-        if not (tok or pok):
-            return srverr(handler, 403, "Authentication failed.")
-    return acc
 
 
 def dbo2json(dbo, skips=[]):
@@ -354,53 +411,59 @@ def mailgun_send(handler, eaddr, subj, body):
     conn.close()
 
 
-def update_account(handler, acc):
-    if len(acc.password) < 6:
-        return srverr(handler, 403, "Password should be at least 6 characters")
-    # verify token creation works, otherwise this can crash on return
-    cached_put(acc.email, acc)
-    return_json(handler, [acc, {"token": acctoken(acc.email, acc.password)}])
+class CreateAccount(webapp2.RequestHandler):
+    def post(self):
+        if not verify_secure_comms(self):
+            return  # error already reported
+        emaddr = get_request_value(self.request, ["email", "updemail"])
+        acc = account_from_email(emaddr)
+        if acc:
+            return srverr(self, 400, "Account exists already")
+        acc = AppUser(email="placeholder", phash="whatever")  # corrected below
+        cretime = nowISO()
+        acc.created = cretime
+        acc.accessed = cretime + ";1"
+        authupd = update_email_and_password(self, acc)
+        if not authupd:
+            return  # error already reported
+        if not update_account_fields(self, acc):
+            return  # error already reported
+        cached_put(acc.email, acc)
+        return_json(self, [acc, {"token":token_for_user(acc)}])
 
 
 class UpdateAccount(webapp2.RequestHandler):
     def post(self):
         if not verify_secure_comms(self):
-            return
-        acc = get_authenticated_account(self, True)
+            return  # error already reported
+        acc = authenticated(self.request)
         if not acc:
-            return
+            return srverr(self, 401, "Authentication failed")
+        authupd = update_email_and_password(self, acc)
+        if not authupd:
+            return  # error already reported
+        if not update_account_fields(self, acc):
+            return  # error already reported
+        # handle activation, if given
         params = read_params(self, ["actcode"])
         if "actcode" in params:
             if params["actcode"] == acc.actcode:
                 acc.status = "Active"
-        params = read_params(self, ["updemail", "updpassword", "name", "title",
-                                    "web", "lang", "settings", "remtls", 
-                                    "completed", "started", "built"])
-        if params["updemail"] and params["updemail"] != acc.email:
-            memcache.delete(acc.email)
-        if params["updpassword"] == "noval":
-            params["updpassword"] = acc.password
-        for fieldname in params:
-            attr = fieldname
-            val = params[fieldname]
-            if attr.startswith("upd"):
-                attr = attr[3:]
-            if val: 
-                if val.lower() == "noval":
-                    val = ""
-                setattr(acc, attr, val)
-        update_account(self, acc)
+        update_access_time(acc)
+        cached_put(acc.email, acc)
+        return_json(self, [acc, {"token":token_for_user(acc)}])
         
 
 class AccessAccount(webapp2.RequestHandler):
     def get(self):
         if not verify_secure_comms(self):
             return
-        acc = get_authenticated_account(self, False)
+        acc = authenticated(self.request)
         if not acc:
-            return
-        acc.accessed = nowISO()
-        update_account(self, acc)
+            return srverr(self, 401, "Authentication failed")
+        update_access_time(acc)
+        cached_put(acc.email, acc)
+        return_json(self, [acc, {"token":token_for_user(acc)}])
 
 
 class UpdateMyTimelines(webapp2.RequestHandler):
@@ -409,40 +472,39 @@ class UpdateMyTimelines(webapp2.RequestHandler):
         return srverr(self, 500, "Not implemented yet")
 
 
-class MailCredentials(webapp2.RequestHandler):
+class MailResetPasswordLink(webapp2.RequestHandler):
     def post(self):
-        eaddr = self.request.get('email')
+        eaddr = normalize_email(self.request.get('email'))
         if eaddr:
-            eaddr = eaddr.lower()
-            eaddr = re.sub('%40', '@', eaddr)
-            content = "You requested your password be mailed to you..."
-            content += "\n\nThe support system has looked up " + eaddr + " "
+            content = "You requested your PastKey password be reset...\n\n"
             vq = VizQuery(AppUser, "WHERE email=:1 LIMIT 9", eaddr)
             accounts = vq.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, 
                                 deadline=10)
             if len(accounts) > 0:
-                content += "and your password is: " + accounts[0].password
+                acc = accounts[0]
+                content += "Use this link to sign in, then choose My Account" +\
+                           " from the menu to change your Password:\n" +\
+                           "https://pastkey.org?email=" + eaddr +\
+                           "&authtok=" + token_for_user(acc) + "\n\n"
             else:
-                content += "but found no matching accounts." +\
-                    "\nEither you have not signed up yet, or you used" +\
-                    " a different email address."
-            content += "\n\nhttps://pastkey.org\n\n"
+                content += "There was no account found for " + eaddr + ".\n" +\
+                           "Either you have not signed up yet, or you used" +\
+                           " a different email address.\n\n"
+            content += "https://pastkey.org\n\n"
             mailgun_send(self, eaddr, "PastKey login", content)
         return_json(self, "[]")
 
 
 class PublicUserInfo(webapp2.RequestHandler):
     def get(self):
-        eaddr = self.request.get('email')
+        eaddr = normalize_email(self.request.get('email'))
         if not eaddr:
             return srverr(self, 400, "email address not specified")
-        eaddr = eaddr.lower()
-        eaddr = re.sub('%40', '@', eaddr)
-        account = find_user_by_email(eaddr)
+        account = account_from_email(eaddr)
         if not account:
             return srverr(self, 404, "email address " + eaddr + " not found.")
         pub = {"instid": str(account.key().id()),
-               "email": account.email,
+               "email": account.email,  # matches what they sent us, so ok
                "status": account.status,
                "name": account.name,
                "title": account.title,
@@ -455,9 +517,46 @@ class PublicUserInfo(webapp2.RequestHandler):
         return_json(self, [pub])
 
 
-app = webapp2.WSGIApplication([('.*/updacc', UpdateAccount),
+class ConvertAppUsers(webapp2.RequestHandler):
+    def get(self):
+        msgs = ""
+        vq = VizQuery(AppUser, "")
+        accounts = vq.run(read_policy=db.STRONG_CONSISTENCY, deadline=60)
+        for acc in accounts:
+            if not acc.phash:
+                acc.phash = make_password_hash(acc.email, acc.password,
+                                               acc.created)
+                cached_put(acc.email, acc)
+                msgs += acc.email + " set phash\n"
+            else:
+                msgs += acc.email + " already set\n"
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write(msgs)
+
+
+class TechSupportHelp(webapp2.RequestHandler):
+    def get(self):
+        emaddr = self.request.get("user") or ""
+        suppurl = "No user found, emaddr: " + emaddr
+        acc = None
+        if emaddr:
+            if "." in emaddr:  # @ may be escaped, look for domain dot
+                acc = account_from_email(emaddr)
+            else:  # try looking up by id
+                acc = AppUser.get_by_id(int(emaddr))
+        if acc:
+            suppurl = "https://pastkey.org?email=" + acc.email + "&authtok="
+            suppurl += token_for_user(acc)
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write(suppurl)
+
+
+app = webapp2.WSGIApplication([('.*/newacct', CreateAccount),
+                               ('.*/updacc', UpdateAccount),
                                ('.*/acctok', AccessAccount),
-                               ('.*/mailcred', MailCredentials),
+                               ('.*/convau', ConvertAppUsers),
+                               ('.*/mailpwr', MailResetPasswordLink),
+                               ('.*/supphelp', TechSupportHelp),
                                ('.*/updatetls', UpdateMyTimelines),
                                ('.*/pubuser', PublicUserInfo)],
                               debug=True)
