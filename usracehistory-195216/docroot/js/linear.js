@@ -388,6 +388,14 @@ app.linear = (function () {
     }
 
 
+    function addPointDescriptions () {
+        tl.pts.forEach(function (d) {
+            tl.defs.append("desc")
+                .attr("id", "desc" + d.id)
+                .text(d.text); });
+    }
+
+
     function bindDataAndDrawChart () {
         var dcon = app.db.displayContext();
         tl.x.domain([tl.pts[0].tc, tl.pts[tl.pts.length - 1].tc]);
@@ -422,12 +430,14 @@ app.linear = (function () {
             .attr("id", function(d) { return d.id; })
             .attr("fill", function(d) { return fillColorForPoint(d); })
             .attr("class", "focusCircle")
+            .attr("aria-describedby", function(d) { return "desc" + d.id; })
             .on("mouseover", function(d) { overCircle(d, true); })
             .on("mouseout", function(d) { overCircle(d, false); })
             .on("click", function(d) { clickCircle(d); });
         d3.select(".zoom").on("click", function () {
             handlePicMouseClick(d3.mouse(this)); });
         addContextDecorativeElements();
+        addPointDescriptions();
         adjustTickTextVisibility();
         //testChromaBuckets();
     }
@@ -489,7 +499,8 @@ app.linear = (function () {
             .translateExtent([[0, 0], [tl.width, tl.scaleheight]])
             .extent([[0, 0], [tl.width, tl.scaleheight]])
             .on("zoom", zoomed);
-        tl.svg.append("defs").append("clipPath")
+        tl.defs = tl.svg.append("defs");
+        tl.defs.append("clipPath")
             .attr("id", "clip")
             .append("rect")
             .attr("width", tl.width)
