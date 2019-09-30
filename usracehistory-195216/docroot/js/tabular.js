@@ -524,7 +524,7 @@ app.tabular = (function () {
             ft = pf.mpre[pf.vizval("obmonth")] +
                 pf.wpre[pf.vizval("obweek")] + pf.dpre[pf.vizval("obday")];
             break; }
-        if(tl.featured !== ft && !app.featuredTLManualUpdate) {
+        if(tl.featured && tl.featured !== ft && !app.featuredTLManualUpdate) {
             alert("It can take up to 48 hours for the change to " + ft +
                   " to take effect.");
             app.featuredTLManualUpdate = true; }  //note we told them
