@@ -164,9 +164,17 @@ def recent_timeline_edits(thresh):
     return tlsums
 
 
-def vlt_strval_comp(idx, v1, v2):
-    if str(v1) != str(v2):
-        return str(idx) + " " + str(v1) + " != " + str(v2)
+def vlt_strval_comp(idx, dbo, jd, fields):
+    diffs = []
+    for field in fields:
+        if field == "instid":
+            if str(dbo.key().id()) != str(jd["instid"]):
+                diffs.append(field)
+        else: # standard field comparison check
+            if str(getattr(dbo, field)) != str(jd[field]):
+                diffs.append(field)
+    if len(diffs):
+        return " [" + str(idx) + "] " + ", ".join(diffs)
     return ""
 
 
@@ -177,6 +185,7 @@ def verify_listed_timelines(handler):
         # example handler request.url http://0.0.0.0:9080/periodic
         ru = handler.request.url
         url = ru[0:ru.rfind("/")] + "/docs/tldev.json"
+    fpath = "docs" + url[url.rfind("/"):]
     jts = "[]"
     try:
         result = urlfetch.fetch(url, deadline=10)
@@ -193,19 +202,21 @@ def verify_listed_timelines(handler):
     dts = vq.fetch(200, read_policy=db.EVENTUAL_CONSISTENCY, deadline=20)
     for idx, dt in enumerate(dts):
         if idx >= len(jts):
-            misms += "idx " + str(idx) + " json len " + str(len(jts)) + "\n"
+            misms += " [" + str(idx) + "] added"
         else:
             jt = jts[idx]
-            misms += vlt_strval_comp(idx, dt.key().id(), jt["instid"])
-            misms += vlt_strval_comp(idx, dt.featured, jt["featured"])
-            misms += vlt_strval_comp(idx, dt.modified, jt["modified"])
+            # if instid diff, then the ordering has changed.
+            # if modified, then important details might have changed.
+            # changes to featured have some urgency in getting reflected.
+            misms += vlt_strval_comp(idx, dt, jt, 
+                                     ["instid", "featured", "modified"])
         if rj:
             rj += ",\n"
         rj += appuser.dbo2json(dt, skips=["preb"])
     rj = "[" + rj + "]\n"
-    msg = "Listed Timelines up to date. Compared db to " + url
+    msg = fpath + " up to date."
     if misms:
-        msg = "Listed Timelines OUTDATED. Compared db to " + url
+        msg = fpath + " OUTDATED. Update with emailed content."
         msg += "\n" + misms
         try:
             appuser.mailgun_send(None, "support@pastkey.org", msg, rj)
