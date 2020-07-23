@@ -49,7 +49,7 @@ module.exports = (function () {
         //              '2' (2nd try) guessed date correctly on second click
         //              '3' (3rd try) guessed date correctly on third click
         //              '4' (4th try) guessed date correctly on fourth click
-        {f:"importid", d:"dbid unique", c:"previous id from import data"},
+        {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
         {f:"email", d:"priv req unique email"},
         {f:"phash", d:"adm req string"},
         {f:"status", d:"priv string", c:"Only Active may post",
@@ -77,6 +77,7 @@ module.exports = (function () {
     {entity:"DayCount", descr:"Traffic access accumulator", fields:[
         //Keep track of timeline fetches and progress saves to enable viewing
         //activity.  Aggregated nightly.
+        {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
         {f:"tstamp", d:"isod req", c:"server time zero of day"},
         {f:"rtype", d:"string req", c:"count type (fetches, saves, summaries)",
          enumvals:["tlfetch", "tlsave", "daysum"]},
@@ -87,6 +88,7 @@ module.exports = (function () {
     {entity:"Organization", descr:"A group building timelines", fields:[
         //An independent working group maintaining data points and timelines
         //for education and benefit to their community.
+        {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
         {f:"name", d:"string req unique", c:"Name of organization"},
         {f:"code", d:"string req unique", c:"Short name or initials, slug"},
         {f:"contacturl", d:"url", c:"Main contact website"},
@@ -104,6 +106,7 @@ module.exports = (function () {
      logflds:["code", "name"]},
 
     {entity:"Point", descr:"A data point for use in timelines", fields:[
+        {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
         {f:"orgid", d:"dbid", c:"organization that created this point"},
         {f:"source", d:"string", c:"secondary reference id or load key"},
         //Accepted formats for date values:
@@ -117,20 +120,21 @@ module.exports = (function () {
         //qtypes: 'S': Continue (default), 'U': Did You Know?,
         //        'D': Click correct year, 'F': Firsts
         {f:"qtype", d:"string", c:"Letter code for question type"},
-        {f:"groups", d:"csv", c:"selected values from org groups"},
-        {f:"regions", d:"csv", c:"selected values from org regions"},
-        {f:"categories", d:"csv", c:"selected values from org categories"},
-        {f:"tags", d:"csv", c:"selected values from org tags"},
-        {f:"codes", d:"csv", c:"legacy import category key code values"},
+        {f:"groups", d:"gencsv", c:"selected values from org groups"},
+        {f:"regions", d:"gencsv", c:"selected values from org regions"},
+        {f:"categories", d:"gencsv", c:"selected values from org categories"},
+        {f:"tags", d:"gencsv", c:"selected values from org tags"},
+        {f:"codes", d:"gencsv", c:"legacy import category key code values"},
         {f:"srclang", d:"string", c:"en-US or en-US-x-grade"},
         {f:"translations", d:"json", c:"text translations by lang code"},
         {f:"pic", d:"image", c:"optional freely shareable uploaded pic"},
-        {f:"endorsed", d:"csv", c:"userids who have endorsed the point"},
+        {f:"endorsed", d:"idcsv", c:"userids who have endorsed the point"},
         {f:"stats", d:"json", c:"optional associated data (visualizations)"}],
      cache:{minutes:0},  //points are not cached individually
      logflds:["orgid", "date", "text"]},
 
     {entity:"AppService", descr:"Processing service access", fields:[
+        {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
         {f:"name", d:"string req unique", c:"Name of service"},
         {f:"ckey", d:"string", c:"consumer key"},
         {f:"csec", d:"string", c:"consumer secret"},
@@ -143,6 +147,7 @@ module.exports = (function () {
         //visualizations, or it can be a collection of timelines.  A
         //timeline contains cached points with extra data removed.  These
         //cached points are NOT updated unless the timeline is edited.
+        {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
         //Timelines can be created by anyone, but only timelines created by
         //a Contributor have an associated orgid.
         {f:"orgid", d:"dbid", c:"Organization id (if org timeline)"},
@@ -183,6 +188,7 @@ module.exports = (function () {
      logflds:["name"]},
 
     {entity:"TLComp", descr:"Timeline completion archive record", fields:[
+        {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
         {f:"userid", d:"dbid req", c:"AppUser id who completed the timeline"},
         {f:"tlid", d:"dbid req", c:"Timeline Id they completed"},
         {f:"username", d:"string", c:"user name for ease of reference"},
@@ -190,6 +196,7 @@ module.exports = (function () {
         {f:"data", d:"json", c:"timeline progress instance"}],
      cache:{minutes:0},
      logflds:["userid", "tlid", "username", "tlname"]}];
+
 
     function makeFieldDescriptionLookup (fds, aliasKey) {
         descrLookup = descrLookup || {};

@@ -25,41 +25,253 @@ var puller = (function () {
     var datadefs = require("./datadefs");
 
     var work = {pulled:0, entidx:0, ents:[
-        {entity:"AppUser", refetch:"tag", tdf:"AppUsers.tdf"},
-        {entity:"Organization", refetch:"tag", tdf:"Organizations.tdf"},
-        {entity:"Timeline", refetch:"tag"},
-        //"Point" instances fetched from timelines
-        {entity:"TLComp", refetch:"tag"},
-        {entity:"DayCount", refetch:"no"},
-        {entity:"AppService", refetch:"no", tdf:"AppServices.tdf"}]};
+        {entity:"AppUser", fetch:"tag", tdf:"AppUsers.tdf",
+         tsfs:{created:"created", modified:"accessed"},
+         api:{url:"/pubuser", params:[{obf:"email", pnm:"email"}]}},
+        {entity:"Organization", fetch:"tag", tdf:"Organizations.tdf",
+         //Organization has no timestamp fields in source
+         delflds:["pts"],  //Non JSON long dash, useless field
+         api:{url:"/getorg", params:[{obf:"importid", pnm:"orgid"},
+                                     {af:"email", pnm:"email"},
+                                     {af:"authtok", pnm:"authtok"}]},
+         refs:{obf:"recpre", ent:"Point"}},
+        {entity:"Timeline", fetch:"tag"},
+        {entity:"Point", fetch:"byref",
+         tsfs:{created:"created", modified:"modified"},
+         api:{url:"/ptdat", params:[{obf:"instid", pnm:"pointid"},
+                                    {af:"email", pnm:"email"},
+                                    {af:"authtok", pnm:"authtok"}]},
+         img:{fld:"pic",
+              url:"/ptpic", params:[{obf:"importid", pnm:"pointid"}]}},
+        {entity:"TLComp", fetch:"tag"},
+        {entity:"DayCount", fetch:"perm"},
+        {entity:"AppService", fetch:"perm", tdf:"AppServices.tdf"}]};
 
 
-    function readEntity(def) {
-        def.ddef = datadefs.dataDefinitions()
-            .find((e) => e.entity === def.entity);
-        console.log("readEntity " + def.entity + " (" + def.ddef.descr + ")");
-        work.entidx += 1;
-        fetchNextEntity();
-    }
+    var dwnr = {  //downloader handles https GET and merge
+        completionFunc: null,
+        dlpath: function (def, obj) {
+            return def.entity + "/" + obj.importid + ".json"; },
+        downloaded: function (def, obj) {
+            if(!fs.existsSync(dwnr.dlpath(def, obj))) { return null; }
+            var dat = JSON.parse(fs.readFileSync(dwnr.dlpath(def, obj)));
+            if(dat.dltag !== work.dltag) { return null; }
+            return dat; },
+        getAuthentParam: function (paramname) {
+            if(!work.authent) {
+                var cook = fs.readFileSync("authcookie.txt", "utf8");
+                cook = cook.split("..pastkey..");
+                work.authent = {email:encodeURIComponent(cook[0]),
+                                authtok:cook[1].trim()}; }
+            return work.authent[paramname]; },
+        urlForDownload: function (downdef, obj) {
+            var url = downdef.url;
+            downdef.params.forEach(function (pdef, idx) {
+                if(!idx) {
+                    url += "?"; }
+                else {
+                    url += "&"; }
+                if(pdef.obf) { //field mapped parameter
+                    url += pdef.pnm + "=" + encodeURIComponent(obj[pdef.obf]); }
+                else if(pdef.af) {  //authentication mapped parameter
+                    url += pdef.pnm + "=" + dwnr.getAuthentParam(pdef.af); } });
+            return url; },
+        downloadAndMerge: function (def, obj, contf) {
+            dwnr.completionFunc = contf;
+            var url = dwnr.urlForDownload(def.api, obj);
+            console.log("download: " + url);
+            work.pulled += 1;  //always update pull count even if call fails
+            https.request({host:"pastkey.org", path:url},
+                          function (res) {
+                              var data = []; //array of buffers from each chunk
+                              res.on("data", function (chunk) {
+                                  data.push(chunk); });
+                              res.on("end", function () {
+                                  //concat all the buffers into one and use that
+                                  data = Buffer.concat(data);
+                                  dwnr.mergeData(def, obj, data); }); })
+                .on("error", function (err) {
+                    console.log(err.message); })
+                .end(); }, //signal request ready for processing
+        mergeTimestampFields: function (def, obj, dbo) {
+            if(def.tsfs) {  //merge created/modified fields, warn if outdated
+                Object.keys(def.tsfs).forEach(function (keyf) {
+                    var dbf = def.tsfs[keyf];
+                    if(obj[dbf] !== dbo[dbf]) {
+                        console.log("WARNING: " + def.entity + obj.importid +
+                                    " \"" + dbf + "\" value mismatch"); }
+                    obj[keyf] = dbo[dbf]; }); }
+            else {  //initialize values
+                var ts = new Date().toISOString();
+                obj.created = ts;
+                obj.modified = ts; } },
+        mergeData: function (def, obj, data) {
+            var dbo = JSON.parse(data)[0];
+            dwnr.mergeTimestampFields(def, obj, dbo);
+            def.ddef.fields.forEach(function (fd) {  //merge public fields
+                if(!datadefs.fieldIs(fd.d, "adm") &&
+                   !datadefs.fieldIs(fd.d, "priv")) {
+                    obj[fd.f] = dbo[fd.f] || ""; } });
+            obj.dltag = work.dltag;
+            if(!fs.existsSync(def.entity)) {  //verify download folder
+                fs.mkdirSync(def.entity); }
+            fs.writeFileSync(dwnr.dlpath(def, obj),
+                             JSON.stringify(obj), "utf8");
+            dwnr.completionFunc(obj); }
+    };
 
 
-    function fetchNextEntity () {
-        if(work.entidx < work.ents.length) {
-            return readEntity(work.ents[work.entidx]); }
-        console.log("fetchNextEntity completed. Pulled " + work.pulled);
-    }
+    var picp = { //picpuller downloads saved image pngs.
+        imgpath: function (def, obj) {
+            return def.entity + "/images/" + obj.importid + ".png"; },
+        missingImageData: function (def, obj) {
+            if(!def.img || !obj[def.img.fld]) { 
+                return false; }  //no image data for this obj
+            var imgdn = def.entity + "/images";
+            if(!fs.existsSync(imgdn)) {  //verify folder
+                fs.mkdirSync(imgdn); }
+            if(!fs.existsSync(picp.imgpath(def, obj))) {
+                return true; }  //image data needed and not found
+            return false; },
+        downloadImage: function (def, obj, contf) {
+            var url = dwnr.urlForDownload(def.img, obj);
+            console.log("download: " + url);
+            work.pulled += 1;  //always update pull count even if call fails
+            https.request({host:"pastkey.org", path:url},
+                          function (res) {
+                              var data = []; //array of buffers from each chunk
+                              res.on("data", function (chunk) {
+                                  data.push(chunk); });
+                              res.on("end", function () {
+                                  //concat all the buffers into one and use that
+                                  data = Buffer.concat(data);
+                                  fs.writeFileSync(picp.imgpath(def, obj),
+                                                   data, "binary");
+                                  contf(); }); })
+                .on("error", function (err) {
+                    console.log(err.message); })
+                .end(); } //signal request ready for processing
+    };
 
 
-    function download (tag, maxpull) {
-        work.dltag = tag || "testfetch";
-        work.maxpull = maxpull || 1;  //default to single fetch for testing
-        fetchNextEntity();
-    }
+    var refit = {  //reference iterator walks reference list
+        completionFunc: null,
+        verifyRefs: function (def, obj, contf) {
+            if(!def.refs) { return contf(); }
+            refit.completionFunc = contf;
+            var ws = {idx:0, arr:JSON.parse(obj[def.refs.obf] || "[]"),
+                      def:work.ents.find((e) => e.entity === def.refs.ent)};
+            // console.log("verifyRefs " + def.entity + obj.importid +
+            //             " " + def.refs.obf + ": " + ws.arr.length)
+            entit.connectDataDefinitions(ws.def);
+            refit.readNextRefObj(ws); },
+        readNextRefObj: function (ws) {
+            if((ws.idx >= ws.arr.length) || work.pulled >= work.maxpull) {
+                return refit.completionFunc(); }
+            var refobj = ws.arr[ws.idx];
+            refobj.importid = refobj.instid;  //all refs are by instid
+            var obj = dwnr.downloaded(ws.def, refobj);
+            if(!obj) {
+                return dwnr.downloadAndMerge(ws.def, refobj, function () {
+                    refit.readNextRefObj(ws); }); }
+            if(picp.missingImageData(ws.def, obj)) {
+                return picp.downloadImage(ws.def, obj, function () {
+                    refit.readNextRefObj(ws); }); }
+            ws.idx += 1;
+            refit.readNextRefObj(ws); }
+    };
+
+
+    var tdfit = {  //tab delimited file iterator walks tdf content
+        completionFunc: null,
+        walkTDF: function (def, contf) {
+            tdfit.completionFunc = contf;
+            def.tidx = 0;
+            def.jsa = tdfit.tdf2jsonArray(fs.readFileSync(def.tdf, "utf8"));
+            tdfit.deleteBadFields(def);
+            console.log(def.tdf + " " + def.jsa.length + " objects" +
+                        tdfit.latestmod(def));
+            tdfit.readNextTDFObject(def); },
+        readNextTDFObject: function (def) {
+            var tdfo = def.jsa[def.tidx];
+            var obj = dwnr.downloaded(def, tdfo);
+            if(!obj) {
+                return dwnr.downloadAndMerge(def, tdfo, function () {
+                    tdfit.readNextTDFObject(def); }); }
+            refit.verifyRefs(def, obj, function () {
+                def.tidx += 1;
+                if((def.tidx < def.jsa.length) &&
+                   (work.pulled < work.maxpull)) {
+                    return tdfit.readNextTDFObject(def); }
+                tdfit.completionFunc(); }); },
+        fvs2obj: function (fields, values) {
+            var jso = {};
+            fields.forEach(function (field, idx) {
+                jso[field] = values[idx] || "";
+                jso[field] = jso[field].trim();  //tdf has extra spaces
+                if(jso[field] === "null") {
+                    jso[field] = ""; } });
+            return jso; },
+        tdf2jsonArray: function (data) {
+            var fields = null;
+            var jsa = [];
+            data.split("\n").forEach(function (line) {
+                if(line) {
+                    if(!fields) {
+                        fields = line.split("\t"); }
+                    else {
+                        var values = line.split("\t");
+                        jsa.push(tdfit.fvs2obj(fields, values)); } } });
+            return jsa; },
+        deleteBadFields: function (def) {
+            if(def.delflds) {
+                def.delflds.forEach(function (fld) {
+                    def.jsa.forEach(function (obj) {
+                        delete obj[fld]; }); }); } },
+        latestmod: function (def) {
+            var retval = "";
+            if(def.tsfs && def.tsfs.modified) {
+                var modfield = def.tsfs.modified;
+                var latest = def.jsa.reduce(function (acc, val) {
+                    if(acc[modfield] > val[modfield]) { return acc; }
+                    if(acc[modfield] < val[modfield]) { return val; }
+                    return acc; });
+                retval = ", last modified: " + latest[modfield]; }
+            return retval; }
+    };
+
+
+    var entit = {  //entity iterator walks entity definitions
+        connectDataDefinitions: function (def) {
+            def.ddef = datadefs.dataDefinitions()
+                .find((e) => e.entity === def.entity); },
+        readEntity: function (def) {
+            entit.connectDataDefinitions(def);
+            var msgpre = "entit.readEntity " + def.entity + " ";
+            if(def.tdf) {
+                tdfit.walkTDF(def, entit.nextEntity); }
+            else if(def.tag === "byref") {
+                console.log(msgpre + "handled through references"); }
+            else {
+                console.log(msgpre + "not handled yet."); } },
+        nextEntity: function () {
+            work.entidx += 1;
+            entit.fetchNextEntity(); },
+        fetchNextEntity: function () {
+            if((work.entidx < work.ents.length) &&
+               (work.pulled < work.maxpull)) {
+                return entit.readEntity(work.ents[work.entidx]); }
+            console.log("fetchNextEntity completed. Pulled " + work.pulled); },
+        pull: function (tag, maxpull) {
+            work.dltag = tag || "testfetch";
+            work.maxpull = maxpull || 1;  //default to single fetch for testing
+            entit.fetchNextEntity(); }
+    };
 
 
     return {
-        download: function (tag, maxpull) { download(tag, maxpull); }
+        pull: function (tag, maxpull) { entit.pull(tag, maxpull); }
     };
 }());
 
-puller.download(process.argv[2], process.argv[3]);
+puller.pull(process.argv[2], process.argv[3]);
