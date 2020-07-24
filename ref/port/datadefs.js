@@ -182,7 +182,7 @@ module.exports = (function () {
         //Aggregate timelines present timelines in the order specified.
         {f:"ctype", d:"string", c:"Timelines|Points|Random [:levcnt:rndmax]"},
         {f:"cids", d:"idcsv", c:"Point ids or Timeline ids depending on ctype"},
-        {f:"svs", d:"csv", c:"SuppViz module names"},
+        {f:"svs", d:"gencsv", c:"SuppViz module names"},
         {f:"preb", d:"json", c:"preselected point data"}],
      cache:{minutes:0},
      logflds:["name"]},

@@ -35,7 +35,10 @@ var puller = (function () {
                                      {af:"email", pnm:"email"},
                                      {af:"authtok", pnm:"authtok"}]},
          refs:{obf:"recpre", ent:"Point"}},
-        {entity:"Timeline", fetch:"tag"},
+        {entity:"Timeline", fetch:"tag", tdf:"Timelines.tdf",
+         tsfs:{created:"created", modified:"modified"},
+         api:{url:"/fetchtl", params:[{obf:"importid", pnm:"tlid"}]},
+         refs:{obf:"preb", ent:"Point"}},
         {entity:"Point", fetch:"byref",
          tsfs:{created:"created", modified:"modified"},
          api:{url:"/ptdat", params:[{obf:"instid", pnm:"pointid"},
@@ -43,8 +46,9 @@ var puller = (function () {
                                     {af:"authtok", pnm:"authtok"}]},
          img:{fld:"pic",
               url:"/ptpic", params:[{obf:"importid", pnm:"pointid"}]}},
-        {entity:"TLComp", fetch:"tag"},
-        {entity:"DayCount", fetch:"perm"},
+        {entity:"TLComp", fetch:"perm", json:"TLComps.json",
+         tsfs:{created:"created", modified:"created"}},
+        {entity:"DayCount", fetch:"perm", tdf:"DayCounts.tdf"},
         {entity:"AppService", fetch:"perm", tdf:"AppServices.tdf"}]};
 
 
@@ -52,11 +56,20 @@ var puller = (function () {
         completionFunc: null,
         dlpath: function (def, obj) {
             return def.entity + "/" + obj.importid + ".json"; },
-        downloaded: function (def, obj) {
-            if(!fs.existsSync(dwnr.dlpath(def, obj))) { return null; }
-            var dat = JSON.parse(fs.readFileSync(dwnr.dlpath(def, obj)));
-            if(dat.dltag !== work.dltag) { return null; }
-            return dat; },
+        downloaded: function (def, obj, cbf) {
+            var path = dwnr.dlpath(def, obj);
+            if(!fs.existsSync(path)) { return cbf(null); }
+            fs.readFile(path, "utf8", function (err, dat) {
+                if(err) {
+                    console.log("dwnr.downloaded " + path + ": " + err);
+                    throw err; }
+                try {
+                    dat = JSON.parse(dat);
+                } catch(e) {
+                    return console.log("dwnr.downloaded " + path + ": " + e); }
+                if(dat && (dat.dltag !== work.dltag)) {
+                    dat = null; }
+                cbf(dat); }); },
         getAuthentParam: function (paramname) {
             if(!work.authent) {
                 var cook = fs.readFileSync("authcookie.txt", "utf8");
@@ -161,8 +174,8 @@ var puller = (function () {
             refit.completionFunc = contf;
             var ws = {idx:0, arr:JSON.parse(obj[def.refs.obf] || "[]"),
                       def:work.ents.find((e) => e.entity === def.refs.ent)};
-            // console.log("verifyRefs " + def.entity + obj.importid +
-            //             " " + def.refs.obf + ": " + ws.arr.length)
+            console.log("verifyRefs " + def.entity + obj.importid +
+                        " " + def.refs.obf + ": " + ws.arr.length);
             entit.connectDataDefinitions(ws.def);
             refit.readNextRefObj(ws); },
         readNextRefObj: function (ws) {
@@ -170,15 +183,15 @@ var puller = (function () {
                 return refit.completionFunc(); }
             var refobj = ws.arr[ws.idx];
             refobj.importid = refobj.instid;  //all refs are by instid
-            var obj = dwnr.downloaded(ws.def, refobj);
-            if(!obj) {
-                return dwnr.downloadAndMerge(ws.def, refobj, function () {
-                    refit.readNextRefObj(ws); }); }
-            if(picp.missingImageData(ws.def, obj)) {
-                return picp.downloadImage(ws.def, obj, function () {
-                    refit.readNextRefObj(ws); }); }
-            ws.idx += 1;
-            refit.readNextRefObj(ws); }
+            dwnr.downloaded(ws.def, refobj, function (obj) {
+                if(!obj) {
+                    return dwnr.downloadAndMerge(ws.def, refobj, function () {
+                        refit.readNextRefObj(ws); }); }
+                if(picp.missingImageData(ws.def, obj)) {
+                    return picp.downloadImage(ws.def, obj, function () {
+                        refit.readNextRefObj(ws); }); }
+                ws.idx += 1;
+                refit.readNextRefObj(ws); }); }
     };
 
 
@@ -194,16 +207,20 @@ var puller = (function () {
             tdfit.readNextTDFObject(def); },
         readNextTDFObject: function (def) {
             var tdfo = def.jsa[def.tidx];
-            var obj = dwnr.downloaded(def, tdfo);
-            if(!obj) {
-                return dwnr.downloadAndMerge(def, tdfo, function () {
-                    tdfit.readNextTDFObject(def); }); }
-            refit.verifyRefs(def, obj, function () {
-                def.tidx += 1;
-                if((def.tidx < def.jsa.length) &&
-                   (work.pulled < work.maxpull)) {
-                    return tdfit.readNextTDFObject(def); }
-                tdfit.completionFunc(); }); },
+            dwnr.downloaded(def, tdfo, function (obj) {
+                if(!obj) {
+                    if(def.api) {  //have an endpoint to fetch from
+                        return dwnr.downloadAndMerge(def, tdfo, function () {
+                            tdfit.readNextTDFObject(def); }); }
+                    //no endpoint available, just write what we have
+                    return tdfit.writeTDFObjDirect(def, tdfo, function () {
+                        tdfit.readNextTDFObject(def); }); }
+                refit.verifyRefs(def, obj, function () {
+                    def.tidx += 1;
+                    if((def.tidx < def.jsa.length) &&
+                       (work.pulled < work.maxpull)) {
+                        return tdfit.readNextTDFObject(def); }
+                    tdfit.completionFunc(); }); }); },
         fvs2obj: function (fields, values) {
             var jso = {};
             fields.forEach(function (field, idx) {
@@ -237,7 +254,36 @@ var puller = (function () {
                     if(acc[modfield] < val[modfield]) { return val; }
                     return acc; });
                 retval = ", last modified: " + latest[modfield]; }
-            return retval; }
+            return retval; },
+        writeTDFObjDirect: function (def, tdfo, contf) {
+            if(tdfo.importid === def.lastTDFOWriteId) {
+                return console.log("writeTDFObjDirect looping on " +
+                                   def.entity + tdfo.importid); }
+            def.lastTDFOWriteId = tdfo.importid;
+            tdfo.dltag = work.dltag;
+            if(!fs.existsSync(def.entity)) {  //verify download folder
+                fs.mkdirSync(def.entity); }
+            console.log("writeTDFObjDirect writing " + tdfo.importid);
+            //write async to avoid execution getting too far ahead of file data
+            fs.writeFile(dwnr.dlpath(def, tdfo),
+                         JSON.stringify(tdfo), "utf8", contf); }
+    };
+
+
+    var jsonit = {
+        readArray: function (def, contf) {
+            var objs = JSON.parse(fs.readFileSync(def.json, "utf8"));
+            console.log(def.json + " " + objs.length + " objects");
+            objs.forEach(function (obj) {
+                obj.importid = obj.instid;
+                dwnr.mergeTimestampFields(def, obj, obj);
+                jsonit.writeObjToFile(def, obj); });
+            contf(); },
+        writeObjToFile: function (def, obj) {
+            if(!fs.existsSync(def.entity)) {  //verify data folder
+                fs.mkdirSync(def.entity); }
+            fs.writeFileSync(dwnr.dlpath(def, obj),
+                             JSON.stringify(obj), "utf8"); }
     };
 
 
@@ -250,8 +296,11 @@ var puller = (function () {
             var msgpre = "entit.readEntity " + def.entity + " ";
             if(def.tdf) {
                 tdfit.walkTDF(def, entit.nextEntity); }
-            else if(def.tag === "byref") {
-                console.log(msgpre + "handled through references"); }
+            else if(def.fetch === "byref") {
+                console.log(msgpre + "handled through references");
+                entit.nextEntity(); }
+            else if(def.json) {
+                jsonit.readArray(def, entit.nextEntity); }
             else {
                 console.log(msgpre + "not handled yet."); } },
         nextEntity: function () {
