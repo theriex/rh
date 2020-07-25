@@ -825,7 +825,7 @@ function createPythonDBAcc () {
     pyc += "#  - batchconv: Arbitray string for batch database conversion.\n";
     pyc += "dbflds = {\"dsId\": {\"pt\": \"dbid\", \"un\": True, \"dv\": 0},\n";
     pyc += "          \"created\": {\"pt\": \"string\", \"un\": False, \"dv\": \"\"},\n";
-    pyc += "          \"modified\": {\"pt\": \"string\", \"un\": False, \"dv\": \"\"}}\n";
+    pyc += "          \"modified\": {\"pt\": \"string\", \"un\": False, \"dv\": \"\"},\n";
     pyc += "          \"batchconv\": {\"pt\": \"string\", \"un\": False, \"dv\": \"\"}}\n";
     pyc += "\n";
     pyc += entityDefinitions() + "\n\n";

@@ -50,7 +50,7 @@ import py.mconf as mconf
 #  - batchconv: Arbitray string for batch database conversion.
 dbflds = {"dsId": {"pt": "dbid", "un": True, "dv": 0},
           "created": {"pt": "string", "un": False, "dv": ""},
-          "modified": {"pt": "string", "un": False, "dv": ""}}
+          "modified": {"pt": "string", "un": False, "dv": ""},
           "batchconv": {"pt": "string", "un": False, "dv": ""}}
 
 entdefs = {
