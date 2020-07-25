@@ -27,8 +27,13 @@ module.exports = (function () {
         {dn:"int", h:"low range integer value JavaScript can handle"}];
     var descrLookup = null;
 
-
-    // dsId, created, and modified fields are automatically added for all
+    
+    //All entities have the following fields automatically created
+    //  dsId: Large integer value unique within the entity type
+    //  created: UTF string when the instance was first saved
+    //  modified: timestamp;version
+    //  batchconv: string indicator for batch conversion processing
+    //On retrieval, instances have dbType set to the entity name.
     var ddefs = [ //data storage entity definitions
     {entity:"AppUser", descr:"PastKey User account", fields:[
         //Container for login and whatever other info needs to be tracked
@@ -94,7 +99,7 @@ module.exports = (function () {
         {f:"contacturl", d:"url", c:"Main contact website"},
         {f:"projecturl", d:"url", c:"Web page describing timeline work"},
         //point data search filtering organizational definitions
-        {f:"groups", d:"gencsv", c:"e.g. African American, Asian American,..."},
+        {f:"communities", d:"gencsv", c:"e.g. Native, Latinx, ..."},
         {f:"regions", d:"gencsv", c:"e.g. Boston, Puerto Rico, Hawai'i,..."},
         {f:"categories", d:"gencsv", c:"e.g. Stats, Awards, Stereotypes,..."},
         {f:"tags", d:"gencsv", c:"other org grouping keywords"},
@@ -120,7 +125,7 @@ module.exports = (function () {
         //qtypes: 'S': Continue (default), 'U': Did You Know?,
         //        'D': Click correct year, 'F': Firsts
         {f:"qtype", d:"string", c:"Letter code for question type"},
-        {f:"groups", d:"gencsv", c:"selected values from org groups"},
+        {f:"communities", d:"gencsv", c:"selected values from org communities"},
         {f:"regions", d:"gencsv", c:"selected values from org regions"},
         {f:"categories", d:"gencsv", c:"selected values from org categories"},
         {f:"tags", d:"gencsv", c:"selected values from org tags"},
@@ -138,7 +143,7 @@ module.exports = (function () {
         {f:"name", d:"string req unique", c:"Name of service"},
         {f:"ckey", d:"string", c:"consumer key"},
         {f:"csec", d:"string", c:"consumer secret"},
-        {f:"data", d:"json", c:"svc specific support data"}],
+        {f:"data", d:"idcsv", c:"svc specific support data"}],
      cache:{minutes:4*60},  //small instances, minimum change, used a lot
      logflds:["name"]},
 

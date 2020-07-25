@@ -31,6 +31,7 @@ var puller = (function () {
         {entity:"Organization", fetch:"tag", tdf:"Organizations.tdf",
          //Organization has no timestamp fields in source
          delflds:["pts"],  //Non JSON long dash, useless field
+         renflds:[{oldfldn:"groups", newfldn:"communities"}],
          api:{url:"/getorg", params:[{obf:"importid", pnm:"orgid"},
                                      {af:"email", pnm:"email"},
                                      {af:"authtok", pnm:"authtok"}]},
@@ -41,6 +42,7 @@ var puller = (function () {
          refs:{obf:"preb", ent:"Point"}},
         {entity:"Point", fetch:"byref",
          tsfs:{created:"created", modified:"modified"},
+         renflds:[{oldfldn:"groups", newfldn:"communities"}],
          api:{url:"/ptdat", params:[{obf:"instid", pnm:"pointid"},
                                     {af:"email", pnm:"email"},
                                     {af:"authtok", pnm:"authtok"}]},
@@ -118,9 +120,14 @@ var puller = (function () {
                 var ts = new Date().toISOString();
                 obj.created = ts;
                 obj.modified = ts; } },
+        handleRenamedFields: function (def, dbo) {
+            if(def.renflds) {
+                def.renflds.forEach(function (rf) {
+                    dbo[rf.newfldn] = dbo[rf.oldfldn]; }); } },
         mergeData: function (def, obj, data) {
             var dbo = JSON.parse(data)[0];
             dwnr.mergeTimestampFields(def, obj, dbo);
+            dwnr.handleRenamedFields(def, dbo);
             def.ddef.fields.forEach(function (fd) {  //merge public fields
                 if(!datadefs.fieldIs(fd.d, "adm") &&
                    !datadefs.fieldIs(fd.d, "priv")) {
@@ -181,8 +188,7 @@ var puller = (function () {
         readNextRefObj: function (ws) {
             if((ws.idx >= ws.arr.length) || work.pulled >= work.maxpull) {
                 return refit.completionFunc(); }
-            var refobj = ws.arr[ws.idx];
-            refobj.importid = refobj.instid;  //all refs are by instid
+            var refobj = refit.renameFields(ws.def, ws.arr[ws.idx]);
             dwnr.downloaded(ws.def, refobj, function (obj) {
                 if(!obj) {
                     return dwnr.downloadAndMerge(ws.def, refobj, function () {
@@ -191,7 +197,13 @@ var puller = (function () {
                     return picp.downloadImage(ws.def, obj, function () {
                         refit.readNextRefObj(ws); }); }
                 ws.idx += 1;
-                refit.readNextRefObj(ws); }); }
+                refit.readNextRefObj(ws); }); },
+        renameFields: function (def, refobj) {
+            refobj.importid = refobj.instid;  //all refs are by instid
+            if(def.renflds) {
+                def.renflds.forEach(function (rf) {
+                    refobj[rf.newfldn] = refobj[rf.oldfldn]; }); }
+            return refobj; }
     };
 
 
@@ -202,6 +214,7 @@ var puller = (function () {
             def.tidx = 0;
             def.jsa = tdfit.tdf2jsonArray(fs.readFileSync(def.tdf, "utf8"));
             tdfit.deleteBadFields(def);
+            tdfit.renameFields(def);
             console.log(def.tdf + " " + def.jsa.length + " objects" +
                         tdfit.latestmod(def));
             tdfit.readNextTDFObject(def); },
@@ -245,6 +258,12 @@ var puller = (function () {
                 def.delflds.forEach(function (fld) {
                     def.jsa.forEach(function (obj) {
                         delete obj[fld]; }); }); } },
+        renameFields: function (def) {
+            if(def.renflds) {
+                def.renflds.forEach(function (rf) {
+                    def.jsa.forEach(function (obj) {
+                        obj[rf.newfldn] = obj[rf.oldfldn];
+                        delete obj[rf.oldfldn]; }); }); } },
         latestmod: function (def) {
             var retval = "";
             if(def.tsfs && def.tsfs.modified) {
