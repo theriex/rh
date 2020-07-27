@@ -9,3 +9,4 @@ build/fetchedlocptids.csv
 build/fetchedpubptids.csv
 pastkey/public/docs/locpts.json
 pastkey/public/docs/tldev.json
+logs

@@ -7,7 +7,8 @@ var jt = {};   //Global access to general utility methods
 (function () {
     "use strict";
 
-    app.modules = [{name:"db", desc:"Data access and app state"},
+    app.modules = [{name:"refmgr", desc:"Server data and client cache"},
+                   {name:"db", desc:"Data access and app state"},
                    {name:"dlg", desc:"Dialog interactions"},
                    {name:"linear", desc:"Linear timeline display"},
                    {name:"tabular", desc:"Text timeline display"},
@@ -89,6 +90,8 @@ var jt = {};   //Global access to general utility methods
             var path = "js/";
             if(md.type === "gv" || md.type === "sv") {
                 path += "sv/"; }
+            else {
+                path += "amd/"; }
             return path + md.name; });
         jt.out("loadstatdiv", "Loading app modules...");
         app.amdtimer = {};
