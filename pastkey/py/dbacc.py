@@ -147,7 +147,7 @@ entdefs = {
         "orgid": {"pt": "dbid", "un": False, "dv": 0},
         "name": {"pt": "string", "un": True, "dv": ""},
         "cname": {"pt": "string", "un": False, "dv": ""},
-        "slug": {"pt": "string", "un": False, "dv": ""},
+        "slug": {"pt": "string", "un": True, "dv": ""},
         "title": {"pt": "string", "un": False, "dv": ""},
         "subtitle": {"pt": "string", "un": False, "dv": ""},
         "featured": {"pt": "string", "un": False, "dv": ""},
@@ -180,7 +180,7 @@ entkeys = {
     "Organization": ["importid", "name", "code"],
     "Point": ["importid"],
     "AppService": ["importid", "name"],
-    "Timeline": ["importid", "name"],
+    "Timeline": ["importid", "name", "slug"],
     "TLComp": ["importid"]
 }
 

@@ -162,5 +162,5 @@ def convert_refs():
 
 
 impfiles_root = "/general/temp/rhport/"   # local dev
-# load_data(impfiles_root)
+load_data(impfiles_root)
 convert_refs()

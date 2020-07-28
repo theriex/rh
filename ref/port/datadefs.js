@@ -160,7 +160,7 @@ module.exports = (function () {
         //created, remembered, started, and most recently accessed.
         {f:"name", d:"string req unique", c:"name for reference and search"},
         {f:"cname", d:"string", c:"canonical name for dupe checks and query"},
-        {f:"slug", d:"string", c:"permalink label, (org timelines only)"},
+        {f:"slug", d:"unique string", c:"opt permalink label if org timeline"},
         {f:"title", d:"string", c:"title for start dialog"},
         {f:"subtitle", d:"string", c:"2nd line text for start dialog"},
         //By default, featured is "Unlisted" (don't display main page).

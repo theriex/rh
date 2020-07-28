@@ -77,6 +77,8 @@ var jt = {};   //Global access to general utility methods
 
     app.init = function () {
         var modules; var splash;
+        if(!jtminjsDecorateWithUtilities) { //support lib not loaded yet
+            return setTimeout(app.init, 50); }
         jtminjsDecorateWithUtilities(jt);
         if(!app.validURL()) {  //sets app.baseurl or redirects as needed
             return; }
@@ -96,7 +98,7 @@ var jt = {};   //Global access to general utility methods
         jt.out("loadstatdiv", "Loading app modules...");
         app.amdtimer = {};
         app.amdtimer.load = { start: new Date() };
-        jt.loadAppModules(app, modules, app.baseurl, app.init2, "?cbp=190930");
+        jt.loadAppModules(app, modules, app.baseurl, app.init2, "?v=200728");
     };
 
 

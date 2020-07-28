@@ -18,6 +18,10 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.addHandler(handler)
 import flask
+import py.tldat as tldat
+import py.util as util
+import py.start as start
+
 
 # Create a default entrypoint for the app.
 app = flask.Flask(__name__)
@@ -29,6 +33,24 @@ app = flask.Flask(__name__)
 @app.route('/api/version')
 def appversion():
     return "1.2"
+
+@app.route('/api/fetchobj')
+def fetchobj():  # params: dt (dsType), di (dsId)
+    return tldat.fetchobj()
+
+@app.route('/api/obimg')
+def obimg():  # params: dt (dsType), di (dsId)
+    return tldat.obimg()
+
+@app.route('/api/fetchtl')
+def fetchtl(): # params: uidp, tlid|slug
+    return tldat.fetchtl()
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def startpage(path):
+    refer = flask.request.referrer or ""
+    return util.secure(lambda: start.startpage(path, refer))
 
 
 # Hook for calling the app directly using python on the command line, which

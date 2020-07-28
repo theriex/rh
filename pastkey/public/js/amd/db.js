@@ -179,8 +179,8 @@ app.db = (function () {
         if(ptids) {
             if(ptids[pt.id]) {
                 jt.log("Duplicate point id: " + pt.id + " " + ptids[pt.id] +
-                       " and " + pt.instid); }
-            ptids[pt.id] = pt.instid; }
+                       " and " + pt.dsId); }
+            ptids[pt.id] = pt.dsId; }
     }
 
 
@@ -233,7 +233,7 @@ app.db = (function () {
 
     //The preb data points in the timeline are a subset of the database
     //fields (see timeline.py rebuild_prebuilt_timeline_points):
-    //    instid: The database point instance id.  Aka "citation id"
+    //    dsId: The database point instance id.  Aka "citation id"
     //    date: Date or range.  See README.md for allowed formats.
     //    text: Description of the point (max 1200 chars)
     //    refs: Zero or more reference citation strings
@@ -244,7 +244,7 @@ app.db = (function () {
     //    tags: CSV of keywords selected from those defined by org
     //    orgid: Organization id, 1 is bootstrap org
     //    source: Arbitrary source tag used when the point was loaded.
-    //    pic: instid if an image exists, empty string otherwise
+    //    pic: dsId if an image exists, empty string otherwise
     //    created: ISO when the point was first created
     //    modified: ISO when the point was last updated
     //These fields added from calculations and user data:
@@ -328,7 +328,7 @@ app.db = (function () {
         if(pt.isoShown) {
             pt.visited = pt.isoShown;
             return pt.visited; }
-        pes = getProgressElements(dcon.prog.pts, pt.instid);
+        pes = getProgressElements(dcon.prog.pts, pt.dsId);
         Object.keys(pes).forEach(function (key) {
             pt[key] = pes[key]; });
         pt.visited = pt.isoShown;
@@ -377,7 +377,7 @@ app.db = (function () {
     function verifyProgressInfo () {
         var acc; var proginst;
         if(!dcon.prog) {
-            dcon.prog = {tlid:dcon.lastTL.instid,
+            dcon.prog = {tlid:dcon.lastTL.dsId,
                          st:new Date().toISOString(),
                          remindme:"yes", svs:"", pts:""}; }
         if(app.user && app.user.acc) {
@@ -459,8 +459,8 @@ app.db = (function () {
             // levs.forEach(function (lev, idx) {
             //     var txt = "lev " + idx + ": " + lev.points.length + " ";
             //     if(lev.points.length) {
-            //         txt += lev.points[0].instid + "..." +
-            //             lev.points[lev.points.length - 1].instid; }
+            //         txt += lev.points[0].dsId + "..." +
+            //             lev.points[lev.points.length - 1].dsId; }
             //     jt.log(txt); });
             tl.levs = levs; });
         //calculate endpoint values (just avoiding cluttering up prev loop)
@@ -489,7 +489,7 @@ app.db = (function () {
     function pointIndexForId (ptid, points) {
         var i;
         for(i = 0; i < points.length; i += 1) {
-            if(points[i].instid === ptid) {
+            if(points[i].dsId === ptid) {
                 return i; } }
         return -1;
     }
@@ -523,9 +523,9 @@ app.db = (function () {
 
     function mergePointsIntoAppCache (aps) {
         aps.forEach(function (pt) {
-            var acpt = app.mpac[pt.instid];
+            var acpt = app.mpac[pt.dsId];
             if(!acpt || acpt.modified < pt.modified) {
-                app.mpac[pt.instid] = pt; } });
+                app.mpac[pt.dsId] = pt; } });
     }
 
 
@@ -577,9 +577,9 @@ app.db = (function () {
     function makeTimelineDisplaySeries (tls) {
         var serstr = "";
         tls.forEach(function (tl) {
-            jt.log("caching timeline " + tl.instid + " " + tl.name);
-            app.user.tls[tl.instid] = tl; });
-        dcon = {ds:[], tlid:tls[0].instid, prog:null};  //reset display context
+            jt.log("caching timeline " + tl.dsId + " " + tl.name);
+            app.user.tls[tl.dsId] = tl; });
+        dcon = {ds:[], tlid:tls[0].dsId, prog:null};  //reset display context
         stackTimeline(tls[0]);   //recursive walk to build display series 
         initTimelinesContent();  //points for random, levels
         dcon.ds.forEach(function (tl) {
@@ -643,7 +643,7 @@ app.db = (function () {
             points = points || []; }
         for(i = 0; i < points.length; i += 1) {
             pt = points[i];
-            if(pt.instid === ptid) {
+            if(pt.dsId === ptid) {
                 return pt; } }
         return null;
     }
@@ -656,12 +656,12 @@ app.db = (function () {
         src += ref;
         dcon.refs = dcon.refs || {};
         if(dcon.refs[ref]) {
-            return dcon.refs[ref].instid; }
+            return dcon.refs[ref].dsId; }
         for(i = 0; i < points.length; i += 1) {
             pt = points[i];
-            if(pt.instid === ref || pt.source === ref || pt.source === src) {
+            if(pt.dsId === ref || pt.source === ref || pt.source === src) {
                 dcon.refs[ref] = pt;
-                return pt.instid; } }
+                return pt.dsId; } }
         return null;
     }
 
@@ -673,10 +673,10 @@ app.db = (function () {
                 var refid; var oc; var link;
                 refid = pointIdFromReference(pt, pts, p1);
                 if(!refid) {
-                    //jt.log(pt.instid + " link ref not found " + p1);
+                    //jt.log(pt.dsId + " link ref not found " + p1);
                     return p2; } //remove link, return just text
-                //jt.log(pt.instid + " linked to " + refid);
-                oc = jt.fs(fname + "('" + refid + "','" + pt.instid + "')");
+                //jt.log(pt.dsId + " linked to " + refid);
+                oc = jt.fs(fname + "('" + refid + "','" + pt.dsId + "')");
                 //standardize the link href to be #<id>
                 link = "<a href=\"#" + p1 + "\"" +
                     " onclick=\"" + oc + "\">" + p2 + "</a>";
@@ -725,7 +725,7 @@ app.db = (function () {
         var datechg = false;
         if(app.allpts) {
             app.allpts.forEach(function (pt) {
-                if(pt.instid === updpt.instid) {
+                if(pt.dsId === updpt.dsId) {
                     found = true;
                     datechg = (pt.date !== updpt.date);
                     mergePointDataToPoint(pt, updpt); } });
@@ -738,7 +738,7 @@ app.db = (function () {
                 var tlpts = app.user.tls[tlid].points;
                 if(tlpts) {
                     tlpts.forEach(function (pt) {
-                        if(pt.instid === updpt.instid) {
+                        if(pt.dsId === updpt.dsId) {
                             mergePointDataToPoint(pt, updpt); } });
                     tlpts.sort(compareStartDate); } }); }
         return datechg;
@@ -772,7 +772,7 @@ app.db = (function () {
         app.user.tls = app.user.tls || {};
         //PENDING: Go with localStorage timeline if available, then redisplay
         //if db fetch shows anything has changed.
-        url = "fetchtl?" + app.db.uidp() + "&slug=" + slug;
+        url = "/api/fetchtl?" + app.db.uidp() + "&slug=" + slug;
         jt.call("GET", url, null,
                 function (result) {  //one or more timeline objects
                     result.forEach(function (tl) {
@@ -899,13 +899,13 @@ app.db = (function () {
         var td = app.amdtimer.load.end;
         var uid = td.toISOString() + td.getTimezoneOffset();
         if(app.user && app.user.acc) {
-            uid = app.user.acc.instid; }
+            uid = app.user.acc.dsId; }
         return "uidp=" + uid;
     }
 
 
     function timelineURL (tl) {
-        return app.baseurl + "/timeline/" + (tl.slug || tl.instid);
+        return app.baseurl + "/timeline/" + (tl.slug || tl.dsId);
     }
             
         

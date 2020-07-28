@@ -106,7 +106,7 @@ CREATE TABLE Timeline (  -- Points + suppviz*, or other timelines
   orgid BIGINT,
   name VARCHAR(256) NOT NULL UNIQUE,
   cname VARCHAR(256),
-  slug VARCHAR(256),
+  slug VARCHAR(256) UNIQUE,
   title VARCHAR(256),
   subtitle VARCHAR(256),
   featured VARCHAR(256),
