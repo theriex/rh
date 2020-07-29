@@ -1444,10 +1444,8 @@ app.dlg = (function () {
     }
 
 
-    function formValuesToObject (fields, ptid) {
+    function formValuesToObject (fields) {
         var obj = {};
-        if(ptid) {
-            obj.instid = ptid; }
         fields.forEach(function (fspec) {
             switch(fspec.type) {
             case "text": 
@@ -1461,10 +1459,6 @@ app.dlg = (function () {
                 break;
             case "cbsel":
                 obj[fspec.field] = editpt[fspec.field];
-                break;
-            case "image":
-                if(ptid && jt.byId(fspec.field + "in").files.length) {
-                    obj[fspec.field] = "/ptpic?pointid=" + ptid; }  //nodeco
                 break;
             case "txtlst":
                 readTextListInputFields(fspec.field);

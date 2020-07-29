@@ -288,7 +288,7 @@ app.tabular = (function () {
             var base = window.location.protocol + "//" + window.location.host;
             pt.picurl = "";
             if(pt.pic) {
-                pt.picurl = base + "/ptpic?pointid=" + pt.pic; } }); //nodeco
+                pt.picurl = base + app.ptimgsrc(pt, "exporturl"); } });
         var txt = JSON.stringify(currpts);
         return "data:text/plain;charset=utf-8," + encodeURIComponent(txt);
     }

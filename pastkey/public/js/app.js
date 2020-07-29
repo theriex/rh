@@ -127,9 +127,10 @@ var jt = {};   //Global access to general utility methods
     };
 
 
-    app.ptimgsrc = function (pt) {
-        var src = "/ptpic?pointid=" + pt.instid + "&mod=" +
-            jt.canonize(pt.modified || "unspecified");
+    app.ptimgsrc = function (pt, skipcachebust) {
+        var src = "/api/obimg?dt=Point&di=" + pt.dsId;
+        if(!skipcachebust) {
+            src += "&mod=" + jt.canonize(pt.modified || "unspecified"); }
         return src;
     };
 
