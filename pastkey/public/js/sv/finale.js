@@ -60,9 +60,9 @@ app.finale = (function () {
             .attr("width", tl.width2)
             .attr("height", tl.height)
             //.attr("preserveAspectRatio", "none")
-            //.attr("href", "img/rhlogoFilled.png")
+            //.attr("href", app.dr("img/rhlogoFilled.png"))
             .attr("preserveAspectRatio", "xMidyMid meet")
-            .attr("href", "img/pastkey.png")
+            .attr("href", app.dr("img/pastkey.png"))
             .style("opacity", 0.2);
     }
 

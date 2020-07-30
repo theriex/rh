@@ -304,14 +304,14 @@ app.svcommon = (function () {
                                               k.yr.end + ")")},
                        k.yr.end]],
                      ["div", {id:"kcldiv", style:k.styles.ctrl},
-                      ["img", {cla:"tranctrl", src:"img/backward.png",
+                      ["img", {cla:"tranctrl", src:app.dr("img/backward.png"),
                                onclick:jt.fs("app.vizsts.transport('jp')")}]],
                      ["div", {id:"kcplaydiv", style:k.styles.ctrl},
-                      ["img", {cla:"tranctrl", src:"img/play.png",
+                      ["img", {cla:"tranctrl", src:app.dr("img/play.png"),
                                id:"playpause", onclick:jt.fs(
                                    "app.vizsts.transport('toggle')")}]],
                      ["div", {id:"kcrdiv", style:k.styles.ctrl},
-                      ["img", {cla:"tranctrl", src:"img/forward.png",
+                      ["img", {cla:"tranctrl", src:app.dr("img/forward.png"),
                                onclick:jt.fs("app.vizsts.transport('jn')")}]]]],
                    ["div", {id:"kyrdiv", style:"position:absolute;" +
                             "top:60px;left:0px;width:280px;min-height:26px;" + 
@@ -533,14 +533,14 @@ app.svcommon = (function () {
             switch(command) {
             case "play":
                 ani.playing = true;
-                jt.byId("playpause").src = "img/pause.png";
+                jt.byId("playpause").src = app.dr("img/pause.png");
                 displayPoint();
                 break;
             case "pause":
                 ani.playing = false;
                 if(ani.timeout) {
                     clearTimeout(ani.timeout); }
-                jt.byId("playpause").src = "img/play.png";
+                jt.byId("playpause").src = app.dr("img/play.png");
                 break;
             case "jp":
                 ani.idx -= 1;

@@ -304,7 +304,7 @@ app.tabular = (function () {
                 ["a", {id:"downloadactionlink", href:getHTMLDataURI(),
                        download:filebase + ".html",
                        onclick:jt.fsd("app.dlg.close()")},
-                 [["img", {src: "img/download.png"}],
+                 [["img", {src:app.dr("img/download.png")}],
                   ["span", {id:"downloadactiontextspan"}, 
                    "Download HTML"]]]));
             break;
@@ -312,7 +312,7 @@ app.tabular = (function () {
             jt.out("downloadactiondiv", jt.tac2html(
                 ["a", {id:"downloadactionlink", href:"#printToPDF",
                        onclick:jt.fs("app.dlg.close();window.print();")},
-                 [["img", {src: "img/download.png"}],
+                 [["img", {src:app.dr("img/download.png")}],
                   ["span", {id:"downloadactiontextspan"}, 
                    "Print to PDF"]]]));
             break;
@@ -321,7 +321,7 @@ app.tabular = (function () {
                 ["a", {id:"downloadactionlink", href:getTSVDataURI(),
                        download:filebase + ".tsv",
                        onclick:jt.fsd("app.dlg.close()")},
-                 [["img", {src: "img/download.png"}],
+                 [["img", {src:app.dr("img/download.png")}],
                   ["span", {id:"downloadactiontextspan"}, 
                    "Download TSV"]]]));
             break;
@@ -330,7 +330,7 @@ app.tabular = (function () {
                 ["a", {id:"downloadactionlink", href:getTXTDataURI(),
                        download:filebase + ".txt",
                        onclick:jt.fsd("app.dlg.close()")},
-                 [["img", {src: "img/download.png"}],
+                 [["img", {src:app.dr("img/download.png")}],
                   ["span", {id:"downloadactiontextspan"}, 
                    "Download TXT"]]]));
             break;
@@ -339,7 +339,7 @@ app.tabular = (function () {
                 ["a", {id:"downloadactionlink", href:getJSONDataURI(),
                        download:filebase + ".json",
                        onclick:jt.fsd("app.dlg.close()")},
-                 [["img", {src: "img/download.png"}],
+                 [["img", {src:app.dr("img/download.png")}],
                   ["span", {id:"downloadactiontextspan"}, 
                    "Download JSON"]]]));
             break;
@@ -661,7 +661,7 @@ app.tabular = (function () {
         app.keyflds.forEach(function (field) {
             if(mcr[field]) {
                 keyiconsrc = "keyicongold.png"; } });
-        jt.byId("keyiconimg").src = "img/" + keyiconsrc;
+        jt.byId("keyiconimg").src = app.dr("img/" + keyiconsrc);
     }
 
 
@@ -715,7 +715,8 @@ app.tabular = (function () {
                      [["div", {id:"ptkeyfiltlinkdiv"},
                        ["a", {href:"#keywordfilter", title:"Keyword Selections",
                               onclick:jt.fs("app.tabular.keysel(event)")},
-                        ["img", {src:"img/keyicon.png", id:"keyiconimg"}]]],
+                        ["img", {src:app.dr("img/keyicon.png"),
+                                 id:"keyiconimg"}]]],
                       ["input", {type:"text", id:"srchin", size:23,
                                  placeholder:"Filter by text...",
                                  value:app.mode.searchstate().qstr, 
@@ -871,11 +872,11 @@ app.tabular = (function () {
         var img = jt.byId("setinfoimg");
         if(setdiv.style.display === "block") {
             infodiv.style.height = setdiv.offsetHeight + "px";
-            img.src = "img/infolit.png";
+            img.src = app.dr("img/infolit.png");
             setdiv.style.display = "none";
             infodiv.style.display = "block"; }
         else {
-            img.src = "img/info.png";
+            img.src = app.dr("img/info.png");
             setdiv.style.display = "block";
             infodiv.style.display = "none"; }
     }
@@ -887,7 +888,7 @@ app.tabular = (function () {
         html = ["div", {id:"etlsetcontdiv"},
                 [["div", {id:"etlsetidiv"},
                   ["a", {href:"#info", onclick:jt.fs("app.tabular.togseti()")},
-                   ["img", {id:"setinfoimg", src:"img/info.png"}]]],
+                   ["img", {id:"setinfoimg", src:app.dr("img/info.png")}]]],
                  ["div", {id:"tlsettingsdispdiv", style:"display:block;"},
                   timelineSettingsFieldsHTML()],
                  ["div", {id:"tlinfodispdiv", style:"display:none;"},
@@ -911,7 +912,7 @@ app.tabular = (function () {
                  [timelineSelectHTML(),
                   ["a", {href:"#settings",
                          onclick:jt.fs("app.tabular.tlset()")},
-                   ["img", {src:"img/settings.png", cla:"formicoimg"}]],
+                   ["img", {src:app.dr("img/settings.png"), cla:"formicoimg"}]],
                   ["div", {id:"tltypeseldiv", cla:"formseldiv"},
                    tlflds.seltype.tac()],
                   ["div", {id:"tlseqseldiv", cla:"formseldiv"},
@@ -996,7 +997,7 @@ app.tabular = (function () {
 
 
     function fetchTimeline (tlid) {
-        jt.call("GET", "fetchtl?tlid=" + tlid, null,
+        jt.call("GET", "/api/fetchtl?tlid=" + tlid, null,
                 function (result) {
                     result.forEach(function (tl) {
                         app.db.deserialize("Timeline", tl);
@@ -1390,7 +1391,7 @@ app.tabular = (function () {
     function updatePointsDisplay (command) {
         var outdiv = jt.byId("pointsdispdiv");
         jt.out("downloadlinkdiv", jt.tac2html(
-            ["img", {src:"img/wait.png", cla:"downloadlinkimg"}]));
+            ["img", {src:app.dr("img/wait.png"), cla:"downloadlinkimg"}]));
         outdiv.innerHTML = "";
         if(tlflds && tlflds.seltype && 
            tlflds.seltype.getValue() === "Timelines") {
@@ -1425,7 +1426,8 @@ app.tabular = (function () {
             ["a", {href:"#Download", id:"downloadlink",
                    title:"Download the displayed points",
                    onclick:jt.fs("app.tabular.showDownloadDialog")},
-             ["img", {src:"img/download.png", cla:"downloadlinkimg"}]]));
+             ["img", {src:app.dr("img/download.png"),
+                      cla:"downloadlinkimg"}]]));
     }
 
 

@@ -611,7 +611,8 @@ app.lynching = (function () {
             jt.out("lyppdiv", jt.tac2html(
                 ["a", {href:"#playpause",
                        onclick:jt.fs("app.lynching.playpause()")},
-                 ["img", {id:"lyppimg", src:"img/pause.png"}]])); }, 4600);
+                 ["img", {id:"lyppimg", src:app.dr("img/pause.png")}]]));
+        }, 4600);
         ani.shto = setTimeout(showNextPoint, 4600);
         ani.transport = "playing";
     }
@@ -623,10 +624,10 @@ app.lynching = (function () {
                 clearTimeout(ani.shto);
                 ani.shto = null; }
             ani.transport = "paused";
-            jt.byId("lyppimg").src = "img/play.png"; }
+            jt.byId("lyppimg").src = app.dr("img/play.png"); }
         else { //paused
             ani.transport = "playing";
-            jt.byId("lyppimg").src = "img/pause.png";
+            jt.byId("lyppimg").src = app.dr("img/pause.png");
             showNextPoint(); }
     }
 

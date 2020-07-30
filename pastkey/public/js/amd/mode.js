@@ -43,7 +43,8 @@ app.mode = (function () {
                              style:"width:" + (ms.w - 60) + "px;" +
                                    "opacity:1.0"},
                      ["Help and more ",
-                      ["img", {cla:"noticeimg", src:"img/forward.png"}]]]];
+                      ["img", {cla:"noticeimg",
+                               src:app.dr("img/forward.png")}]]]];
             jt.out(ms.divid, jt.tac2html(html));
             ms.progsvg = d3.select("#svgnav");
             d3.select("#noticediv").transition().delay(800).duration(5000)
@@ -220,7 +221,7 @@ app.mode = (function () {
         html = [["div", {id:"menuicondiv", style:"text-align:right;"},
                  ["a", {href:"#menu", onclick:jt.fs("app.mode.menu(" + 
                                                     !expand + ")")},
-                  ["img", {src:"img/menuicon.png", //50x38
+                  ["img", {src:app.dr("img/menuicon.png"), //50x38
                            id:"menuiconimg",
                            style:"max-height:20px;max-width:30px;"}]]],
                 ["div", {id:"menulinesdiv", style:"display:none;"},

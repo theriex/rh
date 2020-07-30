@@ -69,12 +69,8 @@ other websites.</p>
 <script src="$RDRjs/app.js?$CACHEBUSTPARAM"></script>
 
 <script>
-function startApp () {
-    if(!app) {
-        return setTimeout(startApp, 50); }
-    app.init();
-}
-startApp();
+  app.refer = "$REFER";
+  app.init();
 </script>
 
 </body>
@@ -99,6 +95,7 @@ def startpage(path, refer):
         # PENDING: fetch timeline and return JSON with index page for cache
         # Replace the title/pic/descr with the timeline info
         stinf["replace"]["$RDR"] = "../"
+        stinf["replace"]["$SITEPIC"] = "../" + stinf["replace"]["$SITEPIC"]
     html = INDEXHTML
     for dcode, value in stinf["replace"].items():
         html = html.replace(dcode, value)

@@ -152,7 +152,7 @@ app.support = (function () {
         app.db.displayContext().prog.remindme = remval;
         app.db.mergeProgToAccount();  //normalize updated prog with db state
         data = app.db.postdata("AppUser", app.user.acc, ["email"]);
-        jt.call("POST", "updacc?" + app.auth(), data,
+        jt.call("POST", "/api/updacc?" + app.auth(), data,
                 function () {  //recently saved, local data up to date
                     jt.out("labrem", compl); },
                 function (code, errtxt) {

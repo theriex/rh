@@ -76,19 +76,21 @@ var jt = {};   //Global access to general utility methods
 
 
     app.init = function () {
-        var modules; var splash;
+        var ox = window.location.href;
+        //PENDING: If not secure then disable login forms
+        app.docroot = ox.split("/").slice(0, 3).join("/") + "/";
         if(!jtminjsDecorateWithUtilities) { //support lib not loaded yet
             return setTimeout(app.init, 50); }
         jtminjsDecorateWithUtilities(jt);
         if(!app.validURL()) {  //sets app.baseurl or redirects as needed
             return; }
-        splash = jt.byId("splashdiv");
+        var splash = jt.byId("splashdiv");
         if(window.location.href.indexOf("/timeline/") >= 0) {
             splash.innerHTML = "Starting timeline"; }
         else {
             splash.style.backgroundImage = "url('../img/splashbg.png')"; }
         splash.style.opacity = 1.0;
-        modules = app.modules.map(function (md) {
+        var modules = app.modules.map(function (md) {
             var path = "js/";
             if(md.type === "gv" || md.type === "sv") {
                 path += "sv/"; }
@@ -107,6 +109,18 @@ var jt = {};   //Global access to general utility methods
         if(jt.byId(id)) {
             val = jt.byId(id)[field] || ""; }
         return val;
+    };
+
+
+    //app.docroot is initialized with a terminating '/' so it can be
+    //concatenated directly with a relative path, but remembering and
+    //relying on whether a slash is required is annoying.  Double slashes
+    //are usually handled properly, but can be a source of confusion, so
+    //easier to call this utility instead when building a relative path.
+    app.dr = function (relpath) {
+        if(relpath.startsWith("/")) {
+            relpath = relpath.slice(1); }
+        return app.docroot + relpath;
     };
 
 

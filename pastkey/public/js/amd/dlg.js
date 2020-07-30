@@ -467,7 +467,7 @@ app.dlg = (function () {
             app.user.acc.settings = app.user.acc.settings || {};
             app.user.acc.settings.gendat = gendat;
             data = jt.objdata({settings:JSON.stringify(app.user.acc.settings)});
-            jt.call("POST", "updacc?" + app.auth(), data,
+            jt.call("POST", "/api/updacc?" + app.auth(), data,
                     function () {
                         jt.log("saveGenerationInfo updacc succeeded"); },
                     function (code, errtxt) {
@@ -507,7 +507,8 @@ app.dlg = (function () {
                        ["img", {cla:"infopic", id:"dlgpicimg",
                                 src:app.ptimgsrc(d)}]]; }
         refshtml = [["a", {onclick:jt.fs("app.dlg.search()")},
-                     ["img", {cla:"searchicoimg", src:"img/search.png"}]]];
+                     ["img", {cla:"searchicoimg",
+                              src:app.dr("img/search.png")}]]];
         if(d.refs && d.refs.length) {
             refshtml.push([["a", {onclick:jt.fs("app.toggledivdisp('" +
                                             "refslistdiv" + d.instid + "')")},
@@ -656,8 +657,8 @@ app.dlg = (function () {
     }
 
 
-    function setCookie (email, authtok) {
-        jt.cookie(cookname, email + cookdelim + authtok, 365);
+    function setCookie (an, at) {
+        jt.cookie(cookname, an + cookdelim + at, 365);
     }
 
 
@@ -666,11 +667,11 @@ app.dlg = (function () {
         app.user.acc = result[0];
         if(app.user.acc.settings && app.user.acc.settings.gendat) {
             gendat = app.user.acc.settings.gendat; }
-        app.user.tok = result[1].token;
+        app.user.tok = result[1];
         setCookie(email, app.user.tok);
         if(!app.auth) {
             app.auth = function () {
-                return "email=" + jt.enc(app.user.email) + "&authtok=" +
+                return "an=" + jt.enc(app.user.email) + "&at=" +
                     app.user.tok; }; }
     }
 
@@ -685,7 +686,7 @@ app.dlg = (function () {
             jt.call("POST", "newacct", inputsToParams(cred),
                     function (result) {
                         app.db.deserialize("AppUser", result[0]);
-                        setAuthentication(cred.emailin, result);
+                        setAuthentication(cred.updemail, result);
                         app.dlg.close();
                         //Do not rebuild random timelines for a new account
                         //or existing progress for points may be lost.
@@ -911,7 +912,8 @@ app.dlg = (function () {
                       tab.capitalize()]]); });
         html.push(["div", {id:"dlgtitlediv"},
                    [["a", {href:"#back", onclick:jt.fs("app.dlg.back()")},
-                     ["img", {src:"img/backward.png", cla:"dlgbackimg"}]],
+                     ["img", {src:app.dr("img/backward.png"),
+                              cla:"dlgbackimg"}]],
                     "Organization",
                     ["div", {id:"dlgorgtabsdiv"}, jt.tac2html(th)]]]);
         html.push(["div", {cla:"dlgsignindiv", id:"dlgcontentdiv"},
@@ -991,7 +993,7 @@ app.dlg = (function () {
         var html;
         html = [["div", {id:"dlgtitlediv"},
                  [["a", {href:"#back", onclick:jt.fs("app.dlg.back()")},
-                   ["img", {src:"img/backward.png", cla:"dlgbackimg"}]],
+                   ["img", {src:app.dr("img/backward.png"), cla:"dlgbackimg"}]],
                   "Account"]],
                 ["div", {cla:"dlgsignindiv"},
                  [["div", {cla:"dlgformline"},
@@ -1055,7 +1057,7 @@ app.dlg = (function () {
                data.updpasswordin === "noval") {  //not changing auth info
                 delete data.updpasswordin;        //so don't send
                 delete data.updemailin; }
-            jt.call("POST", "updacc?" + app.auth(), inputsToParams(data),
+            jt.call("POST", "/api/updacc?" + app.auth(), inputsToParams(data),
                     function (result) {
                         app.db.deserialize("AppUser", result[0]);
                         if(data.updpasswordin) {
@@ -1080,11 +1082,11 @@ app.dlg = (function () {
         params = inputsToParams(cred);
         jt.log("processSignIn params: " + params);
         if(cred) {
-            jt.call("GET", "acctok?" + params, null,
+            jt.call("GET", "/api/acctok?" + params, null,
                     function (result) {
                         jt.log("processSignIn retrieved AppUser");
-                        app.db.deserialize("AppUser", result[0]);
-                        setAuthentication(cred.emailin, result);
+                        app.refmgr.put(app.refmgr.deserialize(result[0]));
+                        setAuthentication(cred.an, result);
                         app.db.initTimelines();  //reset for user
                         if(contf) {
                             return contf(); }
@@ -1112,8 +1114,8 @@ app.dlg = (function () {
 
     function checkCookieSignIn (contf) {
         var cval = jt.parseParams("String");
-        if(cval.email && cval.authtok) {
-            setCookie(cval.email, cval.authtok);
+        if(cval.an && cval.at) {
+            setCookie(cval.an, cval.at);  //email is still encoded
             cval.href = window.location.href;
             cval.qidx = cval.href.indexOf("?");
             if(cval.qidx > 0) {
@@ -1125,8 +1127,7 @@ app.dlg = (function () {
         if(!cval) {
             return contf(); }
         cval = cval.split(cookdelim);
-        processSignIn({emailin:cval[0].replace("%40", "@"),
-                       authtok:cval[1]}, contf);
+        processSignIn({an:jt.dec(cval[0]), at:cval[1]}, contf);
     }
 
 
@@ -1139,7 +1140,8 @@ app.dlg = (function () {
         var mh = "mailto:support@pastkey.org?subject=" + jt.dquotenc(subj) +
             "&body=" + jt.dquotenc(body);
         var html = ["div", {id:"passemdiv"},
-                    [["p", "Your password has been emailed to " + emaddr +
+                    [["p", "An account access link has been emailed to " +
+                      emaddr +
                       " and should arrive in a few minutes.  If it doesn't" +
                       " show up, please"],
                      ["ol",
@@ -1163,7 +1165,8 @@ app.dlg = (function () {
         if(!cred || !jt.isProbablyEmail(cred.emailin)) {
             jt.out("loginstatdiv", "Please fill in your email address...");
             return; }
-        jt.call("POST", "mailpwr", inputsToParams(cred),
+        cred["returlin"] = jt.enc(window.location.href);
+        jt.call("POST", "/api/mailpwr", inputsToParams(cred),
                 function () {
                     jt.out("loginstatdiv", "");
                     displayEmailSent(cred.emailin); },
@@ -1187,7 +1190,7 @@ app.dlg = (function () {
             hd = {f:jt.fs("app.dlg.login()"), b:"Sign In"}; }
         html = [["div", {id:"dlgtitlediv"},
                  [["a", {href:"#back", onclick:jt.fs("app.dlg.back()")},
-                   ["img", {src:"img/backward.png", cla:"dlgbackimg"}]],
+                   ["img", {src:app.dr("img/backward.png"), cla:"dlgbackimg"}]],
                   "Welcome"]],
                 ["div", {cla:"dlgsignindiv"},
                  [["div", {cla:"dlgformline"},
@@ -1261,7 +1264,7 @@ app.dlg = (function () {
     function indicateMenu (color) {
         var source;
         color = color || "";
-        source = "img/menuicon" + color + ".png";
+        source = app.dr("img/menuicon" + color + ".png");
         jt.byId("menuiconimg").src = source;
         jt.log("indicateMenu source " + source);
     }
@@ -1328,7 +1331,7 @@ app.dlg = (function () {
         jt.byId("contbutton").disabled = true;
         app.db.mergeProgToAccount();  //normalize current prog with db state
         var data = app.db.postdata("AppUser", app.user.acc, ["email"]);
-        jt.call("POST", "updacc?" + app.auth(), data,
+        jt.call("POST", "/api/updacc?" + app.auth(), data,
                 function (result) {
                     jt.byId("contbutton").disabled = false;
                     jt.log("progress saved");
@@ -1398,7 +1401,7 @@ app.dlg = (function () {
                                          "fhdiv" + fs.field + "'," +
                                          fs.descf + ")")},
                      [label + "&nbsp;",
-                      ["img", {src:"img/info.png"}],
+                      ["img", {src:app.dr("img/info.png")}],
                       "&nbsp;"]]; }
         var html = ["div", {cla:"dlgformline"},
                     [["div", {cla:"fieldhelpdiv", id:"fhdiv" + fs.field}],
@@ -1590,7 +1593,7 @@ app.dlg = (function () {
                     ["label", {fo:fs.field + "cbdel", id:"picdellabel"},
                      "Delete pic"]]]; }
         else {
-            imgsrc = "/img/picplaceholder.png"; }
+            imgsrc = app.dr("/img/picplaceholder.png"); }
         if(mode === "list") {
             return ["div", {cla:"edptvaldiv"}, 
                     ["img", {src:imgsrc, cla:"txtpicimg"}]]; }

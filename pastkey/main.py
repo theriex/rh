@@ -46,6 +46,18 @@ def obimg():  # params: dt (dsType), di (dsId)
 def fetchtl(): # params: uidp, tlid|slug
     return tldat.fetchtl()
 
+@app.route('/api/acctok')
+def acctok(): # params: email, password
+    return util.secure(util.acctok)
+
+@app.route('/api/mailpwr', methods=['GET', 'POST'])
+def mailpwr(): # params: email, returl
+    return util.secure(util.mailpwr)
+
+@app.route('/api/updacc', methods=['GET', 'POST'])
+def updacc(): # params: auth, AppUser
+    return util.secure(util.updacc)
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def startpage(path):
