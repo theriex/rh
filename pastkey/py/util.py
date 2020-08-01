@@ -44,11 +44,19 @@ def respond(contentstr, mimetype="text/html"):
     return resp
 
 
-def respJSON(jsontxt):
+def safe_JSON(obj, audience="public"):  # "private" includes personal info
+    if isinstance(obj, dict) and obj.get("dsType"):
+        obj = dbacc.visible_fields(obj, audience)
+    return json.dumps(obj)
+
+
+def respJSON(jsontxt, audience="public"):  # "private" includes personal info):
     if isinstance(jsontxt, dict):
-        jsontxt = "[" + json.dumps(jsontxt) + "]"
+        jsontxt = "[" + safe_JSON(jsontxt, audience) + "]"
     elif isinstance(jsontxt, list):
-        jsontxt = json.dumps(jsontxt)
+        # list may contain a token or other non-db dict
+        jsontxt = [safe_JSON(obj, audience) for obj in jsontxt]
+        jsontxt = "[" + ",".join(jsontxt) + "]"
     return respond(jsontxt, mimetype="application/json")
 
 
@@ -76,13 +84,6 @@ def token_for_user(appuser):
     token = token.replace("/", "_")
     token = token.replace("=", ".")
     return token
-
-
-def safe_JSON(obj, audience="public"):  # "private" includes personal info
-    filtobj = dbacc.visible_fields(obj, audience)
-    if obj["dsType"] == "AppUser" and audience == "private":
-        filtobj["token"] = token_for_user(obj)
-    return json.dumps(filtobj)
 
 
 # No terminating '/' returned.  Caller specifies for clarity.  It is probable
@@ -204,6 +205,27 @@ def make_activation_code():
     return "".join(random.choice(chars) for _ in range(30))
 
 
+def url_for_mail_message():
+    returl = dbacc.reqarg("returl", "string")
+    if not returl:
+        returl = site_home() + "/timeline/default"
+    else:
+        returl = urllib.parse.unquote(returl)
+    return returl
+
+
+def send_activation_email(appuser):
+    subj = "PastKey account activation link"
+    emaddr = appuser["email"]
+    returl = url_for_mail_message()
+    body = "Use this link to activate your PastKey account:\n\n"
+    body += (returl + "?actcode=" + appuser["actcode"] + "&an=" +
+             urllib.parse.quote(appuser["email"]) + "&at=" +
+             token_for_user(appuser) + "\n\n")
+    body += "Thanks for being a PastKey member!\n"
+    send_mail(emaddr, subj, body)
+
+
 def update_email_and_password(appuser, emaddr, pwd):
     emaddr = normalize_email(emaddr)
     emchg = emaddr and emaddr != appuser["email"]
@@ -221,6 +243,7 @@ def update_email_and_password(appuser, emaddr, pwd):
         appuser["status"] = "Pending"  # need to confirm new email address
         appuser["actsends"] = ""       # reset send attempts log
         appuser["actcode"] = make_activation_code()
+        send_activation_email(appuser)
     # if either email or password changed, always update the phash
     appuser["phash"] = make_password_hash(appuser["email"], pwd,
                                           appuser["created"])
@@ -238,9 +261,40 @@ def update_account_fields(appuser):
             appuser[fld] = val
 
 
+def update_accessed_count(appuser):
+    # Do some reparative checking for older ported data
+    accval = appuser["accessed"] or "1970-01-01T00:00:00Z"
+    modval = appuser["modified"] or "1970-01-01T00:00:00Z"
+    accts, count = accval.split(";")
+    modts, modc = modval.split(";")
+    accts = max(accts, modts)
+    count = max(int(count), int(modc))
+    appuser["accessed"] = accts + ";" + str(count)
+
 
 ############################################################
 ## API endpoints:
+
+def newacct():
+    try:
+        emaddr = dbacc.reqarg("email", "AppUser.email", required=True)
+        emaddr = normalize_email(emaddr)
+        verify_new_email_valid(emaddr)
+        pwd = dbacc.reqarg("password", "string", required=True)
+        cretime = dbacc.nowISO()
+        appuser = {"dsType":"AppUser", "created":cretime,
+                   "email":"placeholder", "phash":"whatever",
+                   "accessed":cretime + ";1", "completed":"[]",
+                   "started":"[]", "built":"[]"}
+        update_email_and_password(appuser, emaddr, pwd)
+        update_account_fields(appuser)
+        appuser = dbacc.write_entity(appuser)
+        dbacc.entcache.cache_put(appuser)  # will need this again shortly
+        token = token_for_user(appuser)
+    except ValueError as e:
+        return serve_value_error(e)
+    return respJSON([appuser, token], audience="private")
+
 
 def acctok():
     try:
@@ -248,17 +302,24 @@ def acctok():
     except ValueError as e:
         logging.info("acctok signin failed: " + str(e))
         return serve_value_error(e, quiet=True)
-    return respJSON([appuser, token])
+    return respJSON([appuser, token], audience="private")
+
+
+def mailactcode():
+    try:
+        appuser, _ = authenticate()
+        send_activation_email(appuser)
+    except ValueError as e:
+        logging.info("mailactcode failed: " + str(e))
+        return serve_value_error(e)
+    return respJSON("[]")
 
 
 def mailpwr():
     try:
+        subj = "PastKey.org account password reset link"
         emaddr = dbacc.reqarg("email", "AppUser.email", required=True)
-        returl = dbacc.reqarg("returl", "string")
-        if not returl:
-            returl = site_home() + "/timeline/default"
-        else:
-            returl = urllib.parse.unquote(returl)
+        returl = url_for_mail_message()
         body = "You asked to reset your PastKey account password.\n\n"
         user = dbacc.cfbk("AppUser", "email", emaddr)
         if user:
@@ -270,7 +331,6 @@ def mailpwr():
             body += "Either you have not signed up yet, or you used "
             body += "a different email address.  To create an account "
             body += "visit " + returl + "\n\n"
-        subj = "PastKey.org account password reset"
         send_mail(emaddr, subj, body)
     except ValueError as e:
         return serve_value_error(e)
@@ -287,6 +347,7 @@ def updacc():
         if chg != "nochange":
             logging.info("Changing " + chg + " for " + appuser["email"])
         update_account_fields(appuser)
+        update_accessed_count(appuser)
         actcode = dbacc.reqarg("actcode", "string")
         if actcode == appuser["actcode"]:
             appuser["status"] = "Active"
@@ -295,4 +356,4 @@ def updacc():
         token = token_for_user(appuser)    # return possibly updated token
     except ValueError as e:
         return serve_value_error(e)
-    return respJSON([appuser, token])
+    return respJSON([appuser, token], audience="private")

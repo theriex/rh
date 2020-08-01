@@ -42,7 +42,7 @@ var jt = {};   //Global access to general utility methods
         jt.log("window.innerWidth: " + window.innerWidth);
         app.user = {};  //used for general reference
         jt.out("loadstatdiv", "");
-        app.dlg.chkcook(app.db.fetchDisplayTimeline);
+        app.dlg.procparams(app.db.fetchDisplayTimeline);
     };
 
 
@@ -138,6 +138,19 @@ var jt = {};   //Global access to general utility methods
         if(window.location.href.match(/\:\d\d80/)) {
             return true; }
         return false;
+    };
+
+
+    //Return the argument list as a string of arguments suitable for appending
+    //to onblah function text.
+    app.paramstr = function (args) {
+        var ps = "";
+        if(args && args.length) {
+            ps = args.reduce(function (acc, arg) {
+                if((typeof arg === "string") && (arg !== "event")) {
+                    arg = "'" + arg + "'"; }
+                return acc + "," + arg; }, ""); }
+        return ps;
     };
 
 

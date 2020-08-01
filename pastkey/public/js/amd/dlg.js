@@ -39,6 +39,30 @@ app.dlg = (function () {
     var orgtabs = ["contact", "keywords", "members"];
 
 
+    function setCookie (an, at) {
+        jt.cookie(cookname, an + cookdelim + at, 365);
+    }
+
+
+    //The api updacc, newacct and acctok calls all return the same result
+    //array consisting of the AppUser and an access token.  The private
+    //information is stored in app.user, and the public information is
+    //stored in app.user.acc.
+    function saveUserInfo (result) {
+        app.user.email = result[0].email;
+        app.user.status = result[0].status;
+        app.user.tok = result[1];
+        app.user.acc = app.refmgr.put(app.refmgr.deserialize(result[0]));
+        //set auth cookie info and create auth params utility method
+        setCookie(app.user.email, app.user.tok);
+        app.auth = function () {
+            return "an=" + jt.enc(app.user.email) + "&at=" + app.user.tok; };
+        //set the generation data if available
+        if(app.user.acc.settings && app.user.acc.settings.gendat) {
+            gendat = app.user.acc.settings.gendat; }
+    }
+
+
     function nextColorTheme () {
         lnfidx += 1;
         lnfidx = lnfidx % lnfs.length;
@@ -468,7 +492,8 @@ app.dlg = (function () {
             app.user.acc.settings.gendat = gendat;
             data = jt.objdata({settings:JSON.stringify(app.user.acc.settings)});
             jt.call("POST", "/api/updacc?" + app.auth(), data,
-                    function () {
+                    function (result) {
+                        saveUserInfo(result);
                         jt.log("saveGenerationInfo updacc succeeded"); },
                     function (code, errtxt) {
                         jt.log("saveGenerationInfo " + code + ": " + errtxt); },
@@ -657,36 +682,18 @@ app.dlg = (function () {
     }
 
 
-    function setCookie (an, at) {
-        jt.cookie(cookname, an + cookdelim + at, 365);
-    }
-
-
-    function setAuthentication (email, result) {
-        app.user.email = email;
-        app.user.acc = result[0];
-        if(app.user.acc.settings && app.user.acc.settings.gendat) {
-            gendat = app.user.acc.settings.gendat; }
-        app.user.tok = result[1];
-        setCookie(email, app.user.tok);
-        if(!app.auth) {
-            app.auth = function () {
-                return "an=" + jt.enc(app.user.email) + "&at=" +
-                    app.user.tok; }; }
-    }
-
-
     function createAccount () {
         var cred = readInputFieldValues([
             {fieldname:"emailin", required:true},
             {fieldname:"passwordin", required:true}]);
         if(cred) {
             cred.updemail = cred.emailin;  //pass email without "in"
+            //Provide context url for account activation email
+            cred.returl = jt.enc(window.location.href);
             jt.out("loginstatdiv", "Creating account...");
-            jt.call("POST", "newacct", inputsToParams(cred),
+            jt.call("POST", "/api/newacct", inputsToParams(cred),
                     function (result) {
-                        app.db.deserialize("AppUser", result[0]);
-                        setAuthentication(cred.updemail, result);
+                        saveUserInfo(result);
                         app.dlg.close();
                         //Do not rebuild random timelines for a new account
                         //or existing progress for points may be lost.
@@ -977,21 +984,55 @@ app.dlg = (function () {
     }
 
 
-    function formInputTAC (lab, field, intype, val, place) {
-        var html = ["div", {cla:"dlgformline"},
-                    [["label", {fo:field + "in", cla:"liflab", 
-                                id:"lab" + field + "in"},
-                      lab],
-                     ["input", {type:intype, cla:"lifin",
-                                name:field + "in", id:field + "in",
-                                placeholder:place, value:val}]]];
-        return html;
+    function mdfs (mgrfname, ...args) {
+        mgrfname = mgrfname.split(".");
+        return jt.fs("app.dlg.managerDispatch('" + mgrfname[0] + "','" +
+                     mgrfname[1] + "'" + app.paramstr(args) + ")");
     }
 
 
-    function myAccount () {
-        var html;
-        html = [["div", {id:"dlgtitlediv"},
+    function displayEmailSent (emo) {
+        var subj = emo.title + " email didn't arrive";
+        var body = "Hi,\n\n" +
+            "I clicked \"" + emo.clk + "\" but didn't get a response. " +
+            "Could you please look into it and get back to me?\n\n" +
+            "Thanks\n\n";
+        var mh = "mailto:support@pastkey.org?subject=" + jt.dquotenc(subj) +
+            "&body=" + jt.dquotenc(body);
+        var html = ["div", {id:"passemdiv"},
+                    [["p", "An account " + emo.lkt + " link has been sent to " +
+                      emo.em +
+                      " and should arrive in a few minutes.  If it doesn't" +
+                      " show up, please"],
+                     ["ol",
+                      [["li", "Make sure your email address is spelled right,"],
+                       ["li", "Check your spam folder"]]],
+                     ["p", 
+                      ["If the email doesn't arrive in a timely fashion,",
+                       " contact ",
+                       ["a", {href:mh}, "support@pastkey.org"],
+                       " so we can look into it."]],
+                     ["div", {id: "dlgbuttondiv"},
+                      ["button", {type: "button", id: "okbutton",
+                                  onclick: jt.fs("app.dlg.back()")},
+                       "Ok"]]]];
+        displayDialog(null, jt.tac2html(html));
+    }
+
+
+    var accmgr = {
+        fiTAC: function (lab, field, intype, val, place) {
+            var html = ["div", {cla:"dlgformline"},
+                        [["label", {fo:field + "in", cla:"liflab", 
+                                    id:"lab" + field + "in"},
+                          lab],
+                         ["input", {type:intype, cla:"lifin",
+                                    name:field + "in", id:field + "in",
+                                    placeholder:place, value:val}]]];
+            return html; },
+        myAccount: function () {
+            var html = [
+                ["div", {id:"dlgtitlediv"},
                  [["a", {href:"#back", onclick:jt.fs("app.dlg.back()")},
                    ["img", {src:app.dr("img/backward.png"), cla:"dlgbackimg"}]],
                   "Account"]],
@@ -999,17 +1040,18 @@ app.dlg = (function () {
                  [["div", {cla:"dlgformline"},
                    ["em",
                     "Private information:"]],
-                  formInputTAC("Email", "updemail", "text", app.user.email, ""),
-                  formInputTAC("Password", "updpassword", "password", "", ""),
+                  accmgr.fiTAC("Email", "updemail", "text", app.user.email, ""),
+                  accmgr.fiTAC("Password", "updpassword", "password", "", ""),
+                  ["div", {cla:"dlgformline", id:"accstatdiv"}],
                   ["div", {cla:"dlgformline", id:"orglinkdiv"}],
                   ["div", {cla:"dlgformline"},
                    ["em",
                     "Public information:"]],
-                  formInputTAC("Name", "name", "text", app.user.acc.name,
+                  accmgr.fiTAC("Name", "name", "text", app.user.acc.name,
                                "For Honor Roll..."),
-                  formInputTAC("Title", "title", "text", app.user.acc.title,
+                  accmgr.fiTAC("Title", "title", "text", app.user.acc.title,
                                "Optional"),
-                  formInputTAC("Website", "web", "text", app.user.acc.web,
+                  accmgr.fiTAC("Website", "web", "text", app.user.acc.web,
                                "Optional"),
                   ["div", {cla:"dlgformline"},
                    [["input", {type:"checkbox", id:"cbtlnotices",
@@ -1023,11 +1065,33 @@ app.dlg = (function () {
                    [["button", {type:"button", id:"updaccbutton",
                                 onclick:jt.fs("app.dlg.updacc()")},
                      "Ok"]]]]]];
-        displayDialog(null, jt.tac2html(html));
-        setFocus("namein");
-        if(app.db.getOrgId(app.user.acc)) {
-            showOrgLink(); }
-    }
+            displayDialog(null, jt.tac2html(html));
+            setFocus("namein");
+            if(app.user.acc.status !== "Active") {
+                accmgr.showAccStatLink(); }
+            if(app.db.getOrgId(app.user.acc)) {
+                showOrgLink(); } },
+        showAccStatLink: function () {
+            if(app.user.status !== "Active") {  //"Pending" or admin setting
+                jt.out("accstatdiv", jt.tac2html(
+                    [["label", {fo:"accstata", cla:"liflab"}, "Status:"],
+                     ["a", {href:"#sendcode", cla:"lifin", id:"accstata",
+                            title:"Email Account Activation Code",
+                            onclick:mdfs("accmgr.sendactcode")},
+                      app.user.status]])); } },
+        sendactcode: function () {
+            jt.out("accstata", "Sending...");
+            var data = jt.objdata({returl:window.location.href});
+            jt.call("POST", "/api/mailactcode?" + app.auth(), data,
+                    function () {
+                        jt.out("accstata", "Mail sent");
+                        displayEmailSent({
+                            em:app.user.email, title:"Account Activation",
+                            clk:"Status: Pending", lkt:"activation"}); },
+                    function (code, errtxt) {
+                        jt.err("Send failed " + code + ": " + errtxt); },
+                    jt.semaphore("sendactcode")); }
+    };
 
 
     function popBack (dfunc) {
@@ -1057,12 +1121,12 @@ app.dlg = (function () {
                data.updpasswordin === "noval") {  //not changing auth info
                 delete data.updpasswordin;        //so don't send
                 delete data.updemailin; }
+            else if(app.user.acc.email !== data.updemailin) {
+                //Provide context url for account activation email
+                data.returl = jt.enc(window.location.href); }
             jt.call("POST", "/api/updacc?" + app.auth(), inputsToParams(data),
                     function (result) {
-                        app.db.deserialize("AppUser", result[0]);
-                        if(data.updpasswordin) {
-                            setAuthentication(data.updemailin, result); }
-                        app.user.acc = result[0];
+                        saveUserInfo(result);
                         app.dlg.close();
                         popBack(app.db.nextInteraction); },
                     function (code, errtxt) {
@@ -1085,8 +1149,7 @@ app.dlg = (function () {
             jt.call("GET", "/api/acctok?" + params, null,
                     function (result) {
                         jt.log("processSignIn retrieved AppUser");
-                        app.refmgr.put(app.refmgr.deserialize(result[0]));
-                        setAuthentication(cred.an, result);
+                        saveUserInfo(result);
                         app.db.initTimelines();  //reset for user
                         if(contf) {
                             return contf(); }
@@ -1112,17 +1175,44 @@ app.dlg = (function () {
     }
 
 
+    //Process and clear all URL parameters saving in cookie or on server.
+    function processParameters (contf) {
+        var params = jt.parseParams("String");
+        params.href = window.location.href;
+        params.qidx = params.href.indexOf("?");
+        if(params.qidx < 0) { //no parameters to process
+            return app.dlg.chkcook(contf); }
+        params.plainurl = params.href.slice(0, params.qidx);
+        if(params.an && params.at) {
+            params.authqs = "an=" + params.an + "&at=" + params.at;
+            params.an = jt.dec(params.an);
+            setCookie(params.an, params.at); }
+        if(params.actcode) {
+            params.data = params.data || {};
+            params.data.actcode = params.actcode; }
+        //Save all parameter state in cookie or server, then clear the
+        //params and continue.  With no app history management, removing the
+        //query portion of the url will probably result in a reload, but
+        //should work either way since all given state was saved.
+        if(params.data) {
+            jt.out("splashdiv", "Updating your account...");
+            params.data = jt.objdata(params.data);
+            jt.call("POST", "/api/updacc?" + params.authqs, params.data,
+                    function (result) {
+                        saveUserInfo(result);
+                        window.location.href = params.plainurl;
+                        app.dlg.chkcook(contf); },
+                    function (code, errtext) {
+                        jt.out("splashdiv", "Account update failed " + code +
+                               ": " + errtext); }); }
+        else { //nothing to save on server.
+            window.location.href = params.plainurl;  //probably causes reload
+            app.dlg.chkcook(contf); }
+    }
+
+
     function checkCookieSignIn (contf) {
-        var cval = jt.parseParams("String");
-        if(cval.an && cval.at) {
-            setCookie(cval.an, cval.at);  //email is still encoded
-            cval.href = window.location.href;
-            cval.qidx = cval.href.indexOf("?");
-            if(cval.qidx > 0) {
-                //eat the authtok etc info.  The browser may interpret this
-                //as a redirect, Ok if it does since the cookie is set.
-                window.location.href = cval.href.slice(0, cval.qidx); } }
-        cval = jt.cookie(cookname);
+        var cval = jt.cookie(cookname);
         jt.log("cookie " + cookname + ": " + cval);
         if(!cval) {
             return contf(); }
@@ -1131,45 +1221,18 @@ app.dlg = (function () {
     }
 
 
-    function displayEmailSent (emaddr) {
-        var subj = "Reset Password email didn't arrive";
-        var body = "Hi,\n\n" +
-            "I clicked \"reset password\" but didn't get a response. " +
-            "Could you please look into it and get back to me?\n\n" +
-            "Thanks\n\n";
-        var mh = "mailto:support@pastkey.org?subject=" + jt.dquotenc(subj) +
-            "&body=" + jt.dquotenc(body);
-        var html = ["div", {id:"passemdiv"},
-                    [["p", "An account access link has been emailed to " +
-                      emaddr +
-                      " and should arrive in a few minutes.  If it doesn't" +
-                      " show up, please"],
-                     ["ol",
-                      [["li", "Make sure your email address is spelled right,"],
-                       ["li", "Check your spam folder"]]],
-                     ["p", 
-                      ["If the email doesn't arrive in a timely fashion,",
-                       " contact ",
-                       ["a", {href:mh}, "support@pastkey.org"],
-                       " so we can look into it."]],
-                     ["div", {id: "dlgbuttondiv"},
-                      ["button", {type: "button", id: "okbutton",
-                                  onclick: jt.fs("app.dlg.close()")},
-                       "Ok"]]]];
-        displayDialog(null, jt.tac2html(html));
-    }
-
-
     function resetPassword () {
         var cred = readInputFieldValues([{fieldname:"emailin", required:true}]);
         if(!cred || !jt.isProbablyEmail(cred.emailin)) {
             jt.out("loginstatdiv", "Please fill in your email address...");
             return; }
-        cred["returlin"] = jt.enc(window.location.href);
+        cred.returl = jt.enc(window.location.href);
         jt.call("POST", "/api/mailpwr", inputsToParams(cred),
                 function () {
                     jt.out("loginstatdiv", "");
-                    displayEmailSent(cred.emailin); },
+                    displayEmailSent({
+                        em:cred.emailin, title:"Reset Password",
+                        clk:"reset password", lkt:"access"}); },
                 function (code, errtxt) {
                     jt.log("mailpwr call failed " + code + " " + errtxt);
                     jt.out("loginstatdiv", "Mail send failed: " + errtxt); },
@@ -1333,10 +1396,9 @@ app.dlg = (function () {
         var data = app.db.postdata("AppUser", app.user.acc, ["email"]);
         jt.call("POST", "/api/updacc?" + app.auth(), data,
                 function (result) {
+                    saveUserInfo(result);
                     jt.byId("contbutton").disabled = false;
                     jt.log("progress saved");
-                    app.db.deserialize("AppUser", result[0]);
-                    app.user.acc = result[0];
                     if(jt.byId("savestatspan") &&
                        jt.byId("savestatspan").innerHTML === savestat) {
                         continueToNext(); } },
@@ -1988,11 +2050,12 @@ app.dlg = (function () {
         closegenentry: function () { closeGenerationEntry(); },
         okgenentry: function () { saveGenerationInfo(); },
         newacc: function () { createAccount(); },
-        myacc: function () { myAccount(); },
+        myacc: function () { accmgr.myAccount(); },
         updacc: function () { updateAccount(); },
         back: function () { closeDialog(); popBack(); },
         login: function () { processSignIn(); },
         logout: function () { processSignOut(); },
+        procparams: function (cf) { processParameters(cf); },
         chkcook: function (cf) { checkCookieSignIn(cf); },
         resetpw: function () { resetPassword(); },
         saveprog: function () { saveProgress(); },
@@ -2017,6 +2080,10 @@ app.dlg = (function () {
         refsListHTML: function (refs) { return refsListHTML(refs); },
         gendat: function (gen) { return getOrSetGenerationData(gen); },
         closepop: function () { closePopup(); },
-        cbdelpic: function () { reflectDeletePicCheckbox(); }
-    };
+        cbdelpic: function () { reflectDeletePicCheckbox(); },
+        managerDispatch: function (mgrname, fname, ...args) {
+            switch(mgrname) {
+            case "accmgr": return accmgr[fname].apply(app.dlg, args);
+            default: jt.log("dlg.managerDispatch unknown mgr: " + mgrname); } }
+        }; //end returned published functions
 }());

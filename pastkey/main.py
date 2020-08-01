@@ -46,9 +46,17 @@ def obimg():  # params: dt (dsType), di (dsId)
 def fetchtl(): # params: uidp, tlid|slug
     return tldat.fetchtl()
 
+@app.route('/api/newacct', methods=['GET', 'POST'])
+def newacct(): # params: email, password
+    return util.secure(util.newacct)
+
 @app.route('/api/acctok')
 def acctok(): # params: email, password
     return util.secure(util.acctok)
+
+@app.route('/api/mailactcode', methods=['GET', 'POST'])
+def mailactcode(): # params: email, returl
+    return util.secure(util.mailactcode)
 
 @app.route('/api/mailpwr', methods=['GET', 'POST'])
 def mailpwr(): # params: email, returl
