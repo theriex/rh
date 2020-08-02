@@ -27,8 +27,13 @@ def fetchobj():
     oj = ""
     try:
         dsType = dbacc.reqarg("dt", "string", required=True)
-        dsId = dbacc.reqarg("di", "string", required=True)
-        inst = dbacc.cfbk(dsType, "dsId", dsId)
+        keyfld = dbacc.reqarg("ak", "string")  # alternate key
+        if keyfld:
+            fldval = dbacc.reqarg("kv", "string", required=True)
+        else:
+            keyfld = "dsId"
+            fldval = dbacc.reqarg("di", "string", required=True)
+        inst = dbacc.cfbk(dsType, keyfld, fldval)
         if not inst:
             raise ValueError(dsType + " " + dsId + " not found")
         oj = util.safe_JSON(inst)

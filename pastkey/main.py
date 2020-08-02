@@ -66,6 +66,11 @@ def mailpwr(): # params: email, returl
 def updacc(): # params: auth, AppUser
     return util.secure(util.updacc)
 
+@app.route('/api/supphelp')
+def supphelp():
+    ## Return an access url for the given email
+    return util.secure(util.supphelp)
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def startpage(path):

@@ -133,6 +133,30 @@ def normalize_email(emaddr):
     return emaddr
 
 
+def val_in_csv(val, csv):
+    if not csv:
+        return False
+    val = str(val)
+    csv = str(csv)
+    if csv == val:
+        return True
+    if csv.startswith(val + ","):
+        return True
+    index = csv.find("," + val)
+    if index >= 0:
+        return True
+    return False
+
+
+def csv_to_list(csv):
+    if not csv:
+        return []
+    csv = str(csv)
+    if not csv.strip():  # was all whitespace. treat as empty
+        return []
+    return csv.split(",")
+
+
 def authenticate():
     emaddr = dbacc.reqarg("an", "AppUser.email")
     if not emaddr:
@@ -163,6 +187,13 @@ def authenticate():
         logging.info("  srvtok: " + srvtok)
         raise ValueError("Wrong password")
     return appuser, srvtok
+
+
+def administrator_auth():
+    appuser, token = authenticate()
+    cs = get_connection_service("Administrators")
+    if not val_in_csv(appuser["dsId"], cs["data"]):
+        raise ValueError("Not authorized as admin")
 
 
 # If the caller is outside of the context of a web request, then the domain
@@ -263,8 +294,10 @@ def update_account_fields(appuser):
 
 def update_accessed_count(appuser):
     # Do some reparative checking for older ported data
-    accval = appuser["accessed"] or "1970-01-01T00:00:00Z"
-    modval = appuser["modified"] or "1970-01-01T00:00:00Z"
+    accval = appuser["accessed"] or "1970-01-01T00:00:00Z;1"
+    modval = appuser["modified"] or "1970-01-01T00:00:00Z;1"
+    if not ";" in accval:
+        accval += ";1"
     accts, count = accval.split(";")
     modts, modc = modval.split(";")
     accts = max(accts, modts)
@@ -357,3 +390,17 @@ def updacc():
     except ValueError as e:
         return serve_value_error(e)
     return respJSON([appuser, token], audience="private")
+
+
+def supphelp():
+    accurl = "Nope."
+    try:
+        administrator_auth()
+        emaddr = dbacc.reqarg("email", "AppUser.email", required=True)
+        appuser = dbacc.cfbk("AppUser", "email", emaddr)
+        accurl = (site_home() + "/timeline/default?an=" +
+                  urllib.parse.quote(appuser["email"]) + "&at=" +
+                  token_for_user(appuser))
+    except ValueError as e:
+        return serve_value_error(e)
+    return accurl

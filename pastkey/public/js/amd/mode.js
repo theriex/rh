@@ -412,7 +412,7 @@ app.mode = (function () {
                 [["div", {id:"certnamediv"}, user.name],
                  ["div", {id:"certtitlediv"}, user.title],
                  ["div", {id:"certwebdiv"}, website],
-                 ["div", {id:"certuiddiv"}, "(user id: " + user.instid + ")"],
+                 ["div", {id:"certuiddiv"}, "(user id: " + user.dsId + ")"],
                  ["div", {id:"certstatsdiv"}, getCompletionStats(user, tlid)]]];
         jt.out("rhcontentdiv", jt.tac2html(html));
     }
@@ -421,7 +421,8 @@ app.mode = (function () {
     function showCompletionCertificate () {
         var params = jt.parseParams("String");
         jt.out("rhcontentdiv", "Fetching completion certificate...");
-        jt.call("GET", "pubuser?email=" + jt.enc(params.email), null,
+        url = "/api/fetchobj?dt=AppUser&ak=email&kv=" + jt.enc(params.email)
+        jt.call("GET", url, null,
                 function (users) {
                     var user = users[0];
                     app.db.deserialize("AppUser", user);
@@ -513,14 +514,21 @@ app.mode = (function () {
     }
 
 
+    //Not currently used.  Opens the first timeline and passes the signin
+    //menu command.  The idea being that dlg.processParameters can strip the
+    //hash without redirecting, and launch the signin menu.  But that flow
+    //is not intuitive and may land you on a different timeline than what
+    //you were last working on.  Should provide a real signin at the top
+    //level if doing this at all.  For now they can find the continuation
+    //link in their email.
     function signInLinkHTML () {
         if(app.user && app.user.email) {
             return ""; }  //already signed in
         if(!app.rectls) {
             return ""; }  //no timelines to link to for starting context
         var tl = app.rectls[0];
-        var link = app.baseurl + "/timeline/" + (tl.slug || tl.instid) +
-            "?menu=signin";
+        var link = app.baseurl + "/timeline/" + (tl.slug || tl.dsId) +
+            "#menu=signin";
         var html = ["&nbsp;",
                     ["a", {id:"splsigninlink", href:link}, "Sign In"]];
         return jt.tac2html(html);
@@ -532,17 +540,17 @@ app.mode = (function () {
             return ""; }
         var ret = "";
         app.user.acc.started.forEach(function (st) {
-            if(st.tlid === tl.instid) {
+            if(st.tlid === tl.dsId) {
                 var comp = st.pts.csvarray().length;
                 var ttl = tl.cids.csvarray().length;
                 ret = String(Math.round(comp/ttl * 100)) + "%";
-                var link = app.baseurl + "/timeline/" + (tl.slug || tl.instid);
+                var link = app.baseurl + "/timeline/" + (tl.slug || tl.dsId);
                 var html = ["a", {href:link},
                             ["span", {cla:"pcntcompspan"}, ret]];
                 ret = jt.tac2html(html); } });
         app.user.acc.completed.forEach(function (ct) {
-            if(ct.tlid === tl.instid) {
-                var link = app.baseurl + "?compcert=" + tl.instid + 
+            if(ct.tlid === tl.dsId) {
+                var link = app.baseurl + "?compcert=" + tl.dsId + 
                     "&email=" + app.user.acc.email;
                 var html = ["a", {href:"#showcomp",
                                   onclick:jt.fs("window.open('" + link + "')")},
@@ -572,13 +580,11 @@ app.mode = (function () {
             html.push(["tr",
                        [["td",
                          ["a", {href:app.baseurl + "/timeline/" + 
-                                (tl.slug || tl.instid)},
+                                (tl.slug || tl.dsId)},
                           tl.name]],
                         ["td", tl.cids.csvarray().length],
                         ["td", tlCompletionStat(tl)]]]); });
-        html = [["div", {id:"rectltitdiv"}, 
-                 ["Recommended Timelines:",
-                  signInLinkHTML()]],
+        html = [["div", {id:"rectltitdiv"}, "Recommended Timelines:"],
                 ["table", {cla:"tltable", id:"rectlstable"}, html]];
         jt.out("recomTLsdiv", jt.tac2html(html));
     }
