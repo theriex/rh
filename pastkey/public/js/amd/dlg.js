@@ -1779,7 +1779,7 @@ app.dlg = (function () {
         html = [
             ["div", {id:"dlgdatediv"}, "Edit Point"],
             ["div", {id:"dlgcontentdiv"},
-             ["form", {action:"/updpt", method:"post", id:"editpointform", 
+             ["form", {action:"/api/updpt", method:"post", id:"editpointform", 
                        target: "subframe", enctype: "multipart/form-data"},
               [["input", {type:"hidden", name:"email", value:app.user.email}],
                ["input", {type:"hidden", name:"authtok", value:app.user.tok}],
@@ -1816,7 +1816,7 @@ app.dlg = (function () {
                 inputFieldsTAC(edptflds, "pic", pt, "edit")],
                ["div", {id:"updatestatdiv"}],
                ["iframe", {id:"subframe", name:"subframe",
-                           src:"/updpt", style:"display:none"}]]]],
+                           src:"/api/updpt", style:"display:none"}]]]],
             editPointButtonsHTML(pt)];
         displayDialog(null, jt.tac2html(html));
     }

@@ -5,7 +5,9 @@
 
 import logging
 import base64
-# from PIL import Image   # Only need Image from Pillow
+import io
+import flask
+from PIL import Image, ImageOps   # from Pillow
 import py.dbacc as dbacc
 import py.util as util
 
@@ -17,6 +19,48 @@ def contained_timelines(tl):
         for cid in tl["cids"].split(","):
             allts.append(dbacc.cfbk("Timeline", "dsId", cid, required=True))
     return allts
+
+
+def verify_point_update_authorized(pdat):
+    appuser, _ = util.authenticate()
+    lev = appuser.get("lev")
+    if not lev or lev <= 0:
+        raise ValueError("Not a Contributor or Administrator")
+    orgid = appuser.get("orgid")
+    if not orgid:
+        raise ValueError("Not a Member of a partner Organization")
+    org = dbacc.cfbk("Organization", "dsId", orgid, required=True)
+    dbpt = None
+    ptid = pdat.get("dsId")
+    if ptid:
+        dbpt = dbacc.cfbk("Point", "dsId", ptid, required=True)
+        if dbpt["orgid"] != orgid:
+            raise ValueError("Not your Organization's Point")
+    pdat["orgid"] = org["dsId"]  # verify set
+    return appuser, dbpt
+
+
+def note_point_endorsement(appuser, pdat, dbpt):
+    csv = dbpt.get("endorsed", "")
+    if not util.val_in_csv(appuser["dsId"], csv):
+        if csv:
+            csv += ","
+        csv += appuser["dsId"]
+    pdat["endorsed"] = csv
+
+
+def set_image_field_value(pobj, picfld, picfile):
+    if not picfile:
+        logging.debug("set_image_field_value: no picfile")
+        return
+    logging.debug("set_image_field_value: processing picfile")
+    img = Image.open(picfile)
+    img = ImageOps.exif_transpose(img)  # correct vertical orientation
+    sizemaxdims = 400, 400   # max allowed width/height for thumbnail resize
+    img.thumbnail(sizemaxdims)   # modify, preserving aspect ratio
+    bbuf = io.BytesIO()          # file-like object for save
+    img.save(bbuf, format="PNG")
+    pobj[picfld] = base64.b64encode(bbuf.getvalue())
 
 
 ############################################################
@@ -35,7 +79,8 @@ def fetchobj():
             fldval = dbacc.reqarg("di", "string", required=True)
         inst = dbacc.cfbk(dsType, keyfld, fldval)
         if not inst:
-            raise ValueError(dsType + " " + dsId + " not found")
+            raise ValueError(dsType + " " + keyfld + ": " + fldval +
+                             " not found")
         oj = util.safe_JSON(inst)
     except ValueError as e:
         return util.serve_value_error(e)
@@ -62,18 +107,44 @@ def obimg():
 
 def fetchtl():
     """ Return the requested timeline and note the fetch. """
-    tlid = dbacc.reqarg("tlid", "dbid")
-    slug = ""
-    if tlid:
-        tl = dbacc.cfbk("Timeline", "dsId", str(tlid), required=True)
-    else:
-        slug = dbacc.reqarg("slug", "string")
-        if not slug:
-            slug = "default"
-        slug = slug.lower()  # in case someone camelcased the url.
-        tl = dbacc.cfbk("Timeline", "slug", slug, required=True)
-    # Need to note the timeline was fetched, noting at least the Referer
-    # and User-Agent, along with anything else useful for stats reporting.
-    logging.info("TODO: tlfetch not recording DayCount stats yet")
-    tls = contained_timelines(tl)
+    try:
+        tlid = dbacc.reqarg("tlid", "dbid")
+        slug = ""
+        if tlid:
+            tl = dbacc.cfbk("Timeline", "dsId", str(tlid), required=True)
+        else:
+            slug = dbacc.reqarg("slug", "string")
+            if not slug:
+                slug = "default"
+            slug = slug.lower()  # in case someone camelcased the url.
+            tl = dbacc.cfbk("Timeline", "slug", slug, required=True)
+        # Need to note the timeline was fetched, noting at least the Referer
+        # and User-Agent, along with anything else useful for stats reporting.
+        logging.info("TODO: tlfetch not recording DayCount stats yet")
+        tls = contained_timelines(tl)
+    except ValueError as e:
+        return util.serve_value_error(e)
     return util.respJSON(tls)
+
+
+# Called via form submit.  Returns plain text or error.
+def updpt():
+    """ Create or update the point from the multipart form data. """
+    try:
+        # flask.request.method always returns "GET".  Test for form content.
+        picfile = flask.request.files.get("picin")
+        pdat = util.set_fields_from_reqargs([
+            "dsId", "source", "date", "text", "refs", "qtype", "communities",
+            "regions", "categories", "tags", "codes", "srclang",
+            "translations", "endorsed", "stats"], {})
+        if not (picfile or pdat):  # no info sent, assume GET
+            return util.respond("Ready", mimetype="text/plain")
+        # Have POST data
+        pdat["dsType"] = "Point"
+        appuser, dbpt = verify_point_update_authorized(pdat)
+        note_point_endorsement(appuser, pdat, dbpt)
+        set_image_field_value(pdat, "pic", picfile)
+        dbacc.write_entity(pdat, pdat["modified"])
+    except ValueError as e:
+        return util.serve_value_error(e)
+    return util.respond("ptid: " + pdat["dsId"], mimetype="text/plain")

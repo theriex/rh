@@ -281,15 +281,23 @@ def update_email_and_password(appuser, emaddr, pwd):
     return change
 
 
-def update_account_fields(appuser):
-    fields = ["name", "title", "web", "lang", "settings",
-              "remtls", "completed", "started", "built"]
+def set_fields_from_reqargs(fields, obj):
     for fld in fields:
         val = dbacc.reqarg(fld, "string")
+        if not val:
+            val = dbacc.reqarg(fld + "in", "string")
         if val:
-            if val.lower() == "noval":   # remove any existing value
+            if val.lower() == "noval":  # remove any existing value
                 val = ""
-            appuser[fld] = val
+            obj[fld] = val
+    return obj
+
+
+def update_account_fields(appuser):
+    # orgid and lev are updated separately by Organization Administrators.
+    set_fields_from_reqargs([
+        "name", "title", "web", "lang", "settings", "remtls", "completed",
+        "started", "built"], appuser)
 
 
 def update_accessed_count(appuser):

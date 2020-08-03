@@ -67,9 +67,12 @@ def updacc(): # params: auth, AppUser
     return util.secure(util.updacc)
 
 @app.route('/api/supphelp')
-def supphelp():
-    ## Return an access url for the given email
+def supphelp(): # params: adminauth, email
     return util.secure(util.supphelp)
+
+@app.route('/api/updpt', methods=['GET', 'POST'])
+def updpt(): # params: auth, Point data
+    return util.secure(tldat.updpt)
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
