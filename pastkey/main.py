@@ -74,6 +74,10 @@ def supphelp(): # params: adminauth, email
 def updpt(): # params: auth, Point data
     return util.secure(tldat.updpt)
 
+@app.route('/api/updtl', methods=['GET', 'POST'])
+def updtl(): # params: auth, Timeline data
+    return util.secure(tldat.updtl)
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def startpage(path):

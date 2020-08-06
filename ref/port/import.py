@@ -102,23 +102,23 @@ refcons = {
     "AppUser": {
         # "remtls" doesn't need to be converted because all NULL in db
         "completed": {"rt":"jsarr", "fld":"tlid", "et":"Timeline"},
-        "started": {"rt":"jsarr", "fld":"tlid", "et":"Timeline"},
+        "started": {"rt":"jsarr", "fld":"tlid", "et":"Timeline"}},
         # "built" doesn't need to be converted because all NULL in db
-        "orgid": {"rt":"foreignkey", "et":"Organization"}},
+        # "orgid": has been removed
     # The DayCount details are truncated by the download process.  Not
     # worth enabling billing, trying to export to a cloud bucket etc.
-    "Organization": {
-        "recpre": {"rt":"jsarr", "flds": [  # same as Timeline.preb
-            {"fld":"orgid", "et":"Organization"},
-            {"fld":"instid", "et":"Point"}]}},
-    "Point": {
-        "orgid": {"rt":"foreignkey", "et":"Organization"}},
+    # "Organization": {
+    #     "recpre": {"rt":"jsarr", "flds": [  # same as Timeline.preb
+    #         {"fld":"orgid", "et":"Organization"},
+    #         {"fld":"instid", "et":"Point"}]}},
+    # "Point": {
+    #     "orgid": {"rt":"foreignkey", "et":"Organization"}},
     # AppService has no conversions
     "Timeline": {
-        "orgid": {"rt":"foreignkey", "et":"Organization"},
+        # "orgid": {"rt":"foreignkey", "et":"Organization"},
         "cids": {"rt":"potidcsv"},
         "preb": {"rt":"jsarr", "flds": [  # same as Organization.recpre
-            {"fld":"orgid", "et":"Organization"},
+            # {"fld":"orgid", "et":"Organization"},
             {"fld":"instid", "et":"Point"}]}},
     "TLComp": {
         "userid": {"rt":"foreignkey", "et":"AppUser"},

@@ -74,43 +74,15 @@ entdefs = {
         "remtls": {"pt": "string", "un": False, "dv": ""},
         "completed": {"pt": "string", "un": False, "dv": ""},
         "started": {"pt": "string", "un": False, "dv": ""},
-        "built": {"pt": "string", "un": False, "dv": ""},
-        "orgid": {"pt": "dbid", "un": False, "dv": 0},
-        "lev": {"pt": "int", "un": False, "dv": 0}
-    },
-    "DayCount": {  # Traffic access accumulator
-        "dsId": {"pt": "dbid", "un": True, "dv": 0},
-        "created": {"pt": "string", "un": False, "dv": ""},
-        "modified": {"pt": "string", "un": False, "dv": ""},
-        "batchconv": {"pt": "string", "un": False, "dv": ""},
-        "importid": {"pt": "dbid", "un": True, "dv": 0},
-        "tstamp": {"pt": "string", "un": False, "dv": ""},
-        "rtype": {"pt": "string", "un": False, "dv": ""},
-        "detail": {"pt": "string", "un": False, "dv": ""}
-    },
-    "Organization": {  # A group building timelines
-        "dsId": {"pt": "dbid", "un": True, "dv": 0},
-        "created": {"pt": "string", "un": False, "dv": ""},
-        "modified": {"pt": "string", "un": False, "dv": ""},
-        "batchconv": {"pt": "string", "un": False, "dv": ""},
-        "importid": {"pt": "dbid", "un": True, "dv": 0},
-        "name": {"pt": "string", "un": True, "dv": ""},
-        "code": {"pt": "string", "un": True, "dv": ""},
-        "contacturl": {"pt": "string", "un": False, "dv": ""},
-        "projecturl": {"pt": "string", "un": False, "dv": ""},
-        "communities": {"pt": "string", "un": False, "dv": ""},
-        "regions": {"pt": "string", "un": False, "dv": ""},
-        "categories": {"pt": "string", "un": False, "dv": ""},
-        "tags": {"pt": "string", "un": False, "dv": ""},
-        "recpre": {"pt": "string", "un": False, "dv": ""}
+        "built": {"pt": "string", "un": False, "dv": ""}
     },
     "Point": {  # A data point for use in timelines
         "dsId": {"pt": "dbid", "un": True, "dv": 0},
         "created": {"pt": "string", "un": False, "dv": ""},
         "modified": {"pt": "string", "un": False, "dv": ""},
         "batchconv": {"pt": "string", "un": False, "dv": ""},
+        "editors": {"pt": "string", "un": False, "dv": ""},
         "importid": {"pt": "dbid", "un": True, "dv": 0},
-        "orgid": {"pt": "dbid", "un": False, "dv": 0},
         "source": {"pt": "string", "un": False, "dv": ""},
         "date": {"pt": "string", "un": False, "dv": ""},
         "text": {"pt": "string", "un": False, "dv": ""},
@@ -124,27 +96,15 @@ entdefs = {
         "srclang": {"pt": "string", "un": False, "dv": ""},
         "translations": {"pt": "string", "un": False, "dv": ""},
         "pic": {"pt": "image", "un": False, "dv": None},
-        "endorsed": {"pt": "string", "un": False, "dv": ""},
         "stats": {"pt": "string", "un": False, "dv": ""}
-    },
-    "AppService": {  # Processing service access
-        "dsId": {"pt": "dbid", "un": True, "dv": 0},
-        "created": {"pt": "string", "un": False, "dv": ""},
-        "modified": {"pt": "string", "un": False, "dv": ""},
-        "batchconv": {"pt": "string", "un": False, "dv": ""},
-        "importid": {"pt": "dbid", "un": True, "dv": 0},
-        "name": {"pt": "string", "un": True, "dv": ""},
-        "ckey": {"pt": "string", "un": False, "dv": ""},
-        "csec": {"pt": "string", "un": False, "dv": ""},
-        "data": {"pt": "string", "un": False, "dv": ""}
     },
     "Timeline": {  # Points + suppviz*, or other timelines
         "dsId": {"pt": "dbid", "un": True, "dv": 0},
         "created": {"pt": "string", "un": False, "dv": ""},
         "modified": {"pt": "string", "un": False, "dv": ""},
         "batchconv": {"pt": "string", "un": False, "dv": ""},
+        "editors": {"pt": "string", "un": False, "dv": ""},
         "importid": {"pt": "dbid", "un": True, "dv": 0},
-        "orgid": {"pt": "dbid", "un": False, "dv": 0},
         "name": {"pt": "string", "un": True, "dv": ""},
         "cname": {"pt": "string", "un": False, "dv": ""},
         "slug": {"pt": "string", "un": True, "dv": ""},
@@ -154,8 +114,10 @@ entdefs = {
         "lang": {"pt": "string", "un": False, "dv": ""},
         "comment": {"pt": "string", "un": False, "dv": ""},
         "about": {"pt": "string", "un": False, "dv": ""},
+        "kwds": {"pt": "string", "un": False, "dv": ""},
         "ctype": {"pt": "string", "un": False, "dv": ""},
         "cids": {"pt": "string", "un": False, "dv": ""},
+        "rempts": {"pt": "string", "un": False, "dv": ""},
         "svs": {"pt": "string", "un": False, "dv": ""},
         "preb": {"pt": "string", "un": False, "dv": ""}
     },
@@ -170,29 +132,48 @@ entdefs = {
         "username": {"pt": "string", "un": False, "dv": ""},
         "tlname": {"pt": "string", "un": False, "dv": ""},
         "data": {"pt": "string", "un": False, "dv": ""}
+    },
+    "DayCount": {  # Traffic access accumulator
+        "dsId": {"pt": "dbid", "un": True, "dv": 0},
+        "created": {"pt": "string", "un": False, "dv": ""},
+        "modified": {"pt": "string", "un": False, "dv": ""},
+        "batchconv": {"pt": "string", "un": False, "dv": ""},
+        "importid": {"pt": "dbid", "un": True, "dv": 0},
+        "tstamp": {"pt": "string", "un": False, "dv": ""},
+        "rtype": {"pt": "string", "un": False, "dv": ""},
+        "detail": {"pt": "string", "un": False, "dv": ""}
+    },
+    "AppService": {  # Processing service access
+        "dsId": {"pt": "dbid", "un": True, "dv": 0},
+        "created": {"pt": "string", "un": False, "dv": ""},
+        "modified": {"pt": "string", "un": False, "dv": ""},
+        "batchconv": {"pt": "string", "un": False, "dv": ""},
+        "importid": {"pt": "dbid", "un": True, "dv": 0},
+        "name": {"pt": "string", "un": True, "dv": ""},
+        "ckey": {"pt": "string", "un": False, "dv": ""},
+        "csec": {"pt": "string", "un": False, "dv": ""},
+        "data": {"pt": "string", "un": False, "dv": ""}
     }
 }
 
 
 entkeys = {
     "AppUser": ["importid", "email"],
-    "DayCount": ["importid"],
-    "Organization": ["importid", "name", "code"],
     "Point": ["importid"],
-    "AppService": ["importid", "name"],
     "Timeline": ["importid", "name", "slug"],
-    "TLComp": ["importid"]
+    "TLComp": ["importid"],
+    "DayCount": ["importid"],
+    "AppService": ["importid", "name"]
 }
 
 
 cachedefs = {
     "AppUser": {"minutes": 120, "manualadd": True},
-    "DayCount": {"minutes": 0, "manualadd": False},
-    "Organization": {"minutes": 0, "manualadd": False},
     "Point": {"minutes": 0, "manualadd": False},
-    "AppService": {"minutes": 240, "manualadd": False},
     "Timeline": {"minutes": 0, "manualadd": False},
-    "TLComp": {"minutes": 0, "manualadd": False}
+    "TLComp": {"minutes": 0, "manualadd": False},
+    "DayCount": {"minutes": 0, "manualadd": False},
+    "AppService": {"minutes": 240, "manualadd": False}
 }
 
 
@@ -295,7 +276,7 @@ def reqarg(argname, fieldtype="string", required=False):
         if required and not re.match(r"[^@]+@[^@]+\.[^@]+", emaddr):
             raise ValueError("Invalid " + argname + " value: " + emaddr)
         return emaddr
-    if fieldtype in ["string", "isodate", "isomod",
+    if fieldtype in ["string", "isodate", "isomod", "srchidcsv",
                      "text", "json", "idcsv", "isodcsv", "gencsv", "url"]:
         return argval or ""
     if fieldtype == "image":
@@ -500,8 +481,6 @@ def app2db_AppUser(inst):
     cnv["completed"] = app2db_fieldval("AppUser", "completed", inst)
     cnv["started"] = app2db_fieldval("AppUser", "started", inst)
     cnv["built"] = app2db_fieldval("AppUser", "built", inst)
-    cnv["orgid"] = app2db_fieldval("AppUser", "orgid", inst)
-    cnv["lev"] = app2db_fieldval("AppUser", "lev", inst)
     return cnv
 
 
@@ -530,86 +509,6 @@ def db2app_AppUser(inst):
     cnv["completed"] = db2app_fieldval("AppUser", "completed", inst)
     cnv["started"] = db2app_fieldval("AppUser", "started", inst)
     cnv["built"] = db2app_fieldval("AppUser", "built", inst)
-    cnv["orgid"] = db2app_fieldval("AppUser", "orgid", inst)
-    cnv["lev"] = db2app_fieldval("AppUser", "lev", inst)
-    return cnv
-
-
-# Convert the given DayCount inst dict from app values to db values.  Removes
-# the dsType field to avoid trying to write it to the db.
-def app2db_DayCount(inst):
-    cnv = {}
-    cnv["dsId"] = None
-    if "dsId" in inst:
-        cnv["dsId"] = app2db_fieldval(None, "dsId", inst)
-    cnv["created"] = app2db_fieldval(None, "created", inst)
-    cnv["modified"] = app2db_fieldval(None, "modified", inst)
-    cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
-    cnv["importid"] = app2db_fieldval("DayCount", "importid", inst)
-    cnv["tstamp"] = app2db_fieldval("DayCount", "tstamp", inst)
-    cnv["rtype"] = app2db_fieldval("DayCount", "rtype", inst)
-    cnv["detail"] = app2db_fieldval("DayCount", "detail", inst)
-    return cnv
-
-
-# Convert the given DayCount inst dict from db values to app values.  Adds the
-# dsType field for general app processing.
-def db2app_DayCount(inst):
-    cnv = {}
-    cnv["dsType"] = "DayCount"
-    cnv["dsId"] = db2app_fieldval(None, "dsId", inst)
-    cnv["created"] = db2app_fieldval(None, "created", inst)
-    cnv["modified"] = db2app_fieldval(None, "modified", inst)
-    cnv["batchconv"] = db2app_fieldval(None, "batchconv", inst)
-    cnv["importid"] = db2app_fieldval("DayCount", "importid", inst)
-    cnv["tstamp"] = db2app_fieldval("DayCount", "tstamp", inst)
-    cnv["rtype"] = db2app_fieldval("DayCount", "rtype", inst)
-    cnv["detail"] = db2app_fieldval("DayCount", "detail", inst)
-    return cnv
-
-
-# Convert the given Organization inst dict from app values to db values.  Removes
-# the dsType field to avoid trying to write it to the db.
-def app2db_Organization(inst):
-    cnv = {}
-    cnv["dsId"] = None
-    if "dsId" in inst:
-        cnv["dsId"] = app2db_fieldval(None, "dsId", inst)
-    cnv["created"] = app2db_fieldval(None, "created", inst)
-    cnv["modified"] = app2db_fieldval(None, "modified", inst)
-    cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
-    cnv["importid"] = app2db_fieldval("Organization", "importid", inst)
-    cnv["name"] = app2db_fieldval("Organization", "name", inst)
-    cnv["code"] = app2db_fieldval("Organization", "code", inst)
-    cnv["contacturl"] = app2db_fieldval("Organization", "contacturl", inst)
-    cnv["projecturl"] = app2db_fieldval("Organization", "projecturl", inst)
-    cnv["communities"] = app2db_fieldval("Organization", "communities", inst)
-    cnv["regions"] = app2db_fieldval("Organization", "regions", inst)
-    cnv["categories"] = app2db_fieldval("Organization", "categories", inst)
-    cnv["tags"] = app2db_fieldval("Organization", "tags", inst)
-    cnv["recpre"] = app2db_fieldval("Organization", "recpre", inst)
-    return cnv
-
-
-# Convert the given Organization inst dict from db values to app values.  Adds the
-# dsType field for general app processing.
-def db2app_Organization(inst):
-    cnv = {}
-    cnv["dsType"] = "Organization"
-    cnv["dsId"] = db2app_fieldval(None, "dsId", inst)
-    cnv["created"] = db2app_fieldval(None, "created", inst)
-    cnv["modified"] = db2app_fieldval(None, "modified", inst)
-    cnv["batchconv"] = db2app_fieldval(None, "batchconv", inst)
-    cnv["importid"] = db2app_fieldval("Organization", "importid", inst)
-    cnv["name"] = db2app_fieldval("Organization", "name", inst)
-    cnv["code"] = db2app_fieldval("Organization", "code", inst)
-    cnv["contacturl"] = db2app_fieldval("Organization", "contacturl", inst)
-    cnv["projecturl"] = db2app_fieldval("Organization", "projecturl", inst)
-    cnv["communities"] = db2app_fieldval("Organization", "communities", inst)
-    cnv["regions"] = db2app_fieldval("Organization", "regions", inst)
-    cnv["categories"] = db2app_fieldval("Organization", "categories", inst)
-    cnv["tags"] = db2app_fieldval("Organization", "tags", inst)
-    cnv["recpre"] = db2app_fieldval("Organization", "recpre", inst)
     return cnv
 
 
@@ -623,8 +522,8 @@ def app2db_Point(inst):
     cnv["created"] = app2db_fieldval(None, "created", inst)
     cnv["modified"] = app2db_fieldval(None, "modified", inst)
     cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
+    cnv["editors"] = app2db_fieldval("Point", "editors", inst)
     cnv["importid"] = app2db_fieldval("Point", "importid", inst)
-    cnv["orgid"] = app2db_fieldval("Point", "orgid", inst)
     cnv["source"] = app2db_fieldval("Point", "source", inst)
     cnv["date"] = app2db_fieldval("Point", "date", inst)
     cnv["text"] = app2db_fieldval("Point", "text", inst)
@@ -638,7 +537,6 @@ def app2db_Point(inst):
     cnv["srclang"] = app2db_fieldval("Point", "srclang", inst)
     cnv["translations"] = app2db_fieldval("Point", "translations", inst)
     cnv["pic"] = app2db_fieldval("Point", "pic", inst)
-    cnv["endorsed"] = app2db_fieldval("Point", "endorsed", inst)
     cnv["stats"] = app2db_fieldval("Point", "stats", inst)
     return cnv
 
@@ -652,8 +550,8 @@ def db2app_Point(inst):
     cnv["created"] = db2app_fieldval(None, "created", inst)
     cnv["modified"] = db2app_fieldval(None, "modified", inst)
     cnv["batchconv"] = db2app_fieldval(None, "batchconv", inst)
+    cnv["editors"] = db2app_fieldval("Point", "editors", inst)
     cnv["importid"] = db2app_fieldval("Point", "importid", inst)
-    cnv["orgid"] = db2app_fieldval("Point", "orgid", inst)
     cnv["source"] = db2app_fieldval("Point", "source", inst)
     cnv["date"] = db2app_fieldval("Point", "date", inst)
     cnv["text"] = db2app_fieldval("Point", "text", inst)
@@ -667,43 +565,7 @@ def db2app_Point(inst):
     cnv["srclang"] = db2app_fieldval("Point", "srclang", inst)
     cnv["translations"] = db2app_fieldval("Point", "translations", inst)
     cnv["pic"] = db2app_fieldval("Point", "pic", inst)
-    cnv["endorsed"] = db2app_fieldval("Point", "endorsed", inst)
     cnv["stats"] = db2app_fieldval("Point", "stats", inst)
-    return cnv
-
-
-# Convert the given AppService inst dict from app values to db values.  Removes
-# the dsType field to avoid trying to write it to the db.
-def app2db_AppService(inst):
-    cnv = {}
-    cnv["dsId"] = None
-    if "dsId" in inst:
-        cnv["dsId"] = app2db_fieldval(None, "dsId", inst)
-    cnv["created"] = app2db_fieldval(None, "created", inst)
-    cnv["modified"] = app2db_fieldval(None, "modified", inst)
-    cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
-    cnv["importid"] = app2db_fieldval("AppService", "importid", inst)
-    cnv["name"] = app2db_fieldval("AppService", "name", inst)
-    cnv["ckey"] = app2db_fieldval("AppService", "ckey", inst)
-    cnv["csec"] = app2db_fieldval("AppService", "csec", inst)
-    cnv["data"] = app2db_fieldval("AppService", "data", inst)
-    return cnv
-
-
-# Convert the given AppService inst dict from db values to app values.  Adds the
-# dsType field for general app processing.
-def db2app_AppService(inst):
-    cnv = {}
-    cnv["dsType"] = "AppService"
-    cnv["dsId"] = db2app_fieldval(None, "dsId", inst)
-    cnv["created"] = db2app_fieldval(None, "created", inst)
-    cnv["modified"] = db2app_fieldval(None, "modified", inst)
-    cnv["batchconv"] = db2app_fieldval(None, "batchconv", inst)
-    cnv["importid"] = db2app_fieldval("AppService", "importid", inst)
-    cnv["name"] = db2app_fieldval("AppService", "name", inst)
-    cnv["ckey"] = db2app_fieldval("AppService", "ckey", inst)
-    cnv["csec"] = db2app_fieldval("AppService", "csec", inst)
-    cnv["data"] = db2app_fieldval("AppService", "data", inst)
     return cnv
 
 
@@ -717,8 +579,8 @@ def app2db_Timeline(inst):
     cnv["created"] = app2db_fieldval(None, "created", inst)
     cnv["modified"] = app2db_fieldval(None, "modified", inst)
     cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
+    cnv["editors"] = app2db_fieldval("Timeline", "editors", inst)
     cnv["importid"] = app2db_fieldval("Timeline", "importid", inst)
-    cnv["orgid"] = app2db_fieldval("Timeline", "orgid", inst)
     cnv["name"] = app2db_fieldval("Timeline", "name", inst)
     cnv["cname"] = app2db_fieldval("Timeline", "cname", inst)
     cnv["slug"] = app2db_fieldval("Timeline", "slug", inst)
@@ -728,8 +590,10 @@ def app2db_Timeline(inst):
     cnv["lang"] = app2db_fieldval("Timeline", "lang", inst)
     cnv["comment"] = app2db_fieldval("Timeline", "comment", inst)
     cnv["about"] = app2db_fieldval("Timeline", "about", inst)
+    cnv["kwds"] = app2db_fieldval("Timeline", "kwds", inst)
     cnv["ctype"] = app2db_fieldval("Timeline", "ctype", inst)
     cnv["cids"] = app2db_fieldval("Timeline", "cids", inst)
+    cnv["rempts"] = app2db_fieldval("Timeline", "rempts", inst)
     cnv["svs"] = app2db_fieldval("Timeline", "svs", inst)
     cnv["preb"] = app2db_fieldval("Timeline", "preb", inst)
     return cnv
@@ -744,8 +608,8 @@ def db2app_Timeline(inst):
     cnv["created"] = db2app_fieldval(None, "created", inst)
     cnv["modified"] = db2app_fieldval(None, "modified", inst)
     cnv["batchconv"] = db2app_fieldval(None, "batchconv", inst)
+    cnv["editors"] = db2app_fieldval("Timeline", "editors", inst)
     cnv["importid"] = db2app_fieldval("Timeline", "importid", inst)
-    cnv["orgid"] = db2app_fieldval("Timeline", "orgid", inst)
     cnv["name"] = db2app_fieldval("Timeline", "name", inst)
     cnv["cname"] = db2app_fieldval("Timeline", "cname", inst)
     cnv["slug"] = db2app_fieldval("Timeline", "slug", inst)
@@ -755,8 +619,10 @@ def db2app_Timeline(inst):
     cnv["lang"] = db2app_fieldval("Timeline", "lang", inst)
     cnv["comment"] = db2app_fieldval("Timeline", "comment", inst)
     cnv["about"] = db2app_fieldval("Timeline", "about", inst)
+    cnv["kwds"] = db2app_fieldval("Timeline", "kwds", inst)
     cnv["ctype"] = db2app_fieldval("Timeline", "ctype", inst)
     cnv["cids"] = db2app_fieldval("Timeline", "cids", inst)
+    cnv["rempts"] = db2app_fieldval("Timeline", "rempts", inst)
     cnv["svs"] = db2app_fieldval("Timeline", "svs", inst)
     cnv["preb"] = db2app_fieldval("Timeline", "preb", inst)
     return cnv
@@ -799,15 +665,82 @@ def db2app_TLComp(inst):
     return cnv
 
 
+# Convert the given DayCount inst dict from app values to db values.  Removes
+# the dsType field to avoid trying to write it to the db.
+def app2db_DayCount(inst):
+    cnv = {}
+    cnv["dsId"] = None
+    if "dsId" in inst:
+        cnv["dsId"] = app2db_fieldval(None, "dsId", inst)
+    cnv["created"] = app2db_fieldval(None, "created", inst)
+    cnv["modified"] = app2db_fieldval(None, "modified", inst)
+    cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
+    cnv["importid"] = app2db_fieldval("DayCount", "importid", inst)
+    cnv["tstamp"] = app2db_fieldval("DayCount", "tstamp", inst)
+    cnv["rtype"] = app2db_fieldval("DayCount", "rtype", inst)
+    cnv["detail"] = app2db_fieldval("DayCount", "detail", inst)
+    return cnv
+
+
+# Convert the given DayCount inst dict from db values to app values.  Adds the
+# dsType field for general app processing.
+def db2app_DayCount(inst):
+    cnv = {}
+    cnv["dsType"] = "DayCount"
+    cnv["dsId"] = db2app_fieldval(None, "dsId", inst)
+    cnv["created"] = db2app_fieldval(None, "created", inst)
+    cnv["modified"] = db2app_fieldval(None, "modified", inst)
+    cnv["batchconv"] = db2app_fieldval(None, "batchconv", inst)
+    cnv["importid"] = db2app_fieldval("DayCount", "importid", inst)
+    cnv["tstamp"] = db2app_fieldval("DayCount", "tstamp", inst)
+    cnv["rtype"] = db2app_fieldval("DayCount", "rtype", inst)
+    cnv["detail"] = db2app_fieldval("DayCount", "detail", inst)
+    return cnv
+
+
+# Convert the given AppService inst dict from app values to db values.  Removes
+# the dsType field to avoid trying to write it to the db.
+def app2db_AppService(inst):
+    cnv = {}
+    cnv["dsId"] = None
+    if "dsId" in inst:
+        cnv["dsId"] = app2db_fieldval(None, "dsId", inst)
+    cnv["created"] = app2db_fieldval(None, "created", inst)
+    cnv["modified"] = app2db_fieldval(None, "modified", inst)
+    cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
+    cnv["importid"] = app2db_fieldval("AppService", "importid", inst)
+    cnv["name"] = app2db_fieldval("AppService", "name", inst)
+    cnv["ckey"] = app2db_fieldval("AppService", "ckey", inst)
+    cnv["csec"] = app2db_fieldval("AppService", "csec", inst)
+    cnv["data"] = app2db_fieldval("AppService", "data", inst)
+    return cnv
+
+
+# Convert the given AppService inst dict from db values to app values.  Adds the
+# dsType field for general app processing.
+def db2app_AppService(inst):
+    cnv = {}
+    cnv["dsType"] = "AppService"
+    cnv["dsId"] = db2app_fieldval(None, "dsId", inst)
+    cnv["created"] = db2app_fieldval(None, "created", inst)
+    cnv["modified"] = db2app_fieldval(None, "modified", inst)
+    cnv["batchconv"] = db2app_fieldval(None, "batchconv", inst)
+    cnv["importid"] = db2app_fieldval("AppService", "importid", inst)
+    cnv["name"] = db2app_fieldval("AppService", "name", inst)
+    cnv["ckey"] = db2app_fieldval("AppService", "ckey", inst)
+    cnv["csec"] = db2app_fieldval("AppService", "csec", inst)
+    cnv["data"] = db2app_fieldval("AppService", "data", inst)
+    return cnv
+
+
 def dblogmsg(op, entity, res):
     log_summary_flds = {
         "AppUser": ["email", "name"],
-        "DayCount": ["tstamp", "rtype"],
-        "Organization": ["code", "name"],
-        "Point": ["orgid", "date", "text"],
-        "AppService": ["name"],
+        "Point": ["editors", "date", "text"],
         "Timeline": ["name"],
-        "TLComp": ["userid", "tlid", "username", "tlname"]}
+        "TLComp": ["userid", "tlid", "username", "tlname"],
+        "DayCount": ["tstamp", "rtype"],
+        "AppService": ["name"]}
     if res:
         if op != "QRY":  # query is already a list, listify anything else
             res = [res]
@@ -815,7 +748,7 @@ def dblogmsg(op, entity, res):
             msg = "db" + op + " " + entity + " " + obj["dsId"]
             if entity in log_summary_flds:
                 for field in log_summary_flds[entity]:
-                    msg += " " + str(obj[field])
+                    msg += " " + str(obj[field])[0:60]
             logging.info(msg)
     else:  # no res, probably a delete
         logging.info("db" + op + " " + entity + " -no obj details-")
@@ -825,8 +758,8 @@ def dblogmsg(op, entity, res):
 def insert_new_AppUser(cnx, cursor, fields):
     fields = app2db_AppUser(fields)
     stmt = (
-        "INSERT INTO AppUser (created, modified, importid, email, phash, status, actsends, actcode, accessed, name, title, web, lang, settings, remtls, completed, started, built, orgid, lev) "
-        "VALUES (%(created)s, %(modified)s, %(importid)s, %(email)s, %(phash)s, %(status)s, %(actsends)s, %(actcode)s, %(accessed)s, %(name)s, %(title)s, %(web)s, %(lang)s, %(settings)s, %(remtls)s, %(completed)s, %(started)s, %(built)s, %(orgid)s, %(lev)s)")
+        "INSERT INTO AppUser (created, modified, importid, email, phash, status, actsends, actcode, accessed, name, title, web, lang, settings, remtls, completed, started, built) "
+        "VALUES (%(created)s, %(modified)s, %(importid)s, %(email)s, %(phash)s, %(status)s, %(actsends)s, %(actcode)s, %(accessed)s, %(name)s, %(title)s, %(web)s, %(lang)s, %(settings)s, %(remtls)s, %(completed)s, %(started)s, %(built)s)")
     data = {
         'created': fields.get("created"),
         'modified': fields.get("modified"),
@@ -845,9 +778,7 @@ def insert_new_AppUser(cnx, cursor, fields):
         'remtls': fields.get("remtls", entdefs["AppUser"]["remtls"]["dv"]),
         'completed': fields.get("completed", entdefs["AppUser"]["completed"]["dv"]),
         'started': fields.get("started", entdefs["AppUser"]["started"]["dv"]),
-        'built': fields.get("built", entdefs["AppUser"]["built"]["dv"]),
-        'orgid': fields.get("orgid", entdefs["AppUser"]["orgid"]["dv"]),
-        'lev': fields.get("lev", entdefs["AppUser"]["lev"]["dv"])}
+        'built': fields.get("built", entdefs["AppUser"]["built"]["dv"])}
     cursor.execute(stmt, data)
     fields["dsId"] = cursor.lastrowid
     cnx.commit()
@@ -881,115 +812,17 @@ def update_existing_AppUser(cnx, cursor, fields, vck):
     return fields
 
 
-# Write a new DayCount row, using the given field values or defaults.
-def insert_new_DayCount(cnx, cursor, fields):
-    fields = app2db_DayCount(fields)
-    stmt = (
-        "INSERT INTO DayCount (created, modified, importid, tstamp, rtype, detail) "
-        "VALUES (%(created)s, %(modified)s, %(importid)s, %(tstamp)s, %(rtype)s, %(detail)s)")
-    data = {
-        'created': fields.get("created"),
-        'modified': fields.get("modified"),
-        'importid': fields.get("importid", entdefs["DayCount"]["importid"]["dv"]),
-        'tstamp': fields.get("tstamp", entdefs["DayCount"]["tstamp"]["dv"]),
-        'rtype': fields.get("rtype", entdefs["DayCount"]["rtype"]["dv"]),
-        'detail': fields.get("detail", entdefs["DayCount"]["detail"]["dv"])}
-    cursor.execute(stmt, data)
-    fields["dsId"] = cursor.lastrowid
-    cnx.commit()
-    fields = db2app_DayCount(fields)
-    dblogmsg("ADD", "DayCount", fields)
-    return fields
-
-
-# Update the specified DayCount row with the given field values.
-def update_existing_DayCount(cnx, cursor, fields, vck):
-    fields = app2db_DayCount(fields)
-    dsId = int(fields["dsId"])  # Verify int value
-    stmt = ""
-    for field in fields:  # only updating the fields passed in
-        if stmt:
-            stmt += ", "
-        stmt += field + "=(%(" + field + ")s)"
-    stmt = "UPDATE DayCount SET " + stmt + " WHERE dsId=" + str(dsId)
-    if vck != "override":
-        stmt += " AND modified=\"" + vck + "\""
-    data = {}
-    for field in fields:
-        data[field] = fields[field]
-    cursor.execute(stmt, data)
-    if cursor.rowcount < 1 and vck != "override":
-        raise ValueError("DayCount" + str(dsId) + " update received outdated version check value " + vck + ".")
-    cnx.commit()
-    fields = db2app_DayCount(fields)
-    dblogmsg("UPD", "DayCount", fields)
-    entcache.cache_remove(fields)
-    return fields
-
-
-# Write a new Organization row, using the given field values or defaults.
-def insert_new_Organization(cnx, cursor, fields):
-    fields = app2db_Organization(fields)
-    stmt = (
-        "INSERT INTO Organization (created, modified, importid, name, code, contacturl, projecturl, communities, regions, categories, tags, recpre) "
-        "VALUES (%(created)s, %(modified)s, %(importid)s, %(name)s, %(code)s, %(contacturl)s, %(projecturl)s, %(communities)s, %(regions)s, %(categories)s, %(tags)s, %(recpre)s)")
-    data = {
-        'created': fields.get("created"),
-        'modified': fields.get("modified"),
-        'importid': fields.get("importid", entdefs["Organization"]["importid"]["dv"]),
-        'name': fields.get("name", entdefs["Organization"]["name"]["dv"]),
-        'code': fields.get("code", entdefs["Organization"]["code"]["dv"]),
-        'contacturl': fields.get("contacturl", entdefs["Organization"]["contacturl"]["dv"]),
-        'projecturl': fields.get("projecturl", entdefs["Organization"]["projecturl"]["dv"]),
-        'communities': fields.get("communities", entdefs["Organization"]["communities"]["dv"]),
-        'regions': fields.get("regions", entdefs["Organization"]["regions"]["dv"]),
-        'categories': fields.get("categories", entdefs["Organization"]["categories"]["dv"]),
-        'tags': fields.get("tags", entdefs["Organization"]["tags"]["dv"]),
-        'recpre': fields.get("recpre", entdefs["Organization"]["recpre"]["dv"])}
-    cursor.execute(stmt, data)
-    fields["dsId"] = cursor.lastrowid
-    cnx.commit()
-    fields = db2app_Organization(fields)
-    dblogmsg("ADD", "Organization", fields)
-    return fields
-
-
-# Update the specified Organization row with the given field values.
-def update_existing_Organization(cnx, cursor, fields, vck):
-    fields = app2db_Organization(fields)
-    dsId = int(fields["dsId"])  # Verify int value
-    stmt = ""
-    for field in fields:  # only updating the fields passed in
-        if stmt:
-            stmt += ", "
-        stmt += field + "=(%(" + field + ")s)"
-    stmt = "UPDATE Organization SET " + stmt + " WHERE dsId=" + str(dsId)
-    if vck != "override":
-        stmt += " AND modified=\"" + vck + "\""
-    data = {}
-    for field in fields:
-        data[field] = fields[field]
-    cursor.execute(stmt, data)
-    if cursor.rowcount < 1 and vck != "override":
-        raise ValueError("Organization" + str(dsId) + " update received outdated version check value " + vck + ".")
-    cnx.commit()
-    fields = db2app_Organization(fields)
-    dblogmsg("UPD", "Organization", fields)
-    entcache.cache_remove(fields)
-    return fields
-
-
 # Write a new Point row, using the given field values or defaults.
 def insert_new_Point(cnx, cursor, fields):
     fields = app2db_Point(fields)
     stmt = (
-        "INSERT INTO Point (created, modified, importid, orgid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, endorsed, stats) "
-        "VALUES (%(created)s, %(modified)s, %(importid)s, %(orgid)s, %(source)s, %(date)s, %(text)s, %(refs)s, %(qtype)s, %(communities)s, %(regions)s, %(categories)s, %(tags)s, %(codes)s, %(srclang)s, %(translations)s, %(pic)s, %(endorsed)s, %(stats)s)")
+        "INSERT INTO Point (created, modified, editors, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats) "
+        "VALUES (%(created)s, %(modified)s, %(editors)s, %(importid)s, %(source)s, %(date)s, %(text)s, %(refs)s, %(qtype)s, %(communities)s, %(regions)s, %(categories)s, %(tags)s, %(codes)s, %(srclang)s, %(translations)s, %(pic)s, %(stats)s)")
     data = {
         'created': fields.get("created"),
         'modified': fields.get("modified"),
+        'editors': fields.get("editors", entdefs["Point"]["editors"]["dv"]),
         'importid': fields.get("importid", entdefs["Point"]["importid"]["dv"]),
-        'orgid': fields.get("orgid", entdefs["Point"]["orgid"]["dv"]),
         'source': fields.get("source", entdefs["Point"]["source"]["dv"]),
         'date': fields.get("date", entdefs["Point"]["date"]["dv"]),
         'text': fields.get("text", entdefs["Point"]["text"]["dv"]),
@@ -1003,7 +836,6 @@ def insert_new_Point(cnx, cursor, fields):
         'srclang': fields.get("srclang", entdefs["Point"]["srclang"]["dv"]),
         'translations': fields.get("translations", entdefs["Point"]["translations"]["dv"]),
         'pic': fields.get("pic", entdefs["Point"]["pic"]["dv"]),
-        'endorsed': fields.get("endorsed", entdefs["Point"]["endorsed"]["dv"]),
         'stats': fields.get("stats", entdefs["Point"]["stats"]["dv"])}
     cursor.execute(stmt, data)
     fields["dsId"] = cursor.lastrowid
@@ -1038,64 +870,17 @@ def update_existing_Point(cnx, cursor, fields, vck):
     return fields
 
 
-# Write a new AppService row, using the given field values or defaults.
-def insert_new_AppService(cnx, cursor, fields):
-    fields = app2db_AppService(fields)
-    stmt = (
-        "INSERT INTO AppService (created, modified, importid, name, ckey, csec, data) "
-        "VALUES (%(created)s, %(modified)s, %(importid)s, %(name)s, %(ckey)s, %(csec)s, %(data)s)")
-    data = {
-        'created': fields.get("created"),
-        'modified': fields.get("modified"),
-        'importid': fields.get("importid", entdefs["AppService"]["importid"]["dv"]),
-        'name': fields.get("name", entdefs["AppService"]["name"]["dv"]),
-        'ckey': fields.get("ckey", entdefs["AppService"]["ckey"]["dv"]),
-        'csec': fields.get("csec", entdefs["AppService"]["csec"]["dv"]),
-        'data': fields.get("data", entdefs["AppService"]["data"]["dv"])}
-    cursor.execute(stmt, data)
-    fields["dsId"] = cursor.lastrowid
-    cnx.commit()
-    fields = db2app_AppService(fields)
-    dblogmsg("ADD", "AppService", fields)
-    return fields
-
-
-# Update the specified AppService row with the given field values.
-def update_existing_AppService(cnx, cursor, fields, vck):
-    fields = app2db_AppService(fields)
-    dsId = int(fields["dsId"])  # Verify int value
-    stmt = ""
-    for field in fields:  # only updating the fields passed in
-        if stmt:
-            stmt += ", "
-        stmt += field + "=(%(" + field + ")s)"
-    stmt = "UPDATE AppService SET " + stmt + " WHERE dsId=" + str(dsId)
-    if vck != "override":
-        stmt += " AND modified=\"" + vck + "\""
-    data = {}
-    for field in fields:
-        data[field] = fields[field]
-    cursor.execute(stmt, data)
-    if cursor.rowcount < 1 and vck != "override":
-        raise ValueError("AppService" + str(dsId) + " update received outdated version check value " + vck + ".")
-    cnx.commit()
-    fields = db2app_AppService(fields)
-    dblogmsg("UPD", "AppService", fields)
-    entcache.cache_put(fields)
-    return fields
-
-
 # Write a new Timeline row, using the given field values or defaults.
 def insert_new_Timeline(cnx, cursor, fields):
     fields = app2db_Timeline(fields)
     stmt = (
-        "INSERT INTO Timeline (created, modified, importid, orgid, name, cname, slug, title, subtitle, featured, lang, comment, about, ctype, cids, svs, preb) "
-        "VALUES (%(created)s, %(modified)s, %(importid)s, %(orgid)s, %(name)s, %(cname)s, %(slug)s, %(title)s, %(subtitle)s, %(featured)s, %(lang)s, %(comment)s, %(about)s, %(ctype)s, %(cids)s, %(svs)s, %(preb)s)")
+        "INSERT INTO Timeline (created, modified, editors, importid, name, cname, slug, title, subtitle, featured, lang, comment, about, kwds, ctype, cids, rempts, svs, preb) "
+        "VALUES (%(created)s, %(modified)s, %(editors)s, %(importid)s, %(name)s, %(cname)s, %(slug)s, %(title)s, %(subtitle)s, %(featured)s, %(lang)s, %(comment)s, %(about)s, %(kwds)s, %(ctype)s, %(cids)s, %(rempts)s, %(svs)s, %(preb)s)")
     data = {
         'created': fields.get("created"),
         'modified': fields.get("modified"),
+        'editors': fields.get("editors", entdefs["Timeline"]["editors"]["dv"]),
         'importid': fields.get("importid", entdefs["Timeline"]["importid"]["dv"]),
-        'orgid': fields.get("orgid", entdefs["Timeline"]["orgid"]["dv"]),
         'name': fields.get("name", entdefs["Timeline"]["name"]["dv"]),
         'cname': fields.get("cname", entdefs["Timeline"]["cname"]["dv"]),
         'slug': fields.get("slug", entdefs["Timeline"]["slug"]["dv"]),
@@ -1105,8 +890,10 @@ def insert_new_Timeline(cnx, cursor, fields):
         'lang': fields.get("lang", entdefs["Timeline"]["lang"]["dv"]),
         'comment': fields.get("comment", entdefs["Timeline"]["comment"]["dv"]),
         'about': fields.get("about", entdefs["Timeline"]["about"]["dv"]),
+        'kwds': fields.get("kwds", entdefs["Timeline"]["kwds"]["dv"]),
         'ctype': fields.get("ctype", entdefs["Timeline"]["ctype"]["dv"]),
         'cids': fields.get("cids", entdefs["Timeline"]["cids"]["dv"]),
+        'rempts': fields.get("rempts", entdefs["Timeline"]["rempts"]["dv"]),
         'svs': fields.get("svs", entdefs["Timeline"]["svs"]["dv"]),
         'preb': fields.get("preb", entdefs["Timeline"]["preb"]["dv"])}
     cursor.execute(stmt, data)
@@ -1190,6 +977,99 @@ def update_existing_TLComp(cnx, cursor, fields, vck):
     return fields
 
 
+# Write a new DayCount row, using the given field values or defaults.
+def insert_new_DayCount(cnx, cursor, fields):
+    fields = app2db_DayCount(fields)
+    stmt = (
+        "INSERT INTO DayCount (created, modified, importid, tstamp, rtype, detail) "
+        "VALUES (%(created)s, %(modified)s, %(importid)s, %(tstamp)s, %(rtype)s, %(detail)s)")
+    data = {
+        'created': fields.get("created"),
+        'modified': fields.get("modified"),
+        'importid': fields.get("importid", entdefs["DayCount"]["importid"]["dv"]),
+        'tstamp': fields.get("tstamp", entdefs["DayCount"]["tstamp"]["dv"]),
+        'rtype': fields.get("rtype", entdefs["DayCount"]["rtype"]["dv"]),
+        'detail': fields.get("detail", entdefs["DayCount"]["detail"]["dv"])}
+    cursor.execute(stmt, data)
+    fields["dsId"] = cursor.lastrowid
+    cnx.commit()
+    fields = db2app_DayCount(fields)
+    dblogmsg("ADD", "DayCount", fields)
+    return fields
+
+
+# Update the specified DayCount row with the given field values.
+def update_existing_DayCount(cnx, cursor, fields, vck):
+    fields = app2db_DayCount(fields)
+    dsId = int(fields["dsId"])  # Verify int value
+    stmt = ""
+    for field in fields:  # only updating the fields passed in
+        if stmt:
+            stmt += ", "
+        stmt += field + "=(%(" + field + ")s)"
+    stmt = "UPDATE DayCount SET " + stmt + " WHERE dsId=" + str(dsId)
+    if vck != "override":
+        stmt += " AND modified=\"" + vck + "\""
+    data = {}
+    for field in fields:
+        data[field] = fields[field]
+    cursor.execute(stmt, data)
+    if cursor.rowcount < 1 and vck != "override":
+        raise ValueError("DayCount" + str(dsId) + " update received outdated version check value " + vck + ".")
+    cnx.commit()
+    fields = db2app_DayCount(fields)
+    dblogmsg("UPD", "DayCount", fields)
+    entcache.cache_remove(fields)
+    return fields
+
+
+# Write a new AppService row, using the given field values or defaults.
+def insert_new_AppService(cnx, cursor, fields):
+    fields = app2db_AppService(fields)
+    stmt = (
+        "INSERT INTO AppService (created, modified, importid, name, ckey, csec, data) "
+        "VALUES (%(created)s, %(modified)s, %(importid)s, %(name)s, %(ckey)s, %(csec)s, %(data)s)")
+    data = {
+        'created': fields.get("created"),
+        'modified': fields.get("modified"),
+        'importid': fields.get("importid", entdefs["AppService"]["importid"]["dv"]),
+        'name': fields.get("name", entdefs["AppService"]["name"]["dv"]),
+        'ckey': fields.get("ckey", entdefs["AppService"]["ckey"]["dv"]),
+        'csec': fields.get("csec", entdefs["AppService"]["csec"]["dv"]),
+        'data': fields.get("data", entdefs["AppService"]["data"]["dv"])}
+    cursor.execute(stmt, data)
+    fields["dsId"] = cursor.lastrowid
+    cnx.commit()
+    fields = db2app_AppService(fields)
+    dblogmsg("ADD", "AppService", fields)
+    return fields
+
+
+# Update the specified AppService row with the given field values.
+def update_existing_AppService(cnx, cursor, fields, vck):
+    fields = app2db_AppService(fields)
+    dsId = int(fields["dsId"])  # Verify int value
+    stmt = ""
+    for field in fields:  # only updating the fields passed in
+        if stmt:
+            stmt += ", "
+        stmt += field + "=(%(" + field + ")s)"
+    stmt = "UPDATE AppService SET " + stmt + " WHERE dsId=" + str(dsId)
+    if vck != "override":
+        stmt += " AND modified=\"" + vck + "\""
+    data = {}
+    for field in fields:
+        data[field] = fields[field]
+    cursor.execute(stmt, data)
+    if cursor.rowcount < 1 and vck != "override":
+        raise ValueError("AppService" + str(dsId) + " update received outdated version check value " + vck + ".")
+    cnx.commit()
+    fields = db2app_AppService(fields)
+    dblogmsg("UPD", "AppService", fields)
+    entcache.cache_put(fields)
+    return fields
+
+
 # Write the given dict/object based on the dsType.  Binary field values must
 # be base64.b64encode.  Unspecified fields are set to default values for a
 # new instance, and left alone on update.  For update, the verification
@@ -1207,35 +1087,31 @@ def write_entity(inst, vck="1234-12-12T00:00:00Z"):
                 verify_timestamp_fields(entity, dsId, inst, vck)
                 if entity == "AppUser":
                     return update_existing_AppUser(cnx, cursor, inst, vck)
-                if entity == "DayCount":
-                    return update_existing_DayCount(cnx, cursor, inst, vck)
-                if entity == "Organization":
-                    return update_existing_Organization(cnx, cursor, inst, vck)
                 if entity == "Point":
                     return update_existing_Point(cnx, cursor, inst, vck)
-                if entity == "AppService":
-                    return update_existing_AppService(cnx, cursor, inst, vck)
                 if entity == "Timeline":
                     return update_existing_Timeline(cnx, cursor, inst, vck)
                 if entity == "TLComp":
                     return update_existing_TLComp(cnx, cursor, inst, vck)
+                if entity == "DayCount":
+                    return update_existing_DayCount(cnx, cursor, inst, vck)
+                if entity == "AppService":
+                    return update_existing_AppService(cnx, cursor, inst, vck)
                 raise ValueError("Cannot modify unknown entity dsType " + str(entity))
             # No existing instance to update.  Insert new.
             initialize_timestamp_fields(inst, vck)
             if entity == "AppUser":
                 return insert_new_AppUser(cnx, cursor, inst)
-            if entity == "DayCount":
-                return insert_new_DayCount(cnx, cursor, inst)
-            if entity == "Organization":
-                return insert_new_Organization(cnx, cursor, inst)
             if entity == "Point":
                 return insert_new_Point(cnx, cursor, inst)
-            if entity == "AppService":
-                return insert_new_AppService(cnx, cursor, inst)
             if entity == "Timeline":
                 return insert_new_Timeline(cnx, cursor, inst)
             if entity == "TLComp":
                 return insert_new_TLComp(cnx, cursor, inst)
+            if entity == "DayCount":
+                return insert_new_DayCount(cnx, cursor, inst)
+            if entity == "AppService":
+                return insert_new_AppService(cnx, cursor, inst)
             raise ValueError("Cannot create unknown entity dsType " + str(entity))
         except mysql.connector.Error as e:
             raise ValueError(str(e) or "No mysql error text")  # see note 1
@@ -1267,82 +1143,40 @@ def delete_entity(entity, dsId):
 
 def query_AppUser(cnx, cursor, where):
     query = "SELECT dsId, created, modified, "
-    query += "importid, email, phash, status, actsends, actcode, accessed, name, title, web, lang, settings, remtls, completed, started, built, orgid, lev"
+    query += "importid, email, phash, status, actsends, actcode, accessed, name, title, web, lang, settings, remtls, completed, started, built"
     query += " FROM AppUser " + where
     cursor.execute(query)
     res = []
-    for (dsId, created, modified, importid, email, phash, status, actsends, actcode, accessed, name, title, web, lang, settings, remtls, completed, started, built, orgid, lev) in cursor:
-        inst = {"dsType": "AppUser", "dsId": dsId, "created": created, "modified": modified, "importid": importid, "email": email, "phash": phash, "status": status, "actsends": actsends, "actcode": actcode, "accessed": accessed, "name": name, "title": title, "web": web, "lang": lang, "settings": settings, "remtls": remtls, "completed": completed, "started": started, "built": built, "orgid": orgid, "lev": lev}
+    for (dsId, created, modified, importid, email, phash, status, actsends, actcode, accessed, name, title, web, lang, settings, remtls, completed, started, built) in cursor:
+        inst = {"dsType": "AppUser", "dsId": dsId, "created": created, "modified": modified, "importid": importid, "email": email, "phash": phash, "status": status, "actsends": actsends, "actcode": actcode, "accessed": accessed, "name": name, "title": title, "web": web, "lang": lang, "settings": settings, "remtls": remtls, "completed": completed, "started": started, "built": built}
         inst = db2app_AppUser(inst)
         res.append(inst)
     dblogmsg("QRY", "AppUser", res)
     return res
 
 
-def query_DayCount(cnx, cursor, where):
-    query = "SELECT dsId, created, modified, "
-    query += "importid, tstamp, rtype, detail"
-    query += " FROM DayCount " + where
-    cursor.execute(query)
-    res = []
-    for (dsId, created, modified, importid, tstamp, rtype, detail) in cursor:
-        inst = {"dsType": "DayCount", "dsId": dsId, "created": created, "modified": modified, "importid": importid, "tstamp": tstamp, "rtype": rtype, "detail": detail}
-        inst = db2app_DayCount(inst)
-        res.append(inst)
-    dblogmsg("QRY", "DayCount", res)
-    return res
-
-
-def query_Organization(cnx, cursor, where):
-    query = "SELECT dsId, created, modified, "
-    query += "importid, name, code, contacturl, projecturl, communities, regions, categories, tags, recpre"
-    query += " FROM Organization " + where
-    cursor.execute(query)
-    res = []
-    for (dsId, created, modified, importid, name, code, contacturl, projecturl, communities, regions, categories, tags, recpre) in cursor:
-        inst = {"dsType": "Organization", "dsId": dsId, "created": created, "modified": modified, "importid": importid, "name": name, "code": code, "contacturl": contacturl, "projecturl": projecturl, "communities": communities, "regions": regions, "categories": categories, "tags": tags, "recpre": recpre}
-        inst = db2app_Organization(inst)
-        res.append(inst)
-    dblogmsg("QRY", "Organization", res)
-    return res
-
-
 def query_Point(cnx, cursor, where):
     query = "SELECT dsId, created, modified, "
-    query += "importid, orgid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, endorsed, stats"
+    query += "editors, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats"
     query += " FROM Point " + where
     cursor.execute(query)
     res = []
-    for (dsId, created, modified, importid, orgid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, endorsed, stats) in cursor:
-        inst = {"dsType": "Point", "dsId": dsId, "created": created, "modified": modified, "importid": importid, "orgid": orgid, "source": source, "date": date, "text": text, "refs": refs, "qtype": qtype, "communities": communities, "regions": regions, "categories": categories, "tags": tags, "codes": codes, "srclang": srclang, "translations": translations, "pic": pic, "endorsed": endorsed, "stats": stats}
+    for (dsId, created, modified, editors, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats) in cursor:
+        inst = {"dsType": "Point", "dsId": dsId, "created": created, "modified": modified, "editors": editors, "importid": importid, "source": source, "date": date, "text": text, "refs": refs, "qtype": qtype, "communities": communities, "regions": regions, "categories": categories, "tags": tags, "codes": codes, "srclang": srclang, "translations": translations, "pic": pic, "stats": stats}
         inst = db2app_Point(inst)
         res.append(inst)
     dblogmsg("QRY", "Point", res)
     return res
 
 
-def query_AppService(cnx, cursor, where):
-    query = "SELECT dsId, created, modified, "
-    query += "importid, name, ckey, csec, data"
-    query += " FROM AppService " + where
-    cursor.execute(query)
-    res = []
-    for (dsId, created, modified, importid, name, ckey, csec, data) in cursor:
-        inst = {"dsType": "AppService", "dsId": dsId, "created": created, "modified": modified, "importid": importid, "name": name, "ckey": ckey, "csec": csec, "data": data}
-        inst = db2app_AppService(inst)
-        res.append(inst)
-    dblogmsg("QRY", "AppService", res)
-    return res
-
-
 def query_Timeline(cnx, cursor, where):
     query = "SELECT dsId, created, modified, "
-    query += "importid, orgid, name, cname, slug, title, subtitle, featured, lang, comment, about, ctype, cids, svs, preb"
+    query += "editors, importid, name, cname, slug, title, subtitle, featured, lang, comment, about, kwds, ctype, cids, rempts, svs, preb"
     query += " FROM Timeline " + where
     cursor.execute(query)
     res = []
-    for (dsId, created, modified, importid, orgid, name, cname, slug, title, subtitle, featured, lang, comment, about, ctype, cids, svs, preb) in cursor:
-        inst = {"dsType": "Timeline", "dsId": dsId, "created": created, "modified": modified, "importid": importid, "orgid": orgid, "name": name, "cname": cname, "slug": slug, "title": title, "subtitle": subtitle, "featured": featured, "lang": lang, "comment": comment, "about": about, "ctype": ctype, "cids": cids, "svs": svs, "preb": preb}
+    for (dsId, created, modified, editors, importid, name, cname, slug, title, subtitle, featured, lang, comment, about, kwds, ctype, cids, rempts, svs, preb) in cursor:
+        inst = {"dsType": "Timeline", "dsId": dsId, "created": created, "modified": modified, "editors": editors, "importid": importid, "name": name, "cname": cname, "slug": slug, "title": title, "subtitle": subtitle, "featured": featured, "lang": lang, "comment": comment, "about": about, "kwds": kwds, "ctype": ctype, "cids": cids, "rempts": rempts, "svs": svs, "preb": preb}
         inst = db2app_Timeline(inst)
         res.append(inst)
     dblogmsg("QRY", "Timeline", res)
@@ -1363,6 +1197,34 @@ def query_TLComp(cnx, cursor, where):
     return res
 
 
+def query_DayCount(cnx, cursor, where):
+    query = "SELECT dsId, created, modified, "
+    query += "importid, tstamp, rtype, detail"
+    query += " FROM DayCount " + where
+    cursor.execute(query)
+    res = []
+    for (dsId, created, modified, importid, tstamp, rtype, detail) in cursor:
+        inst = {"dsType": "DayCount", "dsId": dsId, "created": created, "modified": modified, "importid": importid, "tstamp": tstamp, "rtype": rtype, "detail": detail}
+        inst = db2app_DayCount(inst)
+        res.append(inst)
+    dblogmsg("QRY", "DayCount", res)
+    return res
+
+
+def query_AppService(cnx, cursor, where):
+    query = "SELECT dsId, created, modified, "
+    query += "importid, name, ckey, csec, data"
+    query += " FROM AppService " + where
+    cursor.execute(query)
+    res = []
+    for (dsId, created, modified, importid, name, ckey, csec, data) in cursor:
+        inst = {"dsType": "AppService", "dsId": dsId, "created": created, "modified": modified, "importid": importid, "name": name, "ckey": ckey, "csec": csec, "data": data}
+        inst = db2app_AppService(inst)
+        res.append(inst)
+    dblogmsg("QRY", "AppService", res)
+    return res
+
+
 # Fetch all instances of the specified entity kind for the given WHERE
 # clause.  The WHERE clause should include a LIMIT, and should only match on
 # indexed fields and/or declared query indexes.  For speed and general
@@ -1376,18 +1238,16 @@ def query_entity(entity, where):
         try:
             if entity == "AppUser":
                 return query_AppUser(cnx, cursor, where)
-            if entity == "DayCount":
-                return query_DayCount(cnx, cursor, where)
-            if entity == "Organization":
-                return query_Organization(cnx, cursor, where)
             if entity == "Point":
                 return query_Point(cnx, cursor, where)
-            if entity == "AppService":
-                return query_AppService(cnx, cursor, where)
             if entity == "Timeline":
                 return query_Timeline(cnx, cursor, where)
             if entity == "TLComp":
                 return query_TLComp(cnx, cursor, where)
+            if entity == "DayCount":
+                return query_DayCount(cnx, cursor, where)
+            if entity == "AppService":
+                return query_AppService(cnx, cursor, where)
         except mysql.connector.Error as e:
             raise ValueError(str(e) or "No mysql error text")  # see note 1
         finally:
@@ -1415,24 +1275,6 @@ def visible_AppUser_fields(obj, audience):
     return filtobj
 
 
-def visible_DayCount_fields(obj, audience):
-    filtobj = {}
-    for fld, val in obj.items():
-        if fld == "importid":
-            continue
-        filtobj[fld] = val
-    return filtobj
-
-
-def visible_Organization_fields(obj, audience):
-    filtobj = {}
-    for fld, val in obj.items():
-        if fld == "importid":
-            continue
-        filtobj[fld] = val
-    return filtobj
-
-
 def visible_Point_fields(obj, audience):
     filtobj = {}
     for fld, val in obj.items():
@@ -1443,15 +1285,6 @@ def visible_Point_fields(obj, audience):
                 val = obj["dsId"]
             else:
                 val = ""
-        filtobj[fld] = val
-    return filtobj
-
-
-def visible_AppService_fields(obj, audience):
-    filtobj = {}
-    for fld, val in obj.items():
-        if fld == "importid":
-            continue
         filtobj[fld] = val
     return filtobj
 
@@ -1474,6 +1307,24 @@ def visible_TLComp_fields(obj, audience):
     return filtobj
 
 
+def visible_DayCount_fields(obj, audience):
+    filtobj = {}
+    for fld, val in obj.items():
+        if fld == "importid":
+            continue
+        filtobj[fld] = val
+    return filtobj
+
+
+def visible_AppService_fields(obj, audience):
+    filtobj = {}
+    for fld, val in obj.items():
+        if fld == "importid":
+            continue
+        filtobj[fld] = val
+    return filtobj
+
+
 # Return a copied object with only the fields appropriate to the audience.
 # Specifying audience="private" includes peronal info.  The given obj is
 # assumed to already have been through db2app conversion.  Image fields are
@@ -1481,18 +1332,16 @@ def visible_TLComp_fields(obj, audience):
 def visible_fields(obj, audience="public"):
     if obj["dsType"] == "AppUser":
         return visible_AppUser_fields(obj, audience)
-    if obj["dsType"] == "DayCount":
-        return visible_DayCount_fields(obj, audience)
-    if obj["dsType"] == "Organization":
-        return visible_Organization_fields(obj, audience)
     if obj["dsType"] == "Point":
         return visible_Point_fields(obj, audience)
-    if obj["dsType"] == "AppService":
-        return visible_AppService_fields(obj, audience)
     if obj["dsType"] == "Timeline":
         return visible_Timeline_fields(obj, audience)
     if obj["dsType"] == "TLComp":
         return visible_TLComp_fields(obj, audience)
+    if obj["dsType"] == "DayCount":
+        return visible_DayCount_fields(obj, audience)
+    if obj["dsType"] == "AppService":
+        return visible_AppService_fields(obj, audience)
     raise ValueError("Unknown object dsType: " + obj["dsType"])
 
 

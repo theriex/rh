@@ -1132,8 +1132,7 @@ app.tabular = (function () {
         // jt.log("saveTimeline parameters:");
         // Object.keys(currtl).forEach(function (field) {
         //     jt.log("    " + field + ": " + currtl[field]); });
-        jt.call("POST", "updtl?" + app.auth(), app.db.postdata("Timeline", 
-                                                               currtl),
+        jt.call("POST", "/api/updtl?" + app.auth(), app.refmgr.postdata(currtl),
                 function (result) {
                     app.db.deserialize("Timeline", result[0]);
                     setStateToDatabaseTimeline(result[0]);

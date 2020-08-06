@@ -17,7 +17,7 @@ app.refmgr = (function () {
 
     var cache = {};
 
-    var persistentTypes = ["AppUser", "DayCount", "Organization", "Point", "AppService", "Timeline", "TLComp"];
+    var persistentTypes = ["AppUser", "Point", "Timeline", "TLComp", "DayCount", "AppService"];
 
 
     //All json fields are initialized to {} so they can be accessed directly.
@@ -39,31 +39,29 @@ app.refmgr = (function () {
 
     function deserialize (obj) {
         switch(obj.dsType) {
-        case "AppUser": 
+        case "AppUser":
             reconstituteFieldJSONObject("settings", obj);
             reconstituteFieldJSONObject("remtls", obj);
             reconstituteFieldJSONObject("completed", obj);
             reconstituteFieldJSONObject("started", obj);
             reconstituteFieldJSONObject("built", obj);
             break;
-        case "DayCount": 
-            reconstituteFieldJSONObject("detail", obj);
-            break;
-        case "Organization": 
-            reconstituteFieldJSONObject("recpre", obj);
-            break;
-        case "Point": 
+        case "Point":
             reconstituteFieldJSONObject("refs", obj);
             reconstituteFieldJSONObject("translations", obj);
             reconstituteFieldJSONObject("stats", obj);
             break;
-        case "AppService": 
-            break;
-        case "Timeline": 
+        case "Timeline":
+            reconstituteFieldJSONObject("kwds", obj);
             reconstituteFieldJSONObject("preb", obj);
             break;
-        case "TLComp": 
+        case "TLComp":
             reconstituteFieldJSONObject("data", obj);
+            break;
+        case "DayCount":
+            reconstituteFieldJSONObject("detail", obj);
+            break;
+        case "AppService":
             break;
         }
         return obj;
@@ -72,31 +70,29 @@ app.refmgr = (function () {
 
     function serialize (obj) {
         switch(obj.dsType) {
-        case "AppUser": 
+        case "AppUser":
             obj.settings = JSON.stringify(obj.settings);
             obj.remtls = JSON.stringify(obj.remtls);
             obj.completed = JSON.stringify(obj.completed);
             obj.started = JSON.stringify(obj.started);
             obj.built = JSON.stringify(obj.built);
             break;
-        case "DayCount": 
-            obj.detail = JSON.stringify(obj.detail);
-            break;
-        case "Organization": 
-            obj.recpre = JSON.stringify(obj.recpre);
-            break;
-        case "Point": 
+        case "Point":
             obj.refs = JSON.stringify(obj.refs);
             obj.translations = JSON.stringify(obj.translations);
             obj.stats = JSON.stringify(obj.stats);
             break;
-        case "AppService": 
-            break;
-        case "Timeline": 
+        case "Timeline":
+            obj.kwds = JSON.stringify(obj.kwds);
             obj.preb = JSON.stringify(obj.preb);
             break;
-        case "TLComp": 
+        case "TLComp":
             obj.data = JSON.stringify(obj.data);
+            break;
+        case "DayCount":
+            obj.detail = JSON.stringify(obj.detail);
+            break;
+        case "AppService":
             break;
         }
         return obj;
@@ -105,21 +101,19 @@ app.refmgr = (function () {
 
     function clearPrivilegedFields (obj) {
         switch(obj.dsType) {
-        case "AppUser": 
+        case "AppUser":
             obj.email = "";
             obj.status = "";
             break;
-        case "DayCount": 
+        case "Point":
             break;
-        case "Organization": 
+        case "Timeline":
             break;
-        case "Point": 
+        case "TLComp":
             break;
-        case "AppService": 
+        case "DayCount":
             break;
-        case "Timeline": 
-            break;
-        case "TLComp": 
+        case "AppService":
             break;
         }
     }

@@ -10,7 +10,7 @@ var fs = require("fs");
 
 function sqlType (fd) {
     if(ddefs.fieldIs(fd, "string")) {
-        //string (email, isodate, isomod)
+        //string (email, isodate, isomod, srchidcsv)
         //MySQL has some native support for email addresses and dates, but
         //any required value checking is done in the service API, not the db.
         return "VARCHAR(256)"; }
@@ -283,7 +283,7 @@ function helperFunctions () {
     pyc += "        if required and not re.match(r\"[^@]+@[^@]+\\.[^@]+\", emaddr):\n";
     pyc += "            raise ValueError(\"Invalid \" + argname + \" value: \" + emaddr)\n";
     pyc += "        return emaddr\n";
-    pyc += "    if fieldtype in [\"string\", \"isodate\", \"isomod\",\n";
+    pyc += "    if fieldtype in [\"string\", \"isodate\", \"isomod\", \"srchidcsv\",\n";
     pyc += "                     \"text\", \"json\", \"idcsv\", \"isodcsv\", \"gencsv\", \"url\"]:\n";
     pyc += "        return argval or \"\"\n";
     pyc += "    if fieldtype == \"image\":\n";
@@ -533,7 +533,7 @@ function dblogMessager () {
     pyc += "            msg = \"db\" + op + \" \" + entity + \" \" + obj[\"dsId\"]\n";
     pyc += "            if entity in log_summary_flds:\n";
     pyc += "                for field in log_summary_flds[entity]:\n";
-    pyc += "                    msg += \" \" + str(obj[field])\n";
+    pyc += "                    msg += \" \" + str(obj[field])[0:60]\n";
     pyc += "            logging.info(msg)\n";
     pyc += "    else:  # no res, probably a delete\n";
     pyc += "        logging.info(\"db\" + op + \" \" + entity + \" -no obj details-\")\n";
@@ -877,7 +877,7 @@ function writeDeserializeFunction () {
     jsc += "        switch(obj.dsType) {\n";
     var definitions = ddefs.dataDefinitions();
     definitions.forEach(function (edef) {
-        jsc += "        case \"" + edef.entity + "\": \n";
+        jsc += "        case \"" + edef.entity + "\":\n";
         edef.fields.forEach(function (fd) {
             if(ddefs.fieldIs(fd.d, "json")) {
                 jsc += "            reconstituteFieldJSONObject(\"" +
@@ -891,7 +891,7 @@ function writeDeserializeFunction () {
     jsc += "    function serialize (obj) {\n";
     jsc += "        switch(obj.dsType) {\n";
     definitions.forEach(function (edef) {
-        jsc += "        case \"" + edef.entity + "\": \n";
+        jsc += "        case \"" + edef.entity + "\":\n";
         edef.fields.forEach(function (fd) {
             if(ddefs.fieldIs(fd.d, "json")) {
                 jsc += "            obj." + fd.f + " = JSON.stringify(obj." +
@@ -910,7 +910,7 @@ function writeClearPrivilegedFunction () {
     jsc += "        switch(obj.dsType) {\n";
     var definitions = ddefs.dataDefinitions();
     definitions.forEach(function (edef) {
-        jsc += "        case \"" + edef.entity + "\": \n";
+        jsc += "        case \"" + edef.entity + "\":\n";
         edef.fields.forEach(function (fd) {
             if(ddefs.fieldIs(fd.d, "priv")) {  //adm fields never leave server
                 jsc += "            obj." + fd.f + " = \"\";\n"; } });

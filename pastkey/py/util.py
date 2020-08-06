@@ -7,6 +7,7 @@
 import logging
 import hmac
 import json
+from json.decoder import JSONDecodeError
 import re
 import os
 import ssl
@@ -42,6 +43,16 @@ def respond(contentstr, mimetype="text/html"):
     resp = flask.make_response(contentstr)
     resp.mimetype = mimetype
     return resp
+
+
+def load_json_or_default(jstxt, dval=None):
+    retval = dval
+    if jstxt:
+        try:
+            retval = json.loads(jstxt)
+        except JSONDecodeError:
+            pass
+    return retval
 
 
 def safe_JSON(obj, audience="public"):  # "private" includes personal info

@@ -1858,10 +1858,9 @@ app.dlg = (function () {
 
 
     function fetchPointFromServer (ptid, contf) {
-        var url;
         jt.out("editlink" + ptid, "fetching point data...");
         app.dbpts = app.dbpts || {};
-        url = "ptdat?" + app.auth() + "&pointid=" + ptid + 
+        var url = "/api/fetchobj?" + app.auth() + "&dt=Point&di=" + ptid +
             jt.ts("&cb=", "second");
         jt.call("GET", url, null,
                 function (points) {

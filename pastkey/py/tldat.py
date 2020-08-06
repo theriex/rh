@@ -2,10 +2,13 @@
 #pylint: disable=line-too-long
 #pylint: disable=invalid-name
 #pylint: disable=missing-function-docstring
+#pylint: disable=logging-not-lazy
 
 import logging
 import base64
 import io
+import re
+import json
 import flask
 from PIL import Image, ImageOps   # from Pillow
 import py.dbacc as dbacc
@@ -21,32 +24,16 @@ def contained_timelines(tl):
     return allts
 
 
-def verify_point_update_authorized(pdat):
-    appuser, _ = util.authenticate()
-    lev = appuser.get("lev")
-    if not lev or lev <= 0:
-        raise ValueError("Not a Contributor or Administrator")
-    orgid = appuser.get("orgid")
-    if not orgid:
-        raise ValueError("Not a Member of a partner Organization")
-    org = dbacc.cfbk("Organization", "dsId", orgid, required=True)
-    dbpt = None
-    ptid = pdat.get("dsId")
-    if ptid:
-        dbpt = dbacc.cfbk("Point", "dsId", ptid, required=True)
-        if dbpt["orgid"] != orgid:
-            raise ValueError("Not your Organization's Point")
-    pdat["orgid"] = org["dsId"]  # verify set
-    return appuser, dbpt
-
-
-def note_point_endorsement(appuser, pdat, dbpt):
-    csv = dbpt.get("endorsed", "")
-    if not util.val_in_csv(appuser["dsId"], csv):
-        if csv:
-            csv += ","
-        csv += appuser["dsId"]
-    pdat["endorsed"] = csv
+def verify_edit_authorization(appuser, obj):
+    if not obj.get("dsType") in ["Point", "Timeline"]:
+        raise ValueError("Unknown object type for edit authorization")
+    if not obj.get("dsId"):
+        obj["editors"] = appuser["dsId"]
+        return None  # Done. Anyone may create a new Point or Timeline
+    dbo = dbacc.cfbk(obj["dsType"], "dsId", obj["dsId"], required=True)
+    if not util.val_in_csv(appuser["dsId"], dbo["editors"]):
+        raise ValueError("Not an editor for " + obj["dsType"] + obj["dsId"])
+    return dbo
 
 
 def set_image_field_value(pobj, picfld, picfile):
@@ -61,6 +48,96 @@ def set_image_field_value(pobj, picfld, picfile):
     bbuf = io.BytesIO()          # file-like object for save
     img.save(bbuf, format="PNG")
     pobj[picfld] = base64.b64encode(bbuf.getvalue())
+
+
+def canonize(cankey):
+    # whitespace and generally problematic characters
+    cankey = re.sub(r'\s', '', cankey)
+    cankey = re.sub(r'\"', '', cankey)
+    cankey = re.sub(r'\.', '', cankey)
+    # URI reserved delimiters
+    cankey = re.sub(r'\:', '', cankey)
+    cankey = re.sub(r'\/', '', cankey)
+    cankey = re.sub(r'\?', '', cankey)
+    cankey = re.sub(r'\#', '', cankey)
+    cankey = re.sub(r'\[', '', cankey)
+    cankey = re.sub(r'\]', '', cankey)
+    cankey = re.sub(r'\@', '', cankey)
+    # URI reserved sub delimiters
+    cankey = re.sub(r'\!', '', cankey)
+    cankey = re.sub(r'\$', '', cankey)
+    cankey = re.sub(r'\&', '', cankey)
+    cankey = re.sub(r'\'', '', cankey)
+    cankey = re.sub(r'\(', '', cankey)
+    cankey = re.sub(r'\)', '', cankey)
+    cankey = re.sub(r'\*', '', cankey)
+    cankey = re.sub(r'\+', '', cankey)
+    cankey = re.sub(r'\,', '', cankey)
+    cankey = re.sub(r'\;', '', cankey)
+    cankey = re.sub(r'\=', '', cankey)
+    cankey = cankey.lower()
+    return cankey
+
+
+def verify_unique_timeline_field(tldat, field, tldb):
+    if tldb and (tldat[field] == tldb[field]):
+        return True  # hasn't changed, so still unique
+    where = "WHERE " + field + "=\"" + tldat[field] + "\" LIMIT 1"
+    objs = dbacc.query_entity("Timeline", where)
+    if len(objs) > 0:
+        raise ValueError("There is already a timeline with that " + field)
+    return True
+
+
+def point_preb_summary(point):
+    # Timelines are language specific, so translations are not included
+    sumflds = ["editors", "source", "date", "text", "refs", "qtype",
+               "communities", "regions", "categories", "tags",
+               "codes", "stats"]
+    summary = {k: point[k] for k in sumflds}
+    if point.get("pic"):
+        summary["pic"] = point["dsId"]
+    else:
+        summary["pic"] = ""
+    return summary
+
+
+# A regular dbacc query includes image data in the returned object, which
+# means fetch overhead with the database on a separate server, which means
+# make maximum use of existing info.  Unless a complete rebuild was
+# triggered, this should be able to complete with a couple of reasonable
+# size queries.
+def update_prebuilt(tldat, tldb):
+    if tldat["ctype"] == "Timelines":
+        return  # Only have preb for timelines containing points
+    lpx = "update_prebuilt Timeline " + str(tldat.get("dsId"))
+    # make a reference dict out of whatever existing preb is available
+    preb = tldat.get("preb") or tldb.get("preb") or "[]"
+    preb = util.load_json_or_default(preb, [])
+    ptd = {k["dsId"]: k for k in preb}
+    # update any ptd entries that were modified since last timeline save
+    if tldb and tldat.get("cids"):
+        logging.info(lpx + "fetching points updated since last timeline save")
+        where = ("modified > \"" + tldb["modified"] + "\" AND dsId IN (" +
+                 tldat["cids"] + ")")
+        points = dbacc.query_entity("Point", where)
+        for point in points:
+            ptd[point["dsId"]] = point_preb_summary(point)
+    # rebuild preb, fetching points for any missing ptd entries
+    logging.info(lpx + "rebuilding preb")
+    preb = []
+    for pid in util.csv_to_list(tldat["cids"]):
+        summary = ptd.get(pid)  # dict or None
+        if not summary:
+            point = dbacc.cfbk("Point", "dsId", pid)
+            if point:
+                summary = point_preb_summary(point)
+        if not summary:
+            logging.info(lpx + "No point info for pid " + pid)
+        else: # have summary info
+            preb.append(summary)
+    tldat["preb"] = json.dumps(preb)
+
 
 
 ############################################################
@@ -134,17 +211,36 @@ def updpt():
         # flask.request.method always returns "GET".  Test for form content.
         picfile = flask.request.files.get("picin")
         pdat = util.set_fields_from_reqargs([
-            "dsId", "source", "date", "text", "refs", "qtype", "communities",
-            "regions", "categories", "tags", "codes", "srclang",
+            "dsId", "modified", "source", "date", "text", "refs", "qtype",
+            "communities", "regions", "categories", "tags", "codes", "srclang",
             "translations", "endorsed", "stats"], {})
         if not (picfile or pdat):  # no info sent, assume GET
             return util.respond("Ready", mimetype="text/plain")
         # Have POST data
         pdat["dsType"] = "Point"
-        appuser, dbpt = verify_point_update_authorized(pdat)
-        note_point_endorsement(appuser, pdat, dbpt)
+        appuser, _ = util.authenticate()
+        verify_edit_authorization(appuser, pdat)
         set_image_field_value(pdat, "pic", picfile)
         dbacc.write_entity(pdat, pdat["modified"])
     except ValueError as e:
         return util.serve_value_error(e)
     return util.respond("ptid: " + pdat["dsId"], mimetype="text/plain")
+
+
+def updtl():
+    """ Standard app POST call to update a timeline. """
+    try:
+        appuser, _ = util.authenticate()
+        tldat = util.set_fields_from_reqargs([
+            "dsId", "modified", "editors", "name", "slug", "title", "subtitle",
+            "featured", "lang", "comment", "about", "kwds", "ctype", "cids",
+            "rempts", "svs"], {})
+        tldb = verify_edit_authorization(appuser, tldat)
+        tldat["cname"] = canonize(tldat.get("name", ""))
+        verify_unique_timeline_field(tldat, "cname", tldb)
+        verify_unique_timeline_field(tldat, "slug", tldb)
+        update_prebuilt(tldat, tldb)
+        dbacc.write_entity(tldat, tldat["modified"])
+    except ValueError as e:
+        return util.serve_value_error(e)
+    return util.respJSON(tldat)

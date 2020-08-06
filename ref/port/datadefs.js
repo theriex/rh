@@ -15,7 +15,8 @@ module.exports = (function () {
         {dn:"str[ing]", h:"Rough max 128 char text, truncation ok.", aliases:[
             {dn:"email", h:"email address format"},
             {dn:"isod[ate]", h:"ISO date format"},
-            {dn:"isomod", h:"ISO date;int count"}]},
+            {dn:"isomod", h:"ISO date;int count"},
+            {dn:"srchidcsv", h:"short string length idcsv, searchable"}]},
         {dn:"text", h:"unindexable max 1mb string.", aliases:[
             {dn:"json", h:"JSON encoded data."},
             {dn:"idcsv", h:"comma separated unique integer ids"},
@@ -27,33 +28,15 @@ module.exports = (function () {
         {dn:"int", h:"low range integer value JavaScript can handle"}];
     var descrLookup = null;
 
-    
-    //All entities have the following fields automatically created
+    //All entities have the following fields automatically created:
     //  dsId: Large integer value unique within the entity type
-    //  created: UTF string when the instance was first saved
+    //  created: ISO UTC timestamp string when the instance was first saved
     //  modified: timestamp;version
     //  batchconv: string indicator for batch conversion processing
     //On retrieval, instances have dbType set to the entity name.
     var ddefs = [ //data storage entity definitions
+
     {entity:"AppUser", descr:"PastKey User account", fields:[
-        //Container for login and whatever other info needs to be tracked
-        //per user.  Login consists of retrieving an access token which is
-        //used for all subsequent API calls. Supports email/password login.
-        //May be expanded to allow for 3rd party authentication processing
-        //if needed.  Administrator isa Contributor isa User
-        //
-        //A timeline progress instance:
-        // tlid: id of top-level timeline (aggregated timelines not separated)
-        // st: ISO when the timeline was started (ISO, not wallclock)
-        // svs*: CSV of svid;isoShown;isoClosed;dispcount
-        // pts: CSV of ptid;isoShown;isoClosed;dispcount;tagcodes
-        //    tagcodes: 'r' (remembered) point noted to revisit later
-        //              'k' (known) knew this before
-        //              'u' (unknown) did not know this before
-        //              '1' (1st try) guessed date correctly on first click
-        //              '2' (2nd try) guessed date correctly on second click
-        //              '3' (3rd try) guessed date correctly on third click
-        //              '4' (4th try) guessed date correctly on fourth click
         {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
         {f:"email", d:"priv req unique email"},
         {f:"phash", d:"adm req string"},
@@ -69,126 +52,107 @@ module.exports = (function () {
         //user settings and traversal data
         {f:"lang", d:"string", c:"optional preferred language code"},
         {f:"settings", d:"json", c:"relative ages of generations etc"},
-        {f:"remtls", d:"json", c:"remembered timeline ids/names"},
+        {f:"remtls", d:"json", c:"remembered timeline ids/names (*2)"},
         {f:"completed", d:"json", c:"[] tlid, name, first, latest"},
-        {f:"started", d:"json", c:"[] timeline progress instances"},
-        {f:"built", d:"json", c:"[] created timeline ids/names"},
-        //write privileges
-        {f:"orgid", d:"dbid", c:"Organization id (0 if none)"},
-        {f:"lev", d:"int", c:"0:User, 1:Contributor, 2:Administrator"}],
+        {f:"started", d:"json", c:"[] timeline progress instances (*1)"},
+        {f:"built", d:"json", c:"[] created timeline ids/names"}],
+        //*1 Timeline Progress instance:
+        // tlid: id of top-level timeline (aggregated timelines not separated)
+        // st: ISO when the timeline was started (ISO, not wallclock)
+        // svs*: CSV of svid;isoShown;isoClosed;dispcount
+        // pts: CSV of ptid;isoShown;isoClosed;dispcount;tagcodes
+        //    tagcodes: 'r' (remembered) point noted to revisit later
+        //              'k' (known) knew this before
+        //              'u' (unknown) did not know this before
+        //              '1' (1st try) guessed date correctly on first click
+        //              '2' (2nd try) guessed date correctly on second click
+        //              '3' (3rd try) guessed date correctly on third click
+        //              '4' (4th try) guessed date correctly on fourth click
+        //*2 Remembered, completed, started, and built timelines are what is
+        //   made available for search.  You learn about new timelines through
+        //   what is featured or links you get from friends.  There is no
+        //   general user global timeline search.
      cache:{minutes:2*60, manualadd:true}, //fast auth after initial load
      logflds:["email", "name"]},
 
-    {entity:"DayCount", descr:"Traffic access accumulator", fields:[
-        //Keep track of timeline fetches and progress saves to enable viewing
-        //activity.  Aggregated nightly.
-        {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
-        {f:"tstamp", d:"isod req", c:"server time zero of day"},
-        {f:"rtype", d:"string req", c:"count type (fetches, saves, summaries)",
-         enumvals:["tlfetch", "tlsave", "daysum"]},
-        {f:"detail", d:"json", c:"count details"}],
-     cache:{minutes:0},  //essentially write only until pulled for report
-     logflds:["tstamp", "rtype"]},
-
-    {entity:"Organization", descr:"A group building timelines", fields:[
-        //An independent working group maintaining data points and timelines
-        //for education and benefit to their community.
-        {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
-        {f:"name", d:"string req unique", c:"Name of organization"},
-        {f:"code", d:"string req unique", c:"Short name or initials, slug"},
-        {f:"contacturl", d:"url", c:"Main contact website"},
-        {f:"projecturl", d:"url", c:"Web page describing timeline work"},
-        //point data search filtering organizational definitions
-        {f:"communities", d:"gencsv", c:"e.g. Native, Latinx, ..."},
-        {f:"regions", d:"gencsv", c:"e.g. Boston, Puerto Rico, Hawai'i,..."},
-        {f:"categories", d:"gencsv", c:"e.g. Stats, Awards, Stereotypes,..."},
-        {f:"tags", d:"gencsv", c:"other org grouping keywords"},
-        //Prebuilt json for most recently edited ~512k of organization
-        //points for ease of reference. Older points can still be accessed
-        //via the timelines that reference them.
-        {f:"recpre", d:"json", c:"recently edited points for quick access"}],
-     cache:{minutes:0},  //client caching should be sufficient
-     logflds:["code", "name"]},
-
     {entity:"Point", descr:"A data point for use in timelines", fields:[
+        {f:"editors", d:"srchidcsv", c:"owner and others with edit access"},
         {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
-        {f:"orgid", d:"dbid", c:"organization that created this point"},
         {f:"source", d:"string", c:"secondary reference id or load key"},
-        //Accepted formats for date values:
-        // point: Y[YYY][ BCE], YYYY-MM, YYYY-MM-DD
-        // range: YYYY's, YYYY+, YYYY['s]-YYYY['s], YYYY-MM[-DD]-YYYY-MM[-DD]
-        {f:"date", d:"string req", c:"A date or date range"},
-        //Text may reference another point using html anchor syntax and the
-        //source or id, e.g. "... <a href=\"#N35\">Pontiac</a> ..."
-        {f:"text", d:"text req", c:"max 1200 chars, prefer < 400"},
+        {f:"date", d:"string req", c:"A date or date range (*1)"},
+        {f:"text", d:"text req", c:"max 1200 chars, prefer < 400. (*2)"},
         {f:"refs", d:"json", c:"array of reference source strings"},
-        //qtypes: 'S': Continue (default), 'U': Did You Know?,
-        //        'D': Click correct year, 'F': Firsts
-        {f:"qtype", d:"string", c:"Letter code for question type"},
-        {f:"communities", d:"gencsv", c:"selected values from org communities"},
-        {f:"regions", d:"gencsv", c:"selected values from org regions"},
-        {f:"categories", d:"gencsv", c:"selected values from org categories"},
-        {f:"tags", d:"gencsv", c:"selected values from org tags"},
+        {f:"qtype", d:"string", c:"Letter code for question type (*3)"},
+        {f:"communities", d:"gencsv", c:"0+ kwds from TL.kwds communities"},
+        {f:"regions", d:"gencsv",     c:"0+ kwds from TL.kwds regions"},
+        {f:"categories", d:"gencsv",  c:"0+ kwds from TL.kwds categories"},
+        {f:"tags", d:"gencsv",        c:"0+ kwds from TL.kwds tags"},
         {f:"codes", d:"gencsv", c:"legacy import category key code values"},
         {f:"srclang", d:"string", c:"en-US or en-US-x-grade"},
         {f:"translations", d:"json", c:"text translations by lang code"},
         {f:"pic", d:"image", c:"optional freely shareable uploaded pic"},
-        {f:"endorsed", d:"idcsv", c:"userids who have endorsed the point"},
         {f:"stats", d:"json", c:"optional associated data (visualizations)"}],
+        //*1 Accepted formats for date values:
+        //   point: Y[YYY][ BCE], YYYY-MM, YYYY-MM-DD
+        //   range: YYYY's, YYYY+, YYYY['s]-YYYY['s], YYYY-MM[-DD]-YYYY-MM[-DD]
+        //*2 Text may reference another point using html anchor syntax and the
+        //   source or id, e.g. "... <a href=\"#N35\">Pontiac</a> ..."
+        //*3 qtypes: 'S': Continue (default),
+        //           'U': Did You Know?,
+        //           'D': Click correct year,
+        //           'F': Firsts
      cache:{minutes:0},  //points are not cached individually
-     logflds:["orgid", "date", "text"]},
-
-    {entity:"AppService", descr:"Processing service access", fields:[
-        {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
-        {f:"name", d:"string req unique", c:"Name of service"},
-        {f:"ckey", d:"string", c:"consumer key"},
-        {f:"csec", d:"string", c:"consumer secret"},
-        {f:"data", d:"idcsv", c:"svc specific support data"}],
-     cache:{minutes:4*60},  //small instances, minimum change, used a lot
-     logflds:["name"]},
+     logflds:["editors", "date", "text"]},
 
     {entity:"Timeline", descr:"Points + suppviz*, or other timelines", fields:[
-        //A timeline is a collection of points and zero or more supplemental
-        //visualizations, or it can be a collection of timelines.  A
-        //timeline contains cached points with extra data removed.  These
-        //cached points are NOT updated unless the timeline is edited.
+        {f:"editors", d:"srchidcsv", c:"owner and others with edit access"},
         {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
-        //Timelines can be created by anyone, but only timelines created by
-        //a Contributor have an associated orgid.
-        {f:"orgid", d:"dbid", c:"Organization id (if org timeline)"},
-        //When a user searches for timelines, they see timelines they have
-        //created, remembered, started, and most recently accessed.
         {f:"name", d:"string req unique", c:"name for reference and search"},
         {f:"cname", d:"string", c:"canonical name for dupe checks and query"},
-        {f:"slug", d:"unique string", c:"opt permalink label if org timeline"},
+        {f:"slug", d:"unique string", c:"opt permalink label"},
         {f:"title", d:"string", c:"title for start dialog"},
         {f:"subtitle", d:"string", c:"2nd line text for start dialog"},
-        //By default, featured is "Unlisted" (don't display main page).
-        //Org timelines can be featured as
-        //  "Listed": no specific featuring
-        //  "-mm-dd": annually on and around month day
-        //  "-mm-Dn-Wn: annually on and around day and week of month
-        //  "Promoted": above general but below anniversaries
-        //Sample annual observations:
-        //  -01-W3-D1  Third Monday of January  (Martin Luther King, Jr. Day)
-        //  -03-31     March 31  (Cesar Chavez day)
-        {f:"featured", d:"string", c:"if/how/when to promote"},
-        //Timelines are language specific.  Translated timelines have
-        //translated names and are separate instances.
-        {f:"lang", d:"string", c:"language code for timeline e.g. en-US"},
-        //e.g. "This timeline is about 10 minutes long [Start]"
-        {f:"comment", d:"text", c:"popup startup text"},
+        {f:"featured", d:"string", c:"if/how/when to promote (*1)"},
+        {f:"lang", d:"string", c:"language code for timeline e.g. en-US (*2)"},
+        {f:"comment", d:"text", c:"popup startup text (*3)"},
         {f:"about", d:"text", c:"html to include in about text"},
-        //For non-aggregate timelines (ctype Points or Random), the ctype
-        //value may optionally specify the number of points presented before
-        //each save.  If not specified, the default is 6.  A Random points
-        //timeline may optionally specify a maximum number of points to
-        //present.  Points timelines present points in date order.
-        //Aggregate timelines present timelines in the order specified.
-        {f:"ctype", d:"string", c:"Timelines|Points|Random [:levcnt:rndmax]"},
+        {f:"kwds", d:"json", c:"communities/regions/categories/tags (*4)"},
+        {f:"ctype", d:"string", c:"Timelines|Points|Random (*5)"},
         {f:"cids", d:"idcsv", c:"Point ids or Timeline ids depending on ctype"},
+        {f:"rempts", d:"idcsv", c:"Removed point ids to avoid orphaning (*6)"},
         {f:"svs", d:"gencsv", c:"SuppViz module names"},
-        {f:"preb", d:"json", c:"preselected point data"}],
+        {f:"preb", d:"json", c:"preselected point data (*7)"}],
+        //*1 By default, featured is "Unlisted" (don't display main page).
+        //   Org timelines can be featured as
+        //    "Listed": no specific featuring
+        //    "-mm-dd": annually on and around month day
+        //    "-mm-Dn-Wn": annually on and around day and week of month
+        //    "Promoted": above general but below anniversaries (admin only)
+        //   Sample annual observations:
+        //    -01-W3-D1  Third Monday of January  (Martin Luther King, Jr. Day)
+        //    -03-31     March 31  (Cesar Chavez day)
+        //*2 Timelines are language specific.  Translated timelines have
+        //   translated names and are separate instances.
+        //*3 The popup start comment can optionally have a continue button
+        //   name e.g. "This timeline is about 10 minutes long" [Start]"
+        //*4 Keyword definitions selectable for points while editing
+        //   communities: e.g. African American, Native, Latinx, Asian American
+        //   regions: e.g. Boston, Puerto Rico, Hawai'i, Southwest
+        //   categories: e.g. Stats, Awards, Stereotypes
+        //   tags: e.g. other timeline specific grouping keywords
+        //*5 ctype Points or Random timelines may optionally be followed by
+        //   ":levcnt" where levcnt is the number of points presented before
+        //   each save.  If not specified, the default levcnt is 6.  Random
+        //   timelines may additionally specify a ":rndmax" which is the 
+        //   total number of points to present.  ctype Timelines timelines
+        //   present timelines in the order specified.  Otherwise points
+        //   are presented in chronological order.
+        //*6 rempts is maintained client side. An orphaned point is not
+        //   catastrophic and can be fixed in the db directly if needed.
+        //*7 The timeline preb contains points with extra data removed. The 
+        //   preb is NOT updated unless/until the timeline is edited.  If 
+        //   you edit a point, you need to manually refresh that point in
+        //   any of the containing timelines.  Batch updates are admin only.
      cache:{minutes:0},
      logflds:["name"]},
 
@@ -200,7 +164,27 @@ module.exports = (function () {
         {f:"tlname", d:"string", c:"timeline name for ease of reference"},
         {f:"data", d:"json", c:"timeline progress instance"}],
      cache:{minutes:0},
-     logflds:["userid", "tlid", "username", "tlname"]}];
+     logflds:["userid", "tlid", "username", "tlname"]},
+
+    {entity:"DayCount", descr:"Traffic access accumulator", fields:[
+        //Keep track of timeline fetches and progress saves to enable viewing
+        //activity.  Aggregated nightly.
+        {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
+        {f:"tstamp", d:"isod req", c:"server time zero of day"},
+        {f:"rtype", d:"string req", c:"count type (fetches, saves, summaries)",
+         enumvals:["tlfetch", "tlsave", "daysum"]},
+        {f:"detail", d:"json", c:"count details"}],
+     cache:{minutes:0},  //essentially write-only unless pulled for a report
+     logflds:["tstamp", "rtype"]},
+
+    {entity:"AppService", descr:"Processing service access", fields:[
+        {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
+        {f:"name", d:"string req unique", c:"Name of service"},
+        {f:"ckey", d:"string", c:"consumer key"},
+        {f:"csec", d:"string", c:"consumer secret"},
+        {f:"data", d:"idcsv", c:"svc specific support data"}],
+     cache:{minutes:4*60},  //small instances, minimum change, used a lot
+     logflds:["name"]}];
 
 
     function makeFieldDescriptionLookup (fds, aliasKey) {
