@@ -139,6 +139,58 @@ def update_prebuilt(tldat, tldb):
     tldat["preb"] = json.dumps(preb)
 
 
+def stats_from_data(csv):
+    if not csv:
+        return 0, 0, 0
+    ttl = 0
+    entries = csv.split(",")
+    for entry in entries:
+        elements = entry.split(";")
+        # ident = elements[0]
+        start = dbacc.ISO2dt(elements[1])
+        end = dbacc.ISO2dt(elements[2])
+        ttl += (end - start).total_seconds()
+    return ttl / len(entries), ttl, len(entries)
+
+
+def completion_stats(prog):
+    pavg, pttl, pcount = stats_from_data(prog["pts"])
+    savg, sttl, scount = 0, 0, 0
+    if "svs" in prog:
+        savg, sttl, scount = stats_from_data(prog["svs"])
+    return {"pavg":pavg, "pttl":pttl, "pcount":pcount,
+            "savg":savg, "sttl":sttl, "scount":scount}
+
+
+def pop_proginst_from_started(appuser, tlid):
+    # Seems wasteful to use multiple list comprehensions, but apparently best.
+    started = json.loads(appuser["started"])
+    popped = [pi for pi in started if pi["tlid"] == tlid]
+    if len(popped) <= 0:
+        raise ValueError("Timeline " + tlid + " not started")
+    started = [pi for pi in started if pi["tlid"] != tlid]
+    appuser["started"] = json.dumps(started)
+    return popped[0]
+
+
+def push_or_update_completion(appuser, tlc, proginst):
+    completed = json.loads(appuser["completed"])
+    other = [pi for pi in completed if pi["tlid"] != tlc["tlid"]]
+    cinst = [pi for pi in completed if pi["tlid"] == tlc["tlid"]]
+    if len(cinst) > 0:
+        cinst = cinst[0]
+    else:
+        cinst = {"tlid":tlc["tlid"], "count":0, "first":tlc["modified"]}
+    for fld in ["name", "title", "subtitle"]:  # set or update
+        cinst[fld] = tlc[fld]
+    cinst["latest"] = tlc["modified"]
+    if not cinst.get("count"):
+        cinst["count"] = 0
+    cinst["count"] += 1
+    cinst["stats"] = completion_stats(proginst)
+    completed = other.append(cinst)
+    appuser["completed"] = json.dumps(completed)
+
 
 ############################################################
 ## API endpoints:
@@ -244,3 +296,21 @@ def updtl():
     except ValueError as e:
         return util.serve_value_error(e)
     return util.respJSON(tldat)
+
+
+def notecomp():
+    """ Note Timeline completion in TLComp instance. """
+    try:
+        appuser, token = util.authenticate()
+        tlc = {"dsType":"TLComp", "userid":appuser["dsId"]}
+        tlc = util.set_fields_from_reqargs([
+            "tlid", "tlname", "tltitle", "tlsubtitle"], tlc)
+        proginst = pop_proginst_from_started(appuser, tlc["tlid"])
+        tlc["data"] = json.dumps(proginst)
+        tlc = dbacc.write_entity(tlc)
+        push_or_update_completion(appuser, tlc, proginst)
+        appuser = dbacc.write_entity(appuser, appuser["modified"])
+        dbacc.entcache.cache_put(appuser)  # ensure cache has latest
+    except ValueError as e:
+        return util.serve_value_error(e)
+    return util.respJSON([appuser, token], audience="private")

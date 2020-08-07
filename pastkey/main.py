@@ -78,6 +78,10 @@ def updpt(): # params: auth, Point data
 def updtl(): # params: auth, Timeline data
     return util.secure(tldat.updtl)
 
+@app.route('/api/notecomp', methods=['GET', 'POST'])
+def notecomp(): # params: auth, TLComp descriptive fields
+    return util.secure(tldat.notecomp)
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def startpage(path):

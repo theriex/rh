@@ -325,7 +325,6 @@ app.finale = (function () {
 
 
     function display (record) {
-        var ds; var tinst; var auth = ""; var data;
         app.dlg.close();  //in case left open
         tl = app.linear.timeline();
         //chart.colors = {bg:"#eefeff"};  /light blue
@@ -333,15 +332,16 @@ app.finale = (function () {
         initDisplayElements();
         if(record) {
             d3.select("#finctitle").text("Saving...");
-            ds = app.db.displayContext().ds;
-            tinst = ds[ds.length - 1];
-            data = {tlid:tinst.instid, tlname:tinst.name,
-                    tltitle:tinst.title || "",
-                    tlsubtitle:tinst.subtitle || ""};
+            var ds = app.db.displayContext().ds;
+            var tinst = ds[ds.length - 1];
+            var data = {tlid:tinst.dsId, tlname:tinst.name,
+                        tltitle:tinst.title || "",
+                        tlsubtitle:tinst.subtitle || ""};
             data = jt.objdata(data);
+            var auth = "";
             if(app.auth) {  //undefined if testing standalone
                 auth = app.auth(); }
-            jt.call("POST", "notecomp?" + auth, data,
+            jt.call("POST", "/api/notecomp?" + auth, data,
                     function (result) {
                         app.db.deserialize("AppUser", result[0]);
                         app.user.acc = result[0];

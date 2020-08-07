@@ -53,7 +53,7 @@ module.exports = (function () {
         {f:"lang", d:"string", c:"optional preferred language code"},
         {f:"settings", d:"json", c:"relative ages of generations etc"},
         {f:"remtls", d:"json", c:"remembered timeline ids/names (*2)"},
-        {f:"completed", d:"json", c:"[] tlid, name, first, latest"},
+        {f:"completed", d:"json", c:"[] tlid, name, first, count, latest"},
         {f:"started", d:"json", c:"[] timeline progress instances (*1)"},
         {f:"built", d:"json", c:"[] created timeline ids/names"}],
         //*1 Timeline Progress instance:
