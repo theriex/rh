@@ -314,3 +314,16 @@ def notecomp():
     except ValueError as e:
         return util.serve_value_error(e)
     return util.respJSON([appuser, token], audience="private")
+
+
+def findcomps():
+    """ Return completions from other people for the given timeline. """
+    try:
+        appuser, _ = util.authenticate()
+        tlid = dbacc.reqarg("tlid", "dbid", required=True)
+        where = ("tlid = " + tlid + " AND userid != " + appuser["dsId"] +
+                 " ORDER BY modified DESC LIMIT 50")
+        tlcs = dbacc.query_entity("TLComp", where)
+    except ValueError as e:
+        return util.serve_value_error(e)
+    return util.respJSON(tlcs)

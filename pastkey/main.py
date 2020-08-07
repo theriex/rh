@@ -82,6 +82,10 @@ def updtl(): # params: auth, Timeline data
 def notecomp(): # params: auth, TLComp descriptive fields
     return util.secure(tldat.notecomp)
 
+@app.route('/api/findcomps')
+def findcomps(): # params: auth, tlid
+    return util.secure(tldat.findcomps)
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def startpage(path):

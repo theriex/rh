@@ -201,11 +201,9 @@ app.finale = (function () {
                     {y:hr.y + 4 * hr.lh, opa:0.4},
                     {y:hr.y + 5 * hr.lh, opa:0.1},
                     {y:hr.y + 6 * hr.lh, opa:0.0}];
-        //PENDING: When a static daily stats page becomes available, fetch
-        //the names from there rather than by general query.
         if(!app.auth) {
             return startHonorRoll([{username:hr.username}]); }
-        url = "findcomps?" + app.auth() + "&tlid=" + tlid +
+        url = "/api/findcomps?" + app.auth() + "&tlid=" + tlid +
             jt.ts("&cb=", "second");
         jt.call("GET", url, null,
                 function (result) {
