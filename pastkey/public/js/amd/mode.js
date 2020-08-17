@@ -202,7 +202,7 @@ app.mode = (function () {
                     {m:"myacc",   n:"My&nbsp;Account",      c:"acc"},
                     {m:"signout", n:"Sign&nbsp;Out",        c:"acc"},
                     {m:"signin",  n:"Sign&nbsp;In",         c:"noacc"},
-                    {m:"newtl",   n:"Create&nbsp;Timeline", c:"acc"},
+                    {m:"tledit",  n:"Edit&nbsp;Timeline",   c:"acc"},
                     {m:"about",   n:"About"}];
         var acc = app.user && app.user.tok;
         var html = []; var item = "";
@@ -239,9 +239,7 @@ app.mode = (function () {
             jt.byId("popupdiv").style.visibility = "hidden";
             jt.byId("itemdispdiv").style.visibility = "hidden";
             jt.byId("suppvisdiv").style.visibility = "hidden";
-            switch(select) {  //update title if needed
-            case "refmode": jt.out("refdiv", "Reference Mode"); break;
-            case "newtl": jt.out("refdiv", "Create Timeline"); break; }
+            jt.out("refdiv", jt.tac2html(["div", {id:"reftitlediv"}]));
             switch(select) {  //next action
             case "visual": changeMode("interactive"); break;
             case "refmode": changeMode("reference"); break;
@@ -249,7 +247,7 @@ app.mode = (function () {
             case "about": app.support.display(ms.tl, "about"); break; 
             case "signin": app.dlg.signin(); break;
             case "myacc": app.dlg.myacc(); break;
-            case "newtl": app.tabular.tledit(); break;
+            case "tledit": app.tabular.tledit(); break;
             case "signout": app.dlg.logout(); break; } }
     }
 

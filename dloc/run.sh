@@ -6,5 +6,5 @@
 # and kill -SIGINT any leftover processes.
 gunicorn -b :8081 --pythonpath 'pastkey/' main:app &
 echo "gunicorn main process: $!"
-nginx -c /general/rh/dloc/nginx.conf
+nginx -c $HOME/general/rh/dloc/nginx.conf
 echo "# mysql.server start"

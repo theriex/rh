@@ -161,6 +161,6 @@ def convert_refs():
             dbacc.write_entity(cob, vck=cob["modified"])
 
 
-impfiles_root = "/general/temp/rhport/"   # local dev
+impfiles_root = "/Users/theriex/general/temp/rhport/"   # local dev
 load_data(impfiles_root)
 convert_refs()

@@ -397,7 +397,7 @@ app.tabular = (function () {
                 selmf:function (opt, tl) {
                     var ft = tl.featured || "";
                     switch(opt) {
-                        case "Obs M/D": return ft.match(/\-\d\d\-\d\d?/);
+                        case "Obs M/D": return ft.match(/-\d\d-\d\d?/);
                         case "Obs M/W": return ft.indexOf("-D") >= 0;
                         default: return ft === opt; } },
                 vizf:function () {
@@ -475,7 +475,7 @@ app.tabular = (function () {
         var fv = tl.featured || "";
         pf.keys.forEach(function (key) {
             if(pf[key].type === "daynuminput") {
-                var val = fv.match(/\-\d\d\-(\d\d?)/);
+                var val = fv.match(/-\d\d-(\d\d?)/);
                 if(val) {
                     val = Number(val[1]); }
                 else {
@@ -536,20 +536,26 @@ app.tabular = (function () {
     // Timeline Editing
     ////////////////////////////////////////
 
+    //options is a [] {value, text, selected, group}.  If group changes
     function makeSelect (domid, onchangestr, options) {
         var spec = {id:domid, chgstr:onchangestr, opts:options};
         return {
-            tac: function () {
-                var html = [];
+            ctrlHTML: function () {
+                var st = {html:[], group:"", gopts:null, pushto:"html"};
                 spec.opts.forEach(function (opt) {
                     var attributes = {value:opt.value, id:"opt" + opt.value};
                     if(opt.selected) {
                         attributes.selected = "selected"; }
-                    html.push(["option", attributes,
-                               opt.text || opt.value]); });
-                return ["select", {name:spec.id, id:spec.id,
-                                   onchange:spec.chgstr},
-                        html]; },
+                    if(opt.group && opt.group !== st.group) {
+                        st.gopts = [];
+                        st.pushto = "gopts";
+                        st.html.push(["optgroup", {label:opt.group},
+                                      st.gopts]); }
+                    st[st.pushto].push(["option", attributes,
+                                        opt.text || opt.value]); });
+                return jt.tac2html(["select", {name:spec.id, id:spec.id,
+                                               onchange:spec.chgstr},
+                                    st.html]); },
             setValue: function (val) {
                 jt.byId(spec.id).value = val; },
             getValue: function () {
@@ -678,68 +684,6 @@ app.tabular = (function () {
         resetPointWorkingSetValues("off");
         app.allpts.forEach(function (pt) {
             updatePointWorkingSetValues(pt); });
-    }
-
-
-    function verifyDisplayElements () {
-        var html; var ps;
-        if(jt.byId("pointsdispdiv")) {  //already set up
-            return; }
-        initTimelineSettingsFields();
-        ps = [{value:"All", text:"All Points"},
-              {value:"Timeline", text:"Timeline Points", selected:"selected"},
-              {value:"Suppviz", text:"Visualizations"}];
-        if(app.user && app.user.acc && app.user.acc.orgid && 
-           app.user.acc.orgid !== "0") {
-            ps.splice(1, 0, {value:"Org", text:"Organization Points"}); }
-        initPointWorkingSetValues();
-        ptflds.selpool = makeSelect(
-            "ptdpsel", jt.fs("app.tabular.ptdisp('reset')"), ps);
-        html = [["div", {id:"tcontheaddiv"},
-                 [["div", {id:"tlctxdiv"}, ""],  //timeline context
-                  ["div", {id:"ptctxdiv"},       //points context
-                   [["div", {id:"ptdispmodediv"},
-                     [ptflds.selpool.tac(),
-                      ["input", {type:"number", cla:"yearin",
-                                 onchange:jt.fs("app.tabular.ptdisp()"),
-                                 name:"yearstartin", id:"yearstartin",
-                                 min:wsv.yr.min, max:wsv.yr.max, 
-                                 value:wsv.yr.min}],
-                      ["span", {id:"srchinspan"}, "&nbsp;to&nbsp;"],
-                      ["input", {type:"number", cla:"yearin",
-                                 onchange:jt.fs("app.tabular.ptdisp()"),
-                                 name:"yearendin", id:"yearendin",
-                                 min:wsv.yr.min, max:wsv.yr.max, 
-                                 value:wsv.yr.max}]]],
-                    ["div", {id:"ptfilterdiv"},  //point filtering
-                     [["div", {id:"ptkeyfiltlinkdiv"},
-                       ["a", {href:"#keywordfilter", title:"Keyword Selections",
-                              onclick:jt.fs("app.tabular.keysel(event)")},
-                        ["img", {src:app.dr("img/keyicon.png"),
-                                 id:"keyiconimg"}]]],
-                      ["input", {type:"text", id:"srchin", size:23,
-                                 placeholder:"Filter by text...",
-                                 value:app.mode.searchstate().qstr, 
-                                 oninput:jt.fs("app.tabular.ptdisp()")}],
-                      ["div", {id:"downloadlinkdiv"}, ""]]]]]]],
-                ["div", {id:"pointsdispdiv"}, ""]];
-        jt.out("tcontdiv", jt.tac2html(html));
-    }
-
-
-    function adjustPointsAreaDisplayHeight () {
-        var ptsh = window.innerHeight - 
-            (jt.byId("tcontheaddiv").offsetHeight + 30);
-        jt.byId("pointsdispdiv").style.height = String(ptsh) + "px";
-    }
-
-
-    function display () {
-        mode = "refdisp";
-        verifyDisplayElements();
-        jt.byId("tlctxdiv").style.display = "none";
-        adjustPointsAreaDisplayHeight();
-        app.tabular.ptdisp();
     }
 
 
@@ -900,15 +844,13 @@ app.tabular = (function () {
 
 
     function editTimeline () {
-        var html;
-        app.mode.chmode("reference");  //verify correct display
-        mode = "tledit";
+        mode = "tledit"; 
         jt.byId("tlctxdiv").style.display = "block";
         tlflds.seltype = makeSelect("tlseltype", jt.fs("app.tabular.tledchg()"),
                                     [{value:"Points"}, {value:"Timelines"}]);
         tlflds.selseq = makeSelect("tlselseq", jt.fs("app.tabular.tledchg()"),
                                    [{value:"Sequential"}, {value:"Random"}]);
-        html = [["div", {id:"etlselpropdiv"},
+        var html = [["div", {id:"etlselpropdiv"},
                  [timelineSelectHTML(),
                   ["a", {href:"#settings",
                          onclick:jt.fs("app.tabular.tlset()")},
@@ -948,7 +890,7 @@ app.tabular = (function () {
         //jt.log("st.prev: " + st.prev + ", st.now: " + st.now);
         if(st.prev !== st.now) {
             //jt.log("timelineSettings changing pointsdispdiv height");
-            adjustPointsAreaDisplayHeight(); }
+            dispmgr.adjustPointsAreaDisplayHeight(); }
     }
 
 
@@ -1140,7 +1082,7 @@ app.tabular = (function () {
                     app.user.acc = result[1];
                     editTimeline();  //redraw reflecting new/updated name
                     jt.out("etlsetbuttonsdiv", jt.tac2html(tlsetButtonsHTML()));
-                    adjustPointsAreaDisplayHeight(); },
+                    dispmgr.adjustPointsAreaDisplayHeight(); },
                 function (code, errtxt) {
                     jt.log("saveTimeline " + code + " " + errtxt);
                     jt.out("etlsetbuttonsdiv", jt.tac2html(tlsetButtonsHTML()));
@@ -1536,11 +1478,327 @@ app.tabular = (function () {
     }
 
 
+    function mdfs (mgrfname, ...args) {
+        mgrfname = mgrfname.split(".");
+        return jt.fs("app.tabular.managerDispatch('" + mgrfname[0] + "','" +
+                     mgrfname[1] + "'" + app.paramstr(args) + ")");
+    }
+
+
+    //Aggregation Manager handles which points are available for display.
+    var aggmgr = {
+        state: {},
+        init: function (mode) {
+            aggmgr.state.mode = mode;
+            if(mode === "tledit") {
+                jt.out("reftitlediv", jt.tac2html(
+                    [["div", {cla:"tletldiv"}, "Edit Timeline"],
+                     ["div", {cla:"tletrdiv"}, "Mix-In"]])); }
+            else { //"refdisp"
+                jt.out("reftitlediv", "Reference Mode"); } },
+        urlTimeline: function () {
+            return app.db.displayContext().lastTL; },
+        getTLName: function (tlid) {
+            var tl = app.refmgr.cached("Timeline", tlid);
+            if(tl) { return tl.name; }
+            app.refmgr.getFull("Timeline", tlid, aggmgr.updateControls);
+            return tlid; },
+        getGrouping: function (tl) {
+            switch(tl.featured) {
+            case "Unlisted": return "Unlisted";
+            case "Archived": return "Archived";
+            case "Deleted": return "Deleted";
+            default: return "Listed"; } },
+        isEditableTL: function (tl) {
+            return tl.editors && app.user.acc && 
+                tl.editors.csvcontains(app.user.acc.dsId); },
+        mergeKnownTLs: function (tls, ovrs) {
+            ovrs = ovrs || {};
+            aggmgr.state.knownTLs = aggmgr.state.knownTLs || {};
+            if(!Array.isArray(tls)) {
+                if(tls && Object.keys(tls).length) { tls = [tls]; }
+                else { tls = []; } }
+            tls.forEach(function (tl) {
+                aggmgr.state.knownTLs[tl.tlid] = {
+                    tlid:tl.tlid,
+                    name:tl.name || aggmgr.getTLName(tl.tlid),
+                    group:ovrs.group || aggmgr.getGrouping(tl),
+                    edit:ovrs.edit || aggmgr.isEditableTL(tl)};
+                if(aggmgr.state.knownTLs[tl.tlid].group === "Deleted") {
+                    delete aggmgr.state.knownTLs[tl.tlid]; } }); },
+        collectKnownTimelines: function () {
+            if(app.user.acc) {
+                aggmgr.mergeKnownTLs(app.user.acc.remtls);
+                aggmgr.mergeKnownTLs(app.user.acc.built, {editable:true});
+                aggmgr.mergeKnownTLs(app.user.acc.started);
+                aggmgr.mergeKnownTLs(app.user.acc.built); }
+            if(aggmgr.state.ftls) {
+                aggmgr.mergeKnownTLs(aggmgr.state.ftls, {group:"Featured"}); }
+            else {
+                app.mode.featuredTimelines(function (tls) {
+                    aggmgr.state.ftls = tls;
+                    aggmgr.updateControls(); }); }
+            aggmgr.mergeKnownTLs(aggmgr.urlTimeline(), {group:"Current"});
+            var so = ["Current", "Featured", "Listed", "Unlisted", "Archived"];
+            aggmgr.state.knownTLs.sort(function (a, b) {
+                return so.indexOf(a.group) - so.indexOf(b.group); }); },
+        makeTimelineSelector: function (sid, editable) {
+            var opts = [];
+            if(editable) {
+                opts.push({value:"new", text:"New Timeline"}); }
+            else {  //
+                opts.push({value:"none", text:"None"}); }
+            aggmgr.state.knownTLs.forEach(function (ktl) {
+                opts.push({value:ktl.tlid, text:ktl.name, group:ktl.group}); });
+            aggmgr.state[sid] = makeSelect(sid, mdfs("aggmgr.updateDisplay"), 
+                                           opts); },
+        updateControls: function () {
+            if(aggmgr.state.mode === "tledit") {
+                aggmgr.collectKnownTimelines();
+                aggmgr.makeTimelineSelector("edsel", "edit");
+                aggmgr.makeTimelineSelector("mixsel");
+                jt.out("aggctrlsdiv", jt.tac2html(
+                    [["div", {cla:"tletldiv"},
+                      [aggmgr.state.edsel.ctrlHTML(),
+                       stgmgr.ctrlHTML()]],
+                     ["div", {cla:"tletrdiv"},
+                      aggmgr.state.mixsel.ctrlHTML()]])); }
+            filtmgr.updateControls(); },
+        updateDisplay: function () {
+            aggmgr.rebuildPoints();
+            filtmgr.filterPoints(); },
+        getPoints: function () {
+            if(!aggmgr.state.points) {
+                aggmgr.rebuildPoints(); }
+            return aggmgr.state.points; },
+        mergePoints: function (sel) {
+            var tlid = sel.getValue();
+            if(tlid.match(/\d+/)) {
+                var tl = app.refmgr.cached("Timeline", tlid);
+                if(tl) {
+                    aggmgr.state.points = aggmgr.state.points.concat(tl.preb);
+                    return; }
+                app.refmgr.getFull("Timeline", tlid, aggmgr.updateDisplay); } },
+        rebuildPoints: function () {
+            if(aggmgr.state.mode !== "tledit") {
+                aggmgr.state.points = aggmgr.urlTimeline().preb;
+                return; }
+            aggmgr.state.points = [];
+            aggmgr.mergePoints(aggmgr.state.edsel);
+            aggmgr.mergePoints(aggmgr.state.mixsel); }
+    };
+
+
+    //Settings Manager handles timeline fields and update.
+    var stgmgr = {
+        ctrlHTML: function () {
+            return jt.tac2html(
+                ["a", {href:"#settings", title:"Toggle Timeline field settings",
+                       onclick:mdfs("stgmr.toggleSettings")},
+                 ["img", {src:app.dr("img/settings.png"),
+                          cla:"formicoimg"}]]); }
+    };
+
+
+    //Year Range Manager provides start/end year bounding if relevent.
+    var yrmgr = {
+        state: {},
+        reset: function () {
+            yrmgr.state = {active:false, yrmin:0, yrmax:0};
+            var pts = aggmgr.getPoints();
+            if(pts.length > 1) {
+                yrmgr.state.active = true;
+                yrmgr.state.yrmin = pts[0].start.year;
+                yrmgr.state.yrmax = pts[pts.length - 1].start.year; } },
+        valchanged: function () {
+            yrmgr.state.yrmin = jt.byId("yearstartin").value;
+            yrmgr.state.yrmax = jt.byId("yearendin").value;
+            if(yrmgr.state.yrmin > yrmgr.state.yrmax) {
+                yrmgr.state.yrmin = yrmgr.state.yrmax;
+                jt.byId("yearstartin").value = yrmgr.state.yrmin; }
+            if(yrmgr.state.yrmax < yrmgr.state.yrmin) {
+                yrmgr.state.yrmax = yrmgr.state.yrmin;
+                jt.byId("yearendin").value = yrmgr.state.yrmaz; }
+            filtmgr.filterPoints(); },
+        makeYearInput: function (domid, val) {
+            return jt.tac2html(
+                ["input", {type:"number", cla:"yearin", value:val,
+                           onchange:mdfs("yrmgr.valchanged"),
+                           id:domid, name:domid,
+                           min:yrmgr.state.yrmin, max:yrmgr.state.yrmax}]); },
+        ctrlHTML: function () {
+            if(!yrmgr.state.active) { return ""; }
+            return jt.tac2html(
+                ["div", {id:"yrmgrctrlsdiv"},
+                 [yrmgr.makeYearInput("yearstartin", yrmgr.state.yrmin),
+                  ["span", {id:"srchinspan"}, "&nbsp;to&nbsp;"],
+                  yrmgr.makeYearInput("yearendin", yrmgr.state.yrmax)]]); },
+        isMatchingPoint: function (pt) {
+            return ((pt.start.year >= yrmgr.state.yrmin) &&
+                    (pt.start.year <= yrmgr.state.yrmax)); }
+    };
+
+
+    //Search Manager provides keyword and general text search
+    var srchmgr = {
+        state: {},
+        ptkfs: ["communities", "regions", "categories", "tags"],
+        reset: function () {
+            srchmgr.state = {all:{}, selkeys:[], qstr:"", pqs:{}};
+            aggmgr.getPoints().forEach(function (pt) {
+                srchmgr.ptkfs.forEach(function (fld) {
+                    var fldkcsv = pt[fld] || "";
+                    fldkcsv.csvarray().forEach(function (val) {
+                        srchmgr.state.all[val.toLowerCase()] = val; }); }); });
+            Object.keys(srchmgr.state.all).forEach(function (ak) {
+                srchmgr.state.selkeys.push(srchmgr.state.all[ak]); });
+            srchmgr.state.selkeys.sort(); },
+        ctrlHTML: function () {
+            var srchinattrs = {type:"search", id:"srchin", size:26,
+                               placeholder:"Search text",
+                               onchange:mdfs("srchmgr.valchanged"),
+                               value:""};  //value set by UI interaction only
+            var dlos = [];  //datalist options from keywords, if available
+            srchmgr.state.selkeys.forEach(function (sk) {
+                sk = sk.trim();  //verify no surrounding whitespace
+                if(sk) {
+                    if(/\S+\s\S+/.test(sk)) {  //keyword has a space in it
+                        sk = "&quot;" + sk + "&quot;"; }
+                    dlos.push(["option", {value:sk}]); } });
+            if(dlos.length) {
+                srchinattrs.list = "srchinoptsdl"; }
+            var divcontents = [["input", srchinattrs]];
+            if(dlos.length) {
+                divcontents.push(["datalist", {id:"srchinoptsdl"}, dlos]); }
+            divcontents.push(
+                ["a", {href:"#search", id:"srchlink", title:"Search items",
+                       onclick:mdfs("srchmgr.valchanged")},
+                 ["img", {src:app.dr("img/search.png")}]]);
+            return jt.tac2html(["div", {id:"srchmgrdiv"}, divcontents]); },
+        valchanged: function () {
+            srchmgr.state.qstr = jt.byId("srchin").value || "";
+            srchmgr.state.qstr = srchmgr.state.qstr.trim();
+            if(!srchmgr.state.pqs[srchmgr.state.qstr]) {
+                srchmgr.parseSearch(srchmgr.state.qstr); }
+            filtmgr.filterPoints(); },
+        //A search can consist of simple strings and/or quoted strings,
+        //possibly preceded by a "+" indicating that the string should be
+        //treated as an additional filter.
+        parseSearch: function (qstr) {
+            var pq = {toks:[], pfts:[]};  //tokens and post-match filter tokens
+            pq.toks = qstr.toLowerCase().match(/\+?"[^"]*"*|\S+/g);
+            pq.pfts = pq.toks.filter((tok) => tok.indexOf("+") === 0);
+            pq.toks = pq.toks.filter((tok) => tok && tok.indexOf("+") !== 0);
+            pq.pfts = pq.pfts.map((tok) => srchmgr.opstrip(tok));
+            pq.toks = pq.toks.map((tok) => srchmgr.opstrip(tok));
+            srchmgr.state.pqs[qstr] = pq; },
+        opstrip: function (tok) {
+            if(tok.indexOf("+") === 0) {
+                tok = tok.slice(1); }
+            if(tok.indexOf("\"") === 0) {
+                tok = tok.slice(1, -1); }
+            return tok; },
+        verifySearchFilterText: function (pt) {
+            if(pt.srchFiltTxt) { return; }
+            var flds = ["source", "text", "refs", "communities", "regions",
+                        "categories", "tags"];
+            pt.srchFiltTxt = flds.reduce((a, c) => pt[a] + " " + pt[c]);
+            pt.srchFiltTxt = pt.srchFiltTxt.toLowerCase(); },
+        isMatchingPoint: function (pt) {
+            if(!srchmgr.state.qstr) { return true; }
+            srchmgr.verifySearchFilterText(pt);
+            var pq = srchmgr.state.pqs[srchmgr.state.qstr];
+            if(pq.toks.some((tok) => pt.srchFiltTxt.indexOf(tok) >= 0) &&
+               pq.pfts.every((pft) => pt.srchFiltTxt.indexOf(pft) >= 0)) {
+                return true; }
+            return false; }
+    };
+
+
+    //Download Manager provides for downloading selected points
+    var dlmgr = {
+        ctrlHTML: function () {
+            return jt.tac2html(
+                ["div", {id:"downloadlinkdiv"},
+                 ["a", {href:"#Download", id:"downloadlink",
+                        title:"Download displayed points",
+                        onclick:mdfs("dlmgr.showDialog")},
+                  ["img", {src:app.dr("img/download.png"),
+                           cla:"downloadlinkimg"}]]]); }
+        //showDialog: function () showDownloadDialog
+    };
+
+
+    //Filter Manager handled which available points are currently displayed.
+    var filtmgr = {
+        state: {},
+        updateControls: function () {
+            filtmgr.state.dispsel = makeSelect(
+                "dispsel", mdfs("filtmgr.updateDisplay"), [
+                    {value:"Timeline", text:"Timeline Points"},
+                    {value:"Suppviz", text:"Visualizations"}]);
+            yrmgr.reset();
+            srchmgr.reset();
+            jt.out("filtctrlsdiv", jt.tac2html(
+                [["div", {id:"ftrdiv"},  //filter timeline and range
+                  [filtmgr.state.dispsel.ctrlHTML(),
+                   yrmgr.ctrlHTML()]],
+                 ["div", {id:"fsddiv"},  //filter search and download
+                  [srchmgr.ctrlHTML(),
+                   dlmgr.ctrlHTML()]]])); },
+        filterPoints: function () {
+            var pts = [];
+            aggmgr.getPoints().forEach(function (pt) {
+                if(yrmgr.isMatchingPoint(pt) &&
+                   srchmgr.isMatchingPoint(pt)) {
+                    pts.push(pt); } });
+            dispmgr.displayPoints(pts); }
+    };
+
+
+    var dispmgr = {
+        display: function (mode) {
+            aggmgr.init(mode || "refdisp");
+            jt.out("tcontdiv", jt.tac2html(
+                [["div", {id:"tcontheaddiv"},
+                  [["div", {id:"aggctrlsdiv"}],
+                   ["div", {id:"filtctrlsdiv"}]]],
+                 ["div", {id:"pointsdispdiv"}]]));
+            aggmgr.updateControls();  //calls filtmgr.updateControls
+            dispmgr.adjustPointsAreaDisplayHeight();
+            aggmgr.updateDisplay(); },
+        adjustPointsAreaDisplayHeight: function () {
+            var ptsh = window.innerHeight - 
+                (jt.byId("tcontheaddiv").offsetHeight + 30);
+            jt.byId("pointsdispdiv").style.height = String(ptsh) + "px"; },
+        displayPoints: function (pts) {
+            if(!pts || !pts.length) {
+                return jt.out("pointsdispdiv", "No points"); }
+            var outdiv = jt.byId("pointsdispdiv");
+            pts.forEach(function (pt) {
+                if(!pt.stats || pt.stats.status !== "deleted") {
+                    var ptdiv = document.createElement("div");
+                    ptdiv.innerHTML = dispmgr.pointHTML(pt);
+                    outdiv.appendChild(ptdiv); } }); },
+        pointImgSrc: function (pt) {
+            var src = app.dr("img/blank.png");
+            if(pt.pic) {
+                src = app.dr("/api/obimg") + "?dt=Point&di=" + pt.dsId; }
+            return src; },
+        pointHTML: function (pt) {
+            return jt.tac2html(
+                ["div", {cla:"trowdiv", id:"trowdiv" + pt.instid},
+                 [["img", {cla:"tptimg", src:dispmgr.pointImgSrc(pt)}],
+                  ["div", {cla:"tpddiv"}, pt.date],
+                  ["div", {cla:"tptxtdiv"}, pt.text]]]); }
+    };
+
+
     return {
-        display: function () { display(); },
+        display: function () { dispmgr.display("refdisp"); },
         showDownloadDialog: function () { showDownloadDialog(); },
         dldrad: function (idx) { selectDownloadOption(idx); },
-        tledit: function () { editTimeline(); },
+        tledit: function () { dispmgr.display("tledit"); },
         tlset: function () { timelineSettings(); },
         tledchg: function (s) { timelineEditFieldChange(s); },
         savetl: function () { saveTimeline(); },

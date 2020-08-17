@@ -52,26 +52,43 @@ module.exports = (function () {
         //user settings and traversal data
         {f:"lang", d:"string", c:"optional preferred language code"},
         {f:"settings", d:"json", c:"relative ages of generations etc"},
-        {f:"remtls", d:"json", c:"remembered timeline ids/names (*2)"},
-        {f:"completed", d:"json", c:"[] tlid, name, first, count, latest"},
-        {f:"started", d:"json", c:"[] timeline progress instances (*1)"},
-        {f:"built", d:"json", c:"[] created timeline ids/names"}],
+        {f:"started", d:"json", c:"[] Timeline Progress instances (*1)"},
+        {f:"completed", d:"json", c:"[] Timeline Completion instances (*2)"},
+        {f:"remtls", d:"json", c:"[] non-editable remembered timelines (*3)"},
+        {f:"built", d:"json", c:"[] created or editable timelines (*3)"}],
         //*1 Timeline Progress instance:
-        // tlid: id of top-level timeline (aggregated timelines not separated)
-        // st: ISO when the timeline was started (ISO, not wallclock)
-        // svs*: CSV of svid;isoShown;isoClosed;dispcount
-        // pts: CSV of ptid;isoShown;isoClosed;dispcount;tagcodes
-        //    tagcodes: 'r' (remembered) point noted to revisit later
-        //              'k' (known) knew this before
-        //              'u' (unknown) did not know this before
-        //              '1' (1st try) guessed date correctly on first click
-        //              '2' (2nd try) guessed date correctly on second click
-        //              '3' (3rd try) guessed date correctly on third click
-        //              '4' (4th try) guessed date correctly on fourth click
-        //*2 Remembered, completed, started, and built timelines are what is
-        //   made available for search.  You learn about new timelines through
-        //   what is featured or links you get from friends.  There is no
-        //   general user global timeline search.
+        //     tlid: id of timeline (top-level if aggregate)
+        //     st: ISO when the timeline was started (ISO, not wallclock)
+        //     svs*: CSV of svid;isoShown;isoClosed;dispcount
+        //     pts: CSV of ptid;isoShown;isoClosed;dispcount;tagcodes
+        //        tagcodes: 'r' (remembered) point noted to revisit later
+        //                  'k' (known) knew this before
+        //                  'u' (unknown) did not know this before
+        //                  '1' (1st try) guessed date correctly on first click
+        //                  '2' (2nd try) guessed date correctly on second click
+        //                  '3' (3rd try) guessed date correctly on third click
+        //                  '4' (4th try) guessed date correctly on fourth click
+        //*2 Timeline Completion instance:
+        //     tlid: id of top-level timeline
+        //     name: name of timeline (when completion recorded)
+        //     title: title of timeline
+        //     subtitle: subtitle of timeline
+        //     count: how many times the timeline has been completed
+        //     first: ISO when the timeline was first completed
+        //     latesst: ISO when the timeline was most recently completed
+        //     stats:
+        //         pttl: total time spent on all points (in seconds)
+        //         pcount: the total number of points in the timeline
+        //         pavg: the average time spent on each point
+        //         sttl: total time spent on all supplemental visualizations
+        //         scount: total number of suppvizs in timeline
+        //         savg: average time spent on suppvizs
+        //*3 Timeline Memory instance:
+        //     tlid: id of timeline
+        //     name: name of timeline
+        //     featured: featured value from timeline
+        //   If a change in editors is found, the client switches the memory
+        //   instance between remtls and built as needed.
      cache:{minutes:2*60, manualadd:true}, //fast auth after initial load
      logflds:["email", "name"]},
 
@@ -122,12 +139,14 @@ module.exports = (function () {
         {f:"rempts", d:"idcsv", c:"Removed point ids to avoid orphaning (*6)"},
         {f:"svs", d:"gencsv", c:"SuppViz module names"},
         {f:"preb", d:"json", c:"preselected point data (*7)"}],
-        //*1 By default, featured is "Unlisted" (don't display main page).
-        //   Org timelines can be featured as
-        //    "Listed": no specific featuring
-        //    "-mm-dd": annually on and around month day
-        //    "-mm-Dn-Wn": annually on and around day and week of month
-        //    "Promoted": above general but below anniversaries (admin only)
+        //*1 Promotional display indicator:
+        //     "Unlisted" Don't display main page
+        //     "Listed": Ok to recommend to all users
+        //     "-mm-dd": Promote annually on and around month day
+        //     "-mm-Dn-Wn": Promote annually on and around day and week of month
+        //     "Promoted": Promote over Listed but below annuals (admin only)
+        //     "Archived": Unlisted, and sorted below Unlisted in UI.
+        //     "Deleted": Don't show anymore.  In db for completions refs.
         //   Sample annual observations:
         //    -01-W3-D1  Third Monday of January  (Martin Luther King, Jr. Day)
         //    -03-31     March 31  (Cesar Chavez day)
