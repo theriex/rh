@@ -86,6 +86,10 @@ def notecomp(): # params: auth, TLComp descriptive fields
 def findcomps(): # params: auth, tlid
     return util.secure(tldat.findcomps)
 
+@app.route('/api/featured')
+def featured():
+    return tldat.featured()
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def startpage(path):

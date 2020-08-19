@@ -541,18 +541,22 @@ app.tabular = (function () {
         var spec = {id:domid, chgstr:onchangestr, opts:options};
         return {
             ctrlHTML: function () {
-                var st = {html:[], group:"", gopts:null, pushto:"html"};
+                var st = {html:[], group:"", gopts:null};
                 spec.opts.forEach(function (opt) {
                     var attributes = {value:opt.value, id:"opt" + opt.value};
                     if(opt.selected) {
                         attributes.selected = "selected"; }
-                    if(opt.group && opt.group !== st.group) {
-                        st.gopts = [];
-                        st.pushto = "gopts";
-                        st.html.push(["optgroup", {label:opt.group},
-                                      st.gopts]); }
-                    st[st.pushto].push(["option", attributes,
-                                        opt.text || opt.value]); });
+                    if(opt.group) {  //push option into optgroup
+                        if(opt.group !== st.group) {  //create new optgroup
+                            st.group = opt.group;
+                            st.gopts = [];
+                            st.html.push(["optgroup", {label:opt.group},
+                                          st.gopts]); }
+                        st.gopts.push(["option", attributes, 
+                                       opt.text || opt.value]); }
+                    else {  //not grouped option
+                        st.html.push(["option", attributes,
+                                      opt.text || opt.value]); } });
                 return jt.tac2html(["select", {name:spec.id, id:spec.id,
                                                onchange:spec.chgstr},
                                     st.html]); },
@@ -1519,39 +1523,43 @@ app.tabular = (function () {
                 if(tls && Object.keys(tls).length) { tls = [tls]; }
                 else { tls = []; } }
             tls.forEach(function (tl) {
-                aggmgr.state.knownTLs[tl.tlid] = {
-                    tlid:tl.tlid,
-                    name:tl.name || aggmgr.getTLName(tl.tlid),
+                tl.dsType = "Timeline";
+                tl.dsId = tl.dsId || tl.tlid;
+                aggmgr.state.knownTLs[tl.dsId] = {
+                    tlid:tl.dsId,
+                    name:tl.name || aggmgr.getTLName(tl.dsId),
                     group:ovrs.group || aggmgr.getGrouping(tl),
                     edit:ovrs.edit || aggmgr.isEditableTL(tl)};
-                if(aggmgr.state.knownTLs[tl.tlid].group === "Deleted") {
-                    delete aggmgr.state.knownTLs[tl.tlid]; } }); },
+                if(aggmgr.state.knownTLs[tl.dsId].group === "Deleted") {
+                    delete aggmgr.state.knownTLs[tl.dsId]; } }); },
         collectKnownTimelines: function () {
             if(app.user.acc) {
                 aggmgr.mergeKnownTLs(app.user.acc.remtls);
                 aggmgr.mergeKnownTLs(app.user.acc.built, {editable:true});
                 aggmgr.mergeKnownTLs(app.user.acc.started);
                 aggmgr.mergeKnownTLs(app.user.acc.built); }
-            if(aggmgr.state.ftls) {
-                aggmgr.mergeKnownTLs(aggmgr.state.ftls, {group:"Featured"}); }
-            else {
+            if(!aggmgr.state.ftls) {  //featured timelines not available yet
+                aggmgr.state.ftls = [];  //continue with none for now
                 app.mode.featuredTimelines(function (tls) {
                     aggmgr.state.ftls = tls;
                     aggmgr.updateControls(); }); }
+            aggmgr.mergeKnownTLs(aggmgr.state.ftls, {group:"Featured"});
             aggmgr.mergeKnownTLs(aggmgr.urlTimeline(), {group:"Current"});
+            aggmgr.state.sktls = Object.values(aggmgr.state.knownTLs);
             var so = ["Current", "Featured", "Listed", "Unlisted", "Archived"];
-            aggmgr.state.knownTLs.sort(function (a, b) {
+            aggmgr.state.sktls.sort(function (a, b) {
                 return so.indexOf(a.group) - so.indexOf(b.group); }); },
         makeTimelineSelector: function (sid, editable) {
             var opts = [];
             if(editable) {
                 opts.push({value:"new", text:"New Timeline"}); }
-            else {  //
+            else {  //mix-in
                 opts.push({value:"none", text:"None"}); }
-            aggmgr.state.knownTLs.forEach(function (ktl) {
-                opts.push({value:ktl.tlid, text:ktl.name, group:ktl.group}); });
-            aggmgr.state[sid] = makeSelect(sid, mdfs("aggmgr.updateDisplay"), 
-                                           opts); },
+            aggmgr.state.sktls.forEach(function (ktl) {
+                if((editable && ktl.edit) || (!editable && !ktl.edit)) {
+                    opts.push({value:ktl.tlid, text:ktl.name,
+                               group:ktl.group}); } });
+            aggmgr.state[sid] = makeSelect(sid, mdfs("aggmgr.tlchg"), opts); },
         updateControls: function () {
             if(aggmgr.state.mode === "tledit") {
                 aggmgr.collectKnownTimelines();
@@ -1564,8 +1572,9 @@ app.tabular = (function () {
                      ["div", {cla:"tletrdiv"},
                       aggmgr.state.mixsel.ctrlHTML()]])); }
             filtmgr.updateControls(); },
-        updateDisplay: function () {
+        tlchg: function () {
             aggmgr.rebuildPoints();
+            filtmgr.updateControls();
             filtmgr.filterPoints(); },
         getPoints: function () {
             if(!aggmgr.state.points) {
@@ -1578,7 +1587,7 @@ app.tabular = (function () {
                 if(tl) {
                     aggmgr.state.points = aggmgr.state.points.concat(tl.preb);
                     return; }
-                app.refmgr.getFull("Timeline", tlid, aggmgr.updateDisplay); } },
+                app.refmgr.getFull("Timeline", tlid, aggmgr.tlchg); } },
         rebuildPoints: function () {
             if(aggmgr.state.mode !== "tledit") {
                 aggmgr.state.points = aggmgr.urlTimeline().preb;
@@ -1607,9 +1616,14 @@ app.tabular = (function () {
             yrmgr.state = {active:false, yrmin:0, yrmax:0};
             var pts = aggmgr.getPoints();
             if(pts.length > 1) {
+                yrmgr.verifyPointStartData(pts);
                 yrmgr.state.active = true;
                 yrmgr.state.yrmin = pts[0].start.year;
                 yrmgr.state.yrmax = pts[pts.length - 1].start.year; } },
+        verifyPointStartData: function (pts) {
+            pts.forEach(function (pt) {
+                if(!pt.start) {
+                    app.db.parseDate(pt); } }); },
         valchanged: function () {
             yrmgr.state.yrmin = jt.byId("yearstartin").value;
             yrmgr.state.yrmax = jt.byId("yearendin").value;
@@ -1634,6 +1648,7 @@ app.tabular = (function () {
                   ["span", {id:"srchinspan"}, "&nbsp;to&nbsp;"],
                   yrmgr.makeYearInput("yearendin", yrmgr.state.yrmax)]]); },
         isMatchingPoint: function (pt) {
+            if(!yrmgr.state.active) { return true; }
             return ((pt.start.year >= yrmgr.state.yrmin) &&
                     (pt.start.year <= yrmgr.state.yrmax)); }
     };
@@ -1758,15 +1773,17 @@ app.tabular = (function () {
 
     var dispmgr = {
         display: function (mode) {
+            app.mode.chmode("reference");  //verify screen elements visible
             aggmgr.init(mode || "refdisp");
             jt.out("tcontdiv", jt.tac2html(
                 [["div", {id:"tcontheaddiv"},
                   [["div", {id:"aggctrlsdiv"}],
-                   ["div", {id:"filtctrlsdiv"}]]],
+                   ["div", {id:"filtctrlsdiv"}],
+                   ["div", {id:"editctrlsdiv"}]]],
                  ["div", {id:"pointsdispdiv"}]]));
             aggmgr.updateControls();  //calls filtmgr.updateControls
             dispmgr.adjustPointsAreaDisplayHeight();
-            aggmgr.updateDisplay(); },
+            aggmgr.tlchg(); },  //update the display
         adjustPointsAreaDisplayHeight: function () {
             var ptsh = window.innerHeight - 
                 (jt.byId("tcontheaddiv").offsetHeight + 30);
@@ -1774,6 +1791,7 @@ app.tabular = (function () {
         displayPoints: function (pts) {
             if(!pts || !pts.length) {
                 return jt.out("pointsdispdiv", "No points"); }
+            jt.out("pointsdispdiv", "");  //reset content
             var outdiv = jt.byId("pointsdispdiv");
             pts.forEach(function (pt) {
                 if(!pt.stats || pt.stats.status !== "deleted") {
@@ -1795,7 +1813,7 @@ app.tabular = (function () {
 
 
     return {
-        display: function () { dispmgr.display("refdisp"); },
+        display: function (mode) { dispmgr.display(mode); },
         showDownloadDialog: function () { showDownloadDialog(); },
         dldrad: function (idx) { selectDownloadOption(idx); },
         tledit: function () { dispmgr.display("tledit"); },
@@ -1817,6 +1835,16 @@ app.tabular = (function () {
         ptdet: function (event, ptid) { showPointDetails(event, ptid); },
         keysel: function (event) { toggleKeySelDisp(event); },
         keychk: function (field, idx) { toggleKeyword(field, idx); },
-        featchg: function () { featuredSelChange(); }
+        featchg: function () { featuredSelChange(); },
+        managerDispatch: function (mgrname, fname, ...args) {
+            switch(mgrname) {
+            case "aggmgr": return aggmgr[fname].apply(app.tabular, args);
+            case "stgmgr": return stgmgr[fname].apply(app.tabular, args);
+            case "yrmgr": return yrmgr[fname].apply(app.tabular, args);
+            case "srchmgr": return srchmgr[fname].apply(app.tabular, args);
+            case "dlmgr": return dlmgr[fname].apply(app.tabular, args);
+            case "filtmgr": return filtmgr[fname].apply(app.tabular, args);
+            default: jt.log("tabular.managerDispatch unknown manager: " +
+                            mgrname); } }
     };
 }());

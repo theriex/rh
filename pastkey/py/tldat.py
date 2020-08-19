@@ -327,3 +327,16 @@ def findcomps():
     except ValueError as e:
         return util.serve_value_error(e)
     return util.respJSON(tlcs)
+
+
+def featured():
+    """ Return currently featured timelines to select from. """
+    try:
+        where = []
+        for badval in ["Unlisted", "Archived", "Deleted"]:
+            where.append("featured != \"" + badval + "\"")
+        where = "WHERE " + " AND ".join(where)
+        tls = dbacc.query_entity("Timeline", where)
+    except ValueError as e:
+        return util.serve_value_error(e)
+    return util.respJSON(tls)

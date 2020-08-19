@@ -8,6 +8,7 @@ app.mode = (function () {
     var mode = "interactive";  //linear only. "reference" is linear or text
     var ms = null;  //mode state detail variables
     var srchst = null;
+    var ftls = null;  //cached featuredTimelines
 
 
     function clearSearchState () {
@@ -242,12 +243,12 @@ app.mode = (function () {
             jt.out("refdiv", jt.tac2html(["div", {id:"reftitlediv"}]));
             switch(select) {  //next action
             case "visual": changeMode("interactive"); break;
-            case "refmode": changeMode("reference"); break;
+            case "refmode": app.tabular.display("refdisp"); break;
             case "share": app.support.display(ms.tl, "share"); break; 
             case "about": app.support.display(ms.tl, "about"); break; 
             case "signin": app.dlg.signin(); break;
             case "myacc": app.dlg.myacc(); break;
-            case "tledit": app.tabular.tledit(); break;
+            case "tledit": app.tabular.display("tledit"); break;
             case "signout": app.dlg.logout(); break; } }
     }
 
@@ -481,8 +482,8 @@ app.mode = (function () {
     }
 
 
-    function sortRecommendedTimelines () {
-        app.rectls.forEach(function (tl) {
+    function sortFeaturedTimelines () {
+        ftls.forEach(function (tl) {
             if(tl.featured.startsWith("-")) {
                 var anv = getAnniversaryDistance(tl.featured);
                 tl.prio = Math.min(anv.prev.days, anv.next.days); }
@@ -490,46 +491,25 @@ app.mode = (function () {
                 tl.prio = 40; }  //anv closer than 40 days is higher prio
             else {  //"Listed" and anything else
                 tl.prio = 500; } });
-        app.rectls.sort(function (a, b) {
+        ftls.sort(function (a, b) {
             return a.prio - b.prio; });
     }
 
 
-    function showTimelinesFailure (code, errtxt) {
-        var subj = "Recommended Timelines not displaying";
-        var body = "The recommended timelines display on the main page is" +
+    function showFeaturedTimelinesFetchFailure (code, errtxt) {
+        var subj = " Timelines not displaying";
+        var body = "The featured timelines display on the main page is" +
             " currently showing " + code + " " + errtxt + "\n" +
             "You might want to get that fixed...\n\n";
         var mh = "mailto:support@pastkey.org?subject=" + jt.dquotenc(subj) +
             "&body=" + jt.dquotenc(body);
-        var html = [["p", "Recommended Timelines fetch failed: " + 
+        var html = [["p", "Featured Timelines fetch failed: " + 
                      code + " " + errtxt],
                     ["p",
                      ["If this message persists, please ",
                       ["a", {href:mh}, "let support know."],
                       " Thanks!"]]];
         jt.out("recomTLsdiv", jt.tac2html(html));
-    }
-
-
-    //Not currently used.  Opens the first timeline and passes the signin
-    //menu command.  The idea being that dlg.processParameters can strip the
-    //hash without redirecting, and launch the signin menu.  But that flow
-    //is not intuitive and may land you on a different timeline than what
-    //you were last working on.  Should provide a real signin at the top
-    //level if doing this at all.  For now they can find the continuation
-    //link in their email.
-    function signInLinkHTML () {
-        if(app.user && app.user.email) {
-            return ""; }  //already signed in
-        if(!app.rectls) {
-            return ""; }  //no timelines to link to for starting context
-        var tl = app.rectls[0];
-        var link = app.baseurl + "/timeline/" + (tl.slug || tl.dsId) +
-            "#menu=signin";
-        var html = ["&nbsp;",
-                    ["a", {id:"splsigninlink", href:link}, "Sign In"]];
-        return jt.tac2html(html);
     }
 
 
@@ -558,23 +538,10 @@ app.mode = (function () {
     }
 
 
-    function showTimelineLinks () {
-        var url = "/docs/tlrec.json";
-        if(app.localdev()) {
-            url = "/docs/tldev.json"; }
-        url += jt.ts("?cb=", "hour");
-        if(!app.rectls) {
-            return jt.call("GET", url, null,
-                           function (tls) {
-                               app.rectls = tls;
-                               sortRecommendedTimelines();
-                               showTimelineLinks(); },
-                           function (code, errtxt) {
-                               showTimelinesFailure(code, errtxt); },
-                           jt.semaphore("mode.showTimelineLinks")); }
+    function showTimelineLinks (tls) {
         var html = [["tr",
                      [["th", "name"], ["th", "pts"], ["th", ""]]]];
-        app.rectls.forEach(function (tl) {
+        tls.forEach(function (tl) {
             html.push(["tr",
                        [["td",
                          ["a", {href:app.baseurl + "/timeline/" + 
@@ -585,6 +552,20 @@ app.mode = (function () {
         html = [["div", {id:"rectltitdiv"}, "Recommended Timelines:"],
                 ["table", {cla:"tltable", id:"rectlstable"}, html]];
         jt.out("recomTLsdiv", jt.tac2html(html));
+    }
+
+
+    function featuredTimelines (contf) {
+        if(ftls) {
+            return setTimeout(function () { contf(ftls); }, 50); }
+        jt.call("GET", "/api/featured" + jt.ts("?cb=", "hour"), null,
+                function (tls) {
+                    ftls = tls;
+                    sortFeaturedTimelines();
+                    contf(ftls); },
+                function (code, errtxt) {
+                    showFeaturedTimelinesFetchFailure(code, errtxt); },
+                jt.semaphore("mode.featuredTimelines"));
     }
 
 
@@ -607,7 +588,7 @@ app.mode = (function () {
                            onclick:jt.fs("window.open('" + ghu + "')")},
                      mt])); }
             p.innerHTML = html; }
-        showTimelineLinks();
+        featuredTimelines(showTimelineLinks);
     }
 
 
@@ -617,13 +598,13 @@ app.mode = (function () {
         chmode: function (mode) { changeMode(mode); },
         menu: function (expand, select) { displayMenu(expand, select); },
         showNextPoints: function (points) { showNextPoints(points); },
-        searchstate: function () { return srchst; },
         updlev: function (currlev) { updateLevelDisplay(currlev); },
         svdone: function (m, s, e) { endSuppViz(m, s, e); },
         requeue: function (pt) { requeue(pt); },
         currpt: function () { return ms && ms.currpt; },
         updqrc: function (count) { updateRemainingQuestionsCount(count); },
         showcert: function () { showCompletionCertificate(); },
-        showlanding: function () { showLandingPage(); }
+        showlanding: function () { showLandingPage(); },
+        featuredTimelines: function (contf) { featuredTimelines(contf); }
     };
 }());
