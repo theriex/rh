@@ -195,9 +195,20 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 
 /* -------------------- */
 /* tabular */
-.trowdiv { padding-bottom:10px; }
-.tptimg { float:left; margin:0px 7px 2px 0px; max-width:200px; }
-.tpddiv { font-size:small; font-style:italic; margin:0px 0px 5px 0px; }
+.trowdiv { padding-bottom:10px; clear:both; }
+.ecsdiv { float:left; margin:0px 2px 0px -5px; }
+.ecscbdiv { padding:14px 0px 0px 0px; min-height:20px; min-width:20px;}
+.ecskmdiv, .ecspldiv { text-align:center; padding:6px 0px 0px 0px; }
+.placehelpdiv { font-size:small; }
+.ptdpic { float:left; margin:0px 7px 2px 0px;
+  max-width:160px; max-height:160px; }
+.ptddatediv { font-size:small; font-style:italic; margin:0px 0px 5px 0px; }
+.ptrefsdiv { font-size:small; max-width:98vw; }
+.ptrefstrdiv { padding:2px 0px 0px 0px; }
+.ptdetlabelspan { font-size:small; color:#666; }
+.ptdetvaluespan { font-size:smaller; }
+.ptqtdiv, .ptsourcediv, pttagdiv { 
+  display:inline-block; margin:0px 10px 0px 0px; }
 
 .trowdatediv { display:table-cell; min-width:80px; padding-right:10px; 
   text-align:right; }

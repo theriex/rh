@@ -121,8 +121,8 @@ app.mode = (function () {
             jt.byId("lcontdiv").style.display = "none";
             jt.byId("tcontdiv").style.display = "block";
             app.dlg.verifyClosed();
-            ms.disp = "text";
-            app.tabular.display(); }  //rebuild contents each time
+            ms.disp = "text"; }
+           //app.tabular.display(); would be an infinite recursion
         else {
             // jt.byId("disptoggle").href = "#textmode";
             // jt.byId("disptoggleimg").src = "img/disptext.png";

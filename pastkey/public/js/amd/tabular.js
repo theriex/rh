@@ -1,4 +1,4 @@
-/*jslint browser, white, fudge, for */
+/*jslint browser, white, fudge, for, long */
 /*global app, window, jt, d3, alert */
 
 app.tabular = (function () {
@@ -1590,11 +1590,34 @@ app.tabular = (function () {
                 app.refmgr.getFull("Timeline", tlid, aggmgr.tlchg); } },
         rebuildPoints: function () {
             if(aggmgr.state.mode !== "tledit") {
-                aggmgr.state.points = aggmgr.urlTimeline().preb;
-                return; }
-            aggmgr.state.points = [];
-            aggmgr.mergePoints(aggmgr.state.edsel);
-            aggmgr.mergePoints(aggmgr.state.mixsel); }
+                aggmgr.state.points = aggmgr.urlTimeline().preb; }
+            else {
+                aggmgr.state.points = [];
+                aggmgr.mergePoints(aggmgr.state.edsel);
+                aggmgr.mergePoints(aggmgr.state.mixsel); }
+            aggmgr.state.points.forEach(function (pt) {
+                if(!pt.start) { app.db.parseDate(pt); } });
+            aggmgr.state.points.sort(function (a, b) {
+                return ((a.start.year - b.start.year) ||
+                        (a.start.month - b.start.month) ||
+                        (a.start.day - b.start.day)); }); },
+        currTL: function (tsel) {
+            switch(tsel) {
+            case "edit": tsel = aggmgr.state.edsel.getValue; break;
+            case "mix": tsel = aggmgr.state.mixsel.getValue; break;
+            default: tsel = aggmgr.urlTimeline; }
+            var tlid = tsel();
+            if(tlid.match(/\d+/)) {
+                return app.refmgr.cached("Timeline", tlid); }
+            return {dsType:"Timeline", dsId:tlid, editors:"", name:tlid,
+                    slug:"", title:"", subtitle:"", featured:"", lang:"en-US",
+                    comment:"", about:"", kwds:"", ctype:"Points", cids:"",
+                    rempts:"", svs:"", preb:[]}; },
+        resolvePoint: function (pt, defltpt) {
+            if(!pt) { return defltpt || null; }
+            if(typeof pt === "string") {
+                pt = aggmgr.state.points.find((tp) => pt.dsId === tp.dsId); }
+            return pt; }
     };
 
 
@@ -1616,14 +1639,9 @@ app.tabular = (function () {
             yrmgr.state = {active:false, yrmin:0, yrmax:0};
             var pts = aggmgr.getPoints();
             if(pts.length > 1) {
-                yrmgr.verifyPointStartData(pts);
                 yrmgr.state.active = true;
                 yrmgr.state.yrmin = pts[0].start.year;
                 yrmgr.state.yrmax = pts[pts.length - 1].start.year; } },
-        verifyPointStartData: function (pts) {
-            pts.forEach(function (pt) {
-                if(!pt.start) {
-                    app.db.parseDate(pt); } }); },
         valchanged: function () {
             yrmgr.state.yrmin = jt.byId("yearstartin").value;
             yrmgr.state.yrmax = jt.byId("yearendin").value;
@@ -1771,6 +1789,237 @@ app.tabular = (function () {
     };
 
 
+    var picmgr = {
+        getHTML: function (pt, sp) {
+            var attrs = {cla:"ptdpic", id:"ptdpic" + pt.dsId,
+                         title:"Point " + pt.dsId,
+                         src:app.dr("img/ptplaceholder.png")};
+            if(pt.pic) {
+                attrs.src = app.dr("/api/obimg") + "?dt=Point&di=" + pt.dsId; }
+            if(sp.mode === "edit") {
+                attrs.style = "cursor:pointer;";
+                attrs.onclick = mdfs("picmgr.uploadPic", pt.dsId); }
+            return jt.tac2html(["img", attrs]); },
+        uploadPic: function (ptid) {
+            jt.log("Not implemented yet"); }
+    };
+
+
+    var placemgr = {
+        makeEditable: function (attrs, ptid, placetext, helpmgrname) {
+            attrs.contentEditable = "true";
+            attrs["data-ptid"] = ptid;
+            attrs["data-placetext"] = placetext;
+            if(helpmgrname) {
+                attrs["data-helpmgr"] = helpmgrname; }
+            var listener = mdfs("placemgr.placeholdercheck", "event");
+            attrs.onfocus = listener;
+            attrs.onblur = listener; },
+        placeholdercheck: function (event) {
+            var ptid = event.target.dataset.ptid;
+            var ptxt = event.target.dataset.placetext;
+            var help = null;
+            if(event.target.dataset.helpmgr) {
+                help = {mgrname:event.target.dataset.helpmgr,
+                        txt:app.tabular.managerDispatch(
+                            event.target.dataset.helpmgr, "helpText")};
+                help.divid = help.mgrname + "help" + ptid;
+                if(!jt.byId(help.divid)) { //create help div if not exists
+                    help.tdiv = jt.byId("ecstdiv" + ptid);
+                    help.tdiv.innerHTML = jt.tac2html(
+                        ["div", {cla:"placehelpdiv", id:help.divid}]) +
+                        help.tdiv.innerHTML; } }
+            if(event.type === "blur" && !event.target.innerText.trim()) {
+                event.target.innerText = ptxt;
+                if(help) {
+                    jt.out(help.divid, ""); } }
+            else if(event.type === "focus") {
+                if(event.target.innerText === ptxt) {
+                    event.target.innerHTML = ""; }
+                if(help) {
+                    jt.out(help.divid, help.txt); } } }
+    };
+
+
+    var datemgr = {
+        getHTML: function (pt, sp) {
+            var attrs = {cla:"ptddatediv", id:"ptddatediv" + pt.dsId};
+            if(sp.mode === "edit") {
+                placemgr.makeEditable(attrs, pt.dsId, sp.def.place, 
+                                      "datemgr"); }
+            return jt.tac2html(["div", attrs, pt.date || sp.def.place]); },
+        helpText: function () {
+            return "The date can be a point in time, formatted as: Y[YYY][ BCE], YYYY-MM, YYYY-MM-DD, or a time range, formatted as: YYYY's, YYYY+, YYYY['s]-YYYY['s], YYYY-MM[-DD]-YYYY-MM[-DD]"; }
+    };
+
+
+    var txtmgr = {
+        getHTML: function (pt, sp) {
+            var attrs = {cla:"pttextdiv", id:"pttextdiv" + pt.dsId};
+            if(sp.mode === "edit") {
+                placemgr.makeEditable(attrs, pt.dsId, sp.def.place,
+                                      "txtmgr"); }
+            return jt.tac2html(["div", attrs, pt.text || sp.def.place]); },
+        helpText: function () {
+            return "The text for the timeline point should describe the key event facts and impact. Be as clear and concise as possible. Max of 1200 characters."; }
+    };
+
+
+    var refmgr = {
+        getHTML: function (pt, sp) {
+            var html = [];
+            pt.refs = pt.refs || [];
+            if(typeof pt.refs === "string") {  //fix improper preb data
+                pt.dsType = "Point";
+                app.refmgr.deserialize(pt); }
+            pt.refs.forEach(function (refstr, idx) {
+                html.push(["div", {cla:"ptrefstrdiv", 
+                                   id:"ptrefstrdiv" + pt.dsId + idx},
+                           jt.linkify(refstr)]); });
+            return jt.tac2html(
+                ["div", {cla:"ptrefsdiv", id:"ptrefsdiv" + pt.dsId}, html]); }
+    };
+
+
+    var qtmgr = {
+        qts:{S:"Continue",
+             U:"Did You Know?",
+             D:"What Year?",
+             F:"Firsts"},
+        sel:null,
+        getHTML: function (pt, sp) {
+            return jt.tac2html(
+                ["div", {cla:"ptqtdiv"},
+                 [["span", {cla:"ptdetlabelspan"}, "Question Type: "],
+                  ["span", {cla:"ptdetvaluespan"},
+                   (qtmgr.qts[pt.qtype] || qtmgr.qts.S)]]]); }
+    };
+
+
+    var srcmgr = {
+        getHTML: function (pt, sp) {
+            if(!pt.source && sp.mode !== "edit") { return ""; }
+            return jt.tac2html(
+                ["div", {cla:"ptsourcediv"},
+                 [["span", {cla:"ptdetlabelspan"}, "Source Id: "],
+                  ["span", {cla:"ptdetvaluespan"}, pt.source]]]); }
+    };
+
+
+    var tagmgr = {
+        getHTML: function (pt, sp) {
+            if(sp.fld === "communities" && !pt.communities && pt.groups) {
+                pt.communities = pt.groups; }  //legacy data name conversion
+            if(!pt[sp.fld] && sp.mode !== "edit") { return ""; }
+            return jt.tac2html(
+                ["div", {cla:"pttagdiv"},
+                 [["span", {cla:"ptdetlabelspan"}, sp.fld.capitalize() + ": "],
+                  ["span", {cla:"ptdetvaluespan"}, pt[sp.fld]]]]); }
+    };
+
+
+    var ptdmgr = {
+        ptfd: {
+            pic:{dv:"", mgr:picmgr},
+            date:{dv:"", mgr:datemgr, place:"YYYY-MM-DD"},
+            text:{dv:"", mgr:txtmgr, place:"Concise event description"},
+            refs:{dv:[], mgr:refmgr, place:"library reference and/or URL"},
+            qtype:{dv:"S", mgr:qtmgr},
+            source:{dv:"", mgr:srcmgr, help:"optional reference key value"},
+            communities:{dv:"", mgr:tagmgr},
+            regions:{dv:"", mgr:tagmgr},
+            categories:{dv:"", mgr:tagmgr},
+            tags:{dv:"", mgr:tagmgr},
+            editors:{dv:""},  //server initializes on first save
+            srclang:{dv:"en-US"},
+            translations:{dv:""}},
+        verifyFields: function (pt) {
+            Object.entries(ptdmgr.ptfd).forEach(function ([fld, def]) {
+                pt[fld] = pt[fld] || def.dv; }); },
+        pointHTML: function (pt, m) {
+            var html = [];
+            Object.entries(ptdmgr.ptfd).forEach(function ([f, d]) {
+                if(d.mgr) {
+                    html.push(d.mgr.getHTML(pt, {fld:f, def:d,
+                                                 mode:(m || "read")})); } });
+            return jt.tac2html(html); },
+        redisplay: function (pt, mode) {
+            ptdmgr.verifyFields(pt);
+            jt.out("pddiv" + pt.dsId, ptdmgr.pointHTML(pt, mode)); }
+    };
+
+
+    var editmgr = {
+        state: {},
+        ownPoint: function (pt) {
+            if(!app.user || !app.user.acc) { return ""; }  //not signed in
+            pt.editors = pt.editors || "";  //legacy compiled points
+            if(pt.editors.startsWith(app.user.acc.dsId) ||
+               !pt.dsId || pt.dsId === "Placeholder") {
+                return app.user.acc.dsId; }
+            return ""; },
+        editCtrlsSideHTML: function (pt) {
+            if(aggmgr.state.mode !== "tledit") { return ""; }
+            return jt.tac2html(
+                [["div", {cla:"ecscbdiv"}, editmgr.cbIncHTML(pt)],
+                 ["div", {cla:"ecskmdiv"}, editmgr.kebabHTML(pt)],
+                 ["div", {cla:"ecspldiv"}, editmgr.plusHTML(pt)]]); },
+        editCtrlsBottomHTML: function (pt) {
+            return jt.tac2html(
+                ["div", {cla:"ecbcdiv", id:"ecbcdiv" + pt.dsId}]); },
+        cbIncHTML: function (pt) {
+            //pt may be from previous mix-in from another url
+            if(editmgr.ownPoint(pt)) { return ""; }
+            var etl = aggmgr.currTL("edit");
+            return jt.tac2html(
+                ["input", {type:"checkbox", id:"cbinc" + pt.dsId,
+                           value:pt.dsId, title:"Include Point in Timeline",
+                           checked:jt.toru(etl.cids.csvcontains(pt.dsId)),
+                           onchange:mdfs("editmgr.toginc", pt.dsId)}]); },
+        kebabHTML: function (pt) {
+            return jt.tac2html(
+                ["a", {href:"#more", title:"More actions...",
+                       onclick:mdfs("editmgr.kebabExpand", pt.dsId)},
+                 "&#x22EE;"]); },  //vertical ellipsis
+        plusHTML: function (pt) {
+            return jt.tac2html(
+                ["a", {href:"#add", title:"Add new point",
+                       onclick:mdfs("editmgr.addNewPoint", pt.dsId)},
+                 "+"]); },
+        addNewPoint: function (pt) {
+            pt = aggmgr.resolvePoint(pt, {dsType:"Point", dsId:"Placeholder"});
+            var parentdiv = jt.byId("pointsdispdiv");
+            var ptdiv = jt.byId("trowdiv" + pt.dsId);
+            var placediv = jt.byId("trowdivPlaceholder");
+            if(placediv) {  //already created
+                parentdiv.removeChild(placediv); }
+            else {  //make a placeholder div
+                placediv = dispmgr.makePointDiv(pt); }
+            if(ptdiv) {  //put placeholder after current point
+                ptdiv.after(placediv); }
+            else { //put placeholder first
+                var pts = aggmgr.getPoints();
+                if(pts.length) {
+                    ptdiv = jt.byId("trowdiv" + pts[0].dsId);
+                    ptdiv.before(placediv); }
+                else {
+                    parentdiv.appendChild(placediv); } }
+            editmgr.togedit("Placeholder", "edit"); },
+        togedit: function (ptid, mode) {
+            if(!mode) {  //toggle
+                var datediv = jt.byId("tpddiv" + ptid);
+                if(datediv && datediv.isContentEditable) {
+                    mode = "read"; }
+                else {
+                    mode = "edit"; } }
+            //Either editing now, or were previously editing.
+            if(ptid !== "Placeholder") {
+                return refmgr.getFull("Point", ptid, function (pt) {
+                    ptdmgr.redisplay(pt, mode); }); }
+            ptdmgr.redisplay({dsType:"Point", dsId:"Placeholder"}, mode); }
+    };
+
+
     var dispmgr = {
         display: function (mode) {
             app.mode.chmode("reference");  //verify screen elements visible
@@ -1789,26 +2038,31 @@ app.tabular = (function () {
                 (jt.byId("tcontheaddiv").offsetHeight + 30);
             jt.byId("pointsdispdiv").style.height = String(ptsh) + "px"; },
         displayPoints: function (pts) {
-            if(!pts || !pts.length) {
-                return jt.out("pointsdispdiv", "No points"); }
             jt.out("pointsdispdiv", "");  //reset content
+            if(!pts || !pts.length) {
+                if(aggmgr.state.mode === "tledit") {
+                    return editmgr.addNewPoint(); }
+                return jt.out("pointsdispdiv", "No timeline points."); }
             var outdiv = jt.byId("pointsdispdiv");
             pts.forEach(function (pt) {
                 if(!pt.stats || pt.stats.status !== "deleted") {
-                    var ptdiv = document.createElement("div");
-                    ptdiv.innerHTML = dispmgr.pointHTML(pt);
+                    var ptdiv = dispmgr.makePointDiv(pt);
                     outdiv.appendChild(ptdiv); } }); },
-        pointImgSrc: function (pt) {
-            var src = app.dr("img/blank.png");
-            if(pt.pic) {
-                src = app.dr("/api/obimg") + "?dt=Point&di=" + pt.dsId; }
-            return src; },
+        makePointDiv: function (pt) {
+            var ptdiv = document.createElement("div");
+            ptdiv.className = "trowdiv";
+            ptdiv.id = "trowdiv" + pt.dsId;
+            ptdiv.innerHTML = dispmgr.pointHTML(pt);
+            return ptdiv; },
         pointHTML: function (pt) {
             return jt.tac2html(
-                ["div", {cla:"trowdiv", id:"trowdiv" + pt.instid},
-                 [["img", {cla:"tptimg", src:dispmgr.pointImgSrc(pt)}],
-                  ["div", {cla:"tpddiv"}, pt.date],
-                  ["div", {cla:"tptxtdiv"}, pt.text]]]); }
+                [["div", {cla:"ecstdiv", id:"ecstdiv" + pt.dsId}],
+                 ["div", {cla:"ecsdiv", id:"ecsdiv" + pt.dsId},
+                  editmgr.editCtrlsSideHTML(pt)],
+                 ["div", {cla:"pddiv", id:"pddiv" + pt.dsId},
+                  ptdmgr.pointHTML(pt)],
+                 ["div", {cla:"ecbdiv", id:"ecbdiv" + pt.dsId},
+                  editmgr.editCtrlsBottomHTML(pt)]]); }
     };
 
 
@@ -1844,6 +2098,17 @@ app.tabular = (function () {
             case "srchmgr": return srchmgr[fname].apply(app.tabular, args);
             case "dlmgr": return dlmgr[fname].apply(app.tabular, args);
             case "filtmgr": return filtmgr[fname].apply(app.tabular, args);
+            case "picmgr": return picmgr[fname].apply(app.tabular, args);
+            case "placemgr": return placemgr[fname].apply(app.tabular, args);
+            case "datemgr": return datemgr[fname].apply(app.tabular, args);
+            case "txtmgr": return txtmgr[fname].apply(app.tabular, args);
+            case "refmgr": return refmgr[fname].apply(app.tabular, args);
+            case "qtmgr": return qtmgr[fname].apply(app.tabular, args);
+            case "srcmgr": return srcmgr[fname].apply(app.tabular, args);
+            case "tagmgr": return tagmgr[fname].apply(app.tabular, args);
+            case "ptdmgr": return ptdmgr[fname].apply(app.tabular, args);
+            case "editmgr": return editmgr[fname].apply(app.tabular, args);
+            case "dispmgr": return dispmgr[fname].apply(app.tabular, args);
             default: jt.log("tabular.managerDispatch unknown manager: " +
                             mgrname); } }
     };
