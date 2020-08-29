@@ -86,7 +86,8 @@ module.exports = (function () {
         //*3 Timeline Memory instance:
         //     tlid: id of timeline
         //     name: name of timeline
-        //     featured: featured value from timeline
+        //     featured: (built) featured value from timeline
+        //     modified: (built) last update timestamp
         //   If a change in editors is found, the client switches the memory
         //   instance between remtls and built as needed.
      cache:{minutes:2*60, manualadd:true}, //fast auth after initial load
@@ -114,7 +115,7 @@ module.exports = (function () {
         //   range: YYYY's, YYYY+, YYYY['s]-YYYY['s], YYYY-MM[-DD]-YYYY-MM[-DD]
         //*2 Text may reference another point using html anchor syntax and the
         //   source or id, e.g. "... <a href=\"#N35\">Pontiac</a> ..."
-        //*3 qtypes: 'S': Continue (default),
+        //*3 qtypes: 'C': Continue (default),
         //           'U': Did You Know?,
         //           'D': Click correct year,
         //           'F': Firsts
@@ -153,12 +154,12 @@ module.exports = (function () {
         //*2 Timelines are language specific.  Translated timelines have
         //   translated names and are separate instances.
         //*3 The popup start comment can optionally have a continue button
-        //   name e.g. "This timeline is about 10 minutes long" [Start]"
+        //   name e.g. "This timeline is about 10 minutes long [Start]"
         //*4 Keyword definitions selectable for points while editing
         //   communities: e.g. African American, Native, Latinx, Asian American
         //   regions: e.g. Boston, Puerto Rico, Hawai'i, Southwest
         //   categories: e.g. Stats, Awards, Stereotypes
-        //   tags: e.g. other timeline specific grouping keywords
+        //   tags: other timeline specific grouping keywords
         //*5 ctype Points or Random timelines may optionally be followed by
         //   ":levcnt" where levcnt is the number of points presented before
         //   each save.  If not specified, the default levcnt is 6.  Random

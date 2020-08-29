@@ -199,7 +199,8 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 .ecsdiv { float:left; margin:0px 2px 0px -5px; }
 .ecscbdiv { padding:14px 0px 0px 0px; min-height:20px; min-width:20px;}
 .ecskmdiv, .ecspldiv { text-align:center; padding:6px 0px 0px 0px; }
-.placehelpdiv { font-size:small; }
+.placehelpdiv, .fieldhelpdiv { font-size:small; }
+.helpdisplaylink { cursor:help; }
 .ptdpic { float:left; margin:0px 7px 2px 0px;
   max-width:160px; max-height:160px; }
 .ptddatediv { font-size:small; font-style:italic; margin:0px 0px 5px 0px; }
@@ -276,12 +277,28 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 .svlistdescdiv { padding-left:10px; }
 .svlistdiv { padding:5px 0px; }
 
+.tlsetfielddiv { padding:6px 0px 0px 0px; }
+.tlsfhdiv { font-size:small; color:#666; }
+.tlsetfldnamediv { display:inline-block; text-align:right; width:80px;
+  font-size:small; color:#666; padding:0px 3px 0px 0px;
+  vertical-align:middle; }
+.tlsetfldvalcontdiv, .tlsetfldvaldiv {
+  display:inline-block; width:200px; min-height:20px; }
+.tlsetfldvalcontdiv { vertical-align:middle;
+  background-image:url('../img/whitewash.png'); }
+.tlsetfldvaldiv { font-size:medium; vertical-align:sub; }
+#stgsavediv { padding:8px 0px; }
+#stgsavebdiv { padding:2px 0px 2px 100px; }
+#datein { width:3em; }
+
 .pubobsel option { padding:0px 0px; }
 .daynumin { width:2em; }
 #obonem { font-size:small; margin:0px 3px 0px 1px; }
 
-.tletldiv { display:inline-block; width:140px; }
-.tletrdiv { display:inline-block; width:140px; text-align:center; }
+.tletldiv { display:inline-block; width:155px; }
+.tletrdiv { display:inline-block; width:125px; }
+#edsel { width:130px; max-width:130px; }
+#mixsel { max-width:125px; }
 #yrmgrctrlsdiv { display:inline-block; padding:0px 0px 0px 10px; }
 #srchmgrdiv { display:inline-block; }
 #srchlink img { max-height:20px; }

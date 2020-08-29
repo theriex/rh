@@ -33,6 +33,14 @@ def verify_edit_authorization(appuser, obj):
     dbo = dbacc.cfbk(obj["dsType"], "dsId", obj["dsId"], required=True)
     if not util.val_in_csv(appuser["dsId"], dbo["editors"]):
         raise ValueError("Not an editor for " + obj["dsType"] + obj["dsId"])
+    updeds = obj.get("editors")
+    if not updeds:  # didn't pass editors info, use existing values
+        obj["editors"] = dbo["editors"]
+    else:  # verify editors value is ok
+        if updeds != dbo["editors"]:
+            owner = util.csv_to_list(dbo["editors"])[0]
+            if owner != appuser["dsId"]:
+                raise ValueError("Only the owner may change editors")
     return dbo
 
 
@@ -80,11 +88,18 @@ def canonize(cankey):
 
 
 def verify_unique_timeline_field(tldat, field, tldb):
+    logging.info("vutf tldat: " + str(tldat))
+    if field == "cname" and not tldat[field]:
+        raise ValueError("A unique name is required.")
+    if field == "slug" and not tldat.get(field):
+        return True  # slug is optional.  May be missing from tldat.
     if tldb and (tldat[field] == tldb[field]):
         return True  # hasn't changed, so still unique
     where = "WHERE " + field + "=\"" + tldat[field] + "\" LIMIT 1"
     objs = dbacc.query_entity("Timeline", where)
     if len(objs) > 0:
+        if field == "cname":
+            field = "name"
         raise ValueError("There is already a timeline with that " + field)
     return True
 
@@ -108,11 +123,14 @@ def point_preb_summary(point):
 # triggered, this should be able to complete with a couple of reasonable
 # size queries.
 def update_prebuilt(tldat, tldb):
-    if tldat["ctype"] == "Timelines":
+    if tldat.get("ctype") == "Timelines":
         return  # Only have preb for timelines containing points
     lpx = "update_prebuilt Timeline " + str(tldat.get("dsId"))
     # make a reference dict out of whatever existing preb is available
-    preb = tldat.get("preb") or tldb.get("preb") or "[]"
+    preb = tldat.get("preb")
+    if not preb and tldb:
+        preb = tldb.get("preb")
+    preb = preb or "[]"
     preb = util.load_json_or_default(preb, [])
     ptd = {k["dsId"]: k for k in preb}
     # update any ptd entries that were modified since last timeline save
@@ -126,7 +144,7 @@ def update_prebuilt(tldat, tldb):
     # rebuild preb, fetching points for any missing ptd entries
     logging.info(lpx + "rebuilding preb")
     preb = []
-    for pid in util.csv_to_list(tldat["cids"]):
+    for pid in util.csv_to_list(tldat.get("cids", "")):
         summary = ptd.get(pid)  # dict or None
         if not summary:
             point = dbacc.cfbk("Point", "dsId", pid)
@@ -284,18 +302,18 @@ def updtl():
     try:
         appuser, _ = util.authenticate()
         tldat = util.set_fields_from_reqargs([
-            "dsId", "modified", "editors", "name", "slug", "title", "subtitle",
-            "featured", "lang", "comment", "about", "kwds", "ctype", "cids",
-            "rempts", "svs"], {})
+            "dsId", "dsType", "modified", "editors", "name", "slug",
+            "title", "subtitle", "featured", "lang", "comment", "about",
+            "kwds", "ctype", "cids", "rempts", "svs"], {})
         tldb = verify_edit_authorization(appuser, tldat)
         tldat["cname"] = canonize(tldat.get("name", ""))
         verify_unique_timeline_field(tldat, "cname", tldb)
         verify_unique_timeline_field(tldat, "slug", tldb)
         update_prebuilt(tldat, tldb)
-        dbacc.write_entity(tldat, tldat["modified"])
+        tl = dbacc.write_entity(tldat, tldat.get("modified", ""))
     except ValueError as e:
         return util.serve_value_error(e)
-    return util.respJSON(tldat)
+    return util.respJSON(tl)
 
 
 def notecomp():
