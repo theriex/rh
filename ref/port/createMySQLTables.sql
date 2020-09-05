@@ -15,9 +15,9 @@ CREATE TABLE AppUser (  -- PastKey User account
   web LONGTEXT,
   lang VARCHAR(256),
   settings LONGTEXT,
-  remtls LONGTEXT,
-  completed LONGTEXT,
   started LONGTEXT,
+  completed LONGTEXT,
+  remtls LONGTEXT,
   built LONGTEXT,
   PRIMARY KEY (dsId)
 );
@@ -29,6 +29,7 @@ CREATE TABLE Point (  -- A data point for use in timelines
   modified VARCHAR(256) NOT NULL,
   batchconv VARCHAR(256),
   editors VARCHAR(256),
+  srctl BIGINT,
   importid BIGINT UNIQUE,
   source VARCHAR(256),
   date VARCHAR(256) NOT NULL,

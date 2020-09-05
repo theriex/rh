@@ -95,6 +95,7 @@ module.exports = (function () {
 
     {entity:"Point", descr:"A data point for use in timelines", fields:[
         {f:"editors", d:"srchidcsv", c:"owner and others with edit access"},
+        {f:"srctl", d:"dbid", c:"timeline this point may be edited from"},
         {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
         {f:"source", d:"string", c:"secondary reference id or load key"},
         {f:"date", d:"string req", c:"A date or date range (*1)"},
@@ -113,8 +114,9 @@ module.exports = (function () {
         //*1 Accepted formats for date values:
         //   point: Y[YYY][ BCE], YYYY-MM, YYYY-MM-DD
         //   range: YYYY's, YYYY+, YYYY['s]-YYYY['s], YYYY-MM[-DD]-YYYY-MM[-DD]
-        //*2 Text may reference another point using html anchor syntax and the
-        //   source or id, e.g. "... <a href=\"#N35\">Pontiac</a> ..."
+        //*2 Text may not contain HTML.  Limited markdown: *italic*, **bold**,
+        //   [link to previous point](prev point source value).  Sample link:
+        //   [Geary Act](A37)
         //*3 qtypes: 'C': Continue (default),
         //           'U': Did You Know?,
         //           'D': Click correct year,

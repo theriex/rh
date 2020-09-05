@@ -195,11 +195,17 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 
 /* -------------------- */
 /* tabular */
-.trowdiv { padding-bottom:10px; clear:both; }
-.ecsdiv { float:left; margin:0px 2px 0px -5px; }
-.ecscbdiv { padding:14px 0px 0px 0px; min-height:20px; min-width:20px;}
-.ecskmdiv, .ecspldiv { text-align:center; padding:6px 0px 0px 0px; }
-.placehelpdiv, .fieldhelpdiv { font-size:small; }
+.trowdiv { padding-bottom:10px; clear:both; position:relative; }
+.ecsidediv { position:absolute; top:5px; left:0px; width:24px; height:75px; }
+.ecsidediv div { background-image:url('../img/bleachscrub.png');
+  text-align:center; min-height:20px; min-width:20px; padding:6px 0px 0px 0px; }
+.pddiv { }
+.ecbdiv { position:relative; }
+.saveptbdiv { padding:0px 0px 0px 10px; }
+.placehelpdiv { position:absolute; top:0px; left:0px; 
+  font-size:small; color:#666; padding:10px; }
+.helpfieldnamediv { font-style:italic; font-weight:bold; text-align:center; 
+  padding:5px 0px; }
 .helpdisplaylink { cursor:help; }
 .ptdpic { float:left; margin:0px 7px 2px 0px;
   max-width:160px; max-height:160px; }
@@ -210,6 +216,9 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 .ptdetvaluespan { font-size:smaller; }
 .ptqtdiv, .ptsourcediv, pttagdiv { 
   display:inline-block; margin:0px 10px 0px 0px; }
+.kebabmenudiv { position:absolute; left:25px; top:20px; padding:3px;
+  background-image:url('../img/bleachscrub.png'); font-size:medium; }
+.kebabchoicediv { padding:8px; }
 
 .trowdatediv { display:table-cell; min-width:80px; padding-right:10px; 
   text-align:right; }

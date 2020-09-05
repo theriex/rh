@@ -71,9 +71,9 @@ entdefs = {
         "web": {"pt": "string", "un": False, "dv": ""},
         "lang": {"pt": "string", "un": False, "dv": ""},
         "settings": {"pt": "string", "un": False, "dv": ""},
-        "remtls": {"pt": "string", "un": False, "dv": ""},
-        "completed": {"pt": "string", "un": False, "dv": ""},
         "started": {"pt": "string", "un": False, "dv": ""},
+        "completed": {"pt": "string", "un": False, "dv": ""},
+        "remtls": {"pt": "string", "un": False, "dv": ""},
         "built": {"pt": "string", "un": False, "dv": ""}
     },
     "Point": {  # A data point for use in timelines
@@ -82,6 +82,7 @@ entdefs = {
         "modified": {"pt": "string", "un": False, "dv": ""},
         "batchconv": {"pt": "string", "un": False, "dv": ""},
         "editors": {"pt": "string", "un": False, "dv": ""},
+        "srctl": {"pt": "dbid", "un": False, "dv": 0},
         "importid": {"pt": "dbid", "un": True, "dv": 0},
         "source": {"pt": "string", "un": False, "dv": ""},
         "date": {"pt": "string", "un": False, "dv": ""},
@@ -477,9 +478,9 @@ def app2db_AppUser(inst):
     cnv["web"] = app2db_fieldval("AppUser", "web", inst)
     cnv["lang"] = app2db_fieldval("AppUser", "lang", inst)
     cnv["settings"] = app2db_fieldval("AppUser", "settings", inst)
-    cnv["remtls"] = app2db_fieldval("AppUser", "remtls", inst)
-    cnv["completed"] = app2db_fieldval("AppUser", "completed", inst)
     cnv["started"] = app2db_fieldval("AppUser", "started", inst)
+    cnv["completed"] = app2db_fieldval("AppUser", "completed", inst)
+    cnv["remtls"] = app2db_fieldval("AppUser", "remtls", inst)
     cnv["built"] = app2db_fieldval("AppUser", "built", inst)
     return cnv
 
@@ -505,9 +506,9 @@ def db2app_AppUser(inst):
     cnv["web"] = db2app_fieldval("AppUser", "web", inst)
     cnv["lang"] = db2app_fieldval("AppUser", "lang", inst)
     cnv["settings"] = db2app_fieldval("AppUser", "settings", inst)
-    cnv["remtls"] = db2app_fieldval("AppUser", "remtls", inst)
-    cnv["completed"] = db2app_fieldval("AppUser", "completed", inst)
     cnv["started"] = db2app_fieldval("AppUser", "started", inst)
+    cnv["completed"] = db2app_fieldval("AppUser", "completed", inst)
+    cnv["remtls"] = db2app_fieldval("AppUser", "remtls", inst)
     cnv["built"] = db2app_fieldval("AppUser", "built", inst)
     return cnv
 
@@ -523,6 +524,7 @@ def app2db_Point(inst):
     cnv["modified"] = app2db_fieldval(None, "modified", inst)
     cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
     cnv["editors"] = app2db_fieldval("Point", "editors", inst)
+    cnv["srctl"] = app2db_fieldval("Point", "srctl", inst)
     cnv["importid"] = app2db_fieldval("Point", "importid", inst)
     cnv["source"] = app2db_fieldval("Point", "source", inst)
     cnv["date"] = app2db_fieldval("Point", "date", inst)
@@ -551,6 +553,7 @@ def db2app_Point(inst):
     cnv["modified"] = db2app_fieldval(None, "modified", inst)
     cnv["batchconv"] = db2app_fieldval(None, "batchconv", inst)
     cnv["editors"] = db2app_fieldval("Point", "editors", inst)
+    cnv["srctl"] = db2app_fieldval("Point", "srctl", inst)
     cnv["importid"] = db2app_fieldval("Point", "importid", inst)
     cnv["source"] = db2app_fieldval("Point", "source", inst)
     cnv["date"] = db2app_fieldval("Point", "date", inst)
@@ -758,8 +761,8 @@ def dblogmsg(op, entity, res):
 def insert_new_AppUser(cnx, cursor, fields):
     fields = app2db_AppUser(fields)
     stmt = (
-        "INSERT INTO AppUser (created, modified, importid, email, phash, status, actsends, actcode, accessed, name, title, web, lang, settings, remtls, completed, started, built) "
-        "VALUES (%(created)s, %(modified)s, %(importid)s, %(email)s, %(phash)s, %(status)s, %(actsends)s, %(actcode)s, %(accessed)s, %(name)s, %(title)s, %(web)s, %(lang)s, %(settings)s, %(remtls)s, %(completed)s, %(started)s, %(built)s)")
+        "INSERT INTO AppUser (created, modified, importid, email, phash, status, actsends, actcode, accessed, name, title, web, lang, settings, started, completed, remtls, built) "
+        "VALUES (%(created)s, %(modified)s, %(importid)s, %(email)s, %(phash)s, %(status)s, %(actsends)s, %(actcode)s, %(accessed)s, %(name)s, %(title)s, %(web)s, %(lang)s, %(settings)s, %(started)s, %(completed)s, %(remtls)s, %(built)s)")
     data = {
         'created': fields.get("created"),
         'modified': fields.get("modified"),
@@ -775,9 +778,9 @@ def insert_new_AppUser(cnx, cursor, fields):
         'web': fields.get("web", entdefs["AppUser"]["web"]["dv"]),
         'lang': fields.get("lang", entdefs["AppUser"]["lang"]["dv"]),
         'settings': fields.get("settings", entdefs["AppUser"]["settings"]["dv"]),
-        'remtls': fields.get("remtls", entdefs["AppUser"]["remtls"]["dv"]),
-        'completed': fields.get("completed", entdefs["AppUser"]["completed"]["dv"]),
         'started': fields.get("started", entdefs["AppUser"]["started"]["dv"]),
+        'completed': fields.get("completed", entdefs["AppUser"]["completed"]["dv"]),
+        'remtls': fields.get("remtls", entdefs["AppUser"]["remtls"]["dv"]),
         'built': fields.get("built", entdefs["AppUser"]["built"]["dv"])}
     cursor.execute(stmt, data)
     fields["dsId"] = cursor.lastrowid
@@ -816,12 +819,13 @@ def update_existing_AppUser(cnx, cursor, fields, vck):
 def insert_new_Point(cnx, cursor, fields):
     fields = app2db_Point(fields)
     stmt = (
-        "INSERT INTO Point (created, modified, editors, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats) "
-        "VALUES (%(created)s, %(modified)s, %(editors)s, %(importid)s, %(source)s, %(date)s, %(text)s, %(refs)s, %(qtype)s, %(communities)s, %(regions)s, %(categories)s, %(tags)s, %(codes)s, %(srclang)s, %(translations)s, %(pic)s, %(stats)s)")
+        "INSERT INTO Point (created, modified, editors, srctl, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats) "
+        "VALUES (%(created)s, %(modified)s, %(editors)s, %(srctl)s, %(importid)s, %(source)s, %(date)s, %(text)s, %(refs)s, %(qtype)s, %(communities)s, %(regions)s, %(categories)s, %(tags)s, %(codes)s, %(srclang)s, %(translations)s, %(pic)s, %(stats)s)")
     data = {
         'created': fields.get("created"),
         'modified': fields.get("modified"),
         'editors': fields.get("editors", entdefs["Point"]["editors"]["dv"]),
+        'srctl': fields.get("srctl", entdefs["Point"]["srctl"]["dv"]),
         'importid': fields.get("importid", entdefs["Point"]["importid"]["dv"]),
         'source': fields.get("source", entdefs["Point"]["source"]["dv"]),
         'date': fields.get("date", entdefs["Point"]["date"]["dv"]),
@@ -1143,12 +1147,12 @@ def delete_entity(entity, dsId):
 
 def query_AppUser(cnx, cursor, where):
     query = "SELECT dsId, created, modified, "
-    query += "importid, email, phash, status, actsends, actcode, accessed, name, title, web, lang, settings, remtls, completed, started, built"
+    query += "importid, email, phash, status, actsends, actcode, accessed, name, title, web, lang, settings, started, completed, remtls, built"
     query += " FROM AppUser " + where
     cursor.execute(query)
     res = []
-    for (dsId, created, modified, importid, email, phash, status, actsends, actcode, accessed, name, title, web, lang, settings, remtls, completed, started, built) in cursor:
-        inst = {"dsType": "AppUser", "dsId": dsId, "created": created, "modified": modified, "importid": importid, "email": email, "phash": phash, "status": status, "actsends": actsends, "actcode": actcode, "accessed": accessed, "name": name, "title": title, "web": web, "lang": lang, "settings": settings, "remtls": remtls, "completed": completed, "started": started, "built": built}
+    for (dsId, created, modified, importid, email, phash, status, actsends, actcode, accessed, name, title, web, lang, settings, started, completed, remtls, built) in cursor:
+        inst = {"dsType": "AppUser", "dsId": dsId, "created": created, "modified": modified, "importid": importid, "email": email, "phash": phash, "status": status, "actsends": actsends, "actcode": actcode, "accessed": accessed, "name": name, "title": title, "web": web, "lang": lang, "settings": settings, "started": started, "completed": completed, "remtls": remtls, "built": built}
         inst = db2app_AppUser(inst)
         res.append(inst)
     dblogmsg("QRY", "AppUser", res)
@@ -1157,12 +1161,12 @@ def query_AppUser(cnx, cursor, where):
 
 def query_Point(cnx, cursor, where):
     query = "SELECT dsId, created, modified, "
-    query += "editors, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats"
+    query += "editors, srctl, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats"
     query += " FROM Point " + where
     cursor.execute(query)
     res = []
-    for (dsId, created, modified, editors, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats) in cursor:
-        inst = {"dsType": "Point", "dsId": dsId, "created": created, "modified": modified, "editors": editors, "importid": importid, "source": source, "date": date, "text": text, "refs": refs, "qtype": qtype, "communities": communities, "regions": regions, "categories": categories, "tags": tags, "codes": codes, "srclang": srclang, "translations": translations, "pic": pic, "stats": stats}
+    for (dsId, created, modified, editors, srctl, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats) in cursor:
+        inst = {"dsType": "Point", "dsId": dsId, "created": created, "modified": modified, "editors": editors, "srctl": srctl, "importid": importid, "source": source, "date": date, "text": text, "refs": refs, "qtype": qtype, "communities": communities, "regions": regions, "categories": categories, "tags": tags, "codes": codes, "srclang": srclang, "translations": translations, "pic": pic, "stats": stats}
         inst = db2app_Point(inst)
         res.append(inst)
     dblogmsg("QRY", "Point", res)

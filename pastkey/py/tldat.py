@@ -88,7 +88,7 @@ def canonize(cankey):
 
 
 def verify_unique_timeline_field(tldat, field, tldb):
-    logging.info("vutf tldat: " + str(tldat))
+    # logging.info("vutf tldat: " + str(tldat))
     if field == "cname" and not tldat[field]:
         raise ValueError("A unique name is required.")
     if field == "slug" and not tldat.get(field):
@@ -106,8 +106,8 @@ def verify_unique_timeline_field(tldat, field, tldb):
 
 def point_preb_summary(point):
     # Timelines are language specific, so translations are not included
-    sumflds = ["editors", "source", "date", "text", "refs", "qtype",
-               "communities", "regions", "categories", "tags",
+    sumflds = ["editors", "srctl", "source", "date", "text", "refs",
+               "qtype", "communities", "regions", "categories", "tags",
                "codes", "stats"]
     summary = {k: point[k] for k in sumflds}
     if point.get("pic"):
@@ -125,7 +125,7 @@ def point_preb_summary(point):
 def update_prebuilt(tldat, tldb):
     if tldat.get("ctype") == "Timelines":
         return  # Only have preb for timelines containing points
-    lpx = "update_prebuilt Timeline " + str(tldat.get("dsId"))
+    lpx = "update_prebuilt Timeline " + str(tldat.get("dsId") + " ")
     # make a reference dict out of whatever existing preb is available
     preb = tldat.get("preb")
     if not preb and tldb:
@@ -136,8 +136,8 @@ def update_prebuilt(tldat, tldb):
     # update any ptd entries that were modified since last timeline save
     if tldb and tldat.get("cids"):
         logging.info(lpx + "fetching points updated since last timeline save")
-        where = ("modified > \"" + tldb["modified"] + "\" AND dsId IN (" +
-                 tldat["cids"] + ")")
+        where = ("WHERE modified > \"" + tldb["modified"] + "\"" +
+                 "AND dsId IN (" + tldat["cids"] + ")")
         points = dbacc.query_entity("Point", where)
         for point in points:
             ptd[point["dsId"]] = point_preb_summary(point)
@@ -210,6 +210,22 @@ def push_or_update_completion(appuser, tlc, proginst):
     appuser["completed"] = json.dumps(completed)
 
 
+def remove_html(val):
+    val = re.sub(r"</?[^>]*>", "", val)
+    val = re.sub(r"\n\n\n+", "\n\n", val)  # max 2 newlines in a row
+    return val
+
+
+def remove_html_from_point_fields(ptdat):
+    """ remove html from any fields that could have accepted pasted values """
+    for fld in ["source", "date", "text"]:
+        ptdat[fld] = remove_html(ptdat.get(fld, ""))
+    if ptdat.get("refs"):
+        refs = json.loads(ptdat["refs"])
+        for i, ref in refs:
+            refs[i] = remove_html(ref)
+
+
 ############################################################
 ## API endpoints:
 
@@ -275,7 +291,7 @@ def fetchtl():
 
 
 # Called via form submit.  Returns plain text or error.
-def updpt():
+def updpt_old():
     """ Create or update the point from the multipart form data. """
     try:
         # flask.request.method always returns "GET".  Test for form content.
@@ -298,7 +314,7 @@ def updpt():
 
 
 def updtl():
-    """ Standard app POST call to update a timeline. """
+    """ Standard app POST call to update a Timeline. """
     try:
         appuser, _ = util.authenticate()
         tldat = util.set_fields_from_reqargs([
@@ -358,3 +374,27 @@ def featured():
     except ValueError as e:
         return util.serve_value_error(e)
     return util.respJSON(tls)
+
+
+def updpt():
+    """ Standard app POST call to update a Point. """
+    try:
+        appuser, _ = util.authenticate()
+        ptdat = util.set_fields_from_reqargs([
+            "dsId", "dsType", "modified", "editors", "srctl", "source",
+            "date", "text", "refs", "qtype", "communities", "regions",
+            "categories", "tags", "srclang", "translations", "stats"], {})
+        dbpt = verify_edit_authorization(appuser, ptdat)
+        if dbpt:
+            dbst = dbpt.get("srctl")
+            if dbst and (dbst != ptdat.get("srctl")):
+                raise ValueError("Source Timeline cannot be changed.")
+        for fld in ["srctl", "date", "text"]:
+            if not ptdat.get(fld):
+                raise ValueError("Point " + fld + " value is required.")
+        # date format validity checking is done client side
+        remove_html_from_point_fields(ptdat)
+        pt = dbacc.write_entity(ptdat, ptdat.get("modified", ""))
+    except ValueError as e:
+        return util.serve_value_error(e)
+    return util.respJSON(pt)

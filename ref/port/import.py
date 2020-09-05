@@ -37,6 +37,16 @@ def load_data(fr):
                     verify_db_instance(fbase, fields, obj)
 
 
+def set_point_srctls(tlid, ptidcsv):
+    if ptidcsv:
+        ptids = ptidcsv.split(",")
+        for ptid in ptids:
+            point = dbacc.cfbk("Point", "dsId", ptid)
+            if point:
+                point["srctl"] = tlid
+                dbacc.write_entity(point, point["modified"])
+
+
 # {entity: { importid:dsId, importid2:dsId2, ...}}
 imp2ds = {}
 
@@ -141,6 +151,7 @@ def convert_ref_fields(obj, fcs):
             if obj["ctype"] == "Timelines":
                 reftype = "Timeline"
             obj[cfield] = convert_idcsv(obj[cfield], reftype)
+            set_point_srctls(obj["dsId"], obj[cfield])
         elif conv["rt"] == "compdat":
             obj[cfield] = convert_completion_data(obj[cfield])
         elif conv["rt"] == "pcompcsv":

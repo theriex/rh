@@ -41,9 +41,9 @@ app.refmgr = (function () {
         switch(obj.dsType) {
         case "AppUser":
             reconstituteFieldJSONObject("settings", obj);
-            reconstituteFieldJSONObject("remtls", obj);
-            reconstituteFieldJSONObject("completed", obj);
             reconstituteFieldJSONObject("started", obj);
+            reconstituteFieldJSONObject("completed", obj);
+            reconstituteFieldJSONObject("remtls", obj);
             reconstituteFieldJSONObject("built", obj);
             break;
         case "Point":
@@ -72,9 +72,9 @@ app.refmgr = (function () {
         switch(obj.dsType) {
         case "AppUser":
             obj.settings = JSON.stringify(obj.settings);
-            obj.remtls = JSON.stringify(obj.remtls);
-            obj.completed = JSON.stringify(obj.completed);
             obj.started = JSON.stringify(obj.started);
+            obj.completed = JSON.stringify(obj.completed);
+            obj.remtls = JSON.stringify(obj.remtls);
             obj.built = JSON.stringify(obj.built);
             break;
         case "Point":
@@ -147,6 +147,11 @@ return {
             console.trace(); }
         var url = app.dr("/api/fetchobj?dt=" + dsType + "&di=" + dsId +
                          jt.ts("&cb=", "second"));
+        var sem = jt.semaphore("refmgr.getFull" + dsType + dsId);
+        if(sem && sem.critsec === "processing") {
+            setTimeout(function () {
+                app.refmgr.getFull(dsType, dsId, contf); }, 200);
+            return; }  //try again later, hopefully find cached
         var logpre = "refmgr.getFull " + dsType + " " + dsId + " ";
         jt.call("GET", url, null,
                 function (objs) {
@@ -160,7 +165,7 @@ return {
                 function (code, errtxt) {
                     jt.log(logpre + code + ": " + errtxt);
                     contf(null); },
-                jt.semaphore("refmgr.getFull" + dsType + dsId));
+                sem);
     },
 
 

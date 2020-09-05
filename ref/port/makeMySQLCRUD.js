@@ -973,6 +973,11 @@ function createJSServerAcc () {
     jsc += "            console.trace(); }\n";
     jsc += "        var url = app.dr(\"/api/fetchobj?dt=\" + dsType + \"&di=\" + dsId +\n";
     jsc += "                         jt.ts(\"&cb=\", \"second\"));\n";
+    jsc += "        var sem = jt.semaphore(\"refmgr.getFull\" + dsType + dsId);\n"
+    jsc += "        if(sem && sem.critsec === \"processing\") {\n"
+    jsc += "            setTimeout(function () {\n"
+    jsc += "                app.refmgr.getFull(dsType, dsId, contf); }, 200);\n"
+    jsc += "            return; }  //try again later, hopefully find cached\n"
     jsc += "        var logpre = \"refmgr.getFull \" + dsType + \" \" + dsId + \" \";\n";
     jsc += "        jt.call(\"GET\", url, null,\n";
     jsc += "                function (objs) {\n";
@@ -986,7 +991,7 @@ function createJSServerAcc () {
     jsc += "                function (code, errtxt) {\n";
     jsc += "                    jt.log(logpre + code + \": \" + errtxt);\n";
     jsc += "                    contf(null); },\n";
-    jsc += "                jt.semaphore(\"refmgr.getFull\" + dsType + dsId));\n";
+    jsc += "                sem);\n";
     jsc += "    },\n";
     jsc += "\n";
     jsc += "\n";
