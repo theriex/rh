@@ -142,14 +142,14 @@ var jt = {};   //Global access to general utility methods
 
 
     //Return the argument list as a string of arguments suitable for appending
-    //to onblah function text.
+    //to manager dispatch onwhatever function text.
     app.paramstr = function (args) {
         var ps = "";
         if(args && args.length) {
             ps = args.reduce(function (acc, arg) {
                 if((typeof arg === "string") && (arg !== "event")) {
                     arg = "'" + arg + "'"; }
-                return acc + "," + arg; }, ""); }
+                return acc + "," + arg; }, ""); }  //always start with comma
         return ps;
     };
 

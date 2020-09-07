@@ -106,9 +106,9 @@ def verify_unique_timeline_field(tldat, field, tldb):
 
 def point_preb_summary(point):
     # Timelines are language specific, so translations are not included
-    sumflds = ["editors", "srctl", "source", "date", "text", "refs",
-               "qtype", "communities", "regions", "categories", "tags",
-               "codes", "stats"]
+    sumflds = ["dsType", "dsId", "editors", "srctl", "source", "date",
+               "text", "refs", "qtype", "communities", "regions", "categories",
+               "tags", "codes", "stats"]
     summary = {k: point[k] for k in sumflds}
     if point.get("pic"):
         summary["pic"] = point["dsId"]
@@ -125,7 +125,7 @@ def point_preb_summary(point):
 def update_prebuilt(tldat, tldb):
     if tldat.get("ctype") == "Timelines":
         return  # Only have preb for timelines containing points
-    lpx = "update_prebuilt Timeline " + str(tldat.get("dsId") + " ")
+    lpx = "update_prebuilt Timeline " + str(tldat.get("dsId", "new") + " ")
     # make a reference dict out of whatever existing preb is available
     preb = tldat.get("preb")
     if not preb and tldb:
