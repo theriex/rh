@@ -221,9 +221,15 @@ def remove_html_from_point_fields(ptdat):
     for fld in ["source", "date", "text"]:
         ptdat[fld] = remove_html(ptdat.get(fld, ""))
     if ptdat.get("refs"):
+        # logging.info("rhfpf refs before: " + ptdat["refs"])
         refs = json.loads(ptdat["refs"])
-        for i, ref in refs:
-            refs[i] = remove_html(ref)
+        if not isinstance(refs, list):
+            logging.warning("rhfpf refs not list: " + str(refs))
+            refs = []
+        else:
+            refs = [remove_html(ref) for ref in refs]
+        ptdat["refs"] = json.dumps(refs)
+        # logging.info("rhfpf refs after:  " + ptdat["refs"])
 
 
 ############################################################
@@ -390,8 +396,11 @@ def updpt():
             if dbst and (dbst != ptdat.get("srctl")):
                 raise ValueError("Source Timeline cannot be changed.")
         for fld in ["srctl", "date", "text"]:
-            if not ptdat.get(fld):
-                raise ValueError("Point " + fld + " value is required.")
+            if not ptdat.get(fld):  # required point field value missing
+                if dbpt:  # copy from existing point
+                    ptdat[fld] = dbpt[fld]
+                else:
+                    raise ValueError("Point " + fld + " value is required.")
         # date format validity checking is done client side
         remove_html_from_point_fields(ptdat)
         pt = dbacc.write_entity(ptdat, ptdat.get("modified", ""))

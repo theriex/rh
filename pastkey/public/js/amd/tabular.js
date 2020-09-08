@@ -1495,7 +1495,7 @@ app.tabular = (function () {
 
 
     function uifoc (domid) {
-        jt.log("uifoc " + domid);
+        //jt.log("uifoc " + domid);
         setTimeout(function () { jt.byId(domid).focus(); }, 200);
     }
 
@@ -2182,7 +2182,7 @@ app.tabular = (function () {
         placeholdercheck: function (event) {
             var ptid = event.target.dataset.ptid;
             var ptxt = event.target.dataset.placetext;
-            jt.log("placeholdercheck " + event.type + " " + event.target.id);
+            //jt.log("placeholdercheck " + event.type + " " + event.target.id);
             if(event.type === "blur" && !event.target.innerText.trim()) {
                 event.target.innerText = ptxt; }
             else if(event.type === "focus") {
@@ -2207,7 +2207,7 @@ app.tabular = (function () {
                 datemgr.placeholder = sp.def.place;
                 placemgr.makeEditable(attrs, pt.dsId, sp.def.place, 
                                       "datemgr"); }
-            else if(editmgr.editable(pt)) {
+            else if(editmgr.status(pt).editable) {
                 attrs.onclick = mdfs("editmgr.togedit", pt.dsId,
                                      "edit", "datemgr"); }
             return jt.tac2html(["div", attrs, pt.date || sp.def.place]); },
@@ -2285,7 +2285,7 @@ app.tabular = (function () {
                 txtmgr.placeholder = sp.def.place;
                 placemgr.makeEditable(attrs, pt.dsId, sp.def.place,
                                       "txtmgr"); }
-            else if(editmgr.editable(pt)) {
+            else if(editmgr.status(pt).editable) {
                 attrs.onclick = mdfs("editmgr.togedit", pt.dsId,
                                      "edit", "txtmgr"); }
             return jt.tac2html(["div", attrs, pt.text || sp.def.place]); },
@@ -2329,37 +2329,55 @@ app.tabular = (function () {
             if(!Array.isArray(pt.refs)) {  //might have defaulted to {}
                 pt.refs = []; } },
         getHTML: function (pt, sp) {
+            var dm = sp.mode || "read";
+            if(dm === "read" && editmgr.status(pt).editable) {
+                dm = "editable"; }
             prmgr.verifyPointRefs(pt);
-            var html = pt.refs.map(function (refstr, idx) {
-                if(sp.mode !== "edit") {
-                    html.push(["div", prmgr.rdas(pt.dsId, idx),
-                               jt.linkify(refstr)]); }
-                else { //editing
-                    html.push(["div", prmgr.rdas(pt.dsId, idx, sp.def.place),
-                               refstr]); } });
-            if(sp.mode === "edit") { //append blank reference field for adding
-                html.push(
-                    ["div", prmgr.rdas(pt.dsId, pt.refs.length, sp.def.place),
-                     sp.def.place]); }
             return jt.tac2html(
-                ["div", {cla:"ptrefsdiv", id:"ptrefsdiv" + pt.dsId}, html]); },
+                ["div", {cla:"ptrefsdiv", id:"ptrefsdiv" + pt.dsId},
+                 prmgr.refshtml(pt.dsId, pt.refs, sp.def.place, dm)]); },
+        refshtml: function (ptid, refs, plt, mode) {
+            mode = mode || "edit";
+            var html = refs.map(function (refstr, idx) {
+                return prmgr.refhtml(ptid, idx, refstr, plt, mode); });
+            if(mode === "edit") { //append blank reference field for adding
+                html.push(prmgr.refhtml(ptid, refs.length, plt, plt)); }
+            return jt.tac2html(html); },
+        refhtml: function (ptid, idx, txt, plt, mode) {
+            if(mode && mode !== "edit") {
+                var attrs = prmgr.rdas(ptid, idx);
+                if(mode === "editable") {
+                    attrs.onclick = mdfs("editmgr.togedit", ptid, "edit",
+                                         "prmgr"); }
+                return ["div", attrs, jt.linkify(txt)]; }
+            return ["div", prmgr.rdas(ptid, idx, plt), txt]; },
         rdas: function (ptid, idx, place) {
             var divattrs = {cla:"ptrefstrdiv", id:"ptrefstrdiv" + ptid + idx};
             if(place) {  //editing
                 placemgr.makeEditable(divattrs, ptid, place, "prmgr");
-                divattrs["data-idx"] = idx;  //data-ptid already set
+                divattrs["data-idx"] = idx;  //data-ptid set by makeEditable
                 divattrs.onkeyup = mdfs("prmgr.refinput", "event"); }
             return divattrs; },
         refinput: function (event) {
             var ptid = event.target.dataset.ptid;
-            var idx = event.target.dataset.idx;
+            var plt = event.target.dataset.placetext;
             if(event.key === "Enter") {
-                jt.log("refinput enter pressed " + ptid + ", idx: " + idx); } },
+                var refs = prmgr.refsFromHTML(ptid, plt);
+                jt.out("ptrefsdiv" + ptid, prmgr.refshtml(ptid, refs, plt));
+                uifoc("ptrefstrdiv" + ptid + refs.length); } },
         help: function () {
-            return {fpn:"References", txt:"Each reference is a single line citation or full URL. References are strongly encouraged for both validation and further learning."}; },
-        appendChangedValue: function () {
-            //return serialized json
-            jt.log("Reference values not accumulated yet."); }
+            return {fpn:"References", txt:"Each reference is a single line citation or full URL. References are strongly recommended for validation and further learning."}; },
+        select: function (pt) {
+            uifoc("ptrefsdiv" + pt.dsId); },
+        refsFromHTML: function (ptid, plt) {
+            var pdiv = jt.byId("ptrefsdiv" + ptid);
+            var refs = Array.from(pdiv.children).map((c) => c.innerText.trim());
+            refs = refs.filter((x) => x && x !== plt);  //remove empty refs
+            return refs; },
+        appendChangedValue: function (ptd, pt, det) {
+            var refs = prmgr.refsFromHTML(pt.dsId, det.def.place);
+            if(JSON.stringify(refs) !== JSON.stringify(pt.refs)) {
+                ptd.refs = refs; } }
     };
 
 
@@ -2371,7 +2389,7 @@ app.tabular = (function () {
         getHTML: function (pt, sp) {
             pt.qtype = pt.qtype || "C";
             var divattrs = {cla:"ptqtdiv"};
-            if(editmgr.editable(pt)) {
+            if(editmgr.status(pt).editable) {
                 divattrs.onclick = mdfs("editmgr.togedit", pt.dsId,
                                         "edit", "qtmgr"); }
             var valhtml = qtmgr.qts[pt.qtype].txt || qtmgr.qts.C.txt;
@@ -2450,7 +2468,7 @@ app.tabular = (function () {
             pic:{dv:"", mgr:picmgr},
             date:{dv:"", mgr:datemgr, place:"YYYY-MM-DD"},
             text:{dv:"", mgr:txtmgr, place:"Concise event description"},
-            refs:{dv:[], mgr:prmgr, place:"Document reference and/or URL"},
+            refs:{dv:[], mgr:prmgr, place:"[+ref]"},
             qtype:{dv:"C", mgr:qtmgr},
             source:{dv:"", mgr:srcmgr, place:"Id"},
             communities:{dv:"", mgr:tagmgr},
@@ -2531,42 +2549,55 @@ app.tabular = (function () {
                 kmd.style.display = "none";
                 jt.byId("kebaba" + ptid).style.fontWeight = "normal"; } },
         rebuildKebabActions: function (pt) {
-            var html = [];
-            if(!editmgr.editable(pt)) {
-                html.push(["div", {cla:"kebabchoicediv"},
-                           ["a", {href:"#copy",
-                                  title:"Copy information to a new point",
-                                  onclick:mdfs("editmgr.copyPoint", pt.dsId)},
-                            "Copy"]]); }
-            if(editmgr.editable(pt) && jt.byId("saveptb" + pt.dsId)) {
-                html.push(["div", {cla:"kebabchoicediv"},
-                           ["a", {href:"#save", title:"Save point",
-                                  onclick:mdfs("kebabmgr.cancelEdit", pt.dsId)},
-                            "Cancel Edit"]]); }
-            if(pt.dsId && pt.dsId !== "Placeholder" && editmgr.editable(pt)) {
-                html.push(["div", {cla:"kebabchoicediv"},
-                           ["a", {href:"#delete", title:"Delete point",
-                                  onclick:mdfs("kebabmgr.deletept", pt.dsId)},
-                            "Delete"]]); }
-            jt.out("kebabmenudiv" + pt.dsId, jt.tac2html(html)); },
-        cancelEdit: function (ptid) {
+            var edst = editmgr.status(pt);
+            var mas = [
+                {id:"copy", tx:"Copy Point", ti:"Copy data to a new point",
+                 cond:!edst.editable},
+                {id:"edit", tx:"Edit", ti:"Edit this point",
+                 cond:edst.editable && !edst.editing},
+                {id:"cancel", tx:"Cancel Edit", ti:"Discard unsaved changes",
+                 cond:edst.editing && edst.cancelable},
+                {id:"delete", tx:"Delete Point", ti:"Delete this point",
+                 cond:edst.editable && edst.cancelable}];
+            mas = mas.filter((ma) => ma.cond);
+            jt.out("kebabmenudiv" + pt.dsId, jt.tac2html(
+                mas.map(function (ma) {
+                    return ["div", {cla:"kebabchoicediv"},
+                            ["a", {href:"#" + ma.id, title:ma.ti,
+                                   onclick:mdfs("kebabmgr." + ma.id, pt.dsId)},
+                             ma.tx]]; }))); },
+        copy: function (ptid) {
+            kebabmgr.toggleKebabMenu(ptid, "close");
+            jt.err("Copy point not implemented yet"); },
+        edit: function (ptid) {
+            kebabmgr.toggleKebabMenu(ptid, "close");
+            editmgr.togedit(ptid, "edit"); },
+        cancel: function (ptid) {
             kebabmgr.toggleKebabMenu(ptid, "close");
             editmgr.togedit(ptid, "read"); },
-        deletept: function (ptid) {
+        delete: function (ptid) {
             kebabmgr.toggleKebabMenu(ptid, "close");
             jt.err("Delete point not implemented yet"); }
     };
 
 
     var editmgr = {
-        editable: function (pt) {
-            if(!app.user || !app.user.acc) { return ""; }  //not signed in
-            pt.editors = pt.editors || "";  //legacy compiled points
-            if((!pt.dsId || pt.dsId === "Placeholder") ||
-               (pt.editors.csvcontains(app.user.acc.dsId) &&
-                (aggmgr.currTL("edit").dsId === pt.srctl))) {
-                return app.user.acc.dsId; }
-            return ""; },
+        editing: function (ptid) {
+            var datediv = jt.byId("ptddatediv" + ptid);
+            return (datediv && datediv.isContentEditable); },
+        status: function (pt) {
+            var state = {editable:false, cancelable:false, editing:false};
+            if(app.user && app.user.acc) {
+                pt.editors = pt.editors || "";  //legacy compiled points
+                if((!pt.dsId || pt.dsId === "Placeholder") ||
+                   (pt.editors.csvcontains(app.user.acc.dsId) &&
+                    (aggmgr.currTL("edit").dsId === pt.srctl))) {
+                    state.editable = true; }
+                if(editmgr.editing(pt.dsId)) {
+                    state.editing = true; }
+                if(pt.dsId && pt.dsId !== "Placeholder") {
+                    state.cancelable = true; } }
+            return state; },
         pt4id: function (ptid, cbf) {
             if(ptid === "Placeholder") {
                 return cbf({dsType:"Point", dsId:"Placeholder"}); }
@@ -2591,8 +2622,10 @@ app.tabular = (function () {
                                style:"display:none;",
                                onclick:mdfs("editmgr.save", pt.dsId)},
                     "Save"]]]]); },
-        updateSaveButtonDisplay: function (pt) {
-            if(pt.dsId === "Placeholder" || ptdmgr.fieldsChanged(pt)) {
+        updateSaveButtonDisplay: function (pt, disp) {
+            if(disp) {
+                jt.byId("saveptb" + pt.dsId).style.display = disp; }
+            else if(pt.dsId === "Placeholder" || ptdmgr.fieldsChanged(pt)) {
                 jt.byId("saveptb" + pt.dsId).style.display = "inline"; }
             else {
                 jt.byId("saveptb" + pt.dsId).style.display = "none"; } },
@@ -2613,27 +2646,27 @@ app.tabular = (function () {
         save: function (ptid) {
             jt.log("editmgr.save called");
             if(!editmgr.validate(ptid)) { return; }
-            jt.out("saveprocmsgdiv" + ptid, "");
-            jt.out("saveptbdiv" + ptid, "Saving...");
+            jt.out("saveprocmsgdiv" + ptid, "Saving...");
+            editmgr.updateSaveButtonDisplay({dsId:ptid}, "none");
             editmgr.pt4id(ptid, function (pt) {
                 var ptdat = ptdmgr.pointChangeData(pt);
                 ptdat = app.refmgr.postdata(ptdat);
                 jt.call("POST", "/api/updpt?" + app.auth(), ptdat,
                         function (obs) {
                             jt.log("Point " + obs[0].dsId + " saved.");
-                            jt.out("saveptbdiv" + ptid,
+                            jt.out("saveprocmsgdiv" + ptid,
                                    "Saved. Updating Timeline...");
                             app.refmgr.put(app.refmgr.deserialize(obs[0]));
                             aggmgr.addOrUpdatePoint(obs[0]);
                             ptdmgr.rebuildTimelinePoints(pt); },
                         function (code, errtxt) {
-                            editmgr.updateSaveButtonDisplay(pt);
+                            editmgr.updateSaveButtonDisplay(pt, "inline");
                             jt.out("saveprocmsgdiv" + pt.dsId, "Error " + code +
                                    ": " + errtxt); },
                         jt.semaphore("editmgr.save")); }); },
         cbIncHTML: function (pt) {
             //pt may be from previous mix-in from another url
-            if(editmgr.editable(pt)) { return ""; }
+            if(editmgr.status(pt).editable) { return ""; }
             var etl = aggmgr.currTL("edit");
             return jt.tac2html(
                 ["input", {type:"checkbox", id:"cbinc" + pt.dsId,
@@ -2671,8 +2704,7 @@ app.tabular = (function () {
         togedit: function (ptid, mode, mgrname) {
             //jt.log("togedit " + ptid + " " + mode + " " + mgrname);
             if(!mode) {  //toggle
-                var datediv = jt.byId("tpddiv" + ptid);
-                if(datediv && datediv.isContentEditable) {
+                if(editmgr.editing(ptid)) {
                     mode = "read"; }
                 else {
                     mode = "edit"; } }
