@@ -2170,6 +2170,9 @@ app.tabular = (function () {
 
 
     var placemgr = {
+        makeTogglable: function (attrs, ptid) {
+            attrs.onclick = mdfs("editmgr.togedit", ptid, "edit", attrs.id);
+            attrs.style = "cursor:pointer;"; },
         makeEditable: function (attrs, ptid, placetext, helpsrcname) {
             attrs.contentEditable = "true";
             attrs["data-ptid"] = ptid;
@@ -2208,13 +2211,10 @@ app.tabular = (function () {
                 placemgr.makeEditable(attrs, pt.dsId, sp.def.place, 
                                       "datemgr"); }
             else if(editmgr.status(pt).editable) {
-                attrs.onclick = mdfs("editmgr.togedit", pt.dsId,
-                                     "edit", "datemgr"); }
+                placemgr.makeTogglable(attrs, pt.dsId); }
             return jt.tac2html(["div", attrs, pt.date || sp.def.place]); },
         help: function () {
             return {fpn:"Date", txt:"A date in general YYYY-MM-DD format.  Month and day can be omitted.  For years before the common era, use a preceding minus sign or a trailing ' BCE'. To make a timespan, specify start ' to ' end.  Years can be decorated with a trailing 's' or '+' to indicate decades or beginnings e.g. 1920s or 1855+."}; },
-        select: function (pt) {
-            uifoc("ptddatediv" + pt.dsId); },
         getValue: function (ptid) {
             var val = jt.byId("ptddatediv" + ptid).innerText || "";
             val = val.trim();
@@ -2286,13 +2286,10 @@ app.tabular = (function () {
                 placemgr.makeEditable(attrs, pt.dsId, sp.def.place,
                                       "txtmgr"); }
             else if(editmgr.status(pt).editable) {
-                attrs.onclick = mdfs("editmgr.togedit", pt.dsId,
-                                     "edit", "txtmgr"); }
+                placemgr.makeTogglable(attrs, pt.dsId); }
             return jt.tac2html(["div", attrs, pt.text || sp.def.place]); },
         help: function () {
             return {fpn:"Text", txt:"The text for the timeline point should describe the key event facts and impact. Be as clear and concise as possible. Max of 1200 characters."}; },
-        select: function (pt) {
-            uifoc("pttextdiv" + pt.dsId); },
         getValue: function (ptid) {
             //Server cleans up any embedded HTML if any sneaks through
             var val = jt.byId("pttextdiv" + ptid).innerText || "";
@@ -2347,8 +2344,7 @@ app.tabular = (function () {
             if(mode && mode !== "edit") {
                 var attrs = prmgr.rdas(ptid, idx);
                 if(mode === "editable") {
-                    attrs.onclick = mdfs("editmgr.togedit", ptid, "edit",
-                                         "prmgr"); }
+                    placemgr.makeTogglable(attrs, ptid); }
                 return ["div", attrs, jt.linkify(txt)]; }
             return ["div", prmgr.rdas(ptid, idx, plt), txt]; },
         rdas: function (ptid, idx, place) {
@@ -2367,8 +2363,6 @@ app.tabular = (function () {
                 uifoc("ptrefstrdiv" + ptid + refs.length); } },
         help: function () {
             return {fpn:"References", txt:"Each reference is a single line citation or full URL. References are strongly recommended for validation and further learning."}; },
-        select: function (pt) {
-            uifoc("ptrefsdiv" + pt.dsId); },
         refsFromHTML: function (ptid, plt) {
             var pdiv = jt.byId("ptrefsdiv" + ptid);
             var refs = Array.from(pdiv.children).map((c) => c.innerText.trim());
@@ -2390,8 +2384,7 @@ app.tabular = (function () {
             pt.qtype = pt.qtype || "C";
             var divattrs = {cla:"ptqtdiv"};
             if(editmgr.status(pt).editable) {
-                divattrs.onclick = mdfs("editmgr.togedit", pt.dsId,
-                                        "edit", "qtmgr"); }
+                placemgr.makeTogglable(divattrs, pt.dsId); }
             var valhtml = qtmgr.qts[pt.qtype].txt || qtmgr.qts.C.txt;
             if(sp.mode === "edit") {
                 var huf = mdfs("helpmgr.updateHelp", "event");
@@ -2411,8 +2404,6 @@ app.tabular = (function () {
             var dt = Object.values(qtmgr.qts).map(function (qt) {
                 return ["tr", [["td", qt.txt], ["td", qt.hlp]]]; });
             return {fpn:"Question Type", txt:"The style of user interaction for this point." + jt.tac2html(["table", dt])}; },
-        select: function (pt) {
-            uifoc("qtsel" + pt.dsId); },
         appendChangedValue: function (ptd, pt) {
             var sel = jt.byId("qtsel" + pt.dsId);
             return sel.options[sel.selectedIndex].value; }
@@ -2701,7 +2692,7 @@ app.tabular = (function () {
                 else {
                     parentdiv.appendChild(placediv); } }
             editmgr.togedit("Placeholder", "edit"); },
-        togedit: function (ptid, mode, mgrname) {
+        togedit: function (ptid, mode, focdivid) {
             //jt.log("togedit " + ptid + " " + mode + " " + mgrname);
             if(!mode) {  //toggle
                 if(editmgr.editing(ptid)) {
@@ -2712,9 +2703,8 @@ app.tabular = (function () {
                 //either canceling current edit or starting a new edit
                 jt.byId("saveptb" + pt.dsId).style.display = "none";
                 ptdmgr.redisplay(pt, mode);
-                if(mgrname) {
-                    jt.log("togedit " + mgrname + " select " + pt.dsId);
-                    app.tabular.managerDispatch(mgrname, "select", pt); } }); }
+                if(focdivid) {
+                    uifoc(focdivid); } }); }
     };
 
 
