@@ -201,7 +201,7 @@ def authenticate():
 
 
 def administrator_auth():
-    appuser, token = authenticate()
+    appuser, _ = authenticate()
     cs = get_connection_service("Administrators")
     if not val_in_csv(appuser["dsId"], cs["data"]):
         raise ValueError("Not authorized as admin")
@@ -302,6 +302,13 @@ def set_fields_from_reqargs(fields, obj):
                 val = ""
             obj[fld] = val
     return obj
+
+
+def fill_missing_fields(fields, src, trg):
+    for fld in fields:
+        if not trg.get(fld):
+            trg[fld] = src.get(fld, "")
+    return trg
 
 
 def update_account_fields(appuser):

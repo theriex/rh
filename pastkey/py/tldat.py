@@ -386,20 +386,19 @@ def updpt():
     """ Standard app POST call to update a Point. """
     try:
         appuser, _ = util.authenticate()
-        ptdat = util.set_fields_from_reqargs([
-            "dsId", "dsType", "modified", "editors", "srctl", "source",
-            "date", "text", "refs", "qtype", "communities", "regions",
-            "categories", "tags", "srclang", "translations", "stats"], {})
+        fields = ["dsId", "dsType", "modified", "editors", "srctl", "source",
+                  "date", "text", "refs", "qtype", "communities", "regions",
+                  "categories", "tags", "srclang", "translations", "stats"]
+        ptdat = util.set_fields_from_reqargs(fields, {})
         dbpt = verify_edit_authorization(appuser, ptdat)
         if dbpt:
             dbst = dbpt.get("srctl")
             if dbst and (dbst != ptdat.get("srctl")):
-                raise ValueError("Source Timeline cannot be changed.")
-        for fld in ["srctl", "date", "text"]:
-            if not ptdat.get(fld):  # required point field value missing
-                if dbpt:  # copy from existing point
-                    ptdat[fld] = dbpt[fld]
-                else:
+                raise ValueError("Source Timeline may not be changed.")
+            util.fill_missing_fields(fields, dbpt, ptdat)
+        else:  # making a new instance
+            for fld in ["srctl", "date", "text"]:
+                if not ptdat.get(fld):  # required point field value
                     raise ValueError("Point " + fld + " value is required.")
         # date format validity checking is done client side
         remove_html_from_point_fields(ptdat)
