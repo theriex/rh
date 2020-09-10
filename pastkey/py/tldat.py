@@ -106,9 +106,9 @@ def verify_unique_timeline_field(tldat, field, tldb):
 
 def point_preb_summary(point):
     # Timelines are language specific, so translations are not included
-    sumflds = ["dsType", "dsId", "editors", "srctl", "source", "date",
-               "text", "refs", "qtype", "communities", "regions", "categories",
-               "tags", "codes", "stats"]
+    sumflds = ["dsType", "dsId", "modified", "editors", "srctl", "source",
+               "date", "text", "refs", "qtype", "communities", "regions",
+               "categories", "tags", "codes", "stats"]
     summary = {k: point[k] for k in sumflds}
     if point.get("pic"):
         summary["pic"] = point["dsId"]
@@ -406,3 +406,31 @@ def updpt():
     except ValueError as e:
         return util.serve_value_error(e)
     return util.respJSON(pt)
+
+
+def upldpic():
+    """ Form submit and monitoring for uploading a point pic. """
+    # flask.request.method always returns "GET", so check for file input.
+    picfile = flask.request.files.get("picfilein")
+    if not picfile:
+        logging.info("upldpic ready for upload")
+        return util.respond("Ready", mimetype="text/plain")
+    try:
+        appuser, _ = util.authenticate()
+        ptid = dbacc.reqarg("ptid", "dbid", required=True)
+        pt = dbacc.cfbk("Point", "dsId", ptid, required=True)
+        logging.info(appuser["email"] + " upldpic Point " + str(ptid))
+        if not appuser["dsId"] in util.csv_to_list(pt["editors"]):
+            raise ValueError("Not authorized to edit this point")
+        img = Image.open(picfile)
+        img = ImageOps.exif_transpose(img)  # correct vertical orientation
+        sizemaxdims = 400, 400   # max allowed width/height for thumbnail resize
+        img.thumbnail(sizemaxdims)   # modify, preserving aspect ratio
+        bbuf = io.BytesIO()          # file-like object for save
+        img.save(bbuf, format="PNG")
+        pt["pic"] = base64.b64encode(bbuf.getvalue())
+        pt = dbacc.write_entity(pt, pt["modified"])
+    except ValueError as e:
+        logging.info("upldpic Point " + str(ptid) + ": " + str(e))
+        return util.serve_value_error(e)
+    return util.respond("Done: " + pt["modified"], mimetype="text/plain")

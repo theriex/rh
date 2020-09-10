@@ -1488,7 +1488,7 @@ app.tabular = (function () {
         mgrfname = mgrfname.split(".");
         var fstr = "app.tabular.managerDispatch('" + mgrfname[0] + "','" +
             mgrfname[1] + "'" + pstr + ")";
-        if(pstr !== ",event") {
+        if(pstr !== ",event") {  //don't return false from event hooks
             fstr = jt.fs(fstr); }
         return fstr;
     }
@@ -2129,24 +2129,105 @@ app.tabular = (function () {
 
 
     var picmgr = {
+        picsrc: function (pt) {
+            var src = app.dr("img/ptplaceholder.png");
+            if(pt.pic) {
+                src = app.dr("/api/obimg") + "?dt=Point&di=" + pt.dsId +
+                    "&v=" + app.vtag(pt.modified); }
+            return src; },
         getHTML: function (pt, sp) {
             var attrs = {cla:"ptdpic", id:"ptdpic" + pt.dsId,
                          title:"Point " + pt.dsId,
-                         src:app.dr("img/ptplaceholder.png")};
-            if(pt.pic) {
-                attrs.src = app.dr("/api/obimg") + "?dt=Point&di=" + pt.dsId; }
-            if(sp.mode === "edit") {
+                         src:picmgr.picsrc(pt)};
+            if(editmgr.status(pt).editable) {
                 attrs.style = "cursor:pointer;";
-                attrs.onclick = mdfs("picmgr.uploadPic", pt.dsId); }
+                attrs.onclick = mdfs("picmgr.prepUpload", pt.dsId); }
             return jt.tac2html(["img", attrs]); },
-        uploadPic: function (ptid) {
-            jt.log("Not implemented yet"); },
+        prepUpload: function (ptid) {
+            if(kebabmgr.showingMenu(ptid)) {
+                kebabmgr.toggleKebabMenu(ptid, "close"); }
+            else if(editmgr.saveButtonDisplayed(ptid)) {
+                //take care of outstanding edits to avoid data sync issues
+                editmgr.save(ptid); }
+            else if(!ptid || ptid === "Placeholder") {
+                //need minimum valid point data in db before uploading pic
+                uifoc("ptddatediv" + ptid); }
+            else {
+                picmgr.togglePicUpload(ptid, "show"); } },
+        togglePicUpload: function (ptid, cmd) {
+            var div = jt.byId("picuploaddiv" + ptid);
+            if(cmd === "hide" || div.style.display === "block") {
+                div.style.display = "none";
+                return; }
+            div.style.display = "block";
+            div.innerHTML = jt.tac2html(
+                ["div", {cla:"picuploadformdiv", id:"picuploadformdiv" + ptid},
+                 [["div", {cla:"cancelxdiv"},
+                   ["a", {href:"#close", title:"Close pic upload",
+                          onclick:mdfs("picmgr.togglePicUpload", ptid)}, "x"]],
+                  ["form", {id:"picuploadform" + ptid, action:"/api/upldpic",
+                            method:"post", target:"pumif" + ptid,
+                            enctype:"multipart/form-data"},
+                   [["input", {type:"hidden", name:"an", value:app.user.email}],
+                    ["input", {type:"hidden", name:"at", value:app.user.tok}],
+                    ["input", {type:"hidden", name:"ptid", value:ptid}],
+                    ["label", {fo:"picfilein" + ptid}, "Upload point pic"],
+                    ["input", {type:"file", id:"picfilein" + ptid, 
+                               name:"picfilein", accept:"image/*",
+                               onchange:mdfs("picmgr.enableUpldBtn", ptid)}],
+                    //PENDING: image attribution input. Public domain for now.
+                    ["div", {cla:"picupstatdiv", id:"picupstatdiv" + ptid}],
+                    ["div", {cla:"picupfbsdiv", id:"picupfbsdiv" + ptid},
+                     ["button", {type:"submit", id:"picuploadbutton" + ptid,
+                                 //initially disabled via script below
+                                 onclick:mdfs("picmgr.monitorUpload", 
+                                              ptid, true)},
+                      "Upload"]]]],
+                  ["iframe", {id:"pumif" + ptid, name:"pumif" + ptid,
+                              src:"/api/upldpic", style:"display:none"}]]]);
+            jt.byId("picuploadbutton" + ptid).disabled = true; },
+        enableUpldBtn: function (ptid) {
+            jt.byId("picuploadbutton" + ptid).disabled = false; },
+        monitorUpload: function (ptid, submit) {
+            var iframe = jt.byId("pumif" + ptid);
+            if(!iframe) {
+                return jt.log("picmgr.monitorUpload exiting, no iframe"); }
+            jt.byId("picuploadbutton" + ptid).disabled = true;
+            if(submit) {
+                jt.byId("picuploadform" + ptid).submit(); }
+            var picstatdiv = jt.byId("picupstatdiv" + ptid);
+            if(!picstatdiv.innerHTML) {
+                picstatdiv.innerHTML = "Uploading"; }
+            else {  //add a monitoring dot
+                picstatdiv.innerHTML = picstatdiv.innerHTML + "."; }
+            var txt = iframe.contentDocument || iframe.contentWindow.document;
+            if(!txt || !txt.body || txt.body.innerHTML.indexOf("Ready") >= 0) {
+                return setTimeout(function () {
+                    picmgr.monitorUpload(ptid); }, 1000); }
+            //upload complete, update image or report error
+            txt = txt.body.innerHTML;
+            if(txt.indexOf("Done: ") >= 0) {
+                picmgr.uploadComplete(ptid); }
+            else {
+                picmgr.togglePicUpload(ptid, "hide");
+                jt.err(txt); } },
+        uploadComplete: function (ptid) {
+            jt.out("picupstatdiv" + ptid, "Done.");
+            app.refmgr.uncache("Point", ptid);
+            app.refmgr.getFull("Point", ptid, function (pt) {
+                jt.byId("ptdpic" + pt.dsId).src = picmgr.picsrc(pt);
+                picmgr.togglePicUpload(pt.dsId, "hide");
+                //need to update the timeline preb to include the pic info.
+                //editmgr.save flow is overkill, but simpler to follow.
+                aggmgr.addOrUpdatePoint(pt);
+                ptdmgr.rebuildTimelinePoints(pt); }); },
         appendChangedValue: function () {
-            return "Pic upload is handled separately from save processing"; }
+            return "No value appended, pic upload handled separately."; }
     };
 
 
     var helpmgr = {
+        state: {},
         updateHelp: function (event) {
             if(!event.target.dataset.helpsrc) { return; }
             var ptid = event.target.dataset.ptid;
@@ -2163,9 +2244,15 @@ app.tabular = (function () {
             else if(event.type === "focus") {
                 jt.out(help.divid, jt.tac2html(
                     [["div", {cla:"helpfieldnamediv"}, help.hdat.fpn],
-                     ["div", {cla:"helptextdiv"}, help.hdat.txt]])); }
-            editmgr.pt4id(ptid, function (pt) {
-                editmgr.updateSaveButtonDisplay(pt); }); }
+                     ["div", {cla:"helptextdiv"}, help.hdat.txt]])); } },
+        checkForChanges: function (ptid) {
+            if(helpmgr.state.chgchkt) {
+                clearTimeout(helpmgr.state.chgchkt); }
+            helpmgr.state.chgchkt = setTimeout(function () {
+                editmgr.pt4id(ptid, function (pt) {
+                    //jt.log("checkForChanges updating save button");
+                    editmgr.updateSaveButtonDisplay(pt);
+                    helpmgr.state.chgchkt = null; }); }, 500); }
     };
 
 
@@ -2179,9 +2266,11 @@ app.tabular = (function () {
             attrs["data-placetext"] = placetext;
             if(helpsrcname) {
                 attrs["data-helpsrc"] = helpsrcname; }
-            var listener = mdfs("placemgr.placeholdercheck", "event");
-            attrs.onfocus = listener;
-            attrs.onblur = listener; },
+            var focfstr = mdfs("placemgr.placeholdercheck", "event");
+            attrs.onfocus = focfstr;
+            attrs.onblur = focfstr;
+            var chgfstr = mdfs("helpmgr.checkForChanges", ptid);
+            attrs.onkeyup = chgfstr; },
         placeholdercheck: function (event) {
             var ptid = event.target.dataset.ptid;
             var ptxt = event.target.dataset.placetext;
@@ -2357,6 +2446,7 @@ app.tabular = (function () {
         refinput: function (event) {
             var ptid = event.target.dataset.ptid;
             var plt = event.target.dataset.placetext;
+            helpmgr.checkForChanges(ptid);
             if(event.key === "Enter") {
                 var refs = prmgr.refsFromHTML(ptid, plt);
                 jt.out("ptrefsdiv" + ptid, prmgr.refshtml(ptid, refs, plt));
@@ -2388,9 +2478,11 @@ app.tabular = (function () {
             var valhtml = qtmgr.qts[pt.qtype].txt || qtmgr.qts.C.txt;
             if(sp.mode === "edit") {
                 var huf = mdfs("helpmgr.updateHelp", "event");
+                var chf = mdfs("helpmgr.checkForChanges", pt.dsId);
                 valhtml = jt.tac2html(
                     ["select", {id:"qtsel" + pt.dsId, "data-helpsrc":"qtmgr",
-                                "data-ptid":pt.dsId, onfocus:huf, onblur:huf},
+                                "data-ptid":pt.dsId, onfocus:huf, onblur:huf,
+                                onchange:chf},
                      Object.entries(qtmgr.qts).map(function ([key, def]) {
                          var attrs = {value:key};
                          if(key === pt.qtype) {
@@ -2406,15 +2498,20 @@ app.tabular = (function () {
             return {fpn:"Question Type", txt:"The style of user interaction for this point." + jt.tac2html(["table", dt])}; },
         appendChangedValue: function (ptd, pt) {
             var sel = jt.byId("qtsel" + pt.dsId);
-            return sel.options[sel.selectedIndex].value; }
+            if(sel) {
+                var val = sel.options[sel.selectedIndex].value;
+                if(val !== pt.qtype) {
+                    ptd.qtype = val; } } }
     };
 
 
     var srcmgr = {
+        placeholder:"",
         getHTML: function (pt, sp) {
             if(!pt.source && sp.mode !== "edit") { return ""; }
             var valattrs = {cla:"ptdetvaluespan", id:"srcdivspan" + pt.dsId};
             if(sp.mode === "edit") {
+                srcmgr.placeholder = sp.def.place;
                 placemgr.makeEditable(valattrs, pt.dsId, sp.def.place,
                                       "srcmgr"); }
             return jt.tac2html(
@@ -2424,8 +2521,22 @@ app.tabular = (function () {
         help: function () {
             return {fpn:"Source Id", 
                     txt:"Optional external source identifier text"}; },
+        getValue: function (ptid) {
+            var val = "";
+            var span = jt.byId("srcdivspan" + ptid);
+            if(span) {
+                val = span.innerText || "";
+                if(val) {
+                    val = val.trim();
+                    if(val === srcmgr.placeholder) {
+                        val = ""; } } }
+            return val; },
         appendChangedValue: function (ptd, pt) {
-            return jt.byId("srcdivspan" + pt.dsId).innerText.trim(); }
+            var span = jt.byId("srcdivspan" + pt.dsId);
+            if(span) {
+                var val = srcmgr.getValue(pt.dsId);
+                if(val !== pt.source) {
+                    ptd.source = val; } } }
     };
 
 
@@ -2481,7 +2592,8 @@ app.tabular = (function () {
             return jt.tac2html(html); },
         redisplay: function (pt, mode) {
             ptdmgr.verifyFields(pt);
-            jt.out("pddiv" + pt.dsId, ptdmgr.pointHTML(pt, mode)); },
+            jt.out("pddiv" + pt.dsId, ptdmgr.pointHTML(pt, mode));
+            editmgr.updateSaveButtonDisplay(pt); },  //may have been showing
         pointChangeData: function (pt) {
             var ptd = {dsType:"Point",
                        dsId:pt.dsId || "",
@@ -2530,6 +2642,9 @@ app.tabular = (function () {
                        id:"kebaba" + pt.dsId,
                        onclick:mdfs("kebabmgr.toggleKebabMenu", pt.dsId)},
                  "&#x22EE;"]); },  //vertical ellipsis
+        showingMenu: function (ptid) {
+            var kmd = jt.byId("kebabmenudiv" + ptid);
+            return kmd && kmd.style.display === "block"; },
         toggleKebabMenu: function (ptid, cmd) {
             var kmd = jt.byId("kebabmenudiv" + ptid);
             if(cmd === "open" || kmd.style.display === "none") {
@@ -2620,6 +2735,11 @@ app.tabular = (function () {
                 jt.byId("saveptb" + pt.dsId).style.display = "inline"; }
             else {
                 jt.byId("saveptb" + pt.dsId).style.display = "none"; } },
+        saveButtonDisplayed: function (ptid) {
+            var sb = jt.byId("saveptb" + ptid);
+            if(sb && sb.style.display === "inline") {
+                return true; }
+            return false; },
         validate: function (ptid) {
             var tl = aggmgr.currTL("edit");
             if(!tl.dsId || tl.dsId === "new") {
@@ -2635,7 +2755,6 @@ app.tabular = (function () {
                 return false; }
             return true; },
         save: function (ptid) {
-            jt.log("editmgr.save called");
             if(!editmgr.validate(ptid)) { return; }
             jt.out("saveprocmsgdiv" + ptid, "Saving...");
             editmgr.updateSaveButtonDisplay({dsId:ptid}, "none");
@@ -2694,17 +2813,18 @@ app.tabular = (function () {
             editmgr.togedit("Placeholder", "edit"); },
         togedit: function (ptid, mode, focdivid) {
             //jt.log("togedit " + ptid + " " + mode + " " + mgrname);
-            if(!mode) {  //toggle
-                if(editmgr.editing(ptid)) {
-                    mode = "read"; }
-                else {
-                    mode = "edit"; } }
-            editmgr.pt4id(ptid, function (pt) {
-                //either canceling current edit or starting a new edit
-                jt.byId("saveptb" + pt.dsId).style.display = "none";
-                ptdmgr.redisplay(pt, mode);
-                if(focdivid) {
-                    uifoc(focdivid); } }); }
+            var curredit = editmgr.editing(ptid);
+            var togedit = !curredit;
+            if(mode) {
+                if(mode === "read") { togedit = false; }
+                if(mode === "edit") { togedit = true; } }
+            //only redisplay if the mode has changed. keep interim state.
+            if(curredit !== togedit) {
+                //canceling current edit or starting a new edit, redisplay
+                editmgr.pt4id(ptid, function (pt) {
+                    ptdmgr.redisplay(pt, mode);
+                    if(focdivid) {
+                        uifoc(focdivid); } }); } }
     };
 
 
@@ -2752,6 +2872,8 @@ app.tabular = (function () {
                  ["div", {cla:"ecsidediv", id:"ecsidediv" + pt.dsId},
                   editmgr.editCtrlsSideHTML(pt)],
                  ["div", {cla:"kebabmenudiv", id:"kebabmenudiv" + pt.dsId,
+                          style:"display:none"}],
+                 ["div", {cla:"picuploaddiv", id:"picuploaddiv" + pt.dsId,
                           style:"display:none"}]]); }
     };
 

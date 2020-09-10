@@ -78,6 +78,10 @@ def updpt(): # params: auth, Point data
 def updtl(): # params: auth, Timeline data
     return util.secure(tldat.updtl)
 
+@app.route('/api/upldpic', methods=['GET', 'POST'])
+def upldpic(): #params: auth, ptid, picfilein
+    return util.secure(tldat.upldpic)
+
 @app.route('/api/notecomp', methods=['GET', 'POST'])
 def notecomp(): # params: auth, TLComp descriptive fields
     return util.secure(tldat.notecomp)

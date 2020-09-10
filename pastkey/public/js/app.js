@@ -124,6 +124,14 @@ var jt = {};   //Global access to general utility methods
     };
 
 
+    //Return a timestamp version tag as a url cache bust value.
+    app.vtag = function (modified) {
+        return modified && modified.replace(
+            /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z;?(\d*)/,
+            "$1$2$3-$4$5$6");
+    };
+
+
     app.toggledivdisp = function (divid) {
         var div = jt.byId(divid);
         if(div) {
