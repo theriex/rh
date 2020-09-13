@@ -18,8 +18,8 @@ A:hover {text-decoration:underline; color:#3bd4ff; }
 
 img { border:0px; vertical-align:middle; }
 
-button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
-  background:#c9b609; box-shadow:1px 1px 1px #2f2b00;
+button, .buttonspan { border: 2px solid #666666; border-radius:8px;
+  cursor:pointer; background:#c9b609; box-shadow:1px 1px 1px #2f2b00;
   padding:0px 3px; font-size:large; font-weight:bold; }
 .ghostbutton { background:none; }
 
@@ -244,14 +244,15 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 .keyselcatdiv { font-size:medium; font-weight:bold; }
 .keycbdiv label { font-size:medium; }
 
+#srchinspan { font-size:small; }
 #downloadlinkdiv { padding:0px; font-size:small; display:inline-block; }
 .downloadlinkimg { margin:0px; }
-#srchinspan { font-size:small; }
-#downloadoptsdiv { margin:20px; }
-#dloptseltitlediv { font-style:italic; }
-.dloptseldiv { min-width:100px; padding:10px 10px 2px 2px;
-  background-image:url('../img/whitewash.png'); }
-#downloadactiondiv { min-width:150px; font-weight:bold; padding:16px 0px; }
+#dldlgdiv { width:300px; }
+#dldlgcontdiv { background-image:url('../img/whitewash.png'); padding:10px; }
+#dldlgtitlediv { text-align:center; }
+#dldlgfmtdiv { text-align:center; }
+#dldlgactiondiv { text-align:center; padding:10px; }
+#dldlghelpdiv { font-size:small; }
 
 .spdattrspan { font-style:italic; font-size:medium; }
 .spdvalspan { font-size:medium; }
@@ -317,7 +318,7 @@ button { border: 2px solid #666666; border-radius:8px; cursor:pointer;
 #yrmgrctrlsdiv { display:inline-block; padding:0px 0px 0px 10px; }
 #srchmgrdiv { display:inline-block; }
 #srchlink img { max-height:20px; }
-#downloadlinkdiv { display:inline-block; }
+
 
 /* -------------------- */
 /* dlg */

@@ -323,11 +323,12 @@ def updtl():
     """ Standard app POST call to update a Timeline. """
     try:
         appuser, _ = util.authenticate()
-        tldat = util.set_fields_from_reqargs([
-            "dsId", "dsType", "modified", "editors", "name", "slug",
-            "title", "subtitle", "featured", "lang", "comment", "about",
-            "kwds", "ctype", "cids", "rempts", "svs"], {})
+        tlfs = ["dsId", "dsType", "modified", "editors", "name", "slug",
+                "title", "subtitle", "featured", "lang", "comment", "about",
+                "kwds", "ctype", "cids", "rempts", "svs"]
+        tldat = util.set_fields_from_reqargs(tlfs, {})
         tldb = verify_edit_authorization(appuser, tldat)
+        tldat = util.set_fields_from_reqargs(tlfs, tldb)
         tldat["cname"] = canonize(tldat.get("name", ""))
         verify_unique_timeline_field(tldat, "cname", tldb)
         verify_unique_timeline_field(tldat, "slug", tldb)
