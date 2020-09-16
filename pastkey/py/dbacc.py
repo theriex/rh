@@ -83,6 +83,7 @@ entdefs = {
         "batchconv": {"pt": "string", "un": False, "dv": ""},
         "editors": {"pt": "string", "un": False, "dv": ""},
         "srctl": {"pt": "dbid", "un": False, "dv": 0},
+        "lmuid": {"pt": "dbid", "un": False, "dv": 0},
         "importid": {"pt": "dbid", "un": True, "dv": 0},
         "source": {"pt": "string", "un": False, "dv": ""},
         "date": {"pt": "string", "un": False, "dv": ""},
@@ -105,6 +106,7 @@ entdefs = {
         "modified": {"pt": "string", "un": False, "dv": ""},
         "batchconv": {"pt": "string", "un": False, "dv": ""},
         "editors": {"pt": "string", "un": False, "dv": ""},
+        "lmuid": {"pt": "dbid", "un": False, "dv": 0},
         "importid": {"pt": "dbid", "un": True, "dv": 0},
         "name": {"pt": "string", "un": True, "dv": ""},
         "cname": {"pt": "string", "un": False, "dv": ""},
@@ -178,7 +180,7 @@ cachedefs = {
 }
 
 
-def timestamp(offset):
+def timestamp(offset=0):
     now = datetime.datetime.utcnow().replace(microsecond=0)
     return dt2ISO(now + datetime.timedelta(minutes=offset))
 
@@ -525,6 +527,7 @@ def app2db_Point(inst):
     cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
     cnv["editors"] = app2db_fieldval("Point", "editors", inst)
     cnv["srctl"] = app2db_fieldval("Point", "srctl", inst)
+    cnv["lmuid"] = app2db_fieldval("Point", "lmuid", inst)
     cnv["importid"] = app2db_fieldval("Point", "importid", inst)
     cnv["source"] = app2db_fieldval("Point", "source", inst)
     cnv["date"] = app2db_fieldval("Point", "date", inst)
@@ -554,6 +557,7 @@ def db2app_Point(inst):
     cnv["batchconv"] = db2app_fieldval(None, "batchconv", inst)
     cnv["editors"] = db2app_fieldval("Point", "editors", inst)
     cnv["srctl"] = db2app_fieldval("Point", "srctl", inst)
+    cnv["lmuid"] = db2app_fieldval("Point", "lmuid", inst)
     cnv["importid"] = db2app_fieldval("Point", "importid", inst)
     cnv["source"] = db2app_fieldval("Point", "source", inst)
     cnv["date"] = db2app_fieldval("Point", "date", inst)
@@ -583,6 +587,7 @@ def app2db_Timeline(inst):
     cnv["modified"] = app2db_fieldval(None, "modified", inst)
     cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
     cnv["editors"] = app2db_fieldval("Timeline", "editors", inst)
+    cnv["lmuid"] = app2db_fieldval("Timeline", "lmuid", inst)
     cnv["importid"] = app2db_fieldval("Timeline", "importid", inst)
     cnv["name"] = app2db_fieldval("Timeline", "name", inst)
     cnv["cname"] = app2db_fieldval("Timeline", "cname", inst)
@@ -612,6 +617,7 @@ def db2app_Timeline(inst):
     cnv["modified"] = db2app_fieldval(None, "modified", inst)
     cnv["batchconv"] = db2app_fieldval(None, "batchconv", inst)
     cnv["editors"] = db2app_fieldval("Timeline", "editors", inst)
+    cnv["lmuid"] = db2app_fieldval("Timeline", "lmuid", inst)
     cnv["importid"] = db2app_fieldval("Timeline", "importid", inst)
     cnv["name"] = db2app_fieldval("Timeline", "name", inst)
     cnv["cname"] = db2app_fieldval("Timeline", "cname", inst)
@@ -819,13 +825,14 @@ def update_existing_AppUser(cnx, cursor, fields, vck):
 def insert_new_Point(cnx, cursor, fields):
     fields = app2db_Point(fields)
     stmt = (
-        "INSERT INTO Point (created, modified, editors, srctl, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats) "
-        "VALUES (%(created)s, %(modified)s, %(editors)s, %(srctl)s, %(importid)s, %(source)s, %(date)s, %(text)s, %(refs)s, %(qtype)s, %(communities)s, %(regions)s, %(categories)s, %(tags)s, %(codes)s, %(srclang)s, %(translations)s, %(pic)s, %(stats)s)")
+        "INSERT INTO Point (created, modified, editors, srctl, lmuid, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats) "
+        "VALUES (%(created)s, %(modified)s, %(editors)s, %(srctl)s, %(lmuid)s, %(importid)s, %(source)s, %(date)s, %(text)s, %(refs)s, %(qtype)s, %(communities)s, %(regions)s, %(categories)s, %(tags)s, %(codes)s, %(srclang)s, %(translations)s, %(pic)s, %(stats)s)")
     data = {
         'created': fields.get("created"),
         'modified': fields.get("modified"),
         'editors': fields.get("editors", entdefs["Point"]["editors"]["dv"]),
         'srctl': fields.get("srctl", entdefs["Point"]["srctl"]["dv"]),
+        'lmuid': fields.get("lmuid", entdefs["Point"]["lmuid"]["dv"]),
         'importid': fields.get("importid", entdefs["Point"]["importid"]["dv"]),
         'source': fields.get("source", entdefs["Point"]["source"]["dv"]),
         'date': fields.get("date", entdefs["Point"]["date"]["dv"]),
@@ -878,12 +885,13 @@ def update_existing_Point(cnx, cursor, fields, vck):
 def insert_new_Timeline(cnx, cursor, fields):
     fields = app2db_Timeline(fields)
     stmt = (
-        "INSERT INTO Timeline (created, modified, editors, importid, name, cname, slug, title, subtitle, featured, lang, comment, about, kwds, ctype, cids, rempts, svs, preb) "
-        "VALUES (%(created)s, %(modified)s, %(editors)s, %(importid)s, %(name)s, %(cname)s, %(slug)s, %(title)s, %(subtitle)s, %(featured)s, %(lang)s, %(comment)s, %(about)s, %(kwds)s, %(ctype)s, %(cids)s, %(rempts)s, %(svs)s, %(preb)s)")
+        "INSERT INTO Timeline (created, modified, editors, lmuid, importid, name, cname, slug, title, subtitle, featured, lang, comment, about, kwds, ctype, cids, rempts, svs, preb) "
+        "VALUES (%(created)s, %(modified)s, %(editors)s, %(lmuid)s, %(importid)s, %(name)s, %(cname)s, %(slug)s, %(title)s, %(subtitle)s, %(featured)s, %(lang)s, %(comment)s, %(about)s, %(kwds)s, %(ctype)s, %(cids)s, %(rempts)s, %(svs)s, %(preb)s)")
     data = {
         'created': fields.get("created"),
         'modified': fields.get("modified"),
         'editors': fields.get("editors", entdefs["Timeline"]["editors"]["dv"]),
+        'lmuid': fields.get("lmuid", entdefs["Timeline"]["lmuid"]["dv"]),
         'importid': fields.get("importid", entdefs["Timeline"]["importid"]["dv"]),
         'name': fields.get("name", entdefs["Timeline"]["name"]["dv"]),
         'cname': fields.get("cname", entdefs["Timeline"]["cname"]["dv"]),
@@ -1161,12 +1169,12 @@ def query_AppUser(cnx, cursor, where):
 
 def query_Point(cnx, cursor, where):
     query = "SELECT dsId, created, modified, "
-    query += "editors, srctl, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats"
+    query += "editors, srctl, lmuid, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats"
     query += " FROM Point " + where
     cursor.execute(query)
     res = []
-    for (dsId, created, modified, editors, srctl, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats) in cursor:
-        inst = {"dsType": "Point", "dsId": dsId, "created": created, "modified": modified, "editors": editors, "srctl": srctl, "importid": importid, "source": source, "date": date, "text": text, "refs": refs, "qtype": qtype, "communities": communities, "regions": regions, "categories": categories, "tags": tags, "codes": codes, "srclang": srclang, "translations": translations, "pic": pic, "stats": stats}
+    for (dsId, created, modified, editors, srctl, lmuid, importid, source, date, text, refs, qtype, communities, regions, categories, tags, codes, srclang, translations, pic, stats) in cursor:
+        inst = {"dsType": "Point", "dsId": dsId, "created": created, "modified": modified, "editors": editors, "srctl": srctl, "lmuid": lmuid, "importid": importid, "source": source, "date": date, "text": text, "refs": refs, "qtype": qtype, "communities": communities, "regions": regions, "categories": categories, "tags": tags, "codes": codes, "srclang": srclang, "translations": translations, "pic": pic, "stats": stats}
         inst = db2app_Point(inst)
         res.append(inst)
     dblogmsg("QRY", "Point", res)
@@ -1175,12 +1183,12 @@ def query_Point(cnx, cursor, where):
 
 def query_Timeline(cnx, cursor, where):
     query = "SELECT dsId, created, modified, "
-    query += "editors, importid, name, cname, slug, title, subtitle, featured, lang, comment, about, kwds, ctype, cids, rempts, svs, preb"
+    query += "editors, lmuid, importid, name, cname, slug, title, subtitle, featured, lang, comment, about, kwds, ctype, cids, rempts, svs, preb"
     query += " FROM Timeline " + where
     cursor.execute(query)
     res = []
-    for (dsId, created, modified, editors, importid, name, cname, slug, title, subtitle, featured, lang, comment, about, kwds, ctype, cids, rempts, svs, preb) in cursor:
-        inst = {"dsType": "Timeline", "dsId": dsId, "created": created, "modified": modified, "editors": editors, "importid": importid, "name": name, "cname": cname, "slug": slug, "title": title, "subtitle": subtitle, "featured": featured, "lang": lang, "comment": comment, "about": about, "kwds": kwds, "ctype": ctype, "cids": cids, "rempts": rempts, "svs": svs, "preb": preb}
+    for (dsId, created, modified, editors, lmuid, importid, name, cname, slug, title, subtitle, featured, lang, comment, about, kwds, ctype, cids, rempts, svs, preb) in cursor:
+        inst = {"dsType": "Timeline", "dsId": dsId, "created": created, "modified": modified, "editors": editors, "lmuid": lmuid, "importid": importid, "name": name, "cname": cname, "slug": slug, "title": title, "subtitle": subtitle, "featured": featured, "lang": lang, "comment": comment, "about": about, "kwds": kwds, "ctype": ctype, "cids": cids, "rempts": rempts, "svs": svs, "preb": preb}
         inst = db2app_Timeline(inst)
         res.append(inst)
     dblogmsg("QRY", "Timeline", res)

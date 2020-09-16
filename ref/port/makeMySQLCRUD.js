@@ -176,7 +176,7 @@ function entityKeyFields () {
     pyc += "}\n"
     pyc += "\n"
     pyc += "\n"
-    pyc += "def timestamp(offset):\n"
+    pyc += "def timestamp(offset=0):\n"
     pyc += "    now = datetime.datetime.utcnow().replace(microsecond=0)\n"
     pyc += "    return dt2ISO(now + datetime.timedelta(minutes=offset))\n"
     pyc += "\n"

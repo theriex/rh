@@ -773,6 +773,8 @@ app.db = (function () {
         //PENDING: Go with localStorage timeline if available, then redisplay
         //if db fetch shows anything has changed.
         url = "/api/fetchtl?" + app.db.uidp() + "&slug=" + slug;
+        if(app.user.acc) {
+            url += "&uid=" + app.user.acc.dsId; }
         jt.call("GET", url, null,
                 function (result) {  //one or more timeline objects
                     result.forEach(function (tl) {

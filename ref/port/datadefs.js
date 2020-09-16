@@ -44,7 +44,7 @@ module.exports = (function () {
          enumvals:["Pending", "Active", "Inactive", "Unreachable"]},
         {f:"actsends", d:"adm gencsv", c:"latest first isod;emaddr vals"},
         {f:"actcode", d:"adm string", c:"account activation code"},
-        {f:"accessed", d:"isomod", c:"day last seen"},
+        {f:"accessed", d:"isomod", c:"last account data update by user"},
         //user public display info
         {f:"name", d:"string", c:"optional but recommended public name"},
         {f:"title", d:"string", c:"optional, if helpful for contact"},
@@ -58,7 +58,8 @@ module.exports = (function () {
         {f:"built", d:"json", c:"[] created or editable timelines (*3)"}],
         //*1 Timeline Progress instance:
         //     tlid: id of timeline (top-level if aggregate)
-        //     st: ISO when the timeline was started (ISO, not wallclock)
+        //     st: ISO when the timeline was started
+        //     latestsave: ISO when last saved
         //     svs*: CSV of svid;isoShown;isoClosed;dispcount
         //     pts: CSV of ptid;isoShown;isoClosed;dispcount;tagcodes
         //        tagcodes: 'r' (remembered) point noted to revisit later
@@ -96,6 +97,7 @@ module.exports = (function () {
     {entity:"Point", descr:"A data point for use in timelines", fields:[
         {f:"editors", d:"srchidcsv", c:"owner and others with edit access"},
         {f:"srctl", d:"dbid", c:"timeline this point may be edited from"},
+        {f:"lmuid", d:"dbid", c:"the user who last modified this instance"},
         {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
         {f:"source", d:"string", c:"secondary reference id or load key"},
         {f:"date", d:"string req", c:"A date or date range (*1)"},
@@ -126,6 +128,7 @@ module.exports = (function () {
 
     {entity:"Timeline", descr:"Points + suppviz*, or other timelines", fields:[
         {f:"editors", d:"srchidcsv", c:"owner and others with edit access"},
+        {f:"lmuid", d:"dbid", c:"the user who last modified this instance"},
         {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
         {f:"name", d:"string req unique", c:"name for reference and search"},
         {f:"cname", d:"string", c:"canonical name for dupe checks and query"},
@@ -189,14 +192,27 @@ module.exports = (function () {
      logflds:["userid", "tlid", "username", "tlname"]},
 
     {entity:"DayCount", descr:"Traffic access accumulator", fields:[
-        //Keep track of timeline fetches and progress saves to enable viewing
-        //activity.  Aggregated nightly.
+        //Interim and daily usage stats.
         {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
-        {f:"tstamp", d:"isod req", c:"server time zero of day"},
-        {f:"rtype", d:"string req", c:"count type (fetches, saves, summaries)",
-         enumvals:["tlfetch", "tlsave", "daysum"]},
-        {f:"detail", d:"json", c:"count details"}],
-     cache:{minutes:0},  //essentially write-only unless pulled for a report
+        {f:"tstamp", d:"isod req", c:"server ISO UTC timestamp"},
+        {f:"rtype", d:"string req", c:"record type for count instance",
+         enumvals:["tlfetch", "guestsave", "daysum"]},
+        {f:"detail", d:"json", c:"count details (*1)"}],
+        //*1 detail fields by rtype:
+        //   tlfetch: referer, useragent, tlid, tlname, uid
+        //   guestsave: useragent, tlid, tlname
+        //   daysum:
+        //     refers:[{refstr:count}...]
+        //     agents:[{agstr:count}...]
+        //     timelines:{
+        //       tlid:{tlname,
+        //             fetch: {uid:ttl, uid2:ttl2, ...},
+        //             save, comp, edit}...}
+        //     users:{
+        //       uid:{name, created, modified,
+        //            ptedits:{
+        //              ptid:{date, text[0:60]}...}...}
+     cache:{minutes:0},  //app access is write-only
      logflds:["tstamp", "rtype"]},
 
     {entity:"AppService", descr:"Processing service access", fields:[

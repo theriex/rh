@@ -82,6 +82,10 @@ def updtl(): # params: auth, Timeline data
 def upldpic(): #params: auth, ptid, picfilein
     return util.secure(tldat.upldpic)
 
+@app.route('/api/notefs', methods=['GET', 'POST'])
+def notefs(): # params: tlid, tlname
+    return util.secure(tldat.notefs)
+
 @app.route('/api/notecomp', methods=['GET', 'POST'])
 def notecomp(): # params: auth, TLComp descriptive fields
     return util.secure(tldat.notecomp)

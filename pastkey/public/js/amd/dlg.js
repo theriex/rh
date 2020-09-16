@@ -704,53 +704,6 @@ app.dlg = (function () {
     }
 
 
-    function showOrgMembers () {
-        var oms = app.orgmembers || [app.user.acc];
-        var labels = ["Members:", "Contributors:", "Administrators:"];
-        var html = [];
-        if(!jt.byId("orgedmembersdiv")) {
-            return; }  //no output area so nothing to do
-        oms.sort(function (a, b) {
-            if(a.lev > b.lev) { return -1; }
-            if(a.lev < b.lev) { return 1; }
-            if(a.name < b.name) { return -1; }
-            if(a.name > b.name) { return 1; }
-            if(a.instid < b.instid) { return -1; }
-            if(a.instid > b.instid) { return 1; }
-            return 0; });
-        oms.forEach(function (om) {
-            var nh = om.name;
-            if(app.user.acc.lev === 2) {  //administrator
-                nh = ["a", {href:"#om" + om.instid,
-                            onclick:jt.fs("app.dlg.omexp('" + om.instid + 
-                                          "')")}, om.name]; }
-            if(labels[om.lev]) {
-                html.push(["div", {cla:"dlgformline"}, ["em", labels[om.lev]]]);
-                labels[om.lev] = ""; }
-            html.push(["div", {cla:"dlgsubline", id:"om" + om.instid}, nh]);
-            html.push(["div", {cla:"dlgsubline", id:"om" + om.instid + 
-                               "detdiv"}]); });
-        jt.out("orgedmembersdiv", jt.tac2html(html));
-        if(!app.orgmembers) {
-            jt.out("loginstatdiv", "Fetching members...");
-            var url = "orgmembers?" + app.auth() + "&orgid=" + 
-                app.user.acc.orgid + jt.ts("&cb=", "second");
-            jt.call("GET", url, null,
-                    function (members) {
-                        jt.out("loginstatdiv", "");
-                        app.omids = {};
-                        members.forEach(function (mem) {
-                            mem.name = mem.name || mem.instid;
-                            app.omids[mem.instid] = mem; });
-                        app.orgmembers = members;
-                        showOrgMembers(); },
-                    function (code, errtxt) {
-                        jt.log("showOrgMembers " + code + ": " + errtxt);
-                        jt.out("loginstatdiv", errtxt); },
-                    jt.semaphore("dlg.showOrgMembers")); }
-    }
-
-
     function mdfs (mgrfname, ...args) {
         mgrfname = mgrfname.split(".");
         return jt.fs("app.dlg.managerDispatch('" + mgrfname[0] + "','" +
@@ -1127,12 +1080,14 @@ app.dlg = (function () {
     }
 
 
+    //Note that some anonymous user at least made it to the first save
+    //point.  Prompt for them to sign in.
     function promptSignIn () {
         var data = jt.objdata(app.db.displayContext().prog);
-        jt.call("POST", "noteprog?" + app.db.uidp(), data,
+        jt.call("POST", "/api/notefs?" + app.db.uidp(), data,
                 function () { return true; },
                 function (code, errtxt) {
-                    jt.log("noteGuestProgress " + code + " " + errtxt); },
+                    jt.log("note first save " + code + " " + errtxt); },
                 jt.semaphore("dlg.noteGuestProgress"));
         if(sip.noprompt) {
             setTimeout(continueToNext, 500);

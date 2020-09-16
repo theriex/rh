@@ -232,6 +232,7 @@ def remove_html_from_point_fields(ptdat):
         # logging.info("rhfpf refs after:  " + ptdat["refs"])
 
 
+
 ############################################################
 ## API endpoints:
 
@@ -278,7 +279,6 @@ def fetchtl():
     """ Return the requested timeline and note the fetch. """
     try:
         tlid = dbacc.reqarg("tlid", "dbid")
-        slug = ""
         if tlid:
             tl = dbacc.cfbk("Timeline", "dsId", str(tlid), required=True)
         else:
@@ -287,36 +287,18 @@ def fetchtl():
                 slug = "default"
             slug = slug.lower()  # in case someone camelcased the url.
             tl = dbacc.cfbk("Timeline", "slug", slug, required=True)
-        # Need to note the timeline was fetched, noting at least the Referer
-        # and User-Agent, along with anything else useful for stats reporting.
-        logging.info("TODO: tlfetch not recording DayCount stats yet")
         tls = contained_timelines(tl)
+        # Note the timeline was fetched for daily stats tracking
+        det = {"referer":flask.request.headers.get("Referer", ""),
+               "useragent":flask.request.headers.get("User-Agent", ""),
+               "tlid":tl["dsId"], "tlname":tl["name"],
+               "uid":dbacc.reqarg("uid", "dbid")}
+        dcd = {"dsType":"DayCount", "tstamp":dbacc.timestamp(),
+               "rtype":"tlfetch", "detail":json.dumps(det)}
+        dbacc.write_entity(dcd)
     except ValueError as e:
         return util.serve_value_error(e)
     return util.respJSON(tls)
-
-
-# Called via form submit.  Returns plain text or error.
-def updpt_old():
-    """ Create or update the point from the multipart form data. """
-    try:
-        # flask.request.method always returns "GET".  Test for form content.
-        picfile = flask.request.files.get("picin")
-        pdat = util.set_fields_from_reqargs([
-            "dsId", "modified", "source", "date", "text", "refs", "qtype",
-            "communities", "regions", "categories", "tags", "codes", "srclang",
-            "translations", "endorsed", "stats"], {})
-        if not (picfile or pdat):  # no info sent, assume GET
-            return util.respond("Ready", mimetype="text/plain")
-        # Have POST data
-        pdat["dsType"] = "Point"
-        appuser, _ = util.authenticate()
-        verify_edit_authorization(appuser, pdat)
-        set_image_field_value(pdat, "pic", picfile)
-        dbacc.write_entity(pdat, pdat["modified"])
-    except ValueError as e:
-        return util.serve_value_error(e)
-    return util.respond("ptid: " + pdat["dsId"], mimetype="text/plain")
 
 
 def updtl():
@@ -333,10 +315,29 @@ def updtl():
         verify_unique_timeline_field(tldat, "cname", tldb)
         verify_unique_timeline_field(tldat, "slug", tldb)
         update_prebuilt(tldat, tldb)
+        tldat["lmuid"] = appuser["dsId"]
         tl = dbacc.write_entity(tldat, tldat.get("modified", ""))
     except ValueError as e:
         return util.serve_value_error(e)
     return util.respJSON(tl)
+
+
+def notefs():
+    """ Note first save of Timeline progress. """
+    # normally called to make note of an anonymous user having reached the
+    # first save point in a timeline.  Shows someone interacted with the
+    # timeline even if they don't create an account.
+    try:
+        det = {"useragent":flask.request.headers.get("User-Agent", ""),
+               "tlid":dbacc.reqarg("tlid", "dbid"),
+               "tlname":dbacc.reqarg("tlname", "string"),
+               "uid":dbacc.reqarg("uid", "dbid")}
+        dcd = {"dsType":"DayCount", "tstamp":dbacc.timestamp(),
+               "rtype":"guestsave", "detail":json.dumps(det)}
+        dbacc.write_entity(dcd)
+    except ValueError as e:
+        return util.serve_value_error(e)
+    return util.respJSON("[]")
 
 
 def notecomp():
@@ -403,6 +404,7 @@ def updpt():
                     raise ValueError("Point " + fld + " value is required.")
         # date format validity checking is done client side
         remove_html_from_point_fields(ptdat)
+        ptdat["lmuid"] = appuser["dsId"]
         pt = dbacc.write_entity(ptdat, ptdat.get("modified", ""))
     except ValueError as e:
         return util.serve_value_error(e)

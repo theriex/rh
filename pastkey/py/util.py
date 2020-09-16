@@ -270,6 +270,8 @@ def send_activation_email(appuser):
 
 def update_email_and_password(appuser, emaddr, pwd):
     emaddr = normalize_email(emaddr)
+    if pwd and pwd.lower() == "noval":
+        pwd = ""
     emchg = emaddr and emaddr != appuser["email"]
     if ((not (emchg or pwd)) and (appuser["email"] != "placeholder")):
         return "nochange"  # not updating credentials so done
