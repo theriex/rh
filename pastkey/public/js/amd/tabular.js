@@ -1091,18 +1091,21 @@ app.tabular = (function () {
         validateValue: function (val) {
             var res = {valid:false, msg:"A Date value is required."};
             if(!val) { return res; }
-            var start; var end;
-            [start, end] = val.split(" to ").map((d) => datemgr.parseDate(d));
-            if(!start) {
+            var pd = datemgr.parseDateExpression(val);
+            if(!pd.start) {
                 res.msg = "Date value not recognized.";
                 return res; }
-            res.valid = datemgr.canonicalDate(start);
-            if(end) {
-                res.valid += " to " + datemgr.canonicalDate(end); }
+            res.valid = datemgr.canonicalDate(pd.start);
+            if(pd.end) {
+                res.valid += " to " + datemgr.canonicalDate(pd.end); }
             res.msg = "";
             if(res.valid !== val) {
                 res.msg = "Date value adjusted for validity."; }
             return res; },
+        parseDateExpression: function (val) {
+            var st; var en;
+            [st, en] = val.split(" to ").map((d) => datemgr.parseDate(d));
+            return {start:st, end:en}; },
         parseDate: function (dv) {
             var res = null;
             var match = dv.match(/(-?)(\d+)([s+])?(-\d\d)?(-\d\d)?(\sBCE)?/);

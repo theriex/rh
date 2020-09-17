@@ -13,7 +13,7 @@ app.support = (function () {
         share:{title:"Share", content:[
             ["div", {id:"tlnamediv", cla:"suppheadingdiv"}],
             ["div", {id:"socsharediv"}],
-            ["p", "Questions or comments? Issues are tracked on <span id=\"supghsp\">github</span>, or you can <span id=\"supiemsp\">email us</span>. You are free to download data or embed any timeline using an iframe."],
+            ["p", "Questions or comments? Issues are tracked on <span id=\"supghsp\">github</span>, or you can <span id=\"supiemsp\">email us</span>."],
             ["div", {id:"donatediv"}]],
                repls:[
                    {id:"tlnamediv", func:"tlnameHTML"},
@@ -25,23 +25,20 @@ app.support = (function () {
         about:{title:"About", content:[
             //This hard link is a way to get back to the main landing page
             //if you are viewing a timeline.
-            ["p", "<a href=\"https://pastkey.org\">PastKey</a> was created to promote understanding and respect for the context of people whose histories are frequently ignored.  You are encouraged to check points for yourself, knowledge evolves over time and history has multiple perspectives."],
+            ["p", "<a href=\"https://pastkey.org\">PastKey</a> was created to promote understanding and respect for the context of people whose histories are often ignored. Super condensed interactive timelines provide an introduction to knowledge that otherwise might have not have been viewed."],
             ["div", {id:"tlaboutdiv", cla:"timelineaboutdiv"}],
-            ["p", "Thanks to our member organizations for their essential contributions and guidance."],
-            ["If your organization would like to manage its own data, or commission a visualization, <span id=\"suporgesp\">get in touch</span>."]],
+            ["p", "You are encouraged to check points for yourself. Knowledge evolves over time and history has multiple perspectives.  More information about PastKey can be found on the <span id=\"supglandpg\">landing page</span>. For other questions, or more information, <span id=\"suporgesp\">contact support."]],
                repls:[
                    {id:"tlaboutdiv", func:"tlaboutHTML"},
-                   {id:"suporgesp", em:"contact", delay:1000}]},
+                   {id:"supglandpg", url:"https://pastkey.org"},
+                   {id:"suporgesp", em:"support", delay:1000}]},
         ////////////////////////////////////////
         chapter:{title:"End of Chapter <span id=\"chnsp\"></span>", content:[
             ["p", "You covered <span id=\"chptcsp\">_</span> points <span id=\"chyfsp\"></span> <span id=\"chytsp\"></span>."],
-            ["div", {id:"remdiv"},
-             [["input", {type:"checkbox", id:"cbrem", checked:"checked"}],
-              ["label", {fo:"cbrem", id:"labrem"}, chdet.remind.enabled]]],
             ["div", {id:"revisitdiv", style:"padding:20px 0px 5px 0px;"},
-             "To revisit any of these points, switch to reference mode from the menu."],
+             "To revisit any of the points that were shown, switch to reference mode from the menu."],
             ["div", {id:"sv0textdiv"}, ""], //instruction details as needed
-            ["div", {id:"sv0linkdiv"}, ""], //bookmark/homescreen instructions
+            ["p", "If you haven't already bookmarked this page, consider adding a bookmark for easy reference."],
             ["div", {id:"suppclosediv"},
              ["button", {type:"button", cla:"ghostbutton", id:"contbutton"},
               "Continue"]]]}};
@@ -137,40 +134,6 @@ app.support = (function () {
     }
 
 
-    function toggleReminderSetting () {
-        var cbrem = jt.byId("cbrem"); var data;
-        var remval = "no";
-        var trans = chdet.remind.troff;
-        var compl = chdet.remind.disabled;
-        var fail = chdet.remind.enabled;
-        if(cbrem.checked) {  //previously unchecked, now checked
-            remval = "yes";
-            trans = chdet.remind.tron;
-            compl = chdet.remind.enabled;
-            fail = chdet.remind.disabled; }
-        jt.out("labrem", trans);
-        app.db.displayContext().prog.remindme = remval;
-        app.db.mergeProgToAccount();  //normalize updated prog with db state
-        data = app.db.postdata("AppUser", app.user.acc, ["email"]);
-        jt.call("POST", "/api/updacc?" + app.auth(), data,
-                function () {  //recently saved, local data up to date
-                    jt.out("labrem", compl); },
-                function (code, errtxt) {
-                    jt.log("toggleReminderSetting " + code + ": " + errtxt);
-                    jt.out("labrem", fail); },
-                jt.semaphore("support.toggleReminderSetting"));
-    }
-
-
-    function reminderDisplay () {
-        var prog = app.db.displayContext().prog;
-        if(prog.remindme === "no") {
-            jt.byId("cbrem").checked = false;
-            jt.out("labrem", chdet.remind.disabled); }
-        jt.on("cbrem", "click", toggleReminderSetting);
-    }
-
-
     function chapterSummary (contf) {
         var progpts = []; var yi = {};
         updateChapterDetails();
@@ -192,7 +155,6 @@ app.support = (function () {
             {id:"chyfsp", txt:"from " + yi.s},
             {id:"chytsp", txt:"to " + yi.e},
             {id:"sv0textdiv", ff:chapterHint},
-            {id:"remdiv", ff:reminderDisplay},
             {id:"contbutton", click:contf}];
         display(app.linear.timeline(), "chapter");
         setTimeout(function () {

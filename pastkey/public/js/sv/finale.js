@@ -341,8 +341,8 @@ app.finale = (function () {
                 auth = app.auth(); }
             jt.call("POST", "/api/notecomp?" + auth, data,
                     function (result) {
-                        app.db.deserialize("AppUser", result[0]);
-                        app.user.acc = result[0];
+                        app.user.acc = app.refmgr.put(
+                            app.refmgr.deserialize(result[0]));
                         d3.select("#finctitle").text("Timeline Completed!"); },
                     function (code, errtxt) {
                         //not much to do, will retry next time they load..

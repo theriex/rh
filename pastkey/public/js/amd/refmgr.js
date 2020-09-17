@@ -37,23 +37,30 @@ app.refmgr = (function () {
     }
 
 
+    function reconstituteFieldJSONArray (field, obj) {
+        reconstituteFieldJSONObject(field, obj);
+        if(!Array.isArray(obj[field])) {
+            obj[field] = []; }
+    }
+
+
     function deserialize (obj) {
         switch(obj.dsType) {
         case "AppUser":
             reconstituteFieldJSONObject("settings", obj);
-            reconstituteFieldJSONObject("started", obj);
-            reconstituteFieldJSONObject("completed", obj);
-            reconstituteFieldJSONObject("remtls", obj);
-            reconstituteFieldJSONObject("built", obj);
+            reconstituteFieldJSONArray("started", obj);
+            reconstituteFieldJSONArray("completed", obj);
+            reconstituteFieldJSONArray("remtls", obj);
+            reconstituteFieldJSONArray("built", obj);
             break;
         case "Point":
-            reconstituteFieldJSONObject("refs", obj);
+            reconstituteFieldJSONArray("refs", obj);
             reconstituteFieldJSONObject("translations", obj);
             reconstituteFieldJSONObject("stats", obj);
             break;
         case "Timeline":
             reconstituteFieldJSONObject("kwds", obj);
-            reconstituteFieldJSONObject("preb", obj);
+            reconstituteFieldJSONArray("preb", obj);
             break;
         case "TLComp":
             reconstituteFieldJSONObject("data", obj);
@@ -196,9 +203,9 @@ return {
     },
 
 
-    postdata: function (obj) {
+    postdata: function (obj, skips) {
         serialize(obj);
-        var dat = jt.objdata(obj);
+        var dat = jt.objdata(obj, skips);
         deserialize(obj);
         return dat;
     }

@@ -15,7 +15,7 @@ function sqlType (fd) {
         //any required value checking is done in the service API, not the db.
         return "VARCHAR(256)"; }
     if(ddefs.fieldIs(fd, "text")) {
-        //text (json, idcsv, isodcsv, gencsv, url)
+        //text (json, jsarr, idcsv, isodcsv, gencsv, url)
         //The maximum size of a LONGTEXT is 2^32 = 4,294,967,296 bytes.
         //MySQL has native support for JSON, but rather have that be opaque
         //and not take a hit from the computational overhead.
@@ -284,7 +284,7 @@ function helperFunctions () {
     pyc += "            raise ValueError(\"Invalid \" + argname + \" value: \" + emaddr)\n";
     pyc += "        return emaddr\n";
     pyc += "    if fieldtype in [\"string\", \"isodate\", \"isomod\", \"srchidcsv\",\n";
-    pyc += "                     \"text\", \"json\", \"idcsv\", \"isodcsv\", \"gencsv\", \"url\"]:\n";
+    pyc += "                     \"text\", \"json\", \"jsarr\", \"idcsv\", \"isodcsv\", \"gencsv\", \"url\"]:\n";
     pyc += "        return argval or \"\"\n";
     pyc += "    if fieldtype == \"image\":\n";
     pyc += "        return argval or None\n";
@@ -873,6 +873,13 @@ function writeDeserializeFunction () {
     jsc += "    }\n";
     jsc += "\n";
     jsc += "\n";
+    jsc += "    function reconstituteFieldJSONArray (field, obj) {\n";
+    jsc += "        reconstituteFieldJSONObject(field, obj);\n";
+    jsc += "        if(!Array.isArray(obj[field])) {\n";
+    jsc += "            obj[field] = []; }\n";
+    jsc += "    }\n"
+    jsc += "\n";
+    jsc += "\n";
     jsc += "    function deserialize (obj) {\n";
     jsc += "        switch(obj.dsType) {\n";
     var definitions = ddefs.dataDefinitions();
@@ -881,6 +888,9 @@ function writeDeserializeFunction () {
         edef.fields.forEach(function (fd) {
             if(ddefs.fieldIs(fd.d, "json")) {
                 jsc += "            reconstituteFieldJSONObject(\"" +
+                    fd.f + "\", obj);\n"; }
+            else if(ddefs.fieldIs(fd.d, "jsarr")) {
+                jsc += "            reconstituteFieldJSONArray(\"" +
                     fd.f + "\", obj);\n"; } });
         jsc += "            break;\n"; });
     jsc += "        }\n";
@@ -893,7 +903,7 @@ function writeDeserializeFunction () {
     definitions.forEach(function (edef) {
         jsc += "        case \"" + edef.entity + "\":\n";
         edef.fields.forEach(function (fd) {
-            if(ddefs.fieldIs(fd.d, "json")) {
+            if(ddefs.fieldIs(fd.d, "json") || ddefs.fieldIs(fd.d, "jsarr")) {
                 jsc += "            obj." + fd.f + " = JSON.stringify(obj." +
                     fd.f + ");\n" } });
         jsc += "            break;\n"; });
@@ -1022,9 +1032,9 @@ function createJSServerAcc () {
     jsc += "    },\n";
     jsc += "\n";
     jsc += "\n";
-    jsc += "    postdata: function (obj) {\n";
+    jsc += "    postdata: function (obj, skips) {\n";
     jsc += "        serialize(obj);\n";
-    jsc += "        var dat = jt.objdata(obj);\n";
+    jsc += "        var dat = jt.objdata(obj, skips);\n";
     jsc += "        deserialize(obj);\n";
     jsc += "        return dat;\n";
     jsc += "    }\n";

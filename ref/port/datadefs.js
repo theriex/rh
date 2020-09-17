@@ -18,7 +18,8 @@ module.exports = (function () {
             {dn:"isomod", h:"ISO date;int count"},
             {dn:"srchidcsv", h:"short string length idcsv, searchable"}]},
         {dn:"text", h:"unindexable max 1mb string.", aliases:[
-            {dn:"json", h:"JSON encoded data."},
+            {dn:"json", h:"JSON encoded data. default '{}'"},
+            {dn:"jsarr", h:"JSON encoded data. default '[]'"},
             {dn:"idcsv", h:"comma separated unique integer ids"},
             {dn:"isodcsv", h:"comma separated ISO date values"},
             {dn:"gencsv", h:"general comma separated values"},
@@ -52,10 +53,10 @@ module.exports = (function () {
         //user settings and traversal data
         {f:"lang", d:"string", c:"optional preferred language code"},
         {f:"settings", d:"json", c:"relative ages of generations etc"},
-        {f:"started", d:"json", c:"[] Timeline Progress instances (*1)"},
-        {f:"completed", d:"json", c:"[] Timeline Completion instances (*2)"},
-        {f:"remtls", d:"json", c:"[] non-editable remembered timelines (*3)"},
-        {f:"built", d:"json", c:"[] created or editable timelines (*3)"}],
+        {f:"started", d:"jsarr", c:"Timeline Progress instances (*1)"},
+        {f:"completed", d:"jsarr", c:"Timeline Completion instances (*2)"},
+        {f:"remtls", d:"jsarr", c:"non-editable remembered timelines (*3)"},
+        {f:"built", d:"jsarr", c:"created or editable timelines (*3)"}],
         //*1 Timeline Progress instance:
         //     tlid: id of timeline (top-level if aggregate)
         //     st: ISO when the timeline was started
@@ -102,7 +103,7 @@ module.exports = (function () {
         {f:"source", d:"string", c:"secondary reference id or load key"},
         {f:"date", d:"string req", c:"A date or date range (*1)"},
         {f:"text", d:"text req", c:"max 1200 chars, prefer < 400. (*2)"},
-        {f:"refs", d:"json", c:"array of reference source strings"},
+        {f:"refs", d:"jsarr", c:"reference source strings"},
         {f:"qtype", d:"string", c:"Letter code for question type (*3)"},
         {f:"communities", d:"gencsv", c:"0+ kwds from TL.kwds communities"},
         {f:"regions", d:"gencsv",     c:"0+ kwds from TL.kwds regions"},
@@ -144,7 +145,7 @@ module.exports = (function () {
         {f:"cids", d:"idcsv", c:"Point ids or Timeline ids depending on ctype"},
         {f:"rempts", d:"idcsv", c:"Removed point ids to avoid orphaning (*6)"},
         {f:"svs", d:"gencsv", c:"SuppViz module names"},
-        {f:"preb", d:"json", c:"preselected point data (*7)"}],
+        {f:"preb", d:"jsarr", c:"preselected point data (*7)"}],
         //*1 Promotional display indicator:
         //     "Unlisted" Don't display main page
         //     "Listed": Ok to recommend to all users

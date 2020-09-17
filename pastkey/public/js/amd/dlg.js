@@ -304,13 +304,17 @@ app.dlg = (function () {
     }
 
 
-    function pointKeywords (pt) {
+    function pointKeywordsHTML (pt) {
+        if(pt.groups && !pt.communities) {  //legacy keyfield name support
+            pt.communities = pt.groups; }
         var keys = [];
         app.keyflds.forEach(function (field) {
             if(pt[field]) {
                 pt[field].csvarray().forEach(function (key) {
                     keys.push(key); }); } });
-        return keys.join(", ");
+        return jt.tac2html(
+            [["span", {cla:"buttonptcodeslabelspan"}, "Keys: "],
+             keys.join(", ")]);
     }
 
 
@@ -355,10 +359,7 @@ app.dlg = (function () {
         if(!inter) {
             ret.tac = [prevButtonTAC(d),
                        forwardButtonTAC(d),
-                       ["div", {cla:"buttonptcodesdiv"},
-                        [["span", {cla:"buttonptcodeslabelspan"}, 
-                          "Keys: "],
-                         pointKeywords(d)]],
+                       ["div", {cla:"buttonptcodesdiv"}, pointKeywordsHTML(d)],
                        ["button", {type:"button", id:"backbutton",
                                    onclick:jt.fs("app.dlg.button('back')")},
                         "Return To Interactive"]];
@@ -390,10 +391,7 @@ app.dlg = (function () {
                         ["span", {id:"dlgdatequestion"}, "When?"]]; }
         else {
             ret.tac = [prevButtonTAC(d),
-                       ["div", {cla:"buttonptcodesdiv"},
-                        [["span", {cla:"buttonptcodeslabelspan"}, 
-                          "Keys: "],
-                         pointKeywords(d)]],
+                       ["div", {cla:"buttonptcodesdiv"}, pointKeywordsHTML(d)],
                        ["button", {type:"button", id:"nextbutton",
                                    onclick:jt.fs("app.dlg.button()")},
                         "Continue"]];
@@ -513,12 +511,16 @@ app.dlg = (function () {
 
 
     function refsListHTML (refs) {
-        var html = [];
-        refs.forEach(function (txt) {
-            html.push(["li", jt.linkify(txt)]); });
-        if(html.length) {
-            html = ["ol", {cla:"refslist"}, html]; }
-        return jt.tac2html(html);
+        if(!refs) { return ""; }
+        //Should be deserialized already, but fix if not
+        if(!Array.isArray(refs)) {
+            refs = JSON.parse(refs); }
+        if(!Array.isArray(refs)) { return ""; }
+        if(!refs.length) { return ""; }
+        return jt.tac2html(
+            ["ol", {cla:"refslist"},
+             refs.map(function (txt) {
+                 return ["li", jt.linkify(txt)]; })]);
     }
 
 
@@ -1113,7 +1115,7 @@ app.dlg = (function () {
         displayDialog(null, jt.tac2html(html));
         jt.byId("contbutton").disabled = true;
         app.db.mergeProgToAccount();  //normalize current prog with db state
-        var data = app.db.postdata("AppUser", app.user.acc, ["email"]);
+        var data = app.refmgr.postdata(app.user.acc, ["email"]);
         jt.call("POST", "/api/updacc?" + app.auth(), data,
                 function (result) {
                     saveUserInfo(result);

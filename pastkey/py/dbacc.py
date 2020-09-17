@@ -280,7 +280,7 @@ def reqarg(argname, fieldtype="string", required=False):
             raise ValueError("Invalid " + argname + " value: " + emaddr)
         return emaddr
     if fieldtype in ["string", "isodate", "isomod", "srchidcsv",
-                     "text", "json", "idcsv", "isodcsv", "gencsv", "url"]:
+                     "text", "json", "jsarr", "idcsv", "isodcsv", "gencsv", "url"]:
         return argval or ""
     if fieldtype == "image":
         return argval or None

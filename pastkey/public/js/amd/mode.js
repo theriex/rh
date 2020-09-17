@@ -7,13 +7,7 @@ app.mode = (function () {
 
     var mode = "interactive";  //linear only. "reference" is linear or text
     var ms = null;  //mode state detail variables
-    var srchst = null;
     var ftls = null;  //cached featuredTimelines
-
-
-    function clearSearchState () {
-        srchst = {tlcode:"", qstr:"", status:""};
-    }
 
 
     function showModeElements (chmode) {
@@ -33,7 +27,6 @@ app.mode = (function () {
     function verifyDisplayElements () {
         var html;
         if(!ms.progsvg) {
-            clearSearchState();  //init
             html = [["div", {id:"refdiv", style:"width:" + ms.w + "px;" +
                              //reduce height by 10 to not overflow select box
                              "height:" + (ms.h - 10) + "px;"},
@@ -181,7 +174,6 @@ app.mode = (function () {
         if(mode === "interactive") {
             if(ms.disp === "text") {
                 toggleDisplay(); }
-            clearSearchState();
             app.db.nextInteraction(); }
         else { //"reference"
             //hide the timeline creation context if it has been created, so
@@ -204,6 +196,7 @@ app.mode = (function () {
                     {m:"signout", n:"Sign&nbsp;Out",        c:"acc"},
                     {m:"signin",  n:"Sign&nbsp;In",         c:"noacc"},
                     {m:"tledit",  n:"Edit&nbsp;Timeline",   c:"acc"},
+                    //{m:"chapter", n:"Chapter&nbsp;End",     c:"acc"},
                     {m:"about",   n:"About"}];
         var acc = app.user && app.user.tok;
         var html = []; var item = "";
@@ -244,8 +237,9 @@ app.mode = (function () {
             switch(select) {  //next action
             case "visual": changeMode("interactive"); break;
             case "refmode": app.tabular.display("refdisp"); break;
-            case "share": app.support.display(ms.tl, "share"); break; 
-            case "about": app.support.display(ms.tl, "about"); break; 
+            case "share": app.support.display(ms.tl, "share"); break;
+            case "about": app.support.display(ms.tl, "about"); break;
+            //case "chapter": app.support.display(ms.tl, "chapter"); break;
             case "signin": app.dlg.signin(); break;
             case "myacc": app.dlg.myacc(); break;
             case "tledit": app.tabular.display("tledit"); break;
@@ -418,13 +412,12 @@ app.mode = (function () {
 
 
     function showCompletionCertificate () {
-        var params = jt.parseParams("String");
+        var params = jt.parseParams("String"); var url;
         jt.out("rhcontentdiv", "Fetching completion certificate...");
-        url = "/api/fetchobj?dt=AppUser&ak=email&kv=" + jt.enc(params.email)
+        url = "/api/fetchobj?dt=AppUser&ak=email&kv=" + jt.enc(params.email);
         jt.call("GET", url, null,
                 function (users) {
-                    var user = users[0];
-                    app.db.deserialize("AppUser", user);
+                    var user = app.refmgr.deserialize(users[0]);
                     displayCompletionCertificate(user, params.compcert); },
                 function (code, errtxt) {
                     jt.out("rhcontentdiv", "Fetch failed. Error code " + code +
@@ -459,7 +452,7 @@ app.mode = (function () {
 
     function getAnniversaryDistance (spec) {
         var now = new Date();
-        var res = spec.match(/\-(\d\d)\-(W?)(\d\d?)\-?D?(\d?\d?)/);
+        var res = spec.match(/-(\d\d)-(W?)(\d\d?)-?D?(\d?\d?)/);
         var midx = parseInt(res[1], 10) - 1;
         var day = parseInt(res[3], 10);
         var week = 0;

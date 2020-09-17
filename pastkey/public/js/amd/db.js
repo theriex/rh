@@ -29,64 +29,12 @@ app.db = (function () {
     }
 
 
-    function describeDateFormat () {
-        var descr = [
-            "Single Point In Time:",
-            "Y[YYY][ BCE] or YYYY-MM[-DD]",
-            "Time Range:",
-            "YYYY's or YYYY's-YYYY's or YYYY+ or " + 
-                "YYYY[-MM-DD]-YYYY[-MM-DD]"];
-        descr[0] = "<b>" + descr[0] + "</b>";
-        descr[2] = "<b>" + descr[2] + "</b>";
-        descr = descr.join("<br/>");
-        descr = descr.replace(/\sor\s/g, " <em>or</em> ");
-        descr = descr.replace(/'/g, "&apos;");
-        return descr;
-    }
-
-
     function parseDate (pt) {
-        var date; var mres;
-        date = pt.date;
-        pt.start = {};
-        //start year
-        pt.start.year = date.match(/^\d\d?\d?\d?/)[0];
-        date = date.slice(pt.start.year.length);
-        pt.start.year = Number(pt.start.year);
-        if(date.indexOf(" BCE") >= 0) {
-            date = date.slice(date.indexOf(" BCE") + 4);
-            pt.start.year *= -1; }
-        //start month
-        //01may2018 jslint complains "Expected 'm' flag on a multiline..."
-        //if it encounters an unescaped $ not at the end of the regex.
-        //This needs to match on a '-' or input end, so tolerating warning.
-        mres = date.match(/^\-\d\d(\-|$)/);
-        if(mres) {
-            date = date.slice(3);
-            pt.start.month = Number(mres[0].slice(1,3)); }
-        //start day
-        mres = date.match(/^\-\d\d(\-|$)/);
-        if(mres) {
-            date = date.slice(3);
-            pt.start.day = Number(mres[0].slice(1,3)); }
-        //end year
-        if(date.indexOf("-") >= 0) {
-            date = date.slice(date.indexOf("-") + 1); }
-        mres = date.match(/^\d\d?\d?\d?/);
-        if(mres) {
-            date = date.slice(mres[0].length);
-            pt.end = {};
-            pt.end.year = Number(mres[0]); }
-        //end month
-        mres = date.match(/^\-\d\d(\-|$)/);
-        if(mres) {
-            date = date.slice(3);
-            pt.end.month = Number(mres[0].slice(1,3)); }
-        //end day
-        mres = date.match(/^\-\d\d/);
-        if(mres) {
-            date = date.slice(3);
-            pt.end.day = Number(mres[0].slice(1,3)); }
+        pt.date = pt.date.replace(/(\d{4})-(\d{4})/g, "$1 to $2");
+        var pd = app.tabular.managerDispatch("datemgr", "parseDateExpression",
+                                             pt.date);
+        pt.start = pd.start;
+        pt.end = pt.end;  //undefined if no range specified
         makeDisplayDate(pt);
     }
 
@@ -135,6 +83,8 @@ app.db = (function () {
         if(m) {
             m -= 1; }  //switch from one-based month to array index
         tc = Math.round(((mds[m] + d) / 366) * 1000) / 1000;
+        if(Number.isNaN(y + tc)) {
+            jt.log("Problem tc for Point " + pt.dsId); }
         return y + tc;
     }
 
@@ -206,12 +156,6 @@ app.db = (function () {
     }
 
 
-    function noteStartTime () {
-        if(!app.startTime) {
-            app.startTime = wallClockTimeStamp(); }
-    }
-
-
     function compareStartDate (a, b) {
         a.tc = a.tc || getTimeCode(a);
         b.tc = b.tc || getTimeCode(b);
@@ -225,15 +169,20 @@ app.db = (function () {
     //timeline data for a timeline is saved in edit order (not chronological).
     function prepPointsArray (pts) {
         pts.forEach(function (pt) {
-            app.db.deserialize("Point", pt); });  //calls parseDate
+            if(pt.refs && !Array.isArray(pt.refs)) {
+                app.refmgr.deserialize(pt); }
+            if(!pt.start) {
+                parseDate(pt); }
+            if(!pt.tc) {
+                pt.tc = getTimeCode(pt); } });
         pts.sort(function (a, b) {  //verify in chrono order
             return compareStartDate(a, b); });
     }
 
 
     //The preb data points in the timeline are a subset of the database
-    //fields as written by tldat.py point_preb_summary.  These fields are
-    //added from calculations and user data:
+    //fields as written by tldat.py point_preb_summary.  The following
+    //fields are added from calculations and user data:
     //    start: {year: number, month?, day?}
     //    end?: {year: number, month?, day?}
     //    tc: time coordinate number (fractional start year)
@@ -391,13 +340,13 @@ app.db = (function () {
         if(init) { clearVisited(); }
         verifyProgressInfo();  //creates dcon.prog or reads it from account
         //Mark visited to minimize churn and make the state easier to read.
-        dcon.ds.forEach(function (tl, idx) {
+        dcon.ds.forEach(function (tl) {
             if(!tl.visited) {
                 tl.visited = true;
-                tl.levs.forEach(function (lev, idx) {
+                tl.levs.forEach(function (lev) {
                     if(!lev.visited) {
                         lev.rempts = [];
-                        lev.points.forEach(function (pt, idx) {
+                        lev.points.forEach(function (pt) {
                             if(!isPointVisited(pt)) {
                                 lev.rempts.push(pt); } });
                         lev.levpcnt = pcntComplete(lev.rempts, lev.points);
@@ -427,7 +376,7 @@ app.db = (function () {
 
 
     function makeTimelineLevels () {
-        dcon.ds.forEach(function (tl, idx) {
+        dcon.ds.forEach(function (tl) {
             var levs = []; var ppl;
             tl.svs.csvarray().forEach(function (svn) {
                 levs.push({svname:svn,
@@ -540,8 +489,7 @@ app.db = (function () {
         if(!dcon || !dcon.ds) { return; }  //timelines not loaded yet
         dcon.points = [];  //all points for all timelines in series
         dcon.ds.forEach(function (tl, ix) {
-            var ctc; var idx;
-            ctc = tl.ctype.split(":");
+            var ctc = tl.ctype.split(":");
             ctc = {type:ctc[0], levcnt:ctc[1] || 6, rndmax:ctc[2] || 18};
             tl.pointsPerSave = Number(ctc.levcnt);
             tl.dsindex = ix;
@@ -573,11 +521,6 @@ app.db = (function () {
                 serstr += ", "; }
             serstr += tl.name; });
         jt.log("Timeline display series: " + serstr);
-    }
-
-
-    function noteVisitedPSVs(pt, ct) {
-        jt.log("noteVisitedPSVs not implemented yet");
     }
 
 
@@ -635,7 +578,7 @@ app.db = (function () {
     }
 
 
-    function pointIdFromReference (point, points, ref) {
+    function pointIdFromReference (points, ref) {
         var src = ref || ""; var i; var pt;
         dcon.refs = dcon.refs || {};
         if(dcon.refs[ref]) {
@@ -652,9 +595,9 @@ app.db = (function () {
     function pointLinkedText (pt, pts, fname) {
         var txt = pt.text; var words; var i; var mtw = 5;  //max title words
         txt = txt.replace(/<a\shref\s*=\s*"#([^"]+)">([^<]+)<\/a>/gi,
-            function (match, p1, p2) {
+            function (ignore /*match*/, p1, p2) {
                 var refid; var oc; var link;
-                refid = pointIdFromReference(pt, pts, p1);
+                refid = pointIdFromReference(pts, p1);
                 if(!refid) {
                     //jt.log(pt.dsId + " link ref not found " + p1);
                     return p2; } //remove link, return just text
@@ -759,9 +702,9 @@ app.db = (function () {
         if(app.user.acc) {
             url += "&uid=" + app.user.acc.dsId; }
         jt.call("GET", url, null,
-                function (result) {  //one or more timeline objects
+                function (result) {
                     result.forEach(function (tl) {
-                        app.db.deserialize("Timeline", tl); });
+                        app.refmgr.put(app.refmgr.deserialize(tl)); });
                     makeTimelineDisplaySeries(result);
                     app.linear.display(recalcProgress()); },
                 function (code, errtxt) {
@@ -816,62 +759,6 @@ app.db = (function () {
     }
 
 
-    function bleepParseJSON (jtxt, dval) {
-        var ds; var unserializedMarker = "[object Object]";
-        dval = dval || "[]";   //assume array if no dval
-        if(!jtxt) {
-            jtxt = dval; }
-        if(typeof jtxt !== "string") {  //already deserialized
-            return jtxt; }
-        if(jtxt === unserializedMarker) {
-            jt.log("bleepParseJSON ignoring " + unserializedMarker);
-            jtxt = dval; }
-        try {
-            ds = JSON.parse(jtxt);
-        } catch(exception) {
-            jt.log("bleepParseJSON exception " + exception);
-            ds = JSON.parse(dval);
-        }
-        return ds;
-    }
-
-
-    function deserialize (dbc, dbo) {
-        switch(dbc) {
-        case "AppUser":
-            dbo.settings = bleepParseJSON(dbo.settings, "{}");
-            dbo.remtls = bleepParseJSON(dbo.remtls, "[]");
-            dbo.completed = bleepParseJSON(dbo.completed, "[]");
-            dbo.started = bleepParseJSON(dbo.started, "[]");
-            dbo.built = bleepParseJSON(dbo.built, "[]");
-            break;
-        case "Timeline":
-            dbo.preb = bleepParseJSON(dbo.preb, "[]");
-            break;
-        case "Point":
-            dbo.refs = bleepParseJSON(dbo.refs, "[]");
-            dbo.translations = bleepParseJSON(dbo.translations, "[]");
-            dbo.stats = bleepParseJSON(dbo.stats, "{}");
-            parseDate(dbo);  //sorting etc needs start
-            break;
-        case "Organization":
-            dbo.recpre = bleepParseJSON(dbo.recpre, "[]");
-            dbo.recpre.forEach(function (pt) { parseDate(pt); });
-            break;
-        default:
-            jt.log("Attempt to deserialize unknown db class: " + dbc); }
-    }
-
-
-    function postdata (dbc, dbo, skips) {
-        var dat;
-        serialize(dbc, dbo);
-        dat = jt.objdata(dbo, skips);
-        deserialize(dbc, dbo);
-        return dat;
-    }
-
-
     function userIdParam () {
         var td = app.amdtimer.load.end;
         var uid = td.toISOString() + td.getTimezoneOffset();
@@ -892,11 +779,8 @@ app.db = (function () {
         parseDate: function (pt) { parseDate(pt); },
         makeCoordContext: function (pts) { return makeCoordContext(pts); },
         makeCoordinates: function (pt, ctx) { makeCoordinates(pt, ctx); },
-        describeDateFormat: function () { return describeDateFormat(); },
         fetchDisplayTimeline: function () { fetchDisplayTimeline(); },
         serialize: function (dbc, dbo) { serialize(dbc, dbo); },
-        deserialize: function (dbc, dbo) { deserialize(dbc, dbo); },
-        postdata: function (dbc, dbo) { return postdata(dbc, dbo); },
         displayContext: function () { return dcon; },
         svdone: function (svid, sta, end) { noteSuppvizDone(svid, sta, end); },
         nextInteraction: function () { nextInteraction(); },
