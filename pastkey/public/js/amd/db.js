@@ -232,22 +232,8 @@ app.db = (function () {
 
 
     //The preb data points in the timeline are a subset of the database
-    //fields (see timeline.py rebuild_prebuilt_timeline_points):
-    //    dsId: The database point instance id.  Aka "citation id"
-    //    date: Date or range.  See README.md for allowed formats.
-    //    text: Description of the point (max 1200 chars)
-    //    refs: Zero or more reference citation strings
-    //    qtype: see app.qts
-    //    groups: CSV of keywords selected from those defined by org
-    //    regions: CSV of keywords selected from those defined by org
-    //    categories: CSV of keywords selected from those defined by org
-    //    tags: CSV of keywords selected from those defined by org
-    //    orgid: Organization id, 1 is bootstrap org
-    //    source: Arbitrary source tag used when the point was loaded.
-    //    pic: dsId if an image exists, empty string otherwise
-    //    created: ISO when the point was first created
-    //    modified: ISO when the point was last updated
-    //These fields added from calculations and user data:
+    //fields as written by tldat.py point_preb_summary.  These fields are
+    //added from calculations and user data:
     //    start: {year: number, month?, day?}
     //    end?: {year: number, month?, day?}
     //    tc: time coordinate number (fractional start year)
@@ -650,10 +636,7 @@ app.db = (function () {
 
 
     function pointIdFromReference (point, points, ref) {
-        var src = ""; var i; var pt;
-        if(point.orgid === "5757715179634688" || app.localdev()) {
-            src = "ksep: "; }  //legacy link reference mismatch
-        src += ref;
+        var src = ref || ""; var i; var pt;
         dcon.refs = dcon.refs || {};
         if(dcon.refs[ref]) {
             return dcon.refs[ref].dsId; }
@@ -889,14 +872,6 @@ app.db = (function () {
     }
 
 
-    function getOrgId (obj) {
-        //ids have to be strings because they overflow the javascript max int.
-        if(obj && obj.orgid && obj.orgid !== "0") {
-            return obj.orgid; }
-        return "";
-    }
-
-
     function userIdParam () {
         var td = app.amdtimer.load.end;
         var uid = td.toISOString() + td.getTimezoneOffset();
@@ -930,7 +905,6 @@ app.db = (function () {
         mergeUpdPtData: function (pt) { return mergeUpdatedPointData(pt); },
         initTimelines: function () { initTimelinesContent(); },
         ptlinktxt: function (p, s, f) { return pointLinkedText(p, s, f); },
-        getOrgId: function (obj) { return getOrgId(obj); },
         uidp: function () { return userIdParam(); },
         prepPointsArray: function (pts) { prepPointsArray(pts); },
         prepData: function (tl) { prepData(tl); },

@@ -156,13 +156,13 @@ app.lynching = (function () {
         tlpts = [
             {date:"1922",
              text:"Republicans in the Senate vote to abandon the Dyer Anti-Lynching Bill, which imposes severe penalties and fines on “any state or municipal officer convicted of negligence in affording protection to individuals in custody who are attacked by a mob bent on lynching, torture, or physical intimidation.” The bill, which was approved by the House of Representatives, also provided for compensation to the families of victims. A Southern Democratic filibuster in the Senate halts the bill's passage.",
-             groups:"African American", orgid:"1", source:"ksep: B120"},
+             communities:"African American", source:"ksep: B120"},
             {date:"1926",
              text:"President Coolidge tells Congress the country must provide “for the amelioration of race prejudice and the extension to all of the elements of equal opportunity and equal protection under the laws, which are guaranteed by the Constitution.”",
-             groups:"African American", orgid:"1", source:"ksep: B126"},
+             communities:"African American", source:"ksep: B126"},
             {date:"1934",
              text:"A bill that prohibits lynching fails, as President Roosevelt refuses to support it.",
-             groups:"African American", orgid:"1", source:"ksep: B127"}];
+             communities:"African American", source:"ksep: B127"}];
 
 
     function datapoints () {

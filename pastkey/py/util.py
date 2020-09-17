@@ -314,7 +314,6 @@ def fill_missing_fields(fields, src, trg):
 
 
 def update_account_fields(appuser):
-    # orgid and lev are updated separately by Organization Administrators.
     set_fields_from_reqargs([
         "name", "title", "web", "lang", "settings", "remtls", "completed",
         "started", "built"], appuser)

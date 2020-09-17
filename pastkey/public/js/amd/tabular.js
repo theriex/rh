@@ -1319,8 +1319,6 @@ app.tabular = (function () {
     //be displayed while editing if they are not being used.
     var tagmgr = {
         getHTML: function (pt, sp) {
-            if(sp.fld === "communities" && !pt.communities && pt.groups) {
-                pt.communities = pt.groups; }  //legacy data name conversion
             if(!pt[sp.fld] && sp.mode !== "edit") { return ""; }
             if(sp.mode !== "edit") {  //display existing value(s)
                 return jt.tac2html(

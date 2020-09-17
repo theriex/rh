@@ -29,7 +29,7 @@ var jt = {};   //Global access to general utility methods
                    {name:"miscegenation", type:"sv", title:"Anti-Miscegenation",
                     desc:"Anti-Miscegenation legislation by state"}];
 
-    app.keyflds = ["groups", "regions", "categories", "tags"];
+    app.keyflds = ["communities", "regions", "categories", "tags"];
     app.qts = {C:"Continue",
                U:"Did you know?",
                F:"Firsts",
