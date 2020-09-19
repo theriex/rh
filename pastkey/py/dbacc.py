@@ -279,12 +279,13 @@ def reqarg(argname, fieldtype="string", required=False):
         if required and not re.match(r"[^@]+@[^@]+\.[^@]+", emaddr):
             raise ValueError("Invalid " + argname + " value: " + emaddr)
         return emaddr
-    if fieldtype in ["string", "isodate", "isomod", "srchidcsv",
-                     "text", "json", "jsarr", "idcsv", "isodcsv", "gencsv", "url"]:
+    # A dbid is an int in the db and a string everywhere else
+    if fieldtype in ["dbid", "string", "isodate", "isomod", "srchidcsv", "text",
+                     "json", "jsarr", "idcsv", "isodcsv", "gencsv", "url"]:
         return argval or ""
     if fieldtype == "image":
         return argval or None
-    if fieldtype in ["dbid", "int"]:
+    if fieldtype == "int":
         argval = argval or 0
         return int(argval)
     raise ValueError("Unknown type " + fieldtype + " for " + argname)
@@ -410,6 +411,7 @@ def db2app_fieldval(entity, field, inst):
 
 
 def ISO2dt(isostr):
+    isostr = re.sub(r"\.\d*Z", "Z", isostr)  # remove microsecond if any
     dt = datetime.datetime.utcnow()
     dt = dt.strptime(isostr, "%Y-%m-%dT%H:%M:%SZ")
     return dt

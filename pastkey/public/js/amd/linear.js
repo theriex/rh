@@ -31,7 +31,7 @@ app.linear = (function () {
             .attr("cx", function(d) { return tl.x(d.tc); })
             .attr("cy", function(d) { return tl.y(d.vc); });
         tl.pts.forEach(function (pt) {
-            d3.select("#lp" + pt.instid)
+            d3.select("#lp" + pt.dsId)
                 .attr("x1", tl.x(pt.tc))
                 .attr("x2", tl.x(pt.tc)); });
         d3.select("#centerline")
@@ -97,7 +97,7 @@ app.linear = (function () {
         tl.pts.forEach(function (pt) {
             tl.focus.append("line")
                 .attr("class", "lpline")
-                .attr("id", "lp" + pt.instid)
+                .attr("id", "lp" + pt.dsId)
                 .attr("x1", tl.x(pt.tc))
                 .attr("y1", tl.y(pt.vc))
                 .attr("x2", tl.x(pt.tc))
@@ -362,13 +362,13 @@ app.linear = (function () {
         //find the current point and put it back on the stack to return to it.
         //unless it was already closed (like if following a link off a link)
         for(i = 0; i < tl.pts.length; i += 1) {
-            if(tl.pts[i].instid === srcid) {
+            if(tl.pts[i].dsId === srcid) {
                 if(!tl.pts[i].isoClosed) {
                     app.db.unvisitPoint(tl.pts[i]);
                     app.mode.requeue(tl.pts[i]); }
                 break; } }
         for(i = 0; i < tl.pts.length; i += 1) {
-            if(tl.pts[i].instid === refid) {
+            if(tl.pts[i].dsId === refid) {
                 return clickCircle(tl.pts[i]); } }
         jt.log("byPtId " + refid + " not found.");
     }
@@ -529,7 +529,7 @@ app.linear = (function () {
 
 
     function candidateNotOnWall (wall) {  //lint factoring..
-        return wall.selpts.every((pt) => pt.instid !== wall.cand.instid);
+        return wall.selpts.every((pt) => pt.dsId !== wall.cand.dsId);
     }
 
 
@@ -549,8 +549,8 @@ app.linear = (function () {
         else if(picpts.length >= 2) { grid = {x:2, y:1}; }
         else if(picpts.length >= 1) { grid = {x:1, y:1}; }
         else { 
-            jt.log("Not enough pic points to display. " + picpts.length +
-                   " of " + tl.pts.length + "."); 
+            jt.log("Not enough points with pics to make wallpaper. " +
+                   picpts.length + " of " + tl.pts.length + ".");
             return false;}
         while(wall.selpts.length < (grid.x * grid.y)) {
             idx = Math.floor(Math.random() * picpts.length);

@@ -164,7 +164,7 @@ app.dlg = (function () {
     function displayDialog (d, html) {
         var dim;
         if(d) {
-            jt.log("displayDialog " + d.instid + " " + 
+            jt.log("displayDialog " + d.dsId + " " +
                    d.text.slice(0, 50) + "..."); }
         dim = constrainDialogToChartDims();
         //Verify the dialog is hidden so there is no blink when the content
@@ -269,7 +269,7 @@ app.dlg = (function () {
     function getYearGuessOptions (pt, flank) {
         var pti = 0; var idx = 0; var dp; var off; var years = [pt.start.year];
         for(pti = 0; pti < tl.pts.length; pti += 1) {
-            if(tl.pts[pti].instid === pt.instid) {
+            if(tl.pts[pti].dsId === pt.dsId) {
                 break; } }
         idx = pti - 1;
         while(idx >= 0 && years.length < flank) {
@@ -322,14 +322,14 @@ app.dlg = (function () {
         var html = "";
         var tlpts = app.linear.tldata().pts;
         var idx = 0;
-        while(idx < tlpts.length && tlpts[idx].instid !== d.instid) {
+        while(idx < tlpts.length && tlpts[idx].dsId !== d.dsId) {
             idx += 1; }
         if(idx > 0 && idx < tlpts.length) {  //found it, and not first point
             html = ["div", {id:"prevlinkdiv"},
                     ["a", {href:"#previous",
                            onclick:jt.fs("app.linear.byPtId('" + 
-                                         tlpts[idx - 1].instid + "','" +
-                                         d.instid + "')")},
+                                         tlpts[idx - 1].dsId + "','" +
+                                         d.dsId + "')")},
                      "&#8678;"]]; }  //Leftwards White Arrow U+21E6
         return html;
     }
@@ -340,15 +340,15 @@ app.dlg = (function () {
         var currpt = app.mode.currpt();
         var tlpts = app.linear.tldata().pts;
         var idx = tlpts.length - 1;
-        while(idx > 0 && tlpts[idx].instid !== d.instid) {
+        while(idx > 0 && tlpts[idx].dsId !== d.dsId) {
             idx -= 1; }
         if(idx < tlpts.length - 1 && 
-           (!currpt || currpt.instid !== tlpts[idx + 1].instid)) {
+           (!currpt || currpt.dsId !== tlpts[idx + 1].dsId)) {
             html = ["div", {id:"forwardlinkdiv"},
                     ["a", {href:"#next",
                            onclick:jt.fs("app.linear.byPtId('" +
-                                         tlpts[idx + 1].instid + "','" +
-                                         d.instid + "')")},
+                                         tlpts[idx + 1].dsId + "','" +
+                                         d.dsId + "')")},
                      "&#8680;"]]; }  //Rightwards White Arrow U+21E8
         return html;
     }
@@ -536,9 +536,9 @@ app.dlg = (function () {
                               src:app.dr("img/search.png")}]]];
         if(d.refs && d.refs.length) {
             refshtml.push([["a", {onclick:jt.fs("app.toggledivdisp('" +
-                                            "refslistdiv" + d.instid + "')")},
+                                            "refslistdiv" + d.dsId + "')")},
                             ["span", {cla:"refslinkspan"}, "refs"]],
-                           ["div", {id:"refslistdiv" + d.instid,
+                           ["div", {id:"refslistdiv" + d.dsId,
                                     style:"display:none;"},
                             refsListHTML(d.refs)]]); }
         refshtml = ["div", {id:"dlgrefsdiv"}, refshtml];
@@ -565,7 +565,7 @@ app.dlg = (function () {
     function closeInteractionTimeTracking () {
         var pt = tl.dlgdat;
         var inter = pt.interact;
-        var ptid = pt.instid;
+        var ptid = pt.dsId;
         var prog = app.db.displayContext().prog;
         var pstr = "";
         inter.end = new Date();
@@ -781,7 +781,7 @@ app.dlg = (function () {
                                checked:jt.toru(
                                    app.user.acc.settings.tlnotices)}],
                     ["label", {fo:"cbtlnotices", id:"tlnoticeslabel"},
-                     "Send me new timelines"]]],
+                     "Send me new timeline notices"]]],
                   ["div", {id:"loginstatdiv"}],
                   ["div", {id:"dlgbuttondiv"},
                    [["button", {type:"button", id:"updaccbutton",
@@ -837,11 +837,11 @@ app.dlg = (function () {
                 data.settings = JSON.stringify(app.user.acc.settings); }
             jt.out("loginstatdiv", "Updating account...");
             jt.byId("updaccbutton").disabled = true;
-            if(app.user.acc.email === data.updemailin &&
+            if(app.user.email === data.updemailin &&
                data.updpasswordin === "noval") {  //not changing auth info
                 delete data.updpasswordin;        //so don't send
                 delete data.updemailin; }
-            else if(app.user.acc.email !== data.updemailin) {
+            else if(app.user.email !== data.updemailin) {
                 //Provide context url for account activation email
                 data.returl = jt.enc(window.location.href); }
             jt.call("POST", "/api/updacc?" + app.auth(), inputsToParams(data),
@@ -902,30 +902,31 @@ app.dlg = (function () {
         params.qidx = params.href.indexOf("?");
         if(params.qidx < 0) { //no parameters to process
             return app.dlg.chkcook(contf); }
+        //handle param side effects
         params.plainurl = params.href.slice(0, params.qidx);
         if(params.an && params.at) {
             params.authqs = "an=" + params.an + "&at=" + params.at;
             params.an = jt.dec(params.an);
             setCookie(params.an, params.at); }
+        //choose what to do next
         if(params.actcode) {
-            params.data = params.data || {};
-            params.data.actcode = params.actcode; }
-        //Save all parameter state in cookie or server, then clear the
-        //params and continue.  With no app history management, removing the
-        //query portion of the url will probably result in a reload, but
-        //should work either way since all given state was saved.
-        if(params.data) {
             jt.out("splashdiv", "Updating your account...");
+            params.data = params.data || {};
+            params.data.actcode = params.actcode;
             params.data = jt.objdata(params.data);
             jt.call("POST", "/api/updacc?" + params.authqs, params.data,
                     function (result) {
                         saveUserInfo(result);
+                        //this next line probably results in a reload.
                         window.location.href = params.plainurl;
+                        //continue on in case reload doesn't happen
                         app.dlg.chkcook(contf); },
                     function (code, errtext) {
                         jt.out("splashdiv", "Account update failed " + code +
                                ": " + errtext); }); }
-        else { //nothing to save on server.
+        else if(params.compcert) {  //leave the params on the url
+            app.dlg.chkcook(contf); }
+        else { //nothing to save on server and no custom processing
             window.location.href = params.plainurl;  //probably causes reload
             app.dlg.chkcook(contf); }
     }

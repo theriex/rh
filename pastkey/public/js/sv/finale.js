@@ -170,7 +170,7 @@ app.finale = (function () {
         hr.updcount = 0;
         comps.forEach(function (comp) {
             if(app.user && app.user.acc && 
-               app.user.acc.instid === comp.userid) {
+               app.user.acc.dsId === comp.userid) {
                 //use their most up-to-date name in case they changed it
                 comp.username = app.user.acc.name; }
             if(hr.names.indexOf(comp.username) < 0) {
@@ -224,12 +224,13 @@ app.finale = (function () {
 
     function showCompletionCertificate () {
         var email = "unknown";
-        if(app.user && app.user.acc) {
-            email = app.user.acc.email; }
+        if(app.user && app.user.email) {
+            email = app.user.email; }
         d3.event.preventDefault();
-        window.open(app.baseurl + 
-                    "?compcert=" + app.db.displayContext().tlid + 
-                    "&email=" + email);
+        var url = app.baseurl + "?compcert=" + app.db.displayContext().tlid +
+            "&email=" + email;
+        jt.log("Completion certificate url: " + url);
+        window.open(url);
     }
 
 

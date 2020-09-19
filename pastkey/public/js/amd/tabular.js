@@ -113,13 +113,18 @@ app.tabular = (function () {
     var aggmgr = {
         state: {tombstones:{}},
         init: function (mode) {
+            //account status is private info so stripped from user.acc
+            if(mode === "tledit" && app.user.status !== "Active") {
+                jt.err("You need to activate your account before editing a timeline. Click the link sent to you in the account activation email.");
+                mode = "refdisp"; }
             aggmgr.state.mode = mode;
             if(mode === "tledit") {
                 jt.out("reftitlediv", jt.tac2html(
                     [["div", {cla:"tletldiv"}, "Edit Timeline"],
                      ["div", {cla:"tletrdiv"}, "Mix-In"]])); }
             else { //"refdisp"
-                jt.out("reftitlediv", "Reference Mode"); } },
+                jt.out("reftitlediv", "Reference Mode"); }
+            return aggmgr.state.mode; },
         urlTimeline: function () {
             return app.db.displayContext().lastTL; },
         getTLName: function (tlid) {
@@ -238,7 +243,7 @@ app.tabular = (function () {
                 stgmgr.toggleSettings("open"); }  //rebuild settings
             aggmgr.rebuildPoints();
             filtmgr.updateControls();
-            filtmgr.filterPoints();
+            dispmgr.displayPoints(filtmgr.filterPoints());
             stgmgr.setFocus(); },
         getPoints: function () {
             if(!aggmgr.state.points) {
@@ -291,7 +296,7 @@ app.tabular = (function () {
         resolvePoint: function (pt, defltpt) {
             if(!pt) { return defltpt || null; }
             if(typeof pt === "string") {
-                pt = aggmgr.state.points.find((tp) => pt.dsId === tp.dsId); }
+                pt = aggmgr.state.points.find((tp) => pt === tp.dsId); }
             return pt; },
         addOrUpdatePoint: function (upd) {
             var pts = aggmgr.state.points.filter((pt) => pt.dsId !== upd.dsId);
@@ -564,19 +569,29 @@ app.tabular = (function () {
                     function (code, errtxt) {
                         jt.log("stgmgr.updateUser " + code + ": " + errtxt); },
                     jt.semaphore("stgmgr.updateUser")); },
-        checkForDataChanges: function () {
+        changedFields: function () {
             var tl = aggmgr.currTL("edit");
+            if(!tl) { return ""; }
             var changed = "";
             Object.entries(stgmgr.fdefs).forEach(function ([fld, def]) {
                 var mgr = def.mgr || tfmgr;
                 var val = mgr.getValue(fld);
                 if(val !== tl[fld]) {
                     changed = changed.csvappend(fld); } });
+            return changed; },
+        checkForDataChanges: function () {
+            var changed = stgmgr.changedFields();
             if(changed) {
                 jt.log("Timeline fields changed: " + changed);
                 jt.byId("stgsavebdiv").style.display = "block"; }
             else {
-                jt.byId("stgsavebdiv").style.display = "none"; } }
+                jt.byId("stgsavebdiv").style.display = "none"; } },
+        saveIfModified: function () {
+            var changed = stgmgr.changedFields();
+            if(changed) {
+                stgmgr.save(); }
+            else {
+                stgmgr.toggleSettings("closed"); } }
     };
 
 
@@ -599,7 +614,7 @@ app.tabular = (function () {
             if(yrmgr.state.yrmax < yrmgr.state.yrmin) {
                 yrmgr.state.yrmax = yrmgr.state.yrmin;
                 jt.byId("yearendin").value = yrmgr.state.yrmaz; }
-            filtmgr.filterPoints(); },
+            dispmgr.displayPoints(filtmgr.filterPoints()); },
         makeYearInput: function (domid, val) {
             return jt.tac2html(
                 ["input", {type:"number", cla:"yearin", value:val,
@@ -660,7 +675,7 @@ app.tabular = (function () {
             srchmgr.state.qstr = srchmgr.state.qstr.trim();
             if(!srchmgr.state.pqs[srchmgr.state.qstr]) {
                 srchmgr.parseSearch(srchmgr.state.qstr); }
-            filtmgr.filterPoints(); },
+            dispmgr.displayPoints(filtmgr.filterPoints()); },
         //A search can consist of simple strings and/or quoted strings,
         //possibly preceded by a "+" indicating that the string should be
         //treated as an additional filter.
@@ -883,7 +898,7 @@ app.tabular = (function () {
             if(filtmgr.state.dispsel.getValue() === "Timeline") {
                 jt.byId("yrmgrctrlsdiv").style.display = "inline-block";
                 jt.byId("fsddiv").style.display = "block";
-                filtmgr.filterPoints(); }
+                dispmgr.displayPoints(filtmgr.filterPoints()); }
             else {  //Suppviz
                 jt.byId("yrmgrctrlsdiv").style.display = "none";
                 jt.byId("fsddiv").style.display = "none";
@@ -895,7 +910,7 @@ app.tabular = (function () {
                    srchmgr.isMatchingPoint(pt)) {
                     pts.push(pt); } });
             filtmgr.state.pts = pts;
-            dispmgr.displayPoints(pts); },
+            return pts; },
         points: function () {
             return filtmgr.state.pts; }
     };
@@ -1382,7 +1397,7 @@ app.tabular = (function () {
             var ptd = ptdmgr.pointChangeData(pt);
             return Object.entries(ptdmgr.ptfd)
                 .some(function ([k, d]) { return d.mgr && ptd[k]; }); },
-        rebuildTimelinePoints: function (pt) {  //pt used if error saving
+        rebuildTimelinePoints: function (updpt) {
             var tl = aggmgr.currTL("edit");
             var pts = aggmgr.getPoints()
                 .filter((pt) => pt.srctl === tl.dsId || pt.mixin);
@@ -1393,7 +1408,7 @@ app.tabular = (function () {
             jt.call("POST", "/api/updtl?" + app.auth(), tldat,
                     function (obs) {
                         app.refmgr.put(app.refmgr.deserialize(obs[0]));
-                        dispmgr.displayPoints(filtmgr.points()); },
+                        dispmgr.displayPoints(filtmgr.filterPoints()); },
                     function (code, errtxt) {
                         //PENDING: Admin mail explaining that the timeline
                         //cids will need to be rebuilt from from the Points
@@ -1403,7 +1418,7 @@ app.tabular = (function () {
                         //this in a recovery dialog.
                         jt.err("Timeline points rebuild failed " + code +
                                ": " + errtxt);
-                        editmgr.updateSaveButtonDisplay(pt); },
+                        editmgr.updateSaveButtonDisplay(updpt); },
                     jt.semaphore("ptdmgr.rebuildTimelinePoints")); }
     };
 
@@ -1480,6 +1495,8 @@ app.tabular = (function () {
         pt4id: function (ptid, cbf) {
             if(ptid === "Placeholder") {
                 return cbf({dsType:"Point", dsId:"Placeholder"}); }
+            var pt = app.refmgr.cached("Point", ptid);
+            if(pt) { return cbf(pt); }
             jt.out("saveprocmsgdiv" + ptid, "Fetching full Point data...");
             app.refmgr.getFull("Point", ptid, function (pt) {
                 jt.out("saveprocmsgdiv" + ptid, "");
@@ -1565,20 +1582,23 @@ app.tabular = (function () {
                        onclick:mdfs("editmgr.addNewPoint", pt.dsId)},
                  "+"]); },
         addNewPoint: function (pt) {
-            pt = aggmgr.resolvePoint(pt, {dsType:"Point", dsId:"Placeholder"});
+            var pp = {dsType:"Point", dsId:"Placeholder"};
+            pt = aggmgr.resolvePoint(pt, pp);
             var parentdiv = jt.byId("pointsdispdiv");
             var ptdiv = jt.byId("trowdiv" + pt.dsId);
             var placediv = jt.byId("trowdivPlaceholder");
             if(placediv) {  //already created
                 parentdiv.removeChild(placediv); }
             else {  //make a placeholder div
-                placediv = dispmgr.makePointDiv(pt); }
+                placediv = dispmgr.makePointDiv(pp); }
             if(ptdiv) {  //put placeholder after current point
                 ptdiv.after(placediv); }
             else { //put placeholder first
                 var pts = aggmgr.getPoints();
+                ptdiv = null;
                 if(pts.length) {
-                    ptdiv = jt.byId("trowdiv" + pts[0].dsId);
+                    ptdiv = jt.byId("trowdiv" + pts[0].dsId); }
+                if(ptdiv) { //first row already rendered
                     ptdiv.before(placediv); }
                 else {
                     parentdiv.appendChild(placediv); } }
@@ -1590,6 +1610,8 @@ app.tabular = (function () {
             if(mode) {
                 if(mode === "read") { togedit = false; }
                 if(mode === "edit") { togedit = true; } }
+            if(togedit && !curredit) {
+                stgmgr.saveIfModified(); }
             //only redisplay if the mode has changed. keep interim state.
             if(curredit !== togedit) {
                 //canceling current edit or starting a new edit, redisplay
@@ -1604,7 +1626,7 @@ app.tabular = (function () {
         display: function (mode) {
             //datemgr.test();
             app.mode.chmode("reference");  //verify screen elements visible
-            aggmgr.init(mode || "refdisp");
+            mode = aggmgr.init(mode || "refdisp");
             jt.out("tcontdiv", jt.tac2html(
                 [["div", {id:"tcontheaddiv"},
                   [["div", {id:"aggctrlsdiv"}],

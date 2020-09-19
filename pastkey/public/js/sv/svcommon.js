@@ -1,4 +1,4 @@
-/*jslint browser, multivar, white, fudge, this, long */
+/*jslint browser, white, fudge, this, long */
 /*global app, window, jt, d3 */
 
 //factored common data and utilities used in multiple visualizations
@@ -88,8 +88,8 @@ app.svcommon = (function () {
 
     function pathToVertices (path) {
         //https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d
-        var vs = [], temp = {},
-            state = {prevx:0, prevy:0, offset:false, si:0, co:0};
+        var vs = []; var temp = {};
+        var state = {prevx:0, prevy:0, offset:false, si:0, co:0};
         //ensure command letters are clumped with their first coordinate
         path = path.replace(/([MmLlQqCcTtSsAa])\s+/g, "$1");
         path.split(" ").forEach(function (pt) {
@@ -244,15 +244,15 @@ app.svcommon = (function () {
 
 
     function vizsts (source) {
-        var src = source,
-            stats = null,
-            tl = null,
-            chart = src.chart || {colors: {bg: "#fef6d7", 
+        var src = source;
+        var stats = null;
+        var tl = null;
+        var chart = src.chart || {colors: {bg: "#fef6d7",
                                            progbar: {tick:"#cc6c6c"},
                                            map: {neutral:"#fadb66",
                                                  hover:"#d3aaaa",
-                                                 selected:"#cc6c6c"}}},
-            ani = {wmin:1.0, wbase:0.25, nudge:0.05, idx:0, tes:src.tlpts};
+                                                 selected:"#cc6c6c"}}};
+        var ani = {wmin:1.0, wbase:0.25, nudge:0.05, idx:0, tes:src.tlpts};
 
         function usmapTAC () {
             var html = [];
@@ -362,8 +362,8 @@ app.svcommon = (function () {
 
 
         function displayTitle () {
-            var tg, delay = 3500, duration = 2000;
-            tg = d3.select("#svgin").append("g").attr("opacity", 1.0);
+            var delay = 3500; var duration = 2000;
+            var tg = d3.select("#svgin").append("g").attr("opacity", 1.0);
             tg.append("text")
                 .attr("text-anchor", "middle")
                 .attr("x", chart.vbmid.x)
@@ -386,10 +386,10 @@ app.svcommon = (function () {
 
 
         function initDisplayElements () {
-            var kh = 50, mid, ks;
+            var kh = 50;
             chart.ms = {w:tl.width2, h:Math.min((tl.height - kh), tl.width2)};
             initHTMLContent();
-            ks = chart.key.svg;
+            var ks = chart.key.svg;
             displayTitle();
             ks.x = d3.scaleLinear()
                 .domain(d3.extent(src.tlpts, function (d) { return d.tc; }))
@@ -415,7 +415,7 @@ app.svcommon = (function () {
                 .data(src.tlpts)
                 .enter().append("rect")
                 .attr("class", "ksbar")
-                .attr("id", function (d) { return "kb" + d.instid; })
+                .attr("id", function (d) { return "kb" + d.dsId; })
                 .attr("x", function (d) { return ks.x(d.tc); })
                 .attr("y", 6)  //unstick from top of div to make things balance
                 .attr("width", 3)
@@ -426,8 +426,8 @@ app.svcommon = (function () {
                 .on("mouseout", function () { this.style.opacity = 0.2; })
                 .on("click", function (d) { 
                     app.vizsts.selyear(d.start.year); });
-            mid = {x: Math.round(tl.width2 / 2) + tl.margin.left,
-                   y: Math.round(tl.height / 2) + tl.margin.top};
+            var mid = {x: Math.round(tl.width2 / 2) + tl.margin.left,
+                       y: Math.round(tl.height / 2) + tl.margin.top};
             d3.select("#suppvisdiv")
                 .style("left", mid.x - 15 + "px")
                 .style("top", mid.y - 15 + "px")
@@ -453,11 +453,11 @@ app.svcommon = (function () {
 
 
         function updateProgressBar (year) {
-            var idx = 0, pcnt;
+            var idx = 0;
             ani.tes.forEach(function (te) {
                 if(te.start.year <= year) {
                     idx += 1; } });
-            pcnt = Math.round(idx * 100 / (ani.tes.length - 1)) / 100;
+            var pcnt = Math.round(idx * 100 / (ani.tes.length - 1)) / 100;
             d3.select("#progrect").transition().duration(500)
                 .attr("width", Math.round(pcnt * chart.key.svg.w));
         }
@@ -474,12 +474,12 @@ app.svcommon = (function () {
 
 
         function displayPoint (immediate) {
-            var wc = 0, te, ptxt, wait;
+            var wc = 0; var ptxt;
             if(ani.timeout) {
                 clearTimeout(ani.timeout); }
             ani.idx = Math.max(ani.idx, 0);
             if(ani.idx < ani.tes.length) {
-                te = ani.tes[ani.idx];
+                var te = ani.tes[ani.idx];
                 if(!immediate && ani.dispyear && ani.dispyear < te.start.year) {
                     if(te.start.year - ani.dispyear > 30) {
                         ani.dispyear += 10; }  //close long gaps faster
@@ -519,7 +519,7 @@ app.svcommon = (function () {
                 app.vizsts.stunclick(); }
             if(ani.playing) {
                 ani.ww = ani.ww || ani.wbase;
-                wait = Math.max(ani.wmin, wc * ani.ww) * 1000;
+                var wait = Math.max(ani.wmin, wc * ani.ww) * 1000;
                 if(!ptxt) {  //don't pause if nothing displayed
                     wait = 0; }
                 ani.timeout = setTimeout(function () {
@@ -529,7 +529,7 @@ app.svcommon = (function () {
 
         function transport (command) {
             if(command === "toggle") {
-                command = ani.playing? "pause" : "play"; }
+                command = (ani.playing? "pause" : "play"); }
             switch(command) {
             case "play":
                 ani.playing = true;

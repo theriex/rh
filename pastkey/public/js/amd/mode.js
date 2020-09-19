@@ -368,46 +368,49 @@ app.mode = (function () {
     }
 
 
-    function getCompletionStats (user, tlid) {
-        var html; var ce = null; var cs; var st = "";
-        user.completed.forEach(function (comp) {
-            if(comp.tlid === tlid) {
-                ce = comp; } });
+    function displayCompletionStats (user, tl) {
+        var html = [["div", {cla:"crtcompdiv"}, "has completed"],
+                    ["div", {cla:"crttitlediv"},
+                     ["a", {href:"/timeline/" + (tl.slug || tl.dsId)},
+                      tl.title || tl.name]],
+                    ["div", {cla:"crtsubtdiv"}, tl.subtitle],
+                    ["div", {cla:"crttliddiv"}, "(Timeline " + tl.dsId + ")"]];
+        var ce = user.completed.find((ce) => ce.tlid === tl.dsId);
         if(!ce) {
-            return "has NOT completed this timeline."; }
+            html[0][2] = "has NOT completed";
+            return jt.out("certstatsdiv", jt.tac2html(html)); }
+        html.push(["div", {cla:"crtdatediv"}, "on " +
+                   jt.colloquialDate(ce.latest, false, "z2loc,nodaily")]);
         if(ce.stats) {
-            cs = ce.stats;
-            st = " having studied a total of " + elapsed(cs.pttl + cs.sttl) +
-                ", covering " + cs.pcount + " points in " + elapsed(cs.pttl) +
-                " (an average of " + elapsed(cs.pavg) + " per point)";
+            var cs = ce.stats;
+            var st = "having studied a total of " + elapsed(cs.pttl + cs.sttl) +
+                ", covering " + cs.pcount + " points at an average of " +
+                elapsed(cs.pavg) + " per point";
             if(cs.scount) {
                 st += " and " + cs.scount + " supplemental visualizations in " +
                     elapsed(cs.sttl) + " (an average of " + elapsed(cs.savg) +
                     " per visualization)"; }
-            st += "."; }
-        html = ["has completed ",
-                ["span", {id:"ctltitlespan"}, ce.title], " ", 
-                ["span", {id:"ctlsubtspan"}, ce.subtitle],
-                " on ",
-                jt.colloquialDate(ce.latest, false, "z2loc,nodaily"),
-                st];
-        return html;
+            st += ".";
+            html.push(["div", {cla:"crtsummarydiv"}, st]); }
+        jt.out("certstatsdiv", jt.tac2html(html));
     }
 
 
     function displayCompletionCertificate (user, tlid) {
-        var html; var website = user.web || "";
+        var website = user.web || "";
         if(user.web) {
             website = ["a", {href:user.web, 
                              onclick:jt.fs("window.open('" + user.web + "')")},
                        user.web]; }
-        html = ["div", {id:"certcontdiv"},
-                [["div", {id:"certnamediv"}, user.name],
-                 ["div", {id:"certtitlediv"}, user.title],
-                 ["div", {id:"certwebdiv"}, website],
-                 ["div", {id:"certuiddiv"}, "(user id: " + user.dsId + ")"],
-                 ["div", {id:"certstatsdiv"}, getCompletionStats(user, tlid)]]];
-        jt.out("rhcontentdiv", jt.tac2html(html));
+        jt.out("rhcontentdiv", jt.tac2html(
+            ["div", {id:"certcontdiv"},
+             [["div", {id:"certnamediv"}, user.name],
+              ["div", {id:"certtitlediv"}, user.title],
+              ["div", {id:"certwebdiv"}, website],
+              ["div", {id:"certuiddiv"}, "(user id: " + user.dsId + ")"],
+              ["div", {id:"certstatsdiv"}, "Fetching timeline " + tlid]]]));
+        app.refmgr.getFull("Timeline", tlid, function (tl) {
+            displayCompletionStats(user, tl); });
     }
 
 
@@ -522,7 +525,8 @@ app.mode = (function () {
         app.user.acc.completed.forEach(function (ct) {
             if(ct.tlid === tl.dsId) {
                 var link = app.baseurl + "?compcert=" + tl.dsId + 
-                    "&email=" + app.user.acc.email;
+                    //app.user.acc.email is always empty of private info
+                    "&email=" + app.user.email;
                 var html = ["a", {href:"#showcomp",
                                   onclick:jt.fs("window.open('" + link + "')")},
                             "&#x2713;"]; //checkmark

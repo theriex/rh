@@ -49,10 +49,9 @@ divided into chapters.</p>
 
 <img src="$RDRimg/svsampsupp.png"/>
 
-<p>PastKey is an open source project.  Data for timelines and
-visualizations are provided by member organizations.  You can build your own
-timelines, download data in a variety of formats, and embed timelines in
-other websites.</p>
+<p>PastKey is an open source project.  Data for timelines and visualizations
+are provided by contributing members.  <a href="timeline/default">Sign
+In</a> from the menu on any timeline.  </p>
 
 <img src="$RDRimg/pastkey.png"/>
 

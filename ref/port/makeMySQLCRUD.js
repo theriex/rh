@@ -283,12 +283,13 @@ function helperFunctions () {
     pyc += "        if required and not re.match(r\"[^@]+@[^@]+\\.[^@]+\", emaddr):\n";
     pyc += "            raise ValueError(\"Invalid \" + argname + \" value: \" + emaddr)\n";
     pyc += "        return emaddr\n";
-    pyc += "    if fieldtype in [\"string\", \"isodate\", \"isomod\", \"srchidcsv\",\n";
-    pyc += "                     \"text\", \"json\", \"jsarr\", \"idcsv\", \"isodcsv\", \"gencsv\", \"url\"]:\n";
+    pyc += "    # A dbid is an int in the db and a string everywhere else\n";
+    pyc += "    if fieldtype in [\"dbid\", \"string\", \"isodate\", \"isomod\", \"srchidcsv\", \"text\",\n";
+    pyc += "                     \"json\", \"jsarr\", \"idcsv\", \"isodcsv\", \"gencsv\", \"url\"]:\n";
     pyc += "        return argval or \"\"\n";
     pyc += "    if fieldtype == \"image\":\n";
     pyc += "        return argval or None\n";
-    pyc += "    if fieldtype in [\"dbid\", \"int\"]:\n";
+    pyc += "    if fieldtype == \"int\":\n";
     pyc += "        argval = argval or 0\n";
     pyc += "        return int(argval)\n";
     pyc += "    raise ValueError(\"Unknown type \" + fieldtype + \" for \" + argname)\n";
@@ -414,6 +415,7 @@ function helperFunctions () {
     pyc += "\n";
     pyc += "\n";
     pyc += "def ISO2dt(isostr):\n";
+    pyc += "    isostr = re.sub(r\"\\.\\d*Z\", \"Z\", isostr)  # remove microsecond if any\n";
     pyc += "    dt = datetime.datetime.utcnow()\n";
     pyc += "    dt = dt.strptime(isostr, \"%Y-%m-%dT%H:%M:%SZ\")\n";
     pyc += "    return dt\n";

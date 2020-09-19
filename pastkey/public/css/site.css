@@ -408,12 +408,16 @@ button, .buttonspan { border: 2px solid #666666; border-radius:8px;
   box-shadow:5px 5px 3px #655050; background:antiquewhite; 
   max-width:400px; margin:auto; }
 #certnamediv { font-size:xx-large; text-align:center; font-weight:bold;
-  padding:10px; }
+  padding:10px 0px 0px 0px; }
 #certtitlediv, #certwebdiv { font-size:medium; text-align:center; }
-#certuiddiv { font-size:small; text-align:center; padding-bottom:5px; }
+#certuiddiv, .crttliddiv { font-size:small; text-align:center; }
 #certstatsdiv { padding:5px 2px; font-size:medium; font-style:italic; }
-#ctltitlespan { font-style:normal; font-weight:bold; font-size:large; }
-#ctlsubtspan { font-style:normal; font-weight:bold; }
+.crtcompdiv, .crttitlediv, .crtsubtdiv { text-align:center; }
+.crtcompdiv { padding:10px; }
+.crttitlediv { font-style:normal; font-weight:bold; font-size:x-large; }
+.crtsubtdiv { font-style:normal; font-weight:bold; }
+.crtdatediv { text-align:center; padding:10px 0px 5px 0px; }
+.crtsummarydiv { text-align:center; }
 
 /* -------------------- */
 /* thanks to https://sharingbuttons.io */

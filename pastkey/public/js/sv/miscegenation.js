@@ -1,15 +1,15 @@
-/*jslint browser, multivar, white, fudge, this, long */
+/*jslint browser, white, fudge, this, long */
 /*global app, window, jt, d3 */
 
 app.miscegenation = (function () {
     "use strict";
 
-    var viz = null,
-        cm1 = "#ffb783",  //anti-miscegenation level 1
-        cm2 = "#ffa15c",  //anti-miscegenation expanded to include even more
-        cmx = "#fadb66",  //no anti-miscegenation
-        allpts = null,
-        sps = [{state:"AK", name:"Alaska", points:[]},  //none
+    var viz = null;
+    var cm1 = "#ffb783";  //anti-miscegenation level 1
+    var cm2 = "#ffa15c";  //anti-miscegenation expanded to include even more
+    var cmx = "#fadb66";  //no anti-miscegenation
+    var allpts = null;
+    var sps = [{state:"AK", name:"Alaska", points:[]},  //none
                {state:"HI", name:"Hawaii", points:[]},  //none
                {state:"AL", name:"Alabama", points:[
                    { date:"1822", text:"Alabama prohibits intermarriage between Whites and Negroes or mulattos.", nodisp:true }]},
@@ -144,8 +144,8 @@ app.miscegenation = (function () {
                    { date:"1863", source:"ksep: R46", text:"West Virginia prohibits intermarriage between Whites and Negroes or mulattos.", nodisp:true }]},
                {state:"WY", name:"Wyoming", points:[
                    { date:"1869", text:"Wyoming prohibits \"all marriages of white persons with Negroes, Mulattoes, Mongolians or Malays\".  The law is repealed before reaching statehood, then reinstated in 1913", nodisp:true, color:cm2 },
-                   { date:"1965", text:"Wyoming legalizes interracial marriage.", nodisp:true, color:cmx }]}],
-        tlpts = [
+                   { date:"1965", text:"Wyoming legalizes interracial marriage.", nodisp:true, color:cmx }]}];
+    var tlpts = [
             { date:"1492", text:"With the arrival of Columbus, Native Americans are brought into contact with Europeans and with African slaves" },
             { date:"1614-04-05", text:"Pocahontas (aka Matoaka or Amonute, later Rebecca), 19 year old daughter of Algonquin Chief Powhatan, marries tobacco planter John Rolfe in probably the earliest officially recorded interracial marriage in North America" },
             { date:"1700", text:"Intermarriage between the African slaves and Native Americans. During the 18th century the African slave population is predominantly male and there is a decline in the number of Native American men." },
@@ -217,7 +217,7 @@ app.miscegenation = (function () {
             pt.communities = "Native American,African American,Multiracial";
             if(pt.color === cm2 || pt.color === cmx) {
                 pt.communities += ",Asian American"; } }
-        pt.instid = "miscegenation" + idprefix + idx;
+        pt.dsId = "miscegenation" + idprefix + idx;
     }
 
 

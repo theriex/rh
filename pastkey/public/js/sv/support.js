@@ -180,7 +180,7 @@ app.support = (function () {
             jt.log("socshareHTML can't share if no Timeline selected.");
             return; }
         var urlp = "https%3A%2F%2Fpastkey.org%2Ftimeline%2F" + 
-            dcon.lastTL.slug || dcon.lastTL.instid;
+            dcon.lastTL.slug || dcon.lastTL.dsId;
         var tlnp = jt.dquotenc(dcon.lastTL.name);
         var tac = [
             //Twitter

@@ -1,17 +1,17 @@
-/*jslint browser, multivar, white, fudge, this, long */
+/*jslint browser, white, fudge, this, long */
 /*global app, window, jt, d3 */
 
 app.slavery = (function () {
     "use strict";
 
-    var viz = null,
-        colors = {slavery:"#cc6c6c", free:"#fadb66"},
-        allpts = null,
+    var viz = null;
+    var colors = {slavery:"#cc6c6c", free:"#fadb66"};
+    var allpts = null;
         //start: When slavery was legalized or the first official record of
         //       chattel slaves being held, whichever is earliest.
         //end:   When slavery was made illegal or the last official record 
         //       of chattel slaves being held, whichever is latest.
-        sps = [{state:"AK", name:"Alaska", start:0, end:0,
+    var sps = [{state:"AK", name:"Alaska", start:0, end:0,
                 notes:"Slavery and forced labor of indigenous people by others, including the U.S. government.  Slavery after the Alaska purchase in 1867 was illegal."},
                {state:"HI", name:"Hawaii", start:0, end:0,
                 notes:"Indentured servitude of native Hawaiians and imported labor under extremely harsh conditions."},
@@ -113,8 +113,8 @@ app.slavery = (function () {
                {state:"WV", name:"West Virginia", start:1748, end:1865,
                 notes:"The area that became West Virginia was settled both from north to south and from east to west with slave presence recorded from 1748.  West Virginia separated from Virginia to become a union state in 1863 with a gradual emancipation clause, but slavery is actually abolished on ratification on 13th amendment."},
                {state:"WY", name:"Wyoming", start:0, end:0,
-                notes:"By the time the Spanish took over parts of Wyoming in 1764, they had outlawed slavery of Native Americans. Lewis and Clark brought their slave York with them when they passed through.  Wyoming becomes a state in 1890 after slavery is illegal."}],
-        tlpts = [
+                notes:"By the time the Spanish took over parts of Wyoming in 1764, they had outlawed slavery of Native Americans. Lewis and Clark brought their slave York with them when they passed through.  Wyoming becomes a state in 1890 after slavery is illegal."}];
+    var tlpts = [
             {date:"1501",
              text:"The Spanish throne officially approves the use of African slaves in the New World. The Portugese, following exploration of the Brazilian coast in 1500, bring their first shipload of African slaves to the Western Hemisphere in 1502, selling them in what is now Latin America.",
              communities:"African American,Latino/as", qtype:"D", source:"ksep: B2"},
@@ -248,7 +248,7 @@ app.slavery = (function () {
     function datapoints () {
         tlpts.forEach(function (pt, idx) {
             pt.sv = "slavery";
-            pt.instid = "slavery" + idx; });
+            pt.dsId = "slavery" + idx; });
         return tlpts;
     }
 

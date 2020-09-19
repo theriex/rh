@@ -1,12 +1,12 @@
-/*jslint browser, multivar, white, fudge, this, for, long */
+/*jslint browser, white, fudge, this, for, long */
 /*global app, window, jt, d3 */
 
 app.lynching = (function () {
     "use strict";
 
-    var stats = null,
-        tl = null,
-        chart = {colors:{bg: "#fef6d7",
+    var stats = null;
+    var tl = null;
+    var chart = {colors:{bg: "#fef6d7",
                          other: "red",
                          black: "brown",
                          map:{neutral:"#fadb66",
@@ -16,11 +16,11 @@ app.lynching = (function () {
                       vbw:959, vbh:593,  //viewbox width and height
                       minr:2},  //min radius for circle indicators
                  //Bar chart SVG and related values
-                 bs: {w:0, h:0, bi:{}, tmax:0, moa:false, selidx:0}},
-        ani = {idx:0, pts:[], shto:null},
+                 bs: {w:0, h:0, bi:{}, tmax:0, moa:false, selidx:0}};
+    var ani = {idx:0, pts:[], shto:null};
         //See http://www.chesnuttarchive.org/classroom/lynchingstat.html
         //in particular the notes about totals and "Whites".
-        ldty = [["year", "other", "black", "total"],
+    var ldty = [["year", "other", "black", "total"],
                 [1882, 64, 49, 113],
                 [1883, 77, 53, 130],
                 [1884, 160, 51, 211],
@@ -107,8 +107,8 @@ app.lynching = (function () {
                 [1965, 0, 0, 0],
                 [1966, 0, 0, 0],
                 [1967, 0, 0, 0],
-                [1968, 0, 0, 0]],
-        ldts = [["state", "other", "black", "total"],
+                [1968, 0, 0, 0]];
+    var ldts = [["state", "other", "black", "total"],
                 ["Alabama", 48, 299, 347],
                 ["Arizona", 31, 0, 31],
                 ["Arkansas", 58, 226, 284],
@@ -152,8 +152,8 @@ app.lynching = (function () {
                 ["Washington", 25, 1, 26],
                 ["West Virginia", 20, 28, 48],
                 ["Wisconsin", 6, 0, 6],
-                ["Wyoming", 30, 5, 35]],
-        tlpts = [
+                ["Wyoming", 30, 5, 35]];
+    var tlpts = [
             {date:"1922",
              text:"Republicans in the Senate vote to abandon the Dyer Anti-Lynching Bill, which imposes severe penalties and fines on “any state or municipal officer convicted of negligence in affording protection to individuals in custody who are attacked by a mob bent on lynching, torture, or physical intimidation.” The bill, which was approved by the House of Representatives, also provided for compensation to the families of victims. A Southern Democratic filibuster in the Senate halts the bill's passage.",
              communities:"African American", source:"ksep: B120"},
@@ -168,7 +168,7 @@ app.lynching = (function () {
     function datapoints () {
         tlpts.forEach(function (pt, idx) {
             pt.sv = "lynching";
-            pt.instid = "lynching" + idx; });
+            pt.dsId = "lynching" + idx; });
         return tlpts;
     }
 
@@ -182,9 +182,9 @@ app.lynching = (function () {
 
 
     function groupDataYears (dat, gc, limit) {
-        var grps = [], i, j, key, cgc = gc, cs = null, rem;
+        var grps = []; var i; var j; var cgc = gc; var cs = null; var key;
         limit = limit || dat.length;
-        rem = dat.length - limit;
+        var rem = dat.length - limit;
         for(i = dat.length - 1; i >= 0 && limit > 0; i -= 1) {
             if(!cs) {  //use current year data as grouping accumulator
                 cgc = gc;
@@ -210,7 +210,7 @@ app.lynching = (function () {
 
 
     function initBarChartDataSeries () {
-        var ttlo = 0, ttlb = 0;
+        var ttlo = 0; var ttlb = 0;
         //initialize bar chart data series
         chart.dat = [];
         ldty.forEach(function (yrd, idx) {
@@ -248,10 +248,9 @@ app.lynching = (function () {
                     bpc: stob.black / stob.total,
                     tpc: stob.total / ttla}; } });
         app.svcommon.usmap().forEach(function (state) {
-            var pt, stob;
             if(chart.pct[state.name]) {
-                stob = chart.pct[state.name];
-                pt = state.pinpt.split(",");
+                var stob = chart.pct[state.name];
+                var pt = state.pinpt.split(",");
                 pt = {x:Number(pt[0]), y:Number(pt[1])};
                 stob.center = pt;
                 // console.log(state.id + " opc: " + stob.opc + 
@@ -261,7 +260,7 @@ app.lynching = (function () {
 
 
     function lynchingDefHTML (idx) {
-        var html = "", crit = [
+        var html = ""; var crit = [
             {p:"There must be legal evidence that a person was killed.",
              s:"If not killed, or no body found - not counted."},
             {p:"That person must have met death illegally.",
@@ -334,7 +333,7 @@ app.lynching = (function () {
 
 
     function barTAC () {
-        var html, bi = chart.bs.bi;
+        var bi = chart.bs.bi;
         bi.margin = {top:50, right:20, bottom:30, left:30};
         bi.w = chart.bs.w - bi.margin.right - bi.margin.left;
         bi.h = chart.bs.h - bi.margin.top - bi.margin.bottom;
@@ -344,8 +343,7 @@ app.lynching = (function () {
         bi.sy = d3.scaleLinear()
             .rangeRound([bi.h, 0])
             .domain([chart.bs.tmax, 0]);
-        html = ["svg", {id:"barsvg", width:chart.bs.w, height:chart.bs.h}];
-        return html;
+        return ["svg", {id:"barsvg", width:chart.bs.w, height:chart.bs.h}];
     }
 
 
@@ -365,14 +363,14 @@ app.lynching = (function () {
     function redrawCircles (dro) {
         if(!dro) {
             return; }
-        var barsumttl = dro.sumo + dro.sumb,
-            lastro = chart.dat[chart.dat.length - 1],
-            grandttl = lastro.sumo + lastro.sumb,
-            maxr = Math.round(0.5 * chart.ms.vbw),
-            bmr = (barsumttl / grandttl) * maxr;
+        var barsumttl = dro.sumo + dro.sumb;
+        var lastro = chart.dat[chart.dat.length - 1];
+        var grandttl = lastro.sumo + lastro.sumb;
+        var maxr = Math.round(0.5 * chart.ms.vbw);
+        var bmr = (barsumttl / grandttl) * maxr;
         Object.keys(chart.pct).forEach(function (name) {
-            var stob = chart.pct[name],
-                stmr = Math.max(chart.ms.minr, stob.tpc * bmr);
+            var stob = chart.pct[name];
+            var stmr = Math.max(chart.ms.minr, stob.tpc * bmr);
             d3.select("#circ" + stob.id + "other")
                 .transition().duration(1200).attr("r", stmr);
             d3.select("#circ" + stob.id + "black")
@@ -387,7 +385,7 @@ app.lynching = (function () {
             if(ani.pts[i].baridx === baridx) {
                 ani.idx = i;
                 break; } }
-        showNextPoint();
+        app.lynching.showNextPoint();
     }
 
 
@@ -419,7 +417,7 @@ app.lynching = (function () {
 
 
     function barInit () {
-        var svg = d3.select("#barsvg"), bi = chart.bs.bi;
+        var svg = d3.select("#barsvg"); var bi = chart.bs.bi;
         chart.bs.transg = svg.append("g").attr("id", "lytransg")
             .attr("transform", "translate(" + bi.margin.left + "," +
                                               bi.margin.top + ")");
@@ -530,7 +528,7 @@ app.lynching = (function () {
 
 
     function centerAbsoluteDiv (pid, cid) {
-        var par = {div:jt.byId(pid)}, chi = {div:jt.byId(cid)};
+        var par = {div:jt.byId(pid)}; var chi = {div:jt.byId(cid)};
         par.h = par.div.offsetHeight;
         par.w = par.div.offsetWidth;
         chi.h = chi.div.offsetHeight;
@@ -576,9 +574,9 @@ app.lynching = (function () {
 
 
     function displayTitle () {
-        var tg, mid = {x: Math.round(0.5 * chart.ms.vbw),
-                       y: Math.round(0.35 * chart.ms.vbh)};
-        tg = d3.select("#mapsvg").append("g").attr("opacity", 1.0);
+        var mid = {x: Math.round(0.5 * chart.ms.vbw),
+                   y: Math.round(0.35 * chart.ms.vbh)};
+        var tg = d3.select("#mapsvg").append("g").attr("opacity", 1.0);
         tg.append("text")
             .attr("text-anchor", "middle")
             .attr("x", mid.x)
@@ -688,6 +686,7 @@ app.lynching = (function () {
 
 
     return {
+        showNextPoint: function () { showNextPoint(); },
         display: function () { display(); },
         finish: function () { finish(); },
         datapoints: function () { return datapoints(); },

@@ -287,10 +287,11 @@ def update_email_and_password(appuser, emaddr, pwd):
         appuser["status"] = "Pending"  # need to confirm new email address
         appuser["actsends"] = ""       # reset send attempts log
         appuser["actcode"] = make_activation_code()
-        send_activation_email(appuser)
     # if either email or password changed, always update the phash
     appuser["phash"] = make_password_hash(appuser["email"], pwd,
                                           appuser["created"])
+    if appuser["status"] == "Pending":
+        send_activation_email(appuser)
     return change
 
 
@@ -409,8 +410,12 @@ def updacc():
         update_account_fields(appuser)
         update_accessed_count(appuser)
         actcode = dbacc.reqarg("actcode", "string")
-        if actcode == appuser["actcode"]:
-            appuser["status"] = "Active"
+        if actcode:
+            logging.info(appuser["email"] + " actcode: " + actcode)
+            if actcode == appuser["actcode"]:
+                appuser["status"] = "Active"
+            else:
+                logging.info("actcode did not match: " + appuser["actcode"])
         appuser = dbacc.write_entity(appuser, appuser["modified"])
         dbacc.entcache.cache_put(appuser)  # ensure cache has latest
         token = token_for_user(appuser)    # return possibly updated token

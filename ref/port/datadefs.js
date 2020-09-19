@@ -72,9 +72,7 @@ module.exports = (function () {
         //                  '4' (4th try) guessed date correctly on fourth click
         //*2 Timeline Completion instance:
         //     tlid: id of top-level timeline
-        //     name: name of timeline (when completion recorded)
-        //     title: title of timeline
-        //     subtitle: subtitle of timeline
+        //     name: name of timeline (when completion first recorded)
         //     count: how many times the timeline has been completed
         //     first: ISO when the timeline was first completed
         //     latesst: ISO when the timeline was most recently completed

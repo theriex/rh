@@ -197,17 +197,16 @@ def push_or_update_completion(appuser, tlc, proginst):
     cinst = [pi for pi in completed if pi["tlid"] == tlc["tlid"]]
     if len(cinst) > 0:
         cinst = cinst[0]
-    else:
-        cinst = {"tlid":tlc["tlid"], "count":0, "first":tlc["modified"]}
-    for fld in ["name", "title", "subtitle"]:  # set or update
-        cinst[fld] = tlc[fld]
-    cinst["latest"] = tlc["modified"]
-    if not cinst.get("count"):
+    else: # init Timeline Completion instance from TLComp fields
+        cinst = {"tlid":tlc["tlid"], "name":tlc["tlname"], "count":0,
+                 "first":tlc["modified"]}
+    if not cinst.get("count"):  # verify field exists to increment
         cinst["count"] = 0
     cinst["count"] += 1
+    cinst["latest"] = tlc["modified"]
     cinst["stats"] = completion_stats(proginst)
-    completed = other.append(cinst)
-    appuser["completed"] = json.dumps(completed)
+    other.append(cinst)
+    appuser["completed"] = json.dumps(other)
 
 
 def remove_html(val):
@@ -310,7 +309,8 @@ def updtl():
                 "kwds", "ctype", "cids", "rempts", "svs"]
         tldat = util.set_fields_from_reqargs(tlfs, {})
         tldb = verify_edit_authorization(appuser, tldat)
-        tldat = util.set_fields_from_reqargs(tlfs, tldb)
+        if tldb:
+            tldat = util.set_fields_from_reqargs(tlfs, tldb)
         tldat["cname"] = canonize(tldat.get("name", ""))
         verify_unique_timeline_field(tldat, "cname", tldb)
         verify_unique_timeline_field(tldat, "slug", tldb)
@@ -344,7 +344,8 @@ def notecomp():
     """ Note Timeline completion in TLComp instance. """
     try:
         appuser, token = util.authenticate()
-        tlc = {"dsType":"TLComp", "userid":appuser["dsId"]}
+        tlc = {"dsType":"TLComp", "userid":appuser["dsId"],
+               "username":appuser["name"]}
         tlc = util.set_fields_from_reqargs([
             "tlid", "tlname", "tltitle", "tlsubtitle"], tlc)
         proginst = pop_proginst_from_started(appuser, tlc["tlid"])
@@ -363,7 +364,7 @@ def findcomps():
     try:
         appuser, _ = util.authenticate()
         tlid = dbacc.reqarg("tlid", "dbid", required=True)
-        where = ("tlid = " + tlid + " AND userid != " + appuser["dsId"] +
+        where = ("WHERE tlid = " + tlid + " AND userid != " + appuser["dsId"] +
                  " ORDER BY modified DESC LIMIT 50")
         tlcs = dbacc.query_entity("TLComp", where)
     except ValueError as e:

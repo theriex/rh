@@ -57,7 +57,7 @@ app.levelup = (function () {
         if(!sa.progpts) {
             return; }
         var val = 0;
-        var idx = sa.progpts.indexOf(pt.instid);
+        var idx = sa.progpts.indexOf(pt.dsId);
         if(idx >= 0) {
             val = sa.progpts.slice(idx);
             val = val.split(";");
