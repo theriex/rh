@@ -104,8 +104,9 @@ app.tabular = (function () {
 
 
     function uifoc (domid) {
-        //jt.log("uifoc " + domid);
-        setTimeout(function () { jt.byId(domid).focus(); }, 200);
+        setTimeout(function () {
+            jt.log("uifoc " + domid);
+            jt.byId(domid).focus(); }, 200);
     }
 
 
@@ -479,7 +480,8 @@ app.tabular = (function () {
                     uifoc("tlsfvdtitle"); } } },
         toggleSettings: function (cmd) {
             var sd = jt.byId("tlsettingsdiv");
-            if(cmd === "open" || sd.style.display === "none" || !sd.innerHTML) {
+            if(cmd === "open" || (sd.style.display === "none" &&
+                                  cmd !== "closed") || !sd.innerHTML) {
                 sd.style.display = "block";
                 sd.innerHTML = stgmgr.fieldHTML();
                 setTimeout(function () {
@@ -934,13 +936,11 @@ app.tabular = (function () {
         prepUpload: function (ptid) {
             if(kebabmgr.showingMenu(ptid)) {
                 kebabmgr.toggleKebabMenu(ptid, "close"); }
+            //deal with outstanding edits before uploading to avoid sync issues
             else if(editmgr.saveButtonDisplayed(ptid)) {
-                //take care of outstanding edits to avoid data sync issues
                 editmgr.save(ptid); }
-            else if(!ptid || ptid === "Placeholder") {
-                //need minimum valid point data in db before uploading pic
-                uifoc("ptddatediv" + ptid); }
-            else {
+            //only show upload menu if point already exists.
+            else if(ptid && ptid !== "Placeholder") {
                 picmgr.togglePicUpload(ptid, "show"); } },
         togglePicUpload: function (ptid, cmd) {
             var div = jt.byId("picuploaddiv" + ptid);
@@ -1090,7 +1090,7 @@ app.tabular = (function () {
                 placemgr.makeTogglable(attrs, pt.dsId); }
             return jt.tac2html(["div", attrs, pt.date || sp.def.place]); },
         help: function () {
-            return {fpn:"Date", txt:"A date in general YYYY-MM-DD format.  Month and day can be omitted.  For years before the common era, use a preceding minus sign or a trailing ' BCE'. To make a timespan, specify start ' to ' end.  Years can be decorated with a trailing 's' or '+' to indicate decades or beginnings e.g. 1920s or 1855+."}; },
+            return {fpn:"Date", txt:"A date in general YYYY-MM-DD format.  Month and day can be omitted.  For years before the common era, use a preceding minus sign or a trailing ' BCE'. To make a timespan, put ' to ' between two dates.  Years can be decorated with a trailing 's' or '+' to indicate decades or beginnings e.g. 1920s or 1855+."}; },
         getValue: function (ptid) {
             var val = jt.byId("ptddatediv" + ptid).innerText || "";
             val = val.trim();
@@ -1449,6 +1449,8 @@ app.tabular = (function () {
                  cond:!edst.editable},
                 {id:"edit", tx:"Edit", ti:"Edit this point",
                  cond:edst.editable && !edst.editing},
+                {id:"noadd", tx:"Cancel Add", ti:"Discard unsaved changes",
+                 cond:edst.editing && !edst.cancelable},
                 {id:"cancel", tx:"Cancel Edit", ti:"Discard unsaved changes",
                  cond:edst.editing && edst.cancelable},
                 {id:"delete", tx:"Delete Point", ti:"Delete this point",
@@ -1466,6 +1468,9 @@ app.tabular = (function () {
         edit: function (ptid) {
             kebabmgr.toggleKebabMenu(ptid, "close");
             editmgr.togedit(ptid, "edit"); },
+        noadd: function () {
+            kebabmgr.toggleKebabMenu("Placeholder", "close");
+            jt.byId("trowdivPlaceholder").remove(); },
         cancel: function (ptid) {
             kebabmgr.toggleKebabMenu(ptid, "close");
             editmgr.togedit(ptid, "read"); },
@@ -1519,12 +1524,16 @@ app.tabular = (function () {
                                onclick:mdfs("editmgr.save", pt.dsId)},
                     "Save"]]]]); },
         updateSaveButtonDisplay: function (pt, disp) {
-            if(disp) {
-                jt.byId("saveptb" + pt.dsId).style.display = disp; }
-            else if(pt.dsId === "Placeholder" || ptdmgr.fieldsChanged(pt)) {
-                jt.byId("saveptb" + pt.dsId).style.display = "inline"; }
+            if(!disp) {
+                if(pt.dsId === "Placeholder" || ptdmgr.fieldsChanged(pt)) {
+                    disp = "inline"; }
+                else {
+                    disp = "none"; } }
+            jt.byId("saveptb" + pt.dsId).style.display = disp;
+            if(disp === "inline") {
+                jt.byId("ecbdiv" + pt.dsId).style.minHeight = "40px"; }
             else {
-                jt.byId("saveptb" + pt.dsId).style.display = "none"; } },
+                jt.byId("ecbdiv" + pt.dsId).style.minHeight = "0px"; } },
         saveButtonDisplayed: function (ptid) {
             var sb = jt.byId("saveptb" + ptid);
             if(sb && sb.style.display === "inline") {
@@ -1602,7 +1611,7 @@ app.tabular = (function () {
                     ptdiv.before(placediv); }
                 else {
                     parentdiv.appendChild(placediv); } }
-            editmgr.togedit("Placeholder", "edit"); },
+            editmgr.togedit("Placeholder", "edit", "ptddatedivPlaceholder"); },
         togedit: function (ptid, mode, focdivid) {
             //jt.log("togedit " + ptid + " " + mode + " " + mgrname);
             var curredit = editmgr.editing(ptid);
@@ -1613,7 +1622,7 @@ app.tabular = (function () {
             if(togedit && !curredit) {
                 stgmgr.saveIfModified(); }
             //only redisplay if the mode has changed. keep interim state.
-            if(curredit !== togedit) {
+            if(curredit !== togedit || focdivid) {
                 //canceling current edit or starting a new edit, redisplay
                 editmgr.pt4id(ptid, function (pt) {
                     ptdmgr.redisplay(pt, mode);

@@ -199,11 +199,10 @@ button, .buttonspan { border: 2px solid #666666; border-radius:8px;
 .ecsidediv { position:absolute; top:5px; left:0px; width:24px; height:75px; }
 .ecsidediv div { background-image:url('../img/bleachscrub.png');
   text-align:center; min-height:20px; min-width:20px; padding:6px 0px 0px 0px; }
-.pddiv { }
-.ecbdiv { position:relative; }
+.pddiv { min-height:114px; } /* sized for placeholder image and margin */
+.ecbdiv { position:relative; padding:10px 0px 0px 0px; }  /* button space */
 .saveptbdiv { position:absolute; top:0px; left:0px; padding:0px 0px 0px 10px; }
-.placehelpdiv { position:absolute; top:0px; left:0px; 
-  font-size:small; color:#666; padding:10px; }
+.placehelpdiv { font-size:small; color:#666; }  /* no padding. divstack */
 .helpfieldnamediv { font-style:italic; font-weight:bold; text-align:center; 
   padding:5px 0px; }
 .helpdisplaylink { cursor:help; }
