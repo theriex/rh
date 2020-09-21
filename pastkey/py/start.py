@@ -18,8 +18,8 @@ INDEXHTML = """
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="robots" content="noodp" />
   <meta name="description" content="$DESCR" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <link rel="icon" href="$SITEPIC">
   <link rel="image_src" href="$SITEPIC" />
   <meta property="og:image" content="$SITEPIC" />
