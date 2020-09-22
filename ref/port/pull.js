@@ -1,20 +1,20 @@
 /*jslint node, white, fudge */
 
 /* 
-cd /general/temp/rhport
-ln -s /general/rh/ref/port/pull.js. pull.js
-ln -s /general/rh/ref/port/datadefs.js datadefs.js
-At port time, verify uids.tdf is up to date with GAE.  Then something like
+cd ~/general/temp/rhport
+ln -s ~/general/rh/ref/port/pull.js pull.js
+ln -s ~/general/rh/ref/port/datadefs.js datadefs.js
+At port time, verify AppUsers.tdf is up to date with GAE.  Then something like
 node pull.js "mybatchid", 200
 will download up to 200 per run items where existing json files do not have
 a dltag of "mybatchid".
 */
 
 /*
-uids.tdf was created by querying in the GAE console, selecting all, copying
+AppUsers.tdf was created by querying in the GAE console, selecting all, copying
 into a file, and editing.  Editing consisted of fixing the header line tag
 to be tab delimited, and changing "Name/ID" to "importid".  For the values,
-replace \tid= with "".  Same for orgs.tdf
+replaced \tid= with "".
 */
 
 var puller = (function () {
@@ -28,14 +28,14 @@ var puller = (function () {
         {entity:"AppUser", fetch:"tag", tdf:"AppUsers.tdf",
          tsfs:{created:"created", modified:"accessed"},
          api:{url:"/pubuser", params:[{obf:"email", pnm:"email"}]}},
-        {entity:"Organization", fetch:"tag", tdf:"Organizations.tdf",
-         //Organization has no timestamp fields in source
-         delflds:["pts"],  //Non JSON long dash, useless field
-         renflds:[{oldfldn:"groups", newfldn:"communities"}],
-         api:{url:"/getorg", params:[{obf:"importid", pnm:"orgid"},
-                                     {af:"email", pnm:"email"},
-                                     {af:"authtok", pnm:"authtok"}]},
-         refs:{obf:"recpre", ent:"Point"}},
+        // {entity:"Organization", fetch:"tag", tdf:"Organizations.tdf",
+        //  //Organization has no timestamp fields in source
+        //  delflds:["pts"],  //Non JSON long dash, useless field
+        //  renflds:[{oldfldn:"groups", newfldn:"communities"}],
+        //  api:{url:"/getorg", params:[{obf:"importid", pnm:"orgid"},
+        //                              {af:"email", pnm:"email"},
+        //                              {af:"authtok", pnm:"authtok"}]},
+        //  refs:{obf:"recpre", ent:"Point"}},
         {entity:"Timeline", fetch:"tag", tdf:"Timelines.tdf",
          tsfs:{created:"created", modified:"modified"},
          api:{url:"/fetchtl", params:[{obf:"importid", pnm:"tlid"}]},
