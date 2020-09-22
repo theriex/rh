@@ -384,10 +384,12 @@ def mailpwr():
         body = "You asked to reset your PastKey account password.\n\n"
         user = dbacc.cfbk("AppUser", "email", emaddr)
         if user:
+            logging.info("mailpwr sending access link to " + emaddr)
             body += "Use this link to access the settings for your account: "
             body += (returl + "?an=" + urllib.parse.quote(user["email"]) +
                      "&at=" + token_for_user(user) + "\n\n")
         else:
+            logging.info("mailpwr no account found for " + emaddr)
             body += "You do not have an account for " + emaddr + ". "
             body += "Either you have not signed up yet, or you used "
             body += "a different email address.  To create an account "
