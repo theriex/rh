@@ -807,9 +807,10 @@ app.tabular = (function () {
         state:{},
         initCurrSVs: function () {
             svmgr.state.svs = "";
-            var tl = aggmgr.currTL("edit");
-            if(tl && tl.svs) {
-                svmgr.state.svs = tl.svs; } },
+            if(aggmgr.state.mode.edsel) {
+                var tl = aggmgr.currTL("edit");
+                if(tl && tl.svs) {
+                    svmgr.state.svs = tl.svs; } } },
         svmodules: function () {
             return app.modules.filter((md) => md.type === "sv"); },
         displayVisualizations: function (divid) {
@@ -828,7 +829,7 @@ app.tabular = (function () {
                     ["div", {cla:"svlistdiv"},
                      [["div", {cla:"svlistnamediv"},
                        [si,
-                        ["a", {href:"#run" + md.name,
+                        ["a", {href:"#sv=" + md.name,
                                onclick:mdfs("svmgr.run", md.name)},
                          ["span", {cla:"svlistnamespan"}, md.title]]]],
                       //PENDING: "more..." link to sv about text.

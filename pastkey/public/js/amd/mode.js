@@ -261,10 +261,10 @@ app.mode = (function () {
         app.db.nextInteraction();
         ms.params = jt.parseParams();
         //TEST harness points now available via url params:
-        if(ms.params.menu) {  //e.g. ?menu=refmode
+        if(ms.params.menu) {  //e.g. #menu=refmode
             setTimeout(function () {
                 app.mode.menu(0, ms.params.menu); }, 200); }
-        else if(ms.params.sv) {  //e.g. ?sv=miscegenation
+        else if(ms.params.sv) {  //e.g. #sv=miscegenation
             setTimeout(function () {
                 app.dlg.verifyClosed();
                 app.tabular.runsv(ms.params.sv); }, 200); }
