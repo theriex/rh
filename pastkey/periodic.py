@@ -89,6 +89,8 @@ def within_time_window(val):
 
 
 def verify_active_user(uid, user=None):
+    if not uid:
+        raise ValueError("Valid uid required, received: '" + str(uid) + "'")
     users = rst["dets"]["users"]
     if not users.get(uid):
         if not user:
@@ -207,6 +209,8 @@ def send_activity_report():
 
 
 def daily_activity():
+    logging.info("daily_activity from " + rst["start"])
+    logging.info("                 to " + rst["end"])
     dets = {"refers":{}, "agents":{}, "timelines":{}, "users":{}}
     rst["dets"] = dets
     roll_up_day_counts()
