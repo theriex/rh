@@ -98,11 +98,11 @@ module.exports = (function () {
         {f:"srctl", d:"dbid", c:"timeline this point may be edited from"},
         {f:"lmuid", d:"dbid", c:"the user who last modified this instance"},
         {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
-        {f:"source", d:"string", c:"secondary reference id or load key"},
-        {f:"date", d:"string req", c:"A date or date range (*1)"},
-        {f:"text", d:"text req", c:"max 1200 chars, prefer < 400. (*2)"},
+        {f:"source", d:"string", c:"secondary reference id or load key (*1)"},
+        {f:"date", d:"string req", c:"A date or date range (*2)"},
+        {f:"text", d:"text req", c:"max 1200 chars, prefer < 400. (*3)"},
         {f:"refs", d:"jsarr", c:"reference source strings"},
-        {f:"qtype", d:"string", c:"Letter code for question type (*3)"},
+        {f:"qtype", d:"string", c:"Letter code for question type (*4)"},
         {f:"communities", d:"gencsv", c:"0+ kwds from TL.kwds communities"},
         {f:"regions", d:"gencsv",     c:"0+ kwds from TL.kwds regions"},
         {f:"categories", d:"gencsv",  c:"0+ kwds from TL.kwds categories"},
@@ -112,13 +112,14 @@ module.exports = (function () {
         {f:"translations", d:"json", c:"text translations by lang code"},
         {f:"pic", d:"image", c:"optional freely shareable uploaded pic"},
         {f:"stats", d:"json", c:"optional associated data (visualizations)"}],
-        //*1 Accepted formats for date values:
+        //*1 Each source value should be unique within the timeline so it can
+        //   can function as a reference anchor.  UI checked, not db enforced.
+        //*2 Accepted formats for date values:
         //   point: Y[YYY][ BCE], YYYY-MM, YYYY-MM-DD
         //   range: YYYY's, YYYY+, YYYY['s]-YYYY['s], YYYY-MM[-DD]-YYYY-MM[-DD]
-        //*2 Text may not contain HTML.  Limited markdown: *italic*, **bold**,
-        //   [link to previous point](prev point source value).  Sample link:
-        //   [Geary Act](A37)
-        //*3 qtypes: 'C': Continue (default),
+        //*3 Text may not contain HTML.  Limited markdown: *italic*, **bold**,
+        //   [link text](prev point source value) e.g.  [Geary Act](A37)
+        //*4 qtypes: 'C': Continue (default),
         //           'U': Did You Know?,
         //           'D': Click correct year,
         //           'F': Firsts

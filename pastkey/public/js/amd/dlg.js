@@ -550,7 +550,7 @@ app.dlg = (function () {
                 ["div", {id:"dlgcontentdiv"},
                  ["div", {cla:"dlgtextdiv", id:"dlgtextdiv"},
                   [pichtml,
-                   app.db.ptlinktxt(d, tl.pts, "app.linear.byPtId"),
+                   app.db.ptt2html(d, tl.pts, "app.linear.byPtId"),
                    refshtml]]],
                 ["div", {id:"dlgbuttondiv"}, buttons.tac]];
         displayDialog(d, jt.tac2html(html));

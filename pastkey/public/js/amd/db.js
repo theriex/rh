@@ -134,28 +134,6 @@ app.db = (function () {
     }
 
 
-    //return time difference in tenths of seconds, max 99999
-    function getElapsedTime (startDate, endDate) {
-        var start; var end; var elap;
-        start = Math.round(startDate.getTime() / 100);
-        end = Math.round(endDate.getTime() / 100);
-        elap = Math.min(end - start, 99999);
-        return elap;
-    }
-
-
-    function wallClockTimeStamp (date) {
-        var idx; var ts;
-        date = date || new Date();
-        ts = date.toISOString();
-        idx = ts.indexOf(".");
-        if(idx >= 0) {
-            ts = ts.slice(0, idx) + "Z"; }
-        ts += date.getTimezoneOffset();
-        return ts;
-    }
-
-
     function compareStartDate (a, b) {
         a.tc = a.tc || getTimeCode(a);
         b.tc = b.tc || getTimeCode(b);
@@ -578,46 +556,48 @@ app.db = (function () {
     }
 
 
-    function pointIdFromReference (points, ref) {
-        var src = ref || ""; var i; var pt;
-        dcon.refs = dcon.refs || {};
-        if(dcon.refs[ref]) {
-            return dcon.refs[ref].dsId; }
-        for(i = 0; i < points.length; i += 1) {
-            pt = points[i];
-            if(pt.dsId === ref || pt.source === ref || pt.source === src) {
-                dcon.refs[ref] = pt;
-                return pt.dsId; } }
-        return null;
-    }
-
-
-    function pointLinkedText (pt, pts, fname) {
-        var txt = pt.text; var words; var i; var mtw = 5;  //max title words
-        txt = txt.replace(/<a\shref\s*=\s*"#([^"]+)">([^<]+)<\/a>/gi,
-            function (ignore /*match*/, p1, p2) {
-                var refid; var oc; var link;
-                refid = pointIdFromReference(pts, p1);
-                if(!refid) {
-                    //jt.log(pt.dsId + " link ref not found " + p1);
-                    return p2; } //remove link, return just text
-                //jt.log(pt.dsId + " linked to " + refid);
-                oc = jt.fs(fname + "('" + refid + "','" + pt.dsId + "')");
-                //standardize the link href to be #<id>
-                link = "<a href=\"#" + p1 + "\"" +
-                    " onclick=\"" + oc + "\">" + p2 + "</a>";
-                return link; });
-        //if the first few words end with a ':', then treat them as a title.
-        words = txt.split(/\s/);
-        for(i = 0; i < mtw && i < words.length; i += 1) {
-            if(words[i].endsWith(":")) {  //treat first few words as a title
-                break; } }
-        //avoiding creating the replacement function within the loop...
-        if(i < mtw && i < words.length) {  //found a ':' in the first words
-            txt = "<em class=\"titleem\">" + txt.replace(/\:/, function () {
-                return ":</em>"; }); }
-        return txt;
-    }
+    //Markdown transformation manager
+    var mkdmgr = {
+        html2mkd: function (txt) {
+            txt = txt.replace(/<a\shref\s*=\s*"#([^"]+)">([^<]+)<\/a>/gi,
+                              "[$2]($1)");
+            txt = txt.replace(/<i>([^<]+)<\/i>/gi, "*$1*");
+            txt = txt.replace(/<b>([^<]+)<\/b>/gi, "**$1**");
+            txt = txt.replace(/<em\sclass="titleem">([^<]):<\/em>/gi, "$1:");
+            return txt; },
+        mkd2html: function (txt, ptid, pts, fname) {
+            txt = txt.replace(/\[([^\]]*)\]\(([^)]*)\)/gi,
+                function (ignore /*match*/, p1, p2) {
+                    return mkdmgr.pointRefLink(p1, p2, ptid, pts, fname); });
+            txt = txt.replace(/\*{2}([^*]+)\*{2}/gi, "<b>$1</b>");
+            txt = txt.replace(/\*([^*]+)\*/gi, "<i>$1</i>");
+            txt = txt.replace(/^((\s?[^\s:]+){1,5}):/gi,
+                              "<em class=\"titleem\">>$1:</em>");
+            return txt; },
+        pointRefLink: function (linktext, srcval, ptid, pts, fname) {
+            var refid = mkdmgr.src2ptid(srcval, ptid, pts);
+            if(!refid) {
+                jt.log("Point " + ptid + " link ref " + srcval + " not found.");
+                //leave the standardized link to indicate not converted
+                return "[" + linktext + "](" + srcval + ")"; }
+            //fname params: dsId of linked Point, dsId of this Point
+            return "<a href=\"#" + jt.enc(srcval) + "\" onclick=" +
+                jt.fs(fname + "('" + refid + "','" + ptid + "')") +
+                "\">" + linktext + "</a>"; },
+        src2ptid: function (srcval, ptid, pts) {
+            var spid = 0;
+            var idx = 0;
+            while(!spid && idx < pts.length && pts[idx].dsId !== ptid) {
+                if(pts[idx].source === srcval) {
+                    spid = pts[idx].dsId; }
+                idx += 1; }
+            return spid; },
+        fmt: function (pt, pts, fname) {
+            var txt = pt.text || "";
+            txt = mkdmgr.html2mkd(txt);  //normalize legacy included html
+            txt = mkdmgr.mkd2html(txt, pt.dsId, pts, fname);
+            return txt; }
+    };
 
 
     function mergeProgToAccount () {
@@ -635,39 +615,6 @@ app.db = (function () {
                     app.user.acc.started[i] = prog; } } }
         if(!update) {
             app.user.acc.started.push(prog); }
-    }
-
-
-    function mergePointDataToPoint (pt, updpt) {
-        //updpt may be incomplete
-        Object.keys(updpt).forEach(function (field) {
-            pt[field] = updpt[field]; });
-        pt.tc = getTimeCode(pt);  //date may have changed, so recalculate
-    }
-
-
-    function mergeUpdatedPointData (updpt) {
-        var found = false;
-        var datechg = false;
-        if(app.allpts) {
-            app.allpts.forEach(function (pt) {
-                if(pt.dsId === updpt.dsId) {
-                    found = true;
-                    datechg = (pt.date !== updpt.date);
-                    mergePointDataToPoint(pt, updpt); } });
-            if(datechg) {
-                app.allpts.sort(compareStartDate); } }
-        if(!found) {
-            cachePoints([updpt]); }
-        if(app.user.tls) {
-            Object.keys(app.user.tls).forEach(function (tlid) {
-                var tlpts = app.user.tls[tlid].points;
-                if(tlpts) {
-                    tlpts.forEach(function (pt) {
-                        if(pt.dsId === updpt.dsId) {
-                            mergePointDataToPoint(pt, updpt); } });
-                    tlpts.sort(compareStartDate); } }); }
-        return datechg;
     }
 
 
@@ -734,31 +681,6 @@ app.db = (function () {
     }
 
 
-    function serialize (dbc, dbo) {
-        switch(dbc) {
-        case "AppUser":
-            dbo.settings = JSON.stringify(dbo.settings || {});
-            dbo.remtls = JSON.stringify(dbo.remtls || []);
-            dbo.completed = JSON.stringify(dbo.completed || []);
-            dbo.started = JSON.stringify(dbo.started || []);
-            dbo.built = JSON.stringify(dbo.built || []);
-            break;
-        case "Timeline":
-            dbo.preb = JSON.stringify(dbo.preb || []);
-            break;
-        case "Point":
-            dbo.refs = JSON.stringify(dbo.refs || []);
-            dbo.translations = JSON.stringify(dbo.translations || []);
-            dbo.stats = JSON.stringify(dbo.stats || {});
-            break;
-        case "Organization":
-            dbo.pts = JSON.stringify(dbo.pts || []);
-            break;
-        default:
-            jt.log("Attempt to serialize unknown db class: " + dbc); }
-    }
-
-
     function userIdParam () {
         var td = app.amdtimer.load.end;
         var uid = td.toISOString() + td.getTimezoneOffset();
@@ -768,35 +690,23 @@ app.db = (function () {
     }
 
 
-    function timelineURL (tl) {
-        return app.baseurl + "/timeline/" + (tl.slug || tl.dsId);
-    }
-            
-        
     return {
-        wallClockTimeStamp: function (d) { return wallClockTimeStamp(d); },
-        getElapsedTime: function (sd, ed) { return getElapsedTime(sd, ed); },
         parseDate: function (pt) { parseDate(pt); },
         makeCoordContext: function (pts) { return makeCoordContext(pts); },
         makeCoordinates: function (pt, ctx) { makeCoordinates(pt, ctx); },
         fetchDisplayTimeline: function () { fetchDisplayTimeline(); },
-        serialize: function (dbc, dbo) { serialize(dbc, dbo); },
         displayContext: function () { return dcon; },
         svdone: function (svid, sta, end) { noteSuppvizDone(svid, sta, end); },
         nextInteraction: function () { nextInteraction(); },
         mergeProgToAccount: function () { mergeProgToAccount(); },
         pt4id: function (ptid, points) { return findPointById(ptid, points); },
-        mergeUpdPtData: function (pt) { return mergeUpdatedPointData(pt); },
         initTimelines: function () { initTimelinesContent(); },
-        ptlinktxt: function (p, s, f) { return pointLinkedText(p, s, f); },
+        ptt2html: function (p, s, f) { return mkdmgr.fmt(p, s, f); },
         uidp: function () { return userIdParam(); },
-        prepPointsArray: function (pts) { prepPointsArray(pts); },
-        prepData: function (tl) { prepData(tl); },
         cachePoints: function (pts) { return cachePoints(pts); },
         unvisitPoint: function (pt) { unvisitPoint(pt); },
         recalcProgress: function () { return recalcProgress(); },
         compareStartDate: function (a, b) { return compareStartDate(a, b); },
-        parseProgStr: function (str) { return parseProgStr(str); },
-        timelineURL: function (timeline) { return timelineURL(timeline); }
+        parseProgStr: function (str) { return parseProgStr(str); }
     };
 }());

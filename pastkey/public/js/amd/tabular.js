@@ -290,10 +290,10 @@ app.tabular = (function () {
             var tlid = tsel();
             if(tlid.match(/\d+/)) {
                 return app.refmgr.cached("Timeline", tlid); }
-            return {dsType:"Timeline", dsId:tlid, editors:"", name:tlid,
-                    slug:"", title:"", subtitle:"", featured:"", lang:"en-US",
-                    comment:"", about:"", kwds:"", ctype:"Points", cids:"",
-                    rempts:"", svs:"", preb:[]}; },
+            return {dsType:"Timeline", dsId:tlid, editors:"", name:"",
+                    slug:"", title:"", subtitle:"", featured:"Unlisted",
+                    lang:"en-US", comment:"", about:"", kwds:"",
+                    ctype:"Points", cids:"", rempts:"", svs:"", preb:[]}; },
         resolvePoint: function (pt, defltpt) {
             if(!pt) { return defltpt || null; }
             if(typeof pt === "string") {
@@ -489,7 +489,7 @@ app.tabular = (function () {
                     if(tl) {  //might not have finished loading yet
                         featmgr.setValue(tl.featured); }
                     stgmgr.setFocus(); }, 50); }
-            else {  //was visible, toggle off
+            else {  //was visible, toggle off.
                 sd.style.display = "none"; } },
         fieldHTML: function () {
             var tl = aggmgr.currTL("edit");
@@ -530,7 +530,9 @@ app.tabular = (function () {
                             ui.bdiv.innerHTML = ui.bh;
                             stgmgr.toggleSettings("open"); }
                         else {
-                            stgmgr.toggleSettings("closed"); } },
+                            stgmgr.toggleSettings("closed");
+                            //redisplay points to be able to add new
+                            dispmgr.displayPoints(filtmgr.filterPoints()); } },
                     function (code, errtxt) {
                         jt.log("stgmgr.save " + code + ": " + errtxt);
                         if(ui.bdiv) {
@@ -1654,7 +1656,9 @@ app.tabular = (function () {
             jt.out("pointsdispdiv", "");  //reset content
             if(!pts || !pts.length) {
                 if(aggmgr.state.mode === "tledit") {
-                    return editmgr.addNewPoint(); }
+                    var tl = aggmgr.currTL("edit");
+                    if(tl && tl.dsId.match(/\d+/)) {  //have saved timeline
+                        return editmgr.addNewPoint(); } }
                 return jt.out("pointsdispdiv", "No timeline points."); }
             var outdiv = jt.byId("pointsdispdiv");
             pts.forEach(function (pt) {
