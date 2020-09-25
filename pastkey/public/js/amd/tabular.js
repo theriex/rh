@@ -1163,15 +1163,18 @@ app.tabular = (function () {
         placeholder:"",
         getHTML: function (pt, sp) {
             var attrs = {cla:"pttextdiv", id:"pttextdiv" + pt.dsId};
+            var disp = pt.text || sp.def.place;
             if(sp.mode === "edit") {
                 txtmgr.placeholder = sp.def.place;
                 placemgr.makeEditable(attrs, pt.dsId, sp.def.place,
                                       "txtmgr"); }
             else if(editmgr.status(pt).editable) {
-                placemgr.makeTogglable(attrs, pt.dsId); }
-            return jt.tac2html(["div", attrs, pt.text || sp.def.place]); },
+                placemgr.makeTogglable(attrs, pt.dsId);
+                disp = app.db.ptt2html(pt, aggmgr.getPoints(),
+                                       "app.tabular.linkclick"); }
+            return jt.tac2html(["div", attrs, disp]); },
         help: function () {
-            return {fpn:"Text", txt:"The text for the timeline point should describe the key event facts and impact. Be as clear and concise as possible. Max of 1200 characters."}; },
+            return {fpn:"Text", txt:"Key fact and impact. Max 1200 chars. First few words followed by ':' is a title. *<i>italic</i>*. **<b>bold</b>**. [text for link to previous point](prevPtSource)"}; },
         getValue: function (ptid) {
             //Server cleans up any embedded HTML if any sneaks through
             var val = jt.byId("pttextdiv" + ptid).innerText || "";
@@ -1384,7 +1387,8 @@ app.tabular = (function () {
         redisplay: function (pt, mode) {
             ptdmgr.verifyFields(pt);
             jt.out("pddiv" + pt.dsId, ptdmgr.pointHTML(pt, mode));
-            editmgr.updateSaveButtonDisplay(pt); },  //may have been showing
+            var disp = (mode === "read" ? "none" : "");
+            editmgr.updateSaveButtonDisplay(pt, disp); },
         pointChangeData: function (pt) {
             var ptd = {dsType:"Point",
                        dsId:pt.dsId || "",
@@ -1689,6 +1693,8 @@ app.tabular = (function () {
     return {
         display: function (mode) { dispmgr.display(mode); },
         runsv: function (svmodule) { app[svmodule].display(); },
+        linkclick: function (rid, sid) {
+            jt.log("tabular.linkclick refid: " + rid + ", srcid: " + sid); },
         managerDispatch: function (mgrname, fname, ...args) {
             switch(mgrname) {
             case "aggmgr": return aggmgr[fname].apply(app.tabular, args);

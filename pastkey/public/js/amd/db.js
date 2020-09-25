@@ -572,7 +572,7 @@ app.db = (function () {
             txt = txt.replace(/\*{2}([^*]+)\*{2}/gi, "<b>$1</b>");
             txt = txt.replace(/\*([^*]+)\*/gi, "<i>$1</i>");
             txt = txt.replace(/^((\s?[^\s:]+){1,5}):/gi,
-                              "<em class=\"titleem\">>$1:</em>");
+                              "<em class=\"titleem\">$1:</em>");
             return txt; },
         pointRefLink: function (linktext, srcval, ptid, pts, fname) {
             var refid = mkdmgr.src2ptid(srcval, ptid, pts);
