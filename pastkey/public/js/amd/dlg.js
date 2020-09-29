@@ -475,8 +475,19 @@ app.dlg = (function () {
     }
 
 
+    function saveAccountSettings () {
+        var data = jt.objdata({settings:JSON.stringify(app.user.acc.settings)});
+        jt.call("POST", "/api/updacc?" + app.auth(), data,
+                function (result) {
+                    saveUserInfo(result);
+                    jt.log("saveAccountSettings ok"); },
+                function (code, errtxt) {
+                    jt.log("saveAccountSettings " + code + ": " + errtxt); },
+                jt.semaphore("dlg.saveAccountSettings"));
+    }
+
+
     function saveGenerationInfo () {
-        var data;
         gendat.gens.forEach(function (gen) {
             var input = jt.byId(gen.id + "in");
             if(input) {
@@ -486,14 +497,7 @@ app.dlg = (function () {
         if(app.user && app.user.acc) {
             app.user.acc.settings = app.user.acc.settings || {};
             app.user.acc.settings.gendat = gendat;
-            data = jt.objdata({settings:JSON.stringify(app.user.acc.settings)});
-            jt.call("POST", "/api/updacc?" + app.auth(), data,
-                    function (result) {
-                        saveUserInfo(result);
-                        jt.log("saveGenerationInfo updacc succeeded"); },
-                    function (code, errtxt) {
-                        jt.log("saveGenerationInfo " + code + ": " + errtxt); },
-                    jt.semaphore("dlg.saveGenerationInfo")); }
+            saveAccountSettings(); }
     }
 
 
@@ -742,16 +746,68 @@ app.dlg = (function () {
     }
 
 
-    var accmgr = {
-        fiTAC: function (lab, field, intype, val, place) {
-            var html = ["div", {cla:"dlgformline"},
-                        [["label", {fo:field + "in", cla:"liflab", 
-                                    id:"lab" + field + "in"},
-                          lab],
-                         ["input", {type:intype, cla:"lifin",
-                                    name:field + "in", id:field + "in",
-                                    placeholder:place, value:val}]]];
-            return html; },
+    function popBack (dfunc) {
+        if(dlgstack.length > 0) {
+            return (dlgstack.pop())(); }
+        if(dfunc) {
+            return dfunc(); }
+        app.mode.chmode();
+    }
+
+
+    //General container for all managers.
+    var mgrs = {};
+
+
+    mgrs.kw = (function () {
+        //Using the singular keyword names here keeps the tabular point
+        //keyword managers separate from the user keyword managers.
+        var kgs = {community:null, region:null, category:null, tag:null};
+        var kwsrc = {  //no autocomplete suggestions
+            getKeywords: function () { return ""; },
+            updateKeywords: function () { return ""; }};
+    return {
+        init: function () {
+            Object.keys(kgs).forEach(function (key) {
+                var plh = ((key === "ukeytags")? "keyword" : "");
+                kgs[key] = app.tabular.makeCSVManager(key, plh, kwsrc); }); },
+        keywordsObjectId: function () {
+            return "UserKeywords" + app.user.acc.dsId; },
+        getKeywordsHTML: function () {
+            if(!app.user.acc.built.length) { //don't complicate the interface
+                return ""; }                 //until they have built a timeline
+            var us = app.user.acc.settings || {};
+            us.keywords = us.keywords || {};
+            if(!Object.values(us.keywords).length) { //nothing to edit until
+                return ""; }                         //keywords created
+            us.keywords.dsId = mgrs.kw.keywordsObjectId();
+            mgrs.kw.init();
+            return jt.tac2html(
+                ["div", {id:"ukeydefsdiv"},
+                 [["span", {id:"ukeydefstitlediv"},
+                   "Point edit keyword options:"],
+                  Object.values(kgs).map(function (mgr) {
+                      return mgr.getEditHTML(us.keywords); })]]); },
+        getKeywordsSetting: function (settings) {
+            settings.keywords = settings.keywords || {};
+            var kobjid = mgrs.kw.keywordsObjectId();
+            Object.entries(kgs).forEach(function ([fld, mgr]) {
+                settings.keywords[fld] = mgr.getUIKeywords(kobjid); }); }
+        };
+    }());
+
+
+    mgrs.acc = {
+        fi: function (lab, field, intype, val, place) {
+            place = place || "";
+            return jt.tac2html(
+                ["div", {cla:"dlgformline"},
+                 [["label", {fo:field + "in", cla:"liflab",
+                             id:"lab" + field + "in"},
+                   lab],
+                  ["input", {type:intype, cla:"lifin",
+                             name:field + "in", id:field + "in",
+                             placeholder:place, value:val}]]]); },
         myAccount: function () {
             var html = [
                 ["div", {id:"dlgtitlediv"},
@@ -759,45 +815,46 @@ app.dlg = (function () {
                    ["img", {src:app.dr("img/backward.png"), cla:"dlgbackimg"}]],
                   "Account"]],
                 ["div", {cla:"dlgsignindiv"},
-                 [["div", {cla:"dlgformline"},
-                   ["em",
-                    "Private information:"]],
-                  accmgr.fiTAC("Email", "updemail", "text", app.user.email, ""),
-                  accmgr.fiTAC("Password", "updpassword", "password", "", ""),
-                  ["div", {cla:"dlgformline", id:"accstatdiv"}],
-                  ["div", {cla:"dlgformline", id:"orglinkdiv"}],
-                  ["div", {cla:"dlgformline"},
-                   ["em",
-                    "Public information:"]],
-                  accmgr.fiTAC("Name", "name", "text", app.user.acc.name,
-                               "For Honor Roll..."),
-                  accmgr.fiTAC("Title", "title", "text", app.user.acc.title,
-                               "Optional"),
-                  accmgr.fiTAC("Website", "web", "text", app.user.acc.web,
-                               "Optional"),
-                  ["div", {cla:"dlgformline"},
-                   [["input", {type:"checkbox", id:"cbtlnotices",
-                               value:"sendtlnotices", 
-                               checked:jt.toru(
-                                   app.user.acc.settings.tlnotices)}],
-                    ["label", {fo:"cbtlnotices", id:"tlnoticeslabel"},
-                     "Send me new timeline notices"]]],
+                 [["div", {cla:"dlgsicontdiv"},
+                   [["div", {cla:"dlgformline"},
+                     ["em", "Private information:"]],
+                    mgrs.acc.fi("Email", "updemail", "email", app.user.email),
+                    mgrs.acc.fi("Password", "updpassword", "password", ""),
+                    ["div", {cla:"dlgformline", id:"accstatdiv"}],
+                    ["div", {cla:"dlgformline"},
+                     ["em", "Public information:"]],
+                    mgrs.acc.fi("Name", "name", "text", app.user.acc.name,
+                                "For Honor Roll..."),
+                    mgrs.acc.fi("Title", "title", "text", app.user.acc.title,
+                                "Optional"),
+                    mgrs.acc.fi("Website", "web", "text", app.user.acc.web,
+                                "Optional"),
+                    mgrs.acc.noticesCheckbox(),
+                    mgrs.kw.getKeywordsHTML()]],
                   ["div", {id:"loginstatdiv"}],
                   ["div", {id:"dlgbuttondiv"},
                    [["button", {type:"button", id:"updaccbutton",
-                                onclick:jt.fs("app.dlg.updacc()")},
+                                onclick:mdfs("acc.updateAccount")},
                      "Ok"]]]]]];
             displayDialog(null, jt.tac2html(html));
             setFocus("namein");
             if(app.user.acc.status !== "Active") {
-                accmgr.showAccStatLink(); } },
+                mgrs.acc.showAccStatLink(); } },
+        noticesCheckbox: function () {
+            return jt.tac2html(
+                ["div", {cla:"dlgformline"},
+                 [["input", {type:"checkbox", id:"cbtlnotices",
+                             value:"sendtlnotices",
+                             checked:jt.toru(app.user.acc.settings.tlnotices)}],
+                  ["label", {fo:"cbtlnotices", id:"tlnoticeslabel"},
+                   "Send me new timeline notices"]]]); },
         showAccStatLink: function () {
             if(app.user.status !== "Active") {  //"Pending" or admin setting
                 jt.out("accstatdiv", jt.tac2html(
                     [["label", {fo:"accstata", cla:"liflab"}, "Status:"],
                      ["a", {href:"#sendcode", cla:"lifin", id:"accstata",
                             title:"Email Account Activation Code",
-                            onclick:mdfs("accmgr.sendactcode")},
+                            onclick:mdfs("acc.sendactcode")},
                       app.user.status]])); } },
         sendactcode: function () {
             jt.out("accstata", "Sending...");
@@ -810,31 +867,25 @@ app.dlg = (function () {
                             clk:"Status: Pending", lkt:"activation"}); },
                     function (code, errtxt) {
                         jt.err("Send failed " + code + ": " + errtxt); },
-                    jt.semaphore("sendactcode")); }
-    };
-
-
-    function popBack (dfunc) {
-        if(dlgstack.length > 0) {
-            return (dlgstack.pop())(); }
-        if(dfunc) {
-            return dfunc(); }
-        app.mode.chmode();
-    }
-
-
-    function updateAccount () {
-        var data = readInputFieldValues([
-            "updemailin", "updpasswordin", "namein", "titlein", "webin"]);
-        if(data) {
+                    jt.semaphore("sendactcode")); },
+        getUpdateData: function () {
+            var data = readInputFieldValues([
+                "updemailin", "updpasswordin", "namein", "titlein", "webin"]);
+            data = data || {};  //always update if they click to save
+            data.settings = app.user.acc.settings || {};
+            mgrs.acc.getNoticesSetting(data.settings);
+            mgrs.kw.getKeywordsSetting(data.settings);
+            data.settings = JSON.stringify(data.settings);
+            return data; },
+        getNoticesSetting: function (settings) {
             var cbntl = jt.byId("cbtlnotices");
             if(cbntl) {
-                app.user.acc.settings = app.user.acc.settings || {};
-                if(cbntl.checked) {
-                    app.user.acc.settings.tlnotices = true; }
+                if(cbntl.checked) {  //could be set to "checked" or other true
+                    settings.tlnotices = true; }
                 else {
-                    app.user.acc.settings.tlnotices = false; }
-                data.settings = JSON.stringify(app.user.acc.settings); }
+                    settings.tlnotices = false; } } },
+        updateAccount: function () {
+            var data = mgrs.acc.getUpdateData();
             jt.out("loginstatdiv", "Updating account...");
             jt.byId("updaccbutton").disabled = true;
             if(app.user.email === data.updemailin &&
@@ -854,7 +905,7 @@ app.dlg = (function () {
                         jt.log("updateAccount " + code + ": " + errtxt);
                         jt.out("loginstatdiv", errtxt); },
                     jt.semaphore("dlg.updateAccount")); }
-    }
+    };
 
 
     //local storage notes: https://github.com/theriex/rh/issues/13
@@ -1242,8 +1293,7 @@ app.dlg = (function () {
         closegenentry: function () { closeGenerationEntry(); },
         okgenentry: function () { saveGenerationInfo(); },
         newacc: function () { createAccount(); },
-        myacc: function () { accmgr.myAccount(); },
-        updacc: function () { updateAccount(); },
+        myacc: function () { mgrs.acc.myAccount(); },
         back: function () { closeDialog(); popBack(); },
         login: function () { processSignIn(); },
         logout: function () { processSignOut(); },
@@ -1257,9 +1307,8 @@ app.dlg = (function () {
         refsListHTML: function (refs) { return refsListHTML(refs); },
         gendat: function (gen) { return getOrSetGenerationData(gen); },
         closepop: function () { closePopup(); },
+        saveAccountSettings: function () { saveAccountSettings(); },
         managerDispatch: function (mgrname, fname, ...args) {
-            switch(mgrname) {
-            case "accmgr": return accmgr[fname].apply(app.dlg, args);
-            default: jt.log("dlg.managerDispatch unknown mgr: " + mgrname); } }
+            return mgrs[mgrname][fname].apply(app.tabular, args); }
         }; //end returned published functions
 }());

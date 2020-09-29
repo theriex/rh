@@ -31,7 +31,7 @@ app.db = (function () {
 
     function parseDate (pt) {
         pt.date = pt.date.replace(/(\d{4})-(\d{4})/g, "$1 to $2");
-        var pd = app.tabular.managerDispatch("datemgr", "parseDateExpression",
+        var pd = app.tabular.managerDispatch("date", "parseDateExpression",
                                              pt.date);
         pt.start = pd.start;
         pt.end = pt.end;  //undefined if no range specified

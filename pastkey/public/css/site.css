@@ -169,11 +169,14 @@ button, .buttonspan { border: 2px solid #666666; border-radius:8px;
 
 #dlgtitlediv { padding:5px 20px; text-align:center; font-weight:bold; 
   font-size:x-large; font-family: "Open Sans", "Helvetica", sans-serif; }
+.dlgsignindiv { }
+.dlgsicontdiv { max-height:200px; overflow:scroll; }
+#ukeydefstitlediv { font-size:medium; }
 .dlgformline { padding:2px 0px; }
 .txtlstdiv { padding:3px 0px 10px 0px; }
 .dlgsubline { padding:2px 0px 2px 5px; }
 .liflab, .reflab { font-size:medium; font-weight:normal; text-align:right; 
-  padding:0px 2px 0px 2px; display:block; float:left; width:80px; }
+  padding:0px 2px 0px 2px; display:inline-block; width:80px; }
 .lifin, .refin { padding:0px; font-size:small; width:145px; }
 .lifsep { clear:both; }
 .reflab { width:20px; }
@@ -213,8 +216,10 @@ button, .buttonspan { border: 2px solid #666666; border-radius:8px;
 .ptrefstrdiv { padding:2px 0px 0px 0px; }
 .ptdetlabelspan { font-size:small; color:#666; }
 .ptdetvaluespan { font-size:smaller; }
-.ptqtdiv, .ptsourcediv, pttagdiv { 
+.ptqtdiv, .ptsourcediv {
   display:inline-block; margin:0px 10px 0px 0px; }
+.csvmgrdiv { } /* not inline-block, want it on a separate line */
+.edcsvdiv { display:inline-block; font-size:small; vertical-align:top; }
 .kebabmenudiv { position:absolute; left:25px; top:20px; padding:3px;
   background:white; font-size:medium; }
 .kebabchoicediv { padding:8px; }

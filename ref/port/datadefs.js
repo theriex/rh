@@ -52,7 +52,7 @@ module.exports = (function () {
         {f:"web", d:"url", c:"optional public contact website"},
         //user settings and traversal data
         {f:"lang", d:"string", c:"optional preferred language code"},
-        {f:"settings", d:"json", c:"relative ages of generations etc"},
+        {f:"settings", d:"json", c:"generation ages, keywords used etc"},
         {f:"started", d:"jsarr", c:"Timeline Progress instances (*1)"},
         {f:"completed", d:"jsarr", c:"Timeline Completion instances (*2)"},
         {f:"remtls", d:"jsarr", c:"non-editable remembered timelines (*3)"},
@@ -103,10 +103,10 @@ module.exports = (function () {
         {f:"text", d:"text req", c:"max 1200 chars, prefer < 400. (*3)"},
         {f:"refs", d:"jsarr", c:"reference source strings"},
         {f:"qtype", d:"string", c:"Letter code for question type (*4)"},
-        {f:"communities", d:"gencsv", c:"0+ kwds from TL.kwds communities"},
-        {f:"regions", d:"gencsv",     c:"0+ kwds from TL.kwds regions"},
-        {f:"categories", d:"gencsv",  c:"0+ kwds from TL.kwds categories"},
-        {f:"tags", d:"gencsv",        c:"0+ kwds from TL.kwds tags"},
+        {f:"communities", d:"gencsv", c:"imported community keywords (*5)"},
+        {f:"regions", d:"gencsv",     c:"imported region keywords (*5)"},
+        {f:"categories", d:"gencsv",  c:"imported category keywords (*5)"},
+        {f:"tags", d:"gencsv",        c:"editor defined keywords (*5)"},
         {f:"codes", d:"gencsv", c:"legacy import category key code values"},
         {f:"srclang", d:"string", c:"en-US or en-US-x-grade"},
         {f:"translations", d:"json", c:"text translations by lang code"},
@@ -123,6 +123,11 @@ module.exports = (function () {
         //           'U': Did You Know?,
         //           'D': Click correct year,
         //           'F': Firsts
+        //*5 The tags keywords are set by the point editor. All keywords are
+        //   available for search.  Import-only keywords:
+        //   communities: e.g. African American, Native, Latinx, Asian American
+        //   regions: e.g. Boston, Puerto Rico, Hawai'i, Southwest
+        //   categories: e.g. Stats, Awards, Stereotypes
      cache:{minutes:0},  //points are not cached individually
      logflds:["editors", "date", "text"]},
 
@@ -139,7 +144,7 @@ module.exports = (function () {
         {f:"lang", d:"string", c:"language code for timeline e.g. en-US (*2)"},
         {f:"comment", d:"text", c:"popup startup text (*3)"},
         {f:"about", d:"text", c:"html to include in about text"},
-        {f:"kwds", d:"json", c:"communities/regions/categories/tags (*4)"},
+        {f:"kwds", d:"json", c:"additional timeline keywords (*4)"},
         {f:"ctype", d:"string", c:"Timelines|Points|Random (*5)"},
         {f:"cids", d:"idcsv", c:"Point ids or Timeline ids depending on ctype"},
         {f:"rempts", d:"idcsv", c:"Removed point ids to avoid orphaning (*6)"},
@@ -160,18 +165,14 @@ module.exports = (function () {
         //   translated names and are separate instances.
         //*3 The popup start comment can optionally have a continue button
         //   name e.g. "This timeline is about 10 minutes long [Start]"
-        //*4 Keyword definitions selectable for points while editing
-        //   communities: e.g. African American, Native, Latinx, Asian American
-        //   regions: e.g. Boston, Puerto Rico, Hawai'i, Southwest
-        //   categories: e.g. Stats, Awards, Stereotypes
-        //   tags: other timeline specific grouping keywords
-        //*5 ctype Points or Random timelines may optionally be followed by
-        //   ":levcnt" where levcnt is the number of points presented before
-        //   each save.  If not specified, the default levcnt is 6.  Random
-        //   timelines may additionally specify a ":rndmax" which is the 
-        //   total number of points to present.  ctype Timelines timelines
-        //   present timelines in the order specified.  Otherwise points
-        //   are presented in chronological order.
+        //*4 No UI support for timeline keywords.  Not currently used.
+        //*5 "Points" or "Random". "Timelines" not supported anymore.  Value
+        //   may optionally be followed by ":levcnt" specifying the number
+        //   of points presented before each save.  The default value is
+        //   "Points:6".  Random may also be followed by a :rndmax which is
+        //   the total number of points to present.  Points are always
+        //   presented in chronological order.  The ctype is not currently
+        //   exposed in the UI.
         //*6 rempts is maintained client side. An orphaned point is not
         //   catastrophic and can be fixed in the db directly if needed.
         //*7 The timeline preb contains points with extra data removed. The 
