@@ -437,12 +437,13 @@ app.tabular = (function () {
                          "-D4":"Thu", "-D5":"Fri", "-D6":"Sat"}}};
         var value = "Unlisted";
     return {
-        initSelectors: function () {
+        initSelectors: function (tl) {
             Object.keys(sels).forEach(function (selkey) {
                 var opts;
                 if(selkey === "feat") {
                     opts = fos.map(function (fo) {
-                        return {value:fo.t, text:fo.t}; }); }
+                        return {value:fo.t, text:fo.t,
+                                selected:(tl && tl.featured === fo.t)}; }); }
                 else {
                     opts = Object.entries(sels[selkey].vals)
                         .map(function ([code, disp]) {
@@ -451,8 +452,7 @@ app.tabular = (function () {
                     selkey, mdfs("feat.featselChange"), opts); }); },
         getHTML: function (tl) {
             if(tl && !tl.featured) { tl.featured = "Unlisted"; }
-            if(!sels.feat.sel) {
-                mgrs.feat.initSelectors(); }
+            mgrs.feat.initSelectors(tl);  //rebuild in case tl changed
             return jt.tac2html(
                 [["span", {id:"featselspan"}, sels.feat.sel.ctrlHTML()],
                  " ",  //break here if line too long

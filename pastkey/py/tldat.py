@@ -310,10 +310,13 @@ def updtl():
         tldat = util.set_fields_from_reqargs(tlfs, {})
         tldb = verify_edit_authorization(appuser, tldat)
         if tldb:
-            tldat = util.set_fields_from_reqargs(tlfs, tldb)
+            util.fill_missing_fields(tlfs, tldb, tldat)
         tldat["cname"] = canonize(tldat.get("name", ""))
         verify_unique_timeline_field(tldat, "cname", tldb)
         verify_unique_timeline_field(tldat, "slug", tldb)
+        if tldat.get("featured") == "Promoted":
+            if not tldb or (tldb.get("featured") != "Promoted"):
+                raise ValueError("Promoted feature not authorized")
         update_prebuilt(tldat, tldb)
         tldat["lmuid"] = appuser["dsId"]
         tl = dbacc.write_entity(tldat, tldat.get("modified", ""))

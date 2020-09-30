@@ -792,7 +792,8 @@ app.dlg = (function () {
             settings.keywords = settings.keywords || {};
             var kobjid = mgrs.kw.keywordsObjectId();
             Object.entries(kgs).forEach(function ([fld, mgr]) {
-                settings.keywords[fld] = mgr.getUIKeywords(kobjid); }); }
+                if(mgr) {
+                    settings.keywords[fld] = mgr.getUIKeywords(kobjid); } }); }
         };
     }());
 
