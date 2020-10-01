@@ -300,7 +300,8 @@ app.tabular = (function () {
             else {  //mix-in
                 opts.push({value:"none", text:"None"}); }
             state.sktls.forEach(function (ktl) {
-                if((editable && ktl.edit) || (!editable && !ktl.edit)) {
+                if((editable && ktl.edit) ||
+                   (!editable && ktl.tlid !== state.edsel.getValue())) {
                     opts.push({value:ktl.tlid, text:ktl.name,
                                group:ktl.group}); } });
             state[sid] = makeSelect(sid, mdfs("agg.tlchg", sid),
@@ -347,8 +348,9 @@ app.tabular = (function () {
                     state.edsel.setValue(tl.tlid); } } },
         tlchg: function (src) {
             if(src === "edsel") {  //new timeline selected for editing
-                //PENDING: rebuild mixsel to include all editable timelines
-                //not currently selected so you can remix your own stuff.
+                mgrs.agg.makeTimelineSelector("mixsel");  //rebuild
+                jt.out("tletrdiv", jt.tac2html(
+                    state.mixsel.ctrlHTML()));
                 mgrs.stg.toggleSettings("open"); }  //rebuild settings
             mgrs.agg.rebuildPoints();
             mgrs.filt.updateControls();
@@ -363,12 +365,12 @@ app.tabular = (function () {
             if(Number(tlid)) {
                 var tl = app.refmgr.cached("Timeline", tlid);
                 if(tl) {
-                    var pts = tl.preb;
-                    pts.forEach(function (pt) {
-                        pt.srctl = pt.srctl || tl.dsId;  //fill in if legacy
-                        if(pt.srctl !== tl.dsId) {
-                            pt.mixin = true; } });
-                    state.points = state.points.concat(pts);
+                    tl.preb.forEach(function (pt) {
+                        if(!state.kpts[pt.dsId]) {  //not a dupe
+                            //make a copy we can tag without affecting src tl
+                            pt = JSON.parse(JSON.stringify(pt));
+                            state.kpts[pt.dsId] = pt;
+                            state.points.push(pt); } });
                     return; }
                 if(state.tombstones[tlid]) { return; }
                 app.refmgr.getFull("Timeline", tlid, function (tl) {
@@ -379,10 +381,16 @@ app.tabular = (function () {
             if(state.mode !== "tledit") {
                 state.points = mgrs.agg.urlTimeline().preb; }
             else {
-                state.points = [];
+                state.kpts = {};    //known preb points by dsId (avoids dupes)
+                state.points = [];  //sortable working set of points
                 mgrs.agg.mergePoints(state.edsel);
+                mgrs.agg.noteMixinPoints(state.edsel.getValue());
                 mgrs.agg.mergePoints(state.mixsel);
                 mgrs.agg.sortPoints(); } },
+        noteMixinPoints: function (tlid) {
+            state.points.forEach(function (pt) {
+                if(pt.srctl !== tlid) {
+                    pt.mixin = true; } }); },
         sortPoints: function () {
             state.points.forEach(function (pt) {
                 if(!pt.start) { app.db.parseDate(pt); } });
@@ -449,7 +457,10 @@ app.tabular = (function () {
                         .map(function ([code, disp]) {
                             return {value:code, text:disp}; }); }
                 sels[selkey].sel = makeSelect(
-                    selkey, mdfs("feat.featselChange"), opts); }); },
+                    selkey, mdfs("feat.featselChange"), opts); });
+            value = "Unlisted";  //reset
+            if(tl && tl.featured) {
+                value = tl.featured; } },  //start with same value so no change
         getHTML: function (tl) {
             if(tl && !tl.featured) { tl.featured = "Unlisted"; }
             mgrs.feat.initSelectors(tl);  //rebuild in case tl changed

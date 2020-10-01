@@ -123,8 +123,6 @@ def point_preb_summary(point):
 # triggered, this should be able to complete with a couple of reasonable
 # size queries.
 def update_prebuilt(tldat, tldb):
-    if tldat.get("ctype") == "Timelines":
-        return  # Only have preb for timelines containing points
     lpx = "update_prebuilt Timeline " + str(tldat.get("dsId", "new") + " ")
     # make a reference dict out of whatever existing preb is available
     preb = tldat.get("preb")
@@ -308,6 +306,7 @@ def updtl():
                 "title", "subtitle", "featured", "lang", "comment", "about",
                 "kwds", "ctype", "cids", "rempts", "svs"]
         tldat = util.set_fields_from_reqargs(tlfs, {})
+        # logging.info("updtl received: " + json.dumps(tldat))
         tldb = verify_edit_authorization(appuser, tldat)
         if tldb:
             util.fill_missing_fields(tlfs, tldb, tldat)

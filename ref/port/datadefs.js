@@ -95,35 +95,42 @@ module.exports = (function () {
 
     {entity:"Point", descr:"A data point for use in timelines", fields:[
         {f:"editors", d:"srchidcsv", c:"owner and others with edit access"},
-        {f:"srctl", d:"dbid", c:"timeline this point may be edited from"},
+        {f:"srctl", d:"dbid", c:"the timeline this point belongs to (*1)"},
         {f:"lmuid", d:"dbid", c:"the user who last modified this instance"},
         {f:"importid", d:"dbid adm unique", c:"previous id from import data"},
-        {f:"source", d:"string", c:"secondary reference id or load key (*1)"},
-        {f:"date", d:"string req", c:"A date or date range (*2)"},
-        {f:"text", d:"text req", c:"max 1200 chars, prefer < 400. (*3)"},
+        {f:"source", d:"string", c:"secondary reference id or load key (*2)"},
+        {f:"date", d:"string req", c:"A date or date range (*3)"},
+        {f:"text", d:"text req", c:"max 1200 chars, prefer < 400. (*4)"},
         {f:"refs", d:"jsarr", c:"reference source strings"},
-        {f:"qtype", d:"string", c:"Letter code for question type (*4)"},
-        {f:"communities", d:"gencsv", c:"imported community keywords (*5)"},
-        {f:"regions", d:"gencsv",     c:"imported region keywords (*5)"},
-        {f:"categories", d:"gencsv",  c:"imported category keywords (*5)"},
-        {f:"tags", d:"gencsv",        c:"editor defined keywords (*5)"},
+        {f:"qtype", d:"string", c:"Letter code for question type (*5)"},
+        {f:"communities", d:"gencsv", c:"imported community keywords (*6)"},
+        {f:"regions", d:"gencsv",     c:"imported region keywords (*6)"},
+        {f:"categories", d:"gencsv",  c:"imported category keywords (*6)"},
+        {f:"tags", d:"gencsv",        c:"editor defined keywords (*6)"},
         {f:"codes", d:"gencsv", c:"legacy import category key code values"},
         {f:"srclang", d:"string", c:"en-US or en-US-x-grade"},
         {f:"translations", d:"json", c:"text translations by lang code"},
         {f:"pic", d:"image", c:"optional freely shareable uploaded pic"},
         {f:"stats", d:"json", c:"optional associated data (visualizations)"}],
-        //*1 Each source value should be unique within the timeline so it can
-        //   can function as a reference anchor.  UI checked, not db enforced.
-        //*2 Accepted formats for date values:
+        //*1 A point "belongs" to a single parent timeline to avoid points
+        //   being orphaned with no discovery path.  A point may be included
+        //   in multiple timelines.  A point may be edited from any timeline
+        //   by anyone in that point's editors list.  A point marked as
+        //   deleted in its parent timeline, that has no references from
+        //   other timelines, can be deleted from the db.
+        //*2 Each source value should be unique within the timeline so it
+        //   can can function as a reference anchor.  This is checked in the
+        //   UI, but not enforced in the db.
+        //*3 Accepted formats for date values:
         //   point: Y[YYY][ BCE], YYYY-MM, YYYY-MM-DD
         //   range: YYYY's, YYYY+, YYYY['s]-YYYY['s], YYYY-MM[-DD]-YYYY-MM[-DD]
-        //*3 Text may not contain HTML.  Limited markdown: *italic*, **bold**,
+        //*4 Text may not contain HTML.  Limited markdown: *italic*, **bold**,
         //   [link text](prev point source value) e.g.  [Geary Act](A37)
-        //*4 qtypes: 'C': Continue (default),
+        //*5 qtypes: 'C': Continue (default),
         //           'U': Did You Know?,
         //           'D': Click correct year,
         //           'F': Firsts
-        //*5 The tags keywords are set by the point editor. All keywords are
+        //*6 The tags keywords are set by the point editor. All keywords are
         //   available for search.  Import-only keywords:
         //   communities: e.g. African American, Native, Latinx, Asian American
         //   regions: e.g. Boston, Puerto Rico, Hawai'i, Southwest
