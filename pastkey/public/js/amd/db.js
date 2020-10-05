@@ -30,7 +30,7 @@ app.db = (function () {
 
 
     function parseDate (pt) {
-        pt.date = pt.date.replace(/(\d{4})-(\d{4})/g, "$1 to $2");
+        pt.date = pt.date.replace(/(\d{4}s?)-(\d{4}s?)/g, "$1 to $2");
         var pd = app.tabular.managerDispatch("date", "parseDateExpression",
                                              pt.date);
         pt.start = pd.start;
@@ -577,7 +577,8 @@ app.db = (function () {
         pointRefLink: function (linktext, srcval, ptid, pts, fname) {
             var refid = mkdmgr.src2ptid(srcval, ptid, pts);
             if(!refid) {
-                jt.log("Point " + ptid + " link ref " + srcval + " not found.");
+                jt.log("Point " + ptid + ": [" + linktext + "](" + srcval + 
+                       ") not found.");
                 //leave the standardized link to indicate not converted
                 return "[" + linktext + "](" + srcval + ")"; }
             //fname params: dsId of linked Point, dsId of this Point
@@ -585,13 +586,21 @@ app.db = (function () {
                 jt.fs(fname + "('" + refid + "','" + ptid + "')") +
                 "\">" + linktext + "</a>"; },
         src2ptid: function (srcval, ptid, pts) {
-            var spid = 0;
-            var idx = 0;
-            while(!spid && idx < pts.length && pts[idx].dsId !== ptid) {
-                if(pts[idx].source === srcval) {
-                    spid = pts[idx].dsId; }
-                idx += 1; }
-            return spid; },
+            var s = {spid:0, idx:0, subpid:0, subsrc:""};
+            //while no match found and before the current point
+            while(!s.spid && s.idx < pts.length && pts[s.idx].dsId !== ptid) {
+                if(pts[s.idx].source === srcval) {
+                    s.spid = pts[s.idx].dsId; }
+                else if(pts[s.idx].source
+                        .toLowerCase().indexOf(srcval.toLowerCase()) >= 0) {
+                    s.subsrc = pts[s.idx].source;
+                    s.subpid = pts[s.idx].dsId; }
+                s.idx += 1; }
+            if(s.spid) {
+                return s.spid; }
+            // if(s.subsrc) {
+            //     jt.log("Connecting " + srcval + " link to " + s.subsrc); }
+            return s.subpid; },
         fmt: function (pt, pts, fname) {
             var txt = pt.text || "";
             txt = mkdmgr.html2mkd(txt);  //normalize legacy included html

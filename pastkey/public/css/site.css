@@ -220,9 +220,22 @@ button, .buttonspan { border: 2px solid #666666; border-radius:8px;
   display:inline-block; margin:0px 10px 0px 0px; }
 .csvmgrdiv { } /* not inline-block, want it on a separate line */
 .edcsvdiv { display:inline-block; font-size:small; vertical-align:top; }
-.kebabmenudiv { position:absolute; left:25px; top:20px; padding:3px;
-  background:white; font-size:medium; }
-.kebabchoicediv { padding:8px; }
+.kebabmenudiv, #ellipmenudiv { position:absolute; background:white;
+  font-size:medium; box-shadow:3px 3px 1px #2f2b00; }
+.kebabmenudiv { left:25px; top:20px; padding:3px; }
+.kebabchoicediv, .ellipchoicediv { padding:8px; }
+#ellipmenudiv { top:0px; left:0px; padding:10px; margin:5px; width:260px; }
+#elliplinkdiv { position:absolute; top:-5px; right:10px; }
+
+.subformtitlediv { text-align:center; font-size:large;
+  padding:3px 0px 12px 0px; }
+.subformlinediv { padding:2px 0px; }
+.subformlab { text-align:right; display:inline-block; width:50px;
+  font-size:medium; }
+.subformbuttonsdiv { text-align:center; padding:16px 0px 3px 0px; }
+.subformbuttonsdiv button { margin:0px 3px; font-size:medium; }
+
+
 .picuploaddiv { position:absolute; left:0px; top:0px; padding:8px;
   background:white; font-size:medium; border-radius:8px; }
 .cancelxdiv { float:right; }
@@ -297,6 +310,8 @@ button, .buttonspan { border: 2px solid #666666; border-radius:8px;
 .svlistdescdiv { padding-left:10px; }
 .svlistdiv { padding:5px 0px; }
 
+#tlsettingsdiv { background-image:url('../img/whitewash.png'); width:290px;
+  padding:2px; border:2px solid #333; position:relative; }
 .tlsetfielddiv { padding:6px 0px 0px 0px; }
 .tlsfhdiv { font-size:small; color:#666; }
 .tlsetfldnamediv { display:inline-block; text-align:right; width:80px;
@@ -307,7 +322,7 @@ button, .buttonspan { border: 2px solid #666666; border-radius:8px;
 .tlsetfldvalcontdiv { vertical-align:middle;
   background-image:url('../img/whitewash.png'); }
 .tlsetfldvaldiv { font-size:medium; vertical-align:sub; }
-#stgsavediv { padding:8px 0px; }
+#stgsavediv { padding:8px 0px; position:relative; }
 #stgsavebdiv { padding:2px 0px 2px 100px; }
 #datein { width:3em; }
 

@@ -575,6 +575,105 @@ app.tabular = (function () {
     };
 
 
+    mgrs.ellip = {
+        getHTML: function () {
+            return jt.tac2html(
+                ["a", {href:"#timelineactions", title:"Timeline Actions",
+                       id:"ellipmenulink",
+                       onclick:mdfs("ellip.toggleEllipsisMenu")},
+                 "&#x2026;"]); },  //horizontal ellipsis
+        toggleEllipsisMenu: function (cmd) {
+            var emd = jt.byId("ellipmenudiv");
+            if(cmd === "open" || (!cmd && emd.style.display === "none")) {
+                emd.style.display = "block";
+                jt.byId("ellipmenulink").style.fontWeight = "bold";
+                mgrs.ellip.rebuildEllipActions(); }
+            else {
+                emd.style.display = "none";
+                jt.byId("ellipmenulink").style.fontWeight = "normal"; } },
+        rebuildEllipActions: function () {
+            var mas = [
+                {id:"rldtl", tx:"Reload Timeline",
+                 ti:"Refetch Timeline from server", cond:true},
+                {id:"renkey", tx:"Rename Keyword",
+                 ti:"Change keyword name for all points in timeline",
+                 cond:(mgrs.srch.getSelectionKeywords().length &&
+                       !Number(mgrs.agg.currTL("mix").dsId))}];
+            mas = mas.filter((ma) => ma.cond);
+            jt.out("ellipmenudiv", jt.tac2html(
+                mas.map(function (ma) {
+                    return ["div", {cla:"ellipchoicediv"},
+                            ["a", {href:"#" + ma.id, title:ma.ti,
+                                   onclick:mdfs("ellip." + ma.id)},
+                             ma.tx]]; }))); },
+        rldtl: function () {
+            var tl = mgrs.agg.currTL("edit");
+            app.refmgr.uncache("Timeline", tl.dsId);
+            app.refmgr.getFull("Timeline", tl.dsId, function () {
+                mgrs.agg.tlchg("edsel"); }); },
+        renkey: function () {
+            jt.out("ellipmenudiv", jt.tac2html(
+                [["div", {cla:"subformtitlediv"}, "Rename Keyword"],
+                 ["div", {cla:"subformlinediv", id:"renkeyfromdiv"},
+                  [["label", {fo:"renkeyfromin", cla:"subformlab"}, "From:"],
+                   ["input", {type:"text", id:"renkeyfromin", size:20,
+                              placeholder:"Old keyword", value:"",
+                              list:"renkeyfromdl"}],
+                   ["datalist", {id:"renkeyfromdl"},
+                    mgrs.srch.getSelectionKeywords().map(function (kw) {
+                        return ["option", {value:kw}]; })]]],
+                 ["div", {cla:"subformlinediv", id:"renkeytodiv"},
+                  [["label", {fo:"renkeytoin", cla:"subformlab"}, "To:"],
+                   ["input", {type:"text", id:"renkeytoin", size:20,
+                              placeholder:"New keyword", value:""}]]],
+                 ["div", {id:"renkeystatmsgdiv"}],
+                 ["div", {id:"renkeyworkdiv", style:"display:none"}],
+                 ["div", {cla:"subformbuttonsdiv", id:"renkeybuttonsdiv"},
+                  [["button", {type:"button",
+                               onclick:mdfs("ellip.toggleEllipsisMenu",
+                                            "open")},
+                    "Cancel"],
+                   ["button", {type:"button",
+                               onclick:mdfs("ellip.renameKeyword")},
+                    "Rename"]]]])); },
+        renameKeyword: function () {
+            var kwr = {from:jt.byId("renkeyfromin").value,
+                       to:jt.byId("renkeytoin").value, idx:0, repl:0};
+            if(!kwr.from || !kwr.to) {
+                return jt.out("renkeystatmsgdiv",
+                              "From and To keyword values both required."); }
+            jt.out("renkeybuttonsdiv", "");
+            mgrs.ellip.updateAllKeywords(kwr); },
+        updateAllKeywords: function (kwr) {
+            var aggpts = mgrs.agg.getPoints();
+            if(!aggpts || kwr.idx >= aggpts.length) {
+                mgrs.ellip.toggleEllipsisMenu("close");
+                return mgrs.ptd.rebuildTimelinePoints(null); }
+            jt.out("renkeystatmsgdiv",
+                   "Checked " + kwr.idx + ", Updated " + kwr.repl + " points");
+            var prebp = aggpts[kwr.idx];
+            kwr.idx += 1;
+            mgrs.edit.pt4id(prebp.dsId, function (pt) {
+                var repl = "";
+                mgrs.srch.pointKeywordFields().forEach(function (kwf) {
+                    if(pt[kwf] && pt[kwf].csvcontains(kwr.from)) {
+                        kwr.repl += 1;
+                        repl = pt[kwf].csvremove(kwr.from);
+                        repl = repl.csvappend(kwr.to);
+                        mgrs.ellip.setKeywordWorkingInput(pt, kwf, repl); } });
+                if(!repl) {
+                    return mgrs.ellip.updateAllKeywords(kwr); }
+                mgrs.edit.saveFullPoint(pt, function () {
+                    mgrs.ellip.updateAllKeywords(kwr); }); }); },
+        setKeywordWorkingInput: function (pt, kwf, repl) {
+            //set up input field for getUIKeywords to find the updated value
+            jt.out("renkeyworkdiv", jt.tac2html(
+                ["div", {id:"csvmgr" + pt.dsId + kwf + "valsdiv"},
+                 ["input", {id:"ed" + pt.dsId + kwf + "valdiv0in",
+                            type:"text", value:repl}]])); }
+    };
+
+
     //Settings Manager handles timeline fields and update.
     mgrs.stg = (function () {
         var fdefs = {
@@ -596,11 +695,7 @@ app.tabular = (function () {
         setFocus: function () {
             var sd = jt.byId("tlsettingsdiv");
             if(sd && sd.style.display === "block") {  //settings are visible
-                var namediv = jt.byId("tlsfvdname");
-                if(namediv && !namediv.innerText) {
-                    uifoc("tlsfvdname"); }
-                else {
-                    uifoc("tlsfvdtitle"); } } },
+                uifoc("tlsfvdname"); } },
         toggleSettings: function (cmd) {
             var sd = jt.byId("tlsettingsdiv");
             if(cmd === "open" || (sd.style.display === "none" &&
@@ -627,12 +722,15 @@ app.tabular = (function () {
                         ["div", {cla:"tlsetfldvalcontdiv"},
                          mgr.getHTML(tl, fld)]]]]]); });
             html.push(["div", {id:"stgsavediv"},
-                       [["div", {id:"stgsavemsgdiv"}],
+                       [["div", {id:"elliplinkdiv"},
+                         mgrs.ellip.getHTML()],  //horizontal ellipsis
+                        ["div", {id:"stgsavemsgdiv"}],
                         ["div", {id:"stgsavebdiv", style:"display:none"},
                          ["button", {type:"button", id:"tlsetsavebutton",
                                      title:"Save Timeline Settings",
                                      onclick:mdfs("stg.save")},
                           "Save"]]]]);
+            html.push(["div", {id:"ellipmenudiv", style:"display:none;"}]);
             return jt.tac2html(html); },
         save: function (how) {
             var ui = {bdiv:jt.byId("stgsavebdiv")};
@@ -655,7 +753,8 @@ app.tabular = (function () {
                         else {
                             mgrs.stg.toggleSettings("closed");
                             //redisplay points to be able to add new
-                            mgrs.disp.displayPoints(mgrs.filt.filterPoints()); } },
+                            mgrs.disp.displayPoints(mgrs.filt.filterPoints()); }
+                    },
                     function (code, errtxt) {
                         jt.log("stg.save " + code + ": " + errtxt);
                         if(ui.bdiv) {
@@ -769,6 +868,7 @@ app.tabular = (function () {
         var state = {};
         var ptkfs = ["communities", "regions", "categories", "tags"];
     return {
+        pointKeywordFields: function () { return ptkfs; },
         reset: function () {
             state = {all:{}, selkeys:[], qstr:"", pqs:{}};
             mgrs.agg.getPoints().forEach(function (pt) {
@@ -837,7 +937,9 @@ app.tabular = (function () {
             if(pq.toks.some((tok) => pt.srchFiltTxt.indexOf(tok) >= 0) &&
                pq.pfts.every((pft) => pt.srchFiltTxt.indexOf(pft) >= 0)) {
                 return true; }
-            return false; }
+            return false; },
+        getSelectionKeywords: function () {
+            return state.selkeys; }
         };
     }());
 
@@ -1541,14 +1643,21 @@ app.tabular = (function () {
             var tl = mgrs.agg.currTL("edit");
             var pts = mgrs.agg.getPoints()
                 .filter((pt) => pt.srctl === tl.dsId || pt.mixin);
+            var cids = pts.map((pt) => pt.dsId).join(",");
+            mgrs.ptd.updateTimelinePoints(updpt, cids); },
+        updateTimelinePoints: function (updpt, updcids) {
+            var tl = mgrs.agg.currTL("edit");
             var tldat = {dsType:"Timeline", dsId:tl.dsId, modified:tl.modified,
                          name:tl.name, slug:tl.slug,  //verified on each save
-                         cids:pts.map((pt) => pt.dsId).join(",")};
+                         cids:updcids || "NOVAL"};
             tldat = app.refmgr.postdata(tldat);
             jt.call("POST", "/api/updtl?" + app.auth(), tldat,
                     function (obs) {
                         app.refmgr.put(app.refmgr.deserialize(obs[0]));
-                        mgrs.disp.displayPoints(mgrs.filt.filterPoints()); },
+                        if(updpt) {
+                            mgrs.disp.displayPoints(mgrs.filt.filterPoints()); }
+                        else {  //rebuild display. kwds might have changed
+                            mgrs.agg.tlchg("edsel"); } },
                     function (code, errtxt) {
                         //PENDING: Admin mail explaining that the timeline
                         //cids will need to be rebuilt from from the Points
@@ -1565,7 +1674,9 @@ app.tabular = (function () {
 
 
     //Kebab menu manager handles display and actions from the vertical ellipsis
-    mgrs.kebab = {
+    mgrs.kebab = (function () {
+        var state = {lkcs:""}; //last known timeline cids for revert
+    return {
         getHTML: function (pt) {
             return jt.tac2html(
                 ["a", {href:"#moreactions", title:"More actions...",
@@ -1587,6 +1698,12 @@ app.tabular = (function () {
         rebuildKebabActions: function (pt) {
             var edst = mgrs.edit.status(pt);
             var mas = [
+                {id:"incla", tx:"Include All", ti:"Include all selected points",
+                 cond:!edst.editable},
+                {id:"undin", tx:"Revert Include", ti:"Revert to last included",
+                 cond:!edst.editable && state.lkcs},
+                {id:"noinc", tx:"Include None", ti:"Uninclude all points",
+                 cond:!edst.editable},
                 {id:"copy", tx:"Copy Point", ti:"Copy data to a new point",
                  cond:!edst.editable},
                 {id:"edit", tx:"Edit", ti:"Edit this point",
@@ -1604,6 +1721,26 @@ app.tabular = (function () {
                             ["a", {href:"#" + ma.id, title:ma.ti,
                                    onclick:mdfs("kebab." + ma.id, pt.dsId)},
                              ma.tx]]; }))); },
+        incla: function (ptid) {
+            mgrs.kebab.toggleKebabMenu(ptid, "close");
+            var tl = mgrs.agg.currTL("edit");
+            if(!state.lkcs) { state.lkcs = tl.cids; }
+            mgrs.filt.points().forEach(function (pt) {
+                if(!tl.cids.csvcontains(pt.dsId)) {
+                    pt.mixin = true;
+                    tl.cids = tl.cids.csvappend(pt.dsId); } });
+            mgrs.ptd.updateTimelinePoints(ptid, tl.cids); },
+        undin: function (ptid) {
+            mgrs.kebab.toggleKebabMenu(ptid, "close");
+            mgrs.ptd.updateTimelinePoints(ptid, state.lkcs); },
+        noinc: function (ptid) {
+            mgrs.kebab.toggleKebabMenu(ptid, "close");
+            var tl = mgrs.agg.currTL("edit");
+            if(!state.lkcs) { state.lkcs = tl.cids; }
+            mgrs.filt.points().forEach(function (pt) {
+                pt.mixin = false;
+                tl.cids = tl.cids.csvremove(pt.dsId); });
+            mgrs.ptd.updateTimelinePoints(ptid, tl.cids); },
         copy: function (ptid) {
             mgrs.kebab.toggleKebabMenu(ptid, "close");
             jt.err("Copy point not implemented yet"); },
@@ -1619,7 +1756,8 @@ app.tabular = (function () {
         delete: function (ptid) {
             mgrs.kebab.toggleKebabMenu(ptid, "close");
             jt.err("Delete point not implemented yet"); }
-    };
+        };
+    }());
 
 
     //Edit manager handles the point editing process
@@ -1703,21 +1841,24 @@ app.tabular = (function () {
             jt.out("saveprocmsgdiv" + ptid, "Saving...");
             mgrs.edit.updateSaveButtonDisplay({dsId:ptid}, "none");
             mgrs.edit.pt4id(ptid, function (pt) {
-                var ptdat = mgrs.ptd.pointChangeData(pt);
-                ptdat = app.refmgr.postdata(ptdat);
-                jt.call("POST", "/api/updpt?" + app.auth(), ptdat,
-                        function (obs) {
-                            jt.log("Point " + obs[0].dsId + " saved.");
-                            jt.out("saveprocmsgdiv" + ptid,
-                                   "Saved. Updating Timeline...");
-                            app.refmgr.put(app.refmgr.deserialize(obs[0]));
-                            mgrs.agg.addOrUpdatePoint(obs[0]);
-                            mgrs.ptd.rebuildTimelinePoints(pt); },
-                        function (code, errtxt) {
-                            mgrs.edit.updateSaveButtonDisplay(pt, "inline");
-                            jt.out("saveprocmsgdiv" + pt.dsId, "Error " + code +
-                                   ": " + errtxt); },
-                        jt.semaphore("mgrs.edit.save")); }); },
+                mgrs.edit.saveFullPoint(pt, function (updpt) {
+                    mgrs.agg.addOrUpdatePoint(updpt);
+                    mgrs.ptd.rebuildTimelinePoints(updpt); }); }); },
+        saveFullPoint: function (pt, contf) {
+            var ptdat = mgrs.ptd.pointChangeData(pt);
+            ptdat = app.refmgr.postdata(ptdat);
+            jt.call("POST", "/api/updpt?" + app.auth(), ptdat,
+                    function (obs) {
+                        jt.log("Point " + obs[0].dsId + " saved.");
+                        jt.out("saveprocmsgdiv" + pt.dsId,
+                               "Saved. Updating Timeline...");
+                        app.refmgr.put(app.refmgr.deserialize(obs[0]));
+                        contf(obs[0]); },
+                    function (code, errtxt) {
+                        mgrs.edit.updateSaveButtonDisplay(pt, "inline");
+                        jt.out("saveprocmsgdiv" + pt.dsId, "Error " + code +
+                               ": " + errtxt); },
+                    jt.semaphore("mgrs.edit.saveFullPoint")); },
         cbIncHTML: function (pt) {
             //pt may be from previous mix-in from another url
             if(mgrs.edit.status(pt).editable) { return ""; }
@@ -1728,7 +1869,8 @@ app.tabular = (function () {
                            onchange:mdfs("edit.toginc", pt.dsId)}]); },
         toginc: function (ptid) {
             var pt = mgrs.agg.getPoints().find((pt) => pt.dsId === ptid);
-            pt.mixin = jt.byId("cbinc" + pt.dsId).checked; },
+            pt.mixin = jt.byId("cbinc" + pt.dsId).checked;
+            mgrs.ptd.rebuildTimelinePoints(ptid); },
         plusHTML: function (pt) {
             if(pt.dsId === "Placeholder") { return ""; }
             return jt.tac2html(

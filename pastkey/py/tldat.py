@@ -310,6 +310,7 @@ def updtl():
         tldb = verify_edit_authorization(appuser, tldat)
         if tldb:
             util.fill_missing_fields(tlfs, tldb, tldat)
+            util.set_fields_from_reqargs(tlfs, tldat)  # for fields set to ""
         tldat["cname"] = canonize(tldat.get("name", ""))
         verify_unique_timeline_field(tldat, "cname", tldb)
         verify_unique_timeline_field(tldat, "slug", tldb)
