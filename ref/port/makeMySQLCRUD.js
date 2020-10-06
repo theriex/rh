@@ -470,16 +470,20 @@ function writeApp2DB (edef) {
     var pyc = "";
     pyc += "# Convert the given " + edef.entity + " inst dict from app values to db values.  Removes\n"
     pyc += "# the dsType field to avoid trying to write it to the db.\n"
-    pyc += "def app2db_" + edef.entity + "(inst):\n";
+    pyc += "def app2db_" + edef.entity + "(inst, fill=True):\n";
     pyc += "    cnv = {}\n";
     pyc += "    cnv[\"dsId\"] = None\n";
     pyc += "    if \"dsId\" in inst:\n";
     pyc += "        cnv[\"dsId\"] = app2db_fieldval(None, \"dsId\", inst)\n";
-    pyc += "    cnv[\"created\"] = app2db_fieldval(None, \"created\", inst)\n";
-    pyc += "    cnv[\"modified\"] = app2db_fieldval(None, \"modified\", inst)\n";
-    pyc += "    cnv[\"batchconv\"] = app2db_fieldval(None, \"batchconv\", inst)\n";
+    pyc += "    if fill or \"created\" in inst:\n";
+    pyc += "        cnv[\"created\"] = app2db_fieldval(None, \"created\", inst)\n";
+    pyc += "    if fill or \"modified\" in inst:\n";
+    pyc += "        cnv[\"modified\"] = app2db_fieldval(None, \"modified\", inst)\n";
+    pyc += "    if fill or \"batchconv\" in inst:\n";
+    pyc += "        cnv[\"batchconv\"] = app2db_fieldval(None, \"batchconv\", inst)\n";
     edef.fields.forEach(function (fd) {
-        pyc += "    cnv[\"" + fd.f + "\"] = app2db_fieldval(\"" + edef.entity + "\", \"" + fd.f + "\", inst)\n"; });
+        pyc += "    if fill or \"" + fd.f + "\" in inst:\n"
+        pyc += "        cnv[\"" + fd.f + "\"] = app2db_fieldval(\"" + edef.entity + "\", \"" + fd.f + "\", inst)\n"; });
     pyc += "    return cnv\n";
     return pyc;
 }
@@ -578,7 +582,7 @@ function writeUpdateFunction (edef) {
     var pyc = "";
     pyc += "# Update the specified " + edef.entity + " row with the given field values.\n";
     pyc += "def update_existing_" + edef.entity + "(cnx, cursor, fields, vck):\n";
-    pyc += "    fields = app2db_" + edef.entity + "(fields)\n";
+    pyc += "    fields = app2db_" + edef.entity + "(fields, fill=False)\n";
     pyc += "    dsId = int(fields[\"dsId\"])  # Verify int value\n";
     pyc += "    stmt = \"\"\n";
     pyc += "    for field in fields:  # only updating the fields passed in\n";

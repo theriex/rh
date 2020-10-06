@@ -462,30 +462,49 @@ def verify_timestamp_fields(entity, dsId, fields, vck):
 
 # Convert the given AppUser inst dict from app values to db values.  Removes
 # the dsType field to avoid trying to write it to the db.
-def app2db_AppUser(inst):
+def app2db_AppUser(inst, fill=True):
     cnv = {}
     cnv["dsId"] = None
     if "dsId" in inst:
         cnv["dsId"] = app2db_fieldval(None, "dsId", inst)
-    cnv["created"] = app2db_fieldval(None, "created", inst)
-    cnv["modified"] = app2db_fieldval(None, "modified", inst)
-    cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
-    cnv["importid"] = app2db_fieldval("AppUser", "importid", inst)
-    cnv["email"] = app2db_fieldval("AppUser", "email", inst)
-    cnv["phash"] = app2db_fieldval("AppUser", "phash", inst)
-    cnv["status"] = app2db_fieldval("AppUser", "status", inst)
-    cnv["actsends"] = app2db_fieldval("AppUser", "actsends", inst)
-    cnv["actcode"] = app2db_fieldval("AppUser", "actcode", inst)
-    cnv["accessed"] = app2db_fieldval("AppUser", "accessed", inst)
-    cnv["name"] = app2db_fieldval("AppUser", "name", inst)
-    cnv["title"] = app2db_fieldval("AppUser", "title", inst)
-    cnv["web"] = app2db_fieldval("AppUser", "web", inst)
-    cnv["lang"] = app2db_fieldval("AppUser", "lang", inst)
-    cnv["settings"] = app2db_fieldval("AppUser", "settings", inst)
-    cnv["started"] = app2db_fieldval("AppUser", "started", inst)
-    cnv["completed"] = app2db_fieldval("AppUser", "completed", inst)
-    cnv["remtls"] = app2db_fieldval("AppUser", "remtls", inst)
-    cnv["built"] = app2db_fieldval("AppUser", "built", inst)
+    if fill or "created" in inst:
+        cnv["created"] = app2db_fieldval(None, "created", inst)
+    if fill or "modified" in inst:
+        cnv["modified"] = app2db_fieldval(None, "modified", inst)
+    if fill or "batchconv" in inst:
+        cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
+    if fill or "importid" in inst:
+        cnv["importid"] = app2db_fieldval("AppUser", "importid", inst)
+    if fill or "email" in inst:
+        cnv["email"] = app2db_fieldval("AppUser", "email", inst)
+    if fill or "phash" in inst:
+        cnv["phash"] = app2db_fieldval("AppUser", "phash", inst)
+    if fill or "status" in inst:
+        cnv["status"] = app2db_fieldval("AppUser", "status", inst)
+    if fill or "actsends" in inst:
+        cnv["actsends"] = app2db_fieldval("AppUser", "actsends", inst)
+    if fill or "actcode" in inst:
+        cnv["actcode"] = app2db_fieldval("AppUser", "actcode", inst)
+    if fill or "accessed" in inst:
+        cnv["accessed"] = app2db_fieldval("AppUser", "accessed", inst)
+    if fill or "name" in inst:
+        cnv["name"] = app2db_fieldval("AppUser", "name", inst)
+    if fill or "title" in inst:
+        cnv["title"] = app2db_fieldval("AppUser", "title", inst)
+    if fill or "web" in inst:
+        cnv["web"] = app2db_fieldval("AppUser", "web", inst)
+    if fill or "lang" in inst:
+        cnv["lang"] = app2db_fieldval("AppUser", "lang", inst)
+    if fill or "settings" in inst:
+        cnv["settings"] = app2db_fieldval("AppUser", "settings", inst)
+    if fill or "started" in inst:
+        cnv["started"] = app2db_fieldval("AppUser", "started", inst)
+    if fill or "completed" in inst:
+        cnv["completed"] = app2db_fieldval("AppUser", "completed", inst)
+    if fill or "remtls" in inst:
+        cnv["remtls"] = app2db_fieldval("AppUser", "remtls", inst)
+    if fill or "built" in inst:
+        cnv["built"] = app2db_fieldval("AppUser", "built", inst)
     return cnv
 
 
@@ -519,32 +538,53 @@ def db2app_AppUser(inst):
 
 # Convert the given Point inst dict from app values to db values.  Removes
 # the dsType field to avoid trying to write it to the db.
-def app2db_Point(inst):
+def app2db_Point(inst, fill=True):
     cnv = {}
     cnv["dsId"] = None
     if "dsId" in inst:
         cnv["dsId"] = app2db_fieldval(None, "dsId", inst)
-    cnv["created"] = app2db_fieldval(None, "created", inst)
-    cnv["modified"] = app2db_fieldval(None, "modified", inst)
-    cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
-    cnv["editors"] = app2db_fieldval("Point", "editors", inst)
-    cnv["srctl"] = app2db_fieldval("Point", "srctl", inst)
-    cnv["lmuid"] = app2db_fieldval("Point", "lmuid", inst)
-    cnv["importid"] = app2db_fieldval("Point", "importid", inst)
-    cnv["source"] = app2db_fieldval("Point", "source", inst)
-    cnv["date"] = app2db_fieldval("Point", "date", inst)
-    cnv["text"] = app2db_fieldval("Point", "text", inst)
-    cnv["refs"] = app2db_fieldval("Point", "refs", inst)
-    cnv["qtype"] = app2db_fieldval("Point", "qtype", inst)
-    cnv["communities"] = app2db_fieldval("Point", "communities", inst)
-    cnv["regions"] = app2db_fieldval("Point", "regions", inst)
-    cnv["categories"] = app2db_fieldval("Point", "categories", inst)
-    cnv["tags"] = app2db_fieldval("Point", "tags", inst)
-    cnv["codes"] = app2db_fieldval("Point", "codes", inst)
-    cnv["srclang"] = app2db_fieldval("Point", "srclang", inst)
-    cnv["translations"] = app2db_fieldval("Point", "translations", inst)
-    cnv["pic"] = app2db_fieldval("Point", "pic", inst)
-    cnv["stats"] = app2db_fieldval("Point", "stats", inst)
+    if fill or "created" in inst:
+        cnv["created"] = app2db_fieldval(None, "created", inst)
+    if fill or "modified" in inst:
+        cnv["modified"] = app2db_fieldval(None, "modified", inst)
+    if fill or "batchconv" in inst:
+        cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
+    if fill or "editors" in inst:
+        cnv["editors"] = app2db_fieldval("Point", "editors", inst)
+    if fill or "srctl" in inst:
+        cnv["srctl"] = app2db_fieldval("Point", "srctl", inst)
+    if fill or "lmuid" in inst:
+        cnv["lmuid"] = app2db_fieldval("Point", "lmuid", inst)
+    if fill or "importid" in inst:
+        cnv["importid"] = app2db_fieldval("Point", "importid", inst)
+    if fill or "source" in inst:
+        cnv["source"] = app2db_fieldval("Point", "source", inst)
+    if fill or "date" in inst:
+        cnv["date"] = app2db_fieldval("Point", "date", inst)
+    if fill or "text" in inst:
+        cnv["text"] = app2db_fieldval("Point", "text", inst)
+    if fill or "refs" in inst:
+        cnv["refs"] = app2db_fieldval("Point", "refs", inst)
+    if fill or "qtype" in inst:
+        cnv["qtype"] = app2db_fieldval("Point", "qtype", inst)
+    if fill or "communities" in inst:
+        cnv["communities"] = app2db_fieldval("Point", "communities", inst)
+    if fill or "regions" in inst:
+        cnv["regions"] = app2db_fieldval("Point", "regions", inst)
+    if fill or "categories" in inst:
+        cnv["categories"] = app2db_fieldval("Point", "categories", inst)
+    if fill or "tags" in inst:
+        cnv["tags"] = app2db_fieldval("Point", "tags", inst)
+    if fill or "codes" in inst:
+        cnv["codes"] = app2db_fieldval("Point", "codes", inst)
+    if fill or "srclang" in inst:
+        cnv["srclang"] = app2db_fieldval("Point", "srclang", inst)
+    if fill or "translations" in inst:
+        cnv["translations"] = app2db_fieldval("Point", "translations", inst)
+    if fill or "pic" in inst:
+        cnv["pic"] = app2db_fieldval("Point", "pic", inst)
+    if fill or "stats" in inst:
+        cnv["stats"] = app2db_fieldval("Point", "stats", inst)
     return cnv
 
 
@@ -580,32 +620,53 @@ def db2app_Point(inst):
 
 # Convert the given Timeline inst dict from app values to db values.  Removes
 # the dsType field to avoid trying to write it to the db.
-def app2db_Timeline(inst):
+def app2db_Timeline(inst, fill=True):
     cnv = {}
     cnv["dsId"] = None
     if "dsId" in inst:
         cnv["dsId"] = app2db_fieldval(None, "dsId", inst)
-    cnv["created"] = app2db_fieldval(None, "created", inst)
-    cnv["modified"] = app2db_fieldval(None, "modified", inst)
-    cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
-    cnv["editors"] = app2db_fieldval("Timeline", "editors", inst)
-    cnv["lmuid"] = app2db_fieldval("Timeline", "lmuid", inst)
-    cnv["importid"] = app2db_fieldval("Timeline", "importid", inst)
-    cnv["name"] = app2db_fieldval("Timeline", "name", inst)
-    cnv["cname"] = app2db_fieldval("Timeline", "cname", inst)
-    cnv["slug"] = app2db_fieldval("Timeline", "slug", inst)
-    cnv["title"] = app2db_fieldval("Timeline", "title", inst)
-    cnv["subtitle"] = app2db_fieldval("Timeline", "subtitle", inst)
-    cnv["featured"] = app2db_fieldval("Timeline", "featured", inst)
-    cnv["lang"] = app2db_fieldval("Timeline", "lang", inst)
-    cnv["comment"] = app2db_fieldval("Timeline", "comment", inst)
-    cnv["about"] = app2db_fieldval("Timeline", "about", inst)
-    cnv["kwds"] = app2db_fieldval("Timeline", "kwds", inst)
-    cnv["ctype"] = app2db_fieldval("Timeline", "ctype", inst)
-    cnv["cids"] = app2db_fieldval("Timeline", "cids", inst)
-    cnv["rempts"] = app2db_fieldval("Timeline", "rempts", inst)
-    cnv["svs"] = app2db_fieldval("Timeline", "svs", inst)
-    cnv["preb"] = app2db_fieldval("Timeline", "preb", inst)
+    if fill or "created" in inst:
+        cnv["created"] = app2db_fieldval(None, "created", inst)
+    if fill or "modified" in inst:
+        cnv["modified"] = app2db_fieldval(None, "modified", inst)
+    if fill or "batchconv" in inst:
+        cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
+    if fill or "editors" in inst:
+        cnv["editors"] = app2db_fieldval("Timeline", "editors", inst)
+    if fill or "lmuid" in inst:
+        cnv["lmuid"] = app2db_fieldval("Timeline", "lmuid", inst)
+    if fill or "importid" in inst:
+        cnv["importid"] = app2db_fieldval("Timeline", "importid", inst)
+    if fill or "name" in inst:
+        cnv["name"] = app2db_fieldval("Timeline", "name", inst)
+    if fill or "cname" in inst:
+        cnv["cname"] = app2db_fieldval("Timeline", "cname", inst)
+    if fill or "slug" in inst:
+        cnv["slug"] = app2db_fieldval("Timeline", "slug", inst)
+    if fill or "title" in inst:
+        cnv["title"] = app2db_fieldval("Timeline", "title", inst)
+    if fill or "subtitle" in inst:
+        cnv["subtitle"] = app2db_fieldval("Timeline", "subtitle", inst)
+    if fill or "featured" in inst:
+        cnv["featured"] = app2db_fieldval("Timeline", "featured", inst)
+    if fill or "lang" in inst:
+        cnv["lang"] = app2db_fieldval("Timeline", "lang", inst)
+    if fill or "comment" in inst:
+        cnv["comment"] = app2db_fieldval("Timeline", "comment", inst)
+    if fill or "about" in inst:
+        cnv["about"] = app2db_fieldval("Timeline", "about", inst)
+    if fill or "kwds" in inst:
+        cnv["kwds"] = app2db_fieldval("Timeline", "kwds", inst)
+    if fill or "ctype" in inst:
+        cnv["ctype"] = app2db_fieldval("Timeline", "ctype", inst)
+    if fill or "cids" in inst:
+        cnv["cids"] = app2db_fieldval("Timeline", "cids", inst)
+    if fill or "rempts" in inst:
+        cnv["rempts"] = app2db_fieldval("Timeline", "rempts", inst)
+    if fill or "svs" in inst:
+        cnv["svs"] = app2db_fieldval("Timeline", "svs", inst)
+    if fill or "preb" in inst:
+        cnv["preb"] = app2db_fieldval("Timeline", "preb", inst)
     return cnv
 
 
@@ -641,20 +702,29 @@ def db2app_Timeline(inst):
 
 # Convert the given TLComp inst dict from app values to db values.  Removes
 # the dsType field to avoid trying to write it to the db.
-def app2db_TLComp(inst):
+def app2db_TLComp(inst, fill=True):
     cnv = {}
     cnv["dsId"] = None
     if "dsId" in inst:
         cnv["dsId"] = app2db_fieldval(None, "dsId", inst)
-    cnv["created"] = app2db_fieldval(None, "created", inst)
-    cnv["modified"] = app2db_fieldval(None, "modified", inst)
-    cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
-    cnv["importid"] = app2db_fieldval("TLComp", "importid", inst)
-    cnv["userid"] = app2db_fieldval("TLComp", "userid", inst)
-    cnv["tlid"] = app2db_fieldval("TLComp", "tlid", inst)
-    cnv["username"] = app2db_fieldval("TLComp", "username", inst)
-    cnv["tlname"] = app2db_fieldval("TLComp", "tlname", inst)
-    cnv["data"] = app2db_fieldval("TLComp", "data", inst)
+    if fill or "created" in inst:
+        cnv["created"] = app2db_fieldval(None, "created", inst)
+    if fill or "modified" in inst:
+        cnv["modified"] = app2db_fieldval(None, "modified", inst)
+    if fill or "batchconv" in inst:
+        cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
+    if fill or "importid" in inst:
+        cnv["importid"] = app2db_fieldval("TLComp", "importid", inst)
+    if fill or "userid" in inst:
+        cnv["userid"] = app2db_fieldval("TLComp", "userid", inst)
+    if fill or "tlid" in inst:
+        cnv["tlid"] = app2db_fieldval("TLComp", "tlid", inst)
+    if fill or "username" in inst:
+        cnv["username"] = app2db_fieldval("TLComp", "username", inst)
+    if fill or "tlname" in inst:
+        cnv["tlname"] = app2db_fieldval("TLComp", "tlname", inst)
+    if fill or "data" in inst:
+        cnv["data"] = app2db_fieldval("TLComp", "data", inst)
     return cnv
 
 
@@ -678,18 +748,25 @@ def db2app_TLComp(inst):
 
 # Convert the given DayCount inst dict from app values to db values.  Removes
 # the dsType field to avoid trying to write it to the db.
-def app2db_DayCount(inst):
+def app2db_DayCount(inst, fill=True):
     cnv = {}
     cnv["dsId"] = None
     if "dsId" in inst:
         cnv["dsId"] = app2db_fieldval(None, "dsId", inst)
-    cnv["created"] = app2db_fieldval(None, "created", inst)
-    cnv["modified"] = app2db_fieldval(None, "modified", inst)
-    cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
-    cnv["importid"] = app2db_fieldval("DayCount", "importid", inst)
-    cnv["tstamp"] = app2db_fieldval("DayCount", "tstamp", inst)
-    cnv["rtype"] = app2db_fieldval("DayCount", "rtype", inst)
-    cnv["detail"] = app2db_fieldval("DayCount", "detail", inst)
+    if fill or "created" in inst:
+        cnv["created"] = app2db_fieldval(None, "created", inst)
+    if fill or "modified" in inst:
+        cnv["modified"] = app2db_fieldval(None, "modified", inst)
+    if fill or "batchconv" in inst:
+        cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
+    if fill or "importid" in inst:
+        cnv["importid"] = app2db_fieldval("DayCount", "importid", inst)
+    if fill or "tstamp" in inst:
+        cnv["tstamp"] = app2db_fieldval("DayCount", "tstamp", inst)
+    if fill or "rtype" in inst:
+        cnv["rtype"] = app2db_fieldval("DayCount", "rtype", inst)
+    if fill or "detail" in inst:
+        cnv["detail"] = app2db_fieldval("DayCount", "detail", inst)
     return cnv
 
 
@@ -711,19 +788,27 @@ def db2app_DayCount(inst):
 
 # Convert the given AppService inst dict from app values to db values.  Removes
 # the dsType field to avoid trying to write it to the db.
-def app2db_AppService(inst):
+def app2db_AppService(inst, fill=True):
     cnv = {}
     cnv["dsId"] = None
     if "dsId" in inst:
         cnv["dsId"] = app2db_fieldval(None, "dsId", inst)
-    cnv["created"] = app2db_fieldval(None, "created", inst)
-    cnv["modified"] = app2db_fieldval(None, "modified", inst)
-    cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
-    cnv["importid"] = app2db_fieldval("AppService", "importid", inst)
-    cnv["name"] = app2db_fieldval("AppService", "name", inst)
-    cnv["ckey"] = app2db_fieldval("AppService", "ckey", inst)
-    cnv["csec"] = app2db_fieldval("AppService", "csec", inst)
-    cnv["data"] = app2db_fieldval("AppService", "data", inst)
+    if fill or "created" in inst:
+        cnv["created"] = app2db_fieldval(None, "created", inst)
+    if fill or "modified" in inst:
+        cnv["modified"] = app2db_fieldval(None, "modified", inst)
+    if fill or "batchconv" in inst:
+        cnv["batchconv"] = app2db_fieldval(None, "batchconv", inst)
+    if fill or "importid" in inst:
+        cnv["importid"] = app2db_fieldval("AppService", "importid", inst)
+    if fill or "name" in inst:
+        cnv["name"] = app2db_fieldval("AppService", "name", inst)
+    if fill or "ckey" in inst:
+        cnv["ckey"] = app2db_fieldval("AppService", "ckey", inst)
+    if fill or "csec" in inst:
+        cnv["csec"] = app2db_fieldval("AppService", "csec", inst)
+    if fill or "data" in inst:
+        cnv["data"] = app2db_fieldval("AppService", "data", inst)
     return cnv
 
 
@@ -800,7 +885,7 @@ def insert_new_AppUser(cnx, cursor, fields):
 
 # Update the specified AppUser row with the given field values.
 def update_existing_AppUser(cnx, cursor, fields, vck):
-    fields = app2db_AppUser(fields)
+    fields = app2db_AppUser(fields, fill=False)
     dsId = int(fields["dsId"])  # Verify int value
     stmt = ""
     for field in fields:  # only updating the fields passed in
@@ -860,7 +945,7 @@ def insert_new_Point(cnx, cursor, fields):
 
 # Update the specified Point row with the given field values.
 def update_existing_Point(cnx, cursor, fields, vck):
-    fields = app2db_Point(fields)
+    fields = app2db_Point(fields, fill=False)
     dsId = int(fields["dsId"])  # Verify int value
     stmt = ""
     for field in fields:  # only updating the fields passed in
@@ -920,7 +1005,7 @@ def insert_new_Timeline(cnx, cursor, fields):
 
 # Update the specified Timeline row with the given field values.
 def update_existing_Timeline(cnx, cursor, fields, vck):
-    fields = app2db_Timeline(fields)
+    fields = app2db_Timeline(fields, fill=False)
     dsId = int(fields["dsId"])  # Verify int value
     stmt = ""
     for field in fields:  # only updating the fields passed in
@@ -968,7 +1053,7 @@ def insert_new_TLComp(cnx, cursor, fields):
 
 # Update the specified TLComp row with the given field values.
 def update_existing_TLComp(cnx, cursor, fields, vck):
-    fields = app2db_TLComp(fields)
+    fields = app2db_TLComp(fields, fill=False)
     dsId = int(fields["dsId"])  # Verify int value
     stmt = ""
     for field in fields:  # only updating the fields passed in
@@ -1014,7 +1099,7 @@ def insert_new_DayCount(cnx, cursor, fields):
 
 # Update the specified DayCount row with the given field values.
 def update_existing_DayCount(cnx, cursor, fields, vck):
-    fields = app2db_DayCount(fields)
+    fields = app2db_DayCount(fields, fill=False)
     dsId = int(fields["dsId"])  # Verify int value
     stmt = ""
     for field in fields:  # only updating the fields passed in
@@ -1061,7 +1146,7 @@ def insert_new_AppService(cnx, cursor, fields):
 
 # Update the specified AppService row with the given field values.
 def update_existing_AppService(cnx, cursor, fields, vck):
-    fields = app2db_AppService(fields)
+    fields = app2db_AppService(fields, fill=False)
     dsId = int(fields["dsId"])  # Verify int value
     stmt = ""
     for field in fields:  # only updating the fields passed in
