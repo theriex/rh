@@ -913,10 +913,11 @@ app.tabular = (function () {
         parseSearch: function (qstr) {
             var pq = {toks:[], pfts:[]};  //tokens and post-match filter tokens
             pq.toks = qstr.toLowerCase().match(/\+?"[^"]*"*|\S+/g);
-            pq.pfts = pq.toks.filter((tok) => tok.indexOf("+") === 0);
-            pq.toks = pq.toks.filter((tok) => tok && tok.indexOf("+") !== 0);
-            pq.pfts = pq.pfts.map((tok) => mgrs.srch.opstrip(tok));
-            pq.toks = pq.toks.map((tok) => mgrs.srch.opstrip(tok));
+            if(pq.toks) {
+                pq.pfts = pq.toks.filter((tk) => tk.indexOf("+") === 0);
+                pq.toks = pq.toks.filter((tk) => tk && tk.indexOf("+") !== 0);
+                pq.pfts = pq.pfts.map((tk) => mgrs.srch.opstrip(tk));
+                pq.toks = pq.toks.map((tk) => mgrs.srch.opstrip(tk)); }
             state.pqs[qstr] = pq; },
         opstrip: function (tok) {
             if(tok.indexOf("+") === 0) {
@@ -1765,13 +1766,23 @@ app.tabular = (function () {
         editing: function (ptid) {
             var datediv = jt.byId("ptddatediv" + ptid);
             return (datediv && datediv.isContentEditable); },
+        isEditor: function (obj) {
+            return obj && obj.editors.csvcontains(app.user.acc.dsId); },
+        editable: function (pt) {
+            if(mgrs.agg.getState().mode !== "tledit") {
+                return false; }  //not editing, so not editable
+            var etl = mgrs.agg.currTL("edit");
+            if(!mgrs.edit.isEditor(etl)) {
+                return false; }  //can't edit timeline, so can't edit point
+            if(!pt.dsId || pt.dsId === "Placeholder") {
+                return true; }   //ok to add a point
+            if(mgrs.edit.isEditor(pt) && (pt.srctl === etl.dsId)) {
+                return true; }   //may edit timeline point
+            return false; },
         status: function (pt) {
             var state = {editable:false, cancelable:false, editing:false};
             if(app.user && app.user.acc) {
-                pt.editors = pt.editors || "";  //legacy compiled points
-                if((!pt.dsId || pt.dsId === "Placeholder") ||
-                   (pt.editors.csvcontains(app.user.acc.dsId) &&
-                    (mgrs.agg.currTL("edit").dsId === pt.srctl))) {
+                if(mgrs.edit.editable(pt)) {
                     state.editable = true; }
                 if(mgrs.edit.editing(pt.dsId)) {
                     state.editing = true; }
@@ -1932,7 +1943,7 @@ app.tabular = (function () {
                  ["div", {id:"pointsdispdiv"}]]));
             mgrs.agg.updateControls();  //calls mgrs.filt.updateControls
             mgrs.disp.adjustPointsAreaDisplayHeight();
-            mgrs.agg.tlchg((mode === "tledit")? "edsel" : ""); }, //update display
+            mgrs.agg.tlchg((mode === "tledit")? "edsel" : ""); }, //disp upd
         adjustPointsAreaDisplayHeight: function () {
             var ptsh = window.innerHeight - 
                 (jt.byId("tcontheaddiv").offsetHeight + 30);
