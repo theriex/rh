@@ -305,7 +305,7 @@ app.tabular = (function () {
                     opts.push({value:ktl.tlid, text:ktl.name,
                                group:ktl.group}); } });
             state[sid] = makeSelect(sid, mdfs("agg.tlchg", sid),
-                                           opts); },
+                                    opts); },
         //The controls are updated on initial display, then potentially
         //again after the current timeline is loaded, and again after the
         //featured timelines are loaded.  Also after a timeline is saved.
@@ -1699,6 +1699,9 @@ app.tabular = (function () {
         rebuildKebabActions: function (pt) {
             var edst = mgrs.edit.status(pt);
             var mas = [
+                {id:"selmix", tx:"Show Mix-In",
+                 ti:"Select source timeline as Mix-In",
+                 cond:pt.srctl && mgrs.agg.currTL("mix").dsId !== pt.srctl},
                 {id:"incla", tx:"Include All", ti:"Include all selected points",
                  cond:!edst.editable},
                 {id:"undin", tx:"Revert Include", ti:"Revert to last included",
@@ -1756,7 +1759,11 @@ app.tabular = (function () {
             mgrs.edit.togedit(ptid, "read"); },
         delete: function (ptid) {
             mgrs.kebab.toggleKebabMenu(ptid, "close");
-            jt.err("Delete point not implemented yet"); }
+            jt.err("Delete point not implemented yet"); },
+        selmix: function (ptid) {
+            mgrs.kebab.toggleKebabMenu(ptid, "close");
+            mgrs.edit.pt4id(ptid, function (pt) {
+                mgrs.agg.getState().mixsel.setValue(pt.srctl); }); }
         };
     }());
 
