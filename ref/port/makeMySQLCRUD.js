@@ -444,7 +444,7 @@ function helperFunctions () {
     pyc += "\n";
     pyc += "def verify_timestamp_fields(entity, dsId, fields, vck):\n";
     pyc += "    if vck == \"override\" and \"created\" in fields and \"modified\" in fields:\n";
-    pyc += "        return  # skip query and use specified values\n";
+    pyc += "        return fields # skip query and use specified values\n";
     pyc += "    if not vck or not vck.strip():\n";
     pyc += "        raise ValueError(\"Version check required to update \" + entity +\n";
     pyc += "                         \" \" + str(dsId))\n";
@@ -462,6 +462,7 @@ function helperFunctions () {
     pyc += "        ver = int(mods[1]) + 1\n";
     pyc += "    if \"modified\" not in fields or not fields[\"modified\"] or vck != \"override\":\n";
     pyc += "        fields[\"modified\"] = nowISO() + \";\" + str(ver)\n";
+    pyc += "    return existing\n";
     return pyc;
 }
 
@@ -581,7 +582,7 @@ function writeInsertFunction (edef) {
 function writeUpdateFunction (edef) {
     var pyc = "";
     pyc += "# Update the specified " + edef.entity + " row with the given field values.\n";
-    pyc += "def update_existing_" + edef.entity + "(cnx, cursor, fields, vck):\n";
+    pyc += "def update_existing_" + edef.entity + "(context, fields):\n";
     pyc += "    fields = app2db_" + edef.entity + "(fields, fill=False)\n";
     pyc += "    dsId = int(fields[\"dsId\"])  # Verify int value\n";
     pyc += "    stmt = \"\"\n";
@@ -590,22 +591,25 @@ function writeUpdateFunction (edef) {
     pyc += "            stmt += \", \"\n";
     pyc += "        stmt += field + \"=(%(\" + field + \")s)\"\n";
     pyc += "    stmt = \"UPDATE " + edef.entity + " SET \" + stmt + \" WHERE dsId=\" + str(dsId)\n";
-    pyc += "    if vck != \"override\":\n";
-    pyc += "        stmt += \" AND modified=\\\"\" + vck + \"\\\"\"\n";
+    pyc += "    if context[\"vck\"] != \"override\":\n";
+    pyc += "        stmt += \" AND modified=\\\"\" + context[\"vck\"] + \"\\\"\"\n";
     pyc += "    data = {}\n";
     pyc += "    for field in fields:\n";
     pyc += "        data[field] = fields[field]\n";
-    pyc += "    cursor.execute(stmt, data)\n";
-    pyc += "    if cursor.rowcount < 1 and vck != \"override\":\n";
-    pyc += "        raise ValueError(\"" + edef.entity + "\" + str(dsId) + \" update received outdated version check value \" + vck + \".\")\n";
-    pyc += "    cnx.commit()\n";
-    pyc += "    fields = db2app_" + edef.entity + "(fields)\n";
-    pyc += "    dblogmsg(\"UPD\", \"" + edef.entity + "\", fields)\n";
+    pyc += "    context[\"cursor\"].execute(stmt, data)\n";
+    pyc += "    if context[\"cursor\"].rowcount < 1 and context[\"vck\"] != \"override\":\n";
+    pyc += "        raise ValueError(\"" + edef.entity + "\" + str(dsId) + \" update received outdated version check value \" + context[\"vck\"] + \".\")\n";
+    pyc += "    context[\"cnx\"].commit()\n";
+    pyc += "    result = context[\"existing\"]\n";
+    pyc += "    for field in fields:\n";
+    pyc += "        result[field] = fields[field]\n";
+    pyc += "    result = db2app_" + edef.entity + "(result)\n";
+    pyc += "    dblogmsg(\"UPD\", \"" + edef.entity + "\", result)\n";
     if(edef.cache.minutes && !edef.cache.manualadd) {
-        pyc += "    entcache.cache_put(fields)\n" }
+        pyc += "    entcache.cache_put(result)\n" }
     else {  //make sure there isn't an old copy hanging around
-        pyc += "    entcache.cache_remove(fields)\n" }
-    pyc += "    return fields\n";
+        pyc += "    entcache.cache_remove(result)\n" }
+    pyc += "    return result\n";
     return pyc;
 }
 
@@ -630,17 +634,21 @@ function entityWriteFunction () {
     pyc += "            entity = inst.get(\"dsType\", None)\n";
     pyc += "            dsId = inst.get(\"dsId\", 0)\n";
     pyc += "            if dsId:\n";
-    pyc += "                verify_timestamp_fields(entity, dsId, inst, vck)\n";
+    pyc += "                existing = verify_timestamp_fields(entity, dsId, inst, vck)\n";
+    pyc += "                context = {\"cnx\":cnx, \"cursor\":cursor, \"vck\":vck,\n";
+    pyc += "                           \"existing\":existing}\n";
     definitions.forEach(function (edef) {
         pyc += "                if entity == \"" + edef.entity + "\":\n";
-        pyc += "                    return update_existing_" + edef.entity + "(cnx, cursor, inst, vck)\n"; });
-    pyc += "                raise ValueError(\"Cannot modify unknown entity dsType \" + str(entity))\n";
+        pyc += "                    return update_existing_" + edef.entity + "(context, inst)\n"; });
+    pyc += "                raise ValueError(\"Cannot modify unknown entity dsType \" +\n";
+    pyc += "                                 str(entity))\n";
     pyc += "            # No existing instance to update.  Insert new.\n";
     pyc += "            initialize_timestamp_fields(inst, vck)\n";
     definitions.forEach(function (edef) {
         pyc += "            if entity == \"" + edef.entity + "\":\n";
         pyc += "                return insert_new_" + edef.entity + "(cnx, cursor, inst)\n"; });
-    pyc += "            raise ValueError(\"Cannot create unknown entity dsType \" + str(entity))\n";
+    pyc += "            raise ValueError(\"Cannot create unknown entity dsType \" +\n";
+    pyc += "                             str(entity))\n";
     pyc += "        except mysql.connector.Error as e:\n";
     pyc += "            raise ValueError(str(e) or \"No mysql error text\")  # see note 1\n"
     pyc += "        finally:\n";

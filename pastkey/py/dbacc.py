@@ -440,7 +440,7 @@ def initialize_timestamp_fields(fields, vck):
 
 def verify_timestamp_fields(entity, dsId, fields, vck):
     if vck == "override" and "created" in fields and "modified" in fields:
-        return  # skip query and use specified values
+        return fields # skip query and use specified values
     if not vck or not vck.strip():
         raise ValueError("Version check required to update " + entity +
                          " " + str(dsId))
@@ -458,6 +458,7 @@ def verify_timestamp_fields(entity, dsId, fields, vck):
         ver = int(mods[1]) + 1
     if "modified" not in fields or not fields["modified"] or vck != "override":
         fields["modified"] = nowISO() + ";" + str(ver)
+    return existing
 
 
 # Convert the given AppUser inst dict from app values to db values.  Removes
@@ -884,7 +885,7 @@ def insert_new_AppUser(cnx, cursor, fields):
 
 
 # Update the specified AppUser row with the given field values.
-def update_existing_AppUser(cnx, cursor, fields, vck):
+def update_existing_AppUser(context, fields):
     fields = app2db_AppUser(fields, fill=False)
     dsId = int(fields["dsId"])  # Verify int value
     stmt = ""
@@ -893,19 +894,22 @@ def update_existing_AppUser(cnx, cursor, fields, vck):
             stmt += ", "
         stmt += field + "=(%(" + field + ")s)"
     stmt = "UPDATE AppUser SET " + stmt + " WHERE dsId=" + str(dsId)
-    if vck != "override":
-        stmt += " AND modified=\"" + vck + "\""
+    if context["vck"] != "override":
+        stmt += " AND modified=\"" + context["vck"] + "\""
     data = {}
     for field in fields:
         data[field] = fields[field]
-    cursor.execute(stmt, data)
-    if cursor.rowcount < 1 and vck != "override":
-        raise ValueError("AppUser" + str(dsId) + " update received outdated version check value " + vck + ".")
-    cnx.commit()
-    fields = db2app_AppUser(fields)
-    dblogmsg("UPD", "AppUser", fields)
-    entcache.cache_remove(fields)
-    return fields
+    context["cursor"].execute(stmt, data)
+    if context["cursor"].rowcount < 1 and context["vck"] != "override":
+        raise ValueError("AppUser" + str(dsId) + " update received outdated version check value " + context["vck"] + ".")
+    context["cnx"].commit()
+    result = context["existing"]
+    for field in fields:
+        result[field] = fields[field]
+    result = db2app_AppUser(result)
+    dblogmsg("UPD", "AppUser", result)
+    entcache.cache_remove(result)
+    return result
 
 
 # Write a new Point row, using the given field values or defaults.
@@ -944,7 +948,7 @@ def insert_new_Point(cnx, cursor, fields):
 
 
 # Update the specified Point row with the given field values.
-def update_existing_Point(cnx, cursor, fields, vck):
+def update_existing_Point(context, fields):
     fields = app2db_Point(fields, fill=False)
     dsId = int(fields["dsId"])  # Verify int value
     stmt = ""
@@ -953,19 +957,22 @@ def update_existing_Point(cnx, cursor, fields, vck):
             stmt += ", "
         stmt += field + "=(%(" + field + ")s)"
     stmt = "UPDATE Point SET " + stmt + " WHERE dsId=" + str(dsId)
-    if vck != "override":
-        stmt += " AND modified=\"" + vck + "\""
+    if context["vck"] != "override":
+        stmt += " AND modified=\"" + context["vck"] + "\""
     data = {}
     for field in fields:
         data[field] = fields[field]
-    cursor.execute(stmt, data)
-    if cursor.rowcount < 1 and vck != "override":
-        raise ValueError("Point" + str(dsId) + " update received outdated version check value " + vck + ".")
-    cnx.commit()
-    fields = db2app_Point(fields)
-    dblogmsg("UPD", "Point", fields)
-    entcache.cache_remove(fields)
-    return fields
+    context["cursor"].execute(stmt, data)
+    if context["cursor"].rowcount < 1 and context["vck"] != "override":
+        raise ValueError("Point" + str(dsId) + " update received outdated version check value " + context["vck"] + ".")
+    context["cnx"].commit()
+    result = context["existing"]
+    for field in fields:
+        result[field] = fields[field]
+    result = db2app_Point(result)
+    dblogmsg("UPD", "Point", result)
+    entcache.cache_remove(result)
+    return result
 
 
 # Write a new Timeline row, using the given field values or defaults.
@@ -1004,7 +1011,7 @@ def insert_new_Timeline(cnx, cursor, fields):
 
 
 # Update the specified Timeline row with the given field values.
-def update_existing_Timeline(cnx, cursor, fields, vck):
+def update_existing_Timeline(context, fields):
     fields = app2db_Timeline(fields, fill=False)
     dsId = int(fields["dsId"])  # Verify int value
     stmt = ""
@@ -1013,19 +1020,22 @@ def update_existing_Timeline(cnx, cursor, fields, vck):
             stmt += ", "
         stmt += field + "=(%(" + field + ")s)"
     stmt = "UPDATE Timeline SET " + stmt + " WHERE dsId=" + str(dsId)
-    if vck != "override":
-        stmt += " AND modified=\"" + vck + "\""
+    if context["vck"] != "override":
+        stmt += " AND modified=\"" + context["vck"] + "\""
     data = {}
     for field in fields:
         data[field] = fields[field]
-    cursor.execute(stmt, data)
-    if cursor.rowcount < 1 and vck != "override":
-        raise ValueError("Timeline" + str(dsId) + " update received outdated version check value " + vck + ".")
-    cnx.commit()
-    fields = db2app_Timeline(fields)
-    dblogmsg("UPD", "Timeline", fields)
-    entcache.cache_remove(fields)
-    return fields
+    context["cursor"].execute(stmt, data)
+    if context["cursor"].rowcount < 1 and context["vck"] != "override":
+        raise ValueError("Timeline" + str(dsId) + " update received outdated version check value " + context["vck"] + ".")
+    context["cnx"].commit()
+    result = context["existing"]
+    for field in fields:
+        result[field] = fields[field]
+    result = db2app_Timeline(result)
+    dblogmsg("UPD", "Timeline", result)
+    entcache.cache_remove(result)
+    return result
 
 
 # Write a new TLComp row, using the given field values or defaults.
@@ -1052,7 +1062,7 @@ def insert_new_TLComp(cnx, cursor, fields):
 
 
 # Update the specified TLComp row with the given field values.
-def update_existing_TLComp(cnx, cursor, fields, vck):
+def update_existing_TLComp(context, fields):
     fields = app2db_TLComp(fields, fill=False)
     dsId = int(fields["dsId"])  # Verify int value
     stmt = ""
@@ -1061,19 +1071,22 @@ def update_existing_TLComp(cnx, cursor, fields, vck):
             stmt += ", "
         stmt += field + "=(%(" + field + ")s)"
     stmt = "UPDATE TLComp SET " + stmt + " WHERE dsId=" + str(dsId)
-    if vck != "override":
-        stmt += " AND modified=\"" + vck + "\""
+    if context["vck"] != "override":
+        stmt += " AND modified=\"" + context["vck"] + "\""
     data = {}
     for field in fields:
         data[field] = fields[field]
-    cursor.execute(stmt, data)
-    if cursor.rowcount < 1 and vck != "override":
-        raise ValueError("TLComp" + str(dsId) + " update received outdated version check value " + vck + ".")
-    cnx.commit()
-    fields = db2app_TLComp(fields)
-    dblogmsg("UPD", "TLComp", fields)
-    entcache.cache_remove(fields)
-    return fields
+    context["cursor"].execute(stmt, data)
+    if context["cursor"].rowcount < 1 and context["vck"] != "override":
+        raise ValueError("TLComp" + str(dsId) + " update received outdated version check value " + context["vck"] + ".")
+    context["cnx"].commit()
+    result = context["existing"]
+    for field in fields:
+        result[field] = fields[field]
+    result = db2app_TLComp(result)
+    dblogmsg("UPD", "TLComp", result)
+    entcache.cache_remove(result)
+    return result
 
 
 # Write a new DayCount row, using the given field values or defaults.
@@ -1098,7 +1111,7 @@ def insert_new_DayCount(cnx, cursor, fields):
 
 
 # Update the specified DayCount row with the given field values.
-def update_existing_DayCount(cnx, cursor, fields, vck):
+def update_existing_DayCount(context, fields):
     fields = app2db_DayCount(fields, fill=False)
     dsId = int(fields["dsId"])  # Verify int value
     stmt = ""
@@ -1107,19 +1120,22 @@ def update_existing_DayCount(cnx, cursor, fields, vck):
             stmt += ", "
         stmt += field + "=(%(" + field + ")s)"
     stmt = "UPDATE DayCount SET " + stmt + " WHERE dsId=" + str(dsId)
-    if vck != "override":
-        stmt += " AND modified=\"" + vck + "\""
+    if context["vck"] != "override":
+        stmt += " AND modified=\"" + context["vck"] + "\""
     data = {}
     for field in fields:
         data[field] = fields[field]
-    cursor.execute(stmt, data)
-    if cursor.rowcount < 1 and vck != "override":
-        raise ValueError("DayCount" + str(dsId) + " update received outdated version check value " + vck + ".")
-    cnx.commit()
-    fields = db2app_DayCount(fields)
-    dblogmsg("UPD", "DayCount", fields)
-    entcache.cache_remove(fields)
-    return fields
+    context["cursor"].execute(stmt, data)
+    if context["cursor"].rowcount < 1 and context["vck"] != "override":
+        raise ValueError("DayCount" + str(dsId) + " update received outdated version check value " + context["vck"] + ".")
+    context["cnx"].commit()
+    result = context["existing"]
+    for field in fields:
+        result[field] = fields[field]
+    result = db2app_DayCount(result)
+    dblogmsg("UPD", "DayCount", result)
+    entcache.cache_remove(result)
+    return result
 
 
 # Write a new AppService row, using the given field values or defaults.
@@ -1145,7 +1161,7 @@ def insert_new_AppService(cnx, cursor, fields):
 
 
 # Update the specified AppService row with the given field values.
-def update_existing_AppService(cnx, cursor, fields, vck):
+def update_existing_AppService(context, fields):
     fields = app2db_AppService(fields, fill=False)
     dsId = int(fields["dsId"])  # Verify int value
     stmt = ""
@@ -1154,19 +1170,22 @@ def update_existing_AppService(cnx, cursor, fields, vck):
             stmt += ", "
         stmt += field + "=(%(" + field + ")s)"
     stmt = "UPDATE AppService SET " + stmt + " WHERE dsId=" + str(dsId)
-    if vck != "override":
-        stmt += " AND modified=\"" + vck + "\""
+    if context["vck"] != "override":
+        stmt += " AND modified=\"" + context["vck"] + "\""
     data = {}
     for field in fields:
         data[field] = fields[field]
-    cursor.execute(stmt, data)
-    if cursor.rowcount < 1 and vck != "override":
-        raise ValueError("AppService" + str(dsId) + " update received outdated version check value " + vck + ".")
-    cnx.commit()
-    fields = db2app_AppService(fields)
-    dblogmsg("UPD", "AppService", fields)
-    entcache.cache_put(fields)
-    return fields
+    context["cursor"].execute(stmt, data)
+    if context["cursor"].rowcount < 1 and context["vck"] != "override":
+        raise ValueError("AppService" + str(dsId) + " update received outdated version check value " + context["vck"] + ".")
+    context["cnx"].commit()
+    result = context["existing"]
+    for field in fields:
+        result[field] = fields[field]
+    result = db2app_AppService(result)
+    dblogmsg("UPD", "AppService", result)
+    entcache.cache_put(result)
+    return result
 
 
 # Write the given dict/object based on the dsType.  Binary field values must
@@ -1183,20 +1202,23 @@ def write_entity(inst, vck="1234-12-12T00:00:00Z"):
             entity = inst.get("dsType", None)
             dsId = inst.get("dsId", 0)
             if dsId:
-                verify_timestamp_fields(entity, dsId, inst, vck)
+                existing = verify_timestamp_fields(entity, dsId, inst, vck)
+                context = {"cnx":cnx, "cursor":cursor, "vck":vck,
+                           "existing":existing}
                 if entity == "AppUser":
-                    return update_existing_AppUser(cnx, cursor, inst, vck)
+                    return update_existing_AppUser(context, inst)
                 if entity == "Point":
-                    return update_existing_Point(cnx, cursor, inst, vck)
+                    return update_existing_Point(context, inst)
                 if entity == "Timeline":
-                    return update_existing_Timeline(cnx, cursor, inst, vck)
+                    return update_existing_Timeline(context, inst)
                 if entity == "TLComp":
-                    return update_existing_TLComp(cnx, cursor, inst, vck)
+                    return update_existing_TLComp(context, inst)
                 if entity == "DayCount":
-                    return update_existing_DayCount(cnx, cursor, inst, vck)
+                    return update_existing_DayCount(context, inst)
                 if entity == "AppService":
-                    return update_existing_AppService(cnx, cursor, inst, vck)
-                raise ValueError("Cannot modify unknown entity dsType " + str(entity))
+                    return update_existing_AppService(context, inst)
+                raise ValueError("Cannot modify unknown entity dsType " +
+                                 str(entity))
             # No existing instance to update.  Insert new.
             initialize_timestamp_fields(inst, vck)
             if entity == "AppUser":
@@ -1211,7 +1233,8 @@ def write_entity(inst, vck="1234-12-12T00:00:00Z"):
                 return insert_new_DayCount(cnx, cursor, inst)
             if entity == "AppService":
                 return insert_new_AppService(cnx, cursor, inst)
-            raise ValueError("Cannot create unknown entity dsType " + str(entity))
+            raise ValueError("Cannot create unknown entity dsType " +
+                             str(entity))
         except mysql.connector.Error as e:
             raise ValueError(str(e) or "No mysql error text")  # see note 1
         finally:
