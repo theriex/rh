@@ -220,13 +220,18 @@ app.tabular = (function () {
         var state =  {tombstones:{}};
     return {
         getState: function () { return state; },
-        init: function (mode) {
-            //account status is private info so stripped from user.acc
-            if(mode === "tledit" && app.user.status !== "Active") {
-                jt.err("You need to activate your account before editing a timeline. Click the link sent to you in the account activation email.");
-                mode = "refdisp"; }
-            state.mode = mode;
+        verifyMode: function (mode) {
             if(mode === "tledit") {
+                if(!app.user.acc) {
+                    jt.err("You need to sign in before editing.");
+                    mode = "refdisp"; }
+                else if(app.user.status !== "Active") {  //status is private
+                    jt.err("You need to activate your account before editing a timeline. Click the link sent to you in the account activation email.");
+                    mode = "refdisp"; } }
+            return mode; },
+        init: function (mode) {
+            state.mode = mgrs.agg.verifyMode(mode);
+            if(state.mode === "tledit") {
                 jt.out("reftitlediv", jt.tac2html(
                     [["div", {cla:"tletldiv"}, "Edit Timeline"],
                      ["div", {cla:"tletrdiv"}, "Mix-In"]])); }
@@ -443,24 +448,23 @@ app.tabular = (function () {
                          "-W4":"4th"}},
             day: {vals: {"-D0":"Sun", "-D1":"Mon", "-D2":"Tue", "-D3":"Wed",
                          "-D4":"Thu", "-D5":"Fri", "-D6":"Sat"}}};
-        var value = "Unlisted";
+        var tlval = "Unlisted";  //timeline.featured value
     return {
         initSelectors: function (tl) {
             Object.keys(sels).forEach(function (selkey) {
                 var opts;
                 if(selkey === "feat") {
                     opts = fos.map(function (fo) {
-                        return {value:fo.t, text:fo.t,
-                                selected:(tl && tl.featured === fo.t)}; }); }
+                        return {value:fo.t, text:fo.t}; }); }
                 else {
                     opts = Object.entries(sels[selkey].vals)
                         .map(function ([code, disp]) {
                             return {value:code, text:disp}; }); }
                 sels[selkey].sel = makeSelect(
                     selkey, mdfs("feat.featselChange"), opts); });
-            value = "Unlisted";  //reset
+            tlval = "Unlisted";  //reset
             if(tl && tl.featured) {
-                value = tl.featured; } },  //start with same value so no change
+                tlval = tl.featured; } },  //start with same value so no change
         getHTML: function (tl) {
             if(tl && !tl.featured) { tl.featured = "Unlisted"; }
             mgrs.feat.initSelectors(tl);  //rebuild in case tl changed
@@ -473,6 +477,7 @@ app.tabular = (function () {
                 jt.out("f2selspan", jt.tac2html(
                     [sels.month.sel.ctrlHTML(),
                      ["input", {type:"number", id:"datein", value:1,
+                                onchange:mdfs("feat.featselChange"),
                                 min:1, max:31}]])); } },
         verifyMonthWeekVisible: function () {
             if(!jt.byId("week")) {  //need to rebuild controls
@@ -485,8 +490,7 @@ app.tabular = (function () {
             var match = val.match(/(-\d\d)-(\d\d)/);
             if(match) {
                 mgrs.feat.verifyMonthDateVisible();
-                sels.month.sel.setValue(
-                    sels.month.vals[match[1]]);
+                sels.month.sel.setValue(match[1]);
                 jt.byId("datein").value = Number(match[2]);
                 result = "Obs M/D"; }
             return result; },
@@ -497,32 +501,33 @@ app.tabular = (function () {
                 mgrs.feat.verifyMonthWeekVisible();
                 var selnames = ["month", "week", "day"];
                 selnames.forEach(function (selname, idx) {
-                    sels[selname].setValue(
-                        sels[selname].vals[match[idx + 1]]); });
+                    sels[selname].sel.setValue(match[idx + 1]); });
                 result = "Obs M/W"; }
             return result; },
         setValue: function (val) {
             val = val || "Unlisted";
-            value = (mgrs.feat.setMonthDate(val) || 
-                             mgrs.feat.setMonthWeek(val) || val);
+            val = (mgrs.feat.setMonthDate(val) || 
+                   mgrs.feat.setMonthWeek(val) || val);
+            sels.feat.sel.setValue(val);
             mgrs.feat.updateHelp(); },
         getValue: function () {
-            return value; },  //updated by featselChange
+            return tlval; },  //updated by featselChange
         featselChange: function () {
-            value = sels.feat.sel.getValue();
-            if(value === "Obs M/D") {
+            var val = sels.feat.sel.getValue();
+            if(val === "Obs M/D") {
                 mgrs.feat.verifyMonthDateVisible();
                 var din = String(jt.byId("datein").value);
                 if(din.length < 2) {
                     din = "0" + din; }
-                value = sels.month.sel.getValue() + "-" + din; }
-            else if(value === "Obs M/W") {
+                tlval = sels.month.sel.getValue() + "-" + din; }
+            else if(val === "Obs M/W") {
                 mgrs.feat.verifyMonthWeekVisible();
                 var selnames = ["month", "week", "day"];
-                value = selnames.reduce(function (acc, sn) {
+                tlval = selnames.reduce(function (acc, sn) {
                     return acc + sels[sn].sel.getValue(); }, ""); }
             else {
-                jt.out("f2selspan", ""); }
+                jt.out("f2selspan", "");  //hide extra input fields
+                tlval = val; }
             mgrs.feat.updateHelp();
             mgrs.stg.checkForDataChanges(); },
         updateHelp: function () {
@@ -1774,7 +1779,8 @@ app.tabular = (function () {
             var datediv = jt.byId("ptddatediv" + ptid);
             return (datediv && datediv.isContentEditable); },
         isEditor: function (obj) {
-            return obj && obj.editors.csvcontains(app.user.acc.dsId); },
+            return obj && obj.editors &&
+                obj.editors.csvcontains(app.user.acc.dsId); },
         editable: function (pt) {
             if(mgrs.agg.getState().mode !== "tledit") {
                 return false; }  //not editing, so not editable
