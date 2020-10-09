@@ -598,6 +598,8 @@ app.tabular = (function () {
                 jt.byId("ellipmenulink").style.fontWeight = "normal"; } },
         rebuildEllipActions: function () {
             var mas = [
+                {id:"showtl", tx:"View Timeline",
+                 ti:"Show Timeline Interactive View", cond:true},
                 {id:"rldtl", tx:"Reload Timeline",
                  ti:"Refetch Timeline from server", cond:true},
                 {id:"renkey", tx:"Rename Keyword",
@@ -611,6 +613,13 @@ app.tabular = (function () {
                             ["a", {href:"#" + ma.id, title:ma.ti,
                                    onclick:mdfs("ellip." + ma.id)},
                              ma.tx]]; }))); },
+        showtl: function () {
+            var tl = mgrs.agg.currTL("edit");
+            var href = app.baseurl + "/timeline/" + (tl.slug || tl.dsId);
+            if(window.location.href === href) {
+                app.mode.chmode("interactive"); }
+            else {  //redirect to load current timeline
+                window.location.href = href; } },
         rldtl: function () {
             var tl = mgrs.agg.currTL("edit");
             app.refmgr.uncache("Timeline", tl.dsId);
@@ -895,6 +904,7 @@ app.tabular = (function () {
                 if(sk) {
                     if(/\S+\s\S+/.test(sk)) {  //keyword has a space in it
                         sk = "&quot;" + sk + "&quot;"; }
+                    sk = "in keywords: " + sk;
                     dlos.push(["option", {value:sk}]); } });
             if(dlos.length) {
                 srchinattrs.list = "srchinoptsdl"; }
@@ -908,16 +918,22 @@ app.tabular = (function () {
             return jt.tac2html(["div", {id:"srchmgrdiv"}, divcontents]); },
         valchanged: function () {
             state.qstr = jt.byId("srchin").value || "";
-            state.qstr = state.qstr.trim();
+            state.qstr = state.qstr.trim().toLowerCase();
             if(!state.pqs[state.qstr]) {
                 mgrs.srch.parseSearch(state.qstr); }
             mgrs.disp.displayPoints(mgrs.filt.filterPoints()); },
-        //A search can consist of simple strings and/or quoted strings,
-        //possibly preceded by a "+" indicating that the string should be
-        //treated as an additional filter.
+        //Search tokens can be simple strings and/or quoted strings.  A
+        //token preceded by a '+' is a post match filter.  The search may be
+        //prefixed by a match scope.
         parseSearch: function (qstr) {
-            var pq = {toks:[], pfts:[]};  //tokens and post-match filter tokens
-            pq.toks = qstr.toLowerCase().match(/\+?"[^"]*"*|\S+/g);
+            var pq = {scope:"all", toks:[], pfts:[]};
+            qstr = qstr.toLowerCase().trim();
+            var qs = qstr;  //destroyable working copy of query string
+            pq.m = qs.match(/^(in\s)?(keywords|refs|text):/);
+            if(pq.m) {
+                pq.scope = pq.m[2];
+                qs = qs.slice(pq.m[0].length).trim(); }
+            pq.toks = qs.toLowerCase().match(/\+?"[^"]*"*|\S+/g);
             if(pq.toks) {
                 pq.pfts = pq.toks.filter((tk) => tk.indexOf("+") === 0);
                 pq.toks = pq.toks.filter((tk) => tk && tk.indexOf("+") !== 0);
@@ -930,18 +946,42 @@ app.tabular = (function () {
             if(tok.indexOf("\"") === 0) {
                 tok = tok.slice(1, -1); }
             return tok; },
+        verifySearchFilterKeywords: function (pt) {
+            if(pt.srchFiltKeywords) { return pt.srchFiltKeywords; }
+            pt.srchFiltKeywords = "";
+            ptkfs.forEach(function (fld) {
+                var keys = pt[fld] || "";
+                keys = keys.replace(",", " ") + " ";
+                pt.srchFiltKeywords += keys.toLowerCase(); });
+            return pt.srchFiltKeywords; },
+        verifySearchFilterRefs: function (pt) {
+            if(pt.srchFiltRefs) { return pt.srchFiltRefs; }
+            pt.refs = pt.refs || [];
+            pt.srchFiltRefs = pt.refs.join(" ").toLowerCase();
+            return pt.srchFiltRefs; },
         verifySearchFilterText: function (pt) {
-            if(pt.srchFiltTxt) { return; }
+            if(pt.srchFiltText) { return pt.srchFiltText; }
+            pt.srchFiltText = pt.text.toLowerCase();
+            return pt.srchFiltText; },
+        verifySearchFilterAll: function (pt) {
+            if(pt.srchFiltAll) { return pt.srchFiltAll; }
             var flds = ["source", "text", "refs", "communities", "regions",
                         "categories", "tags"];
-            pt.srchFiltTxt = flds.reduce((a, c) => a + " " + pt[c], "");
-            pt.srchFiltTxt = pt.srchFiltTxt.toLowerCase(); },
+            pt.srchFiltAll = flds.reduce((a, c) => a + " " + pt[c], "");
+            pt.srchFiltAll = pt.srchFiltAll.toLowerCase();
+            return pt.srchFiltAll; },
+        searchTextForScope: function (pq, pt) {
+            switch(pq.scope) {
+            case "keywords": return mgrs.srch.verifySearchFilterKeywords(pt);
+            case "refs": return mgrs.srch.verifySearchFilterRefs(pt);
+            case "text": return mgrs.srch.verifySearchFilterText(pt);
+            default: return mgrs.srch.verifySearchFilterAll(pt); } },
         isMatchingPoint: function (pt) {
             if(!state.qstr) { return true; }
-            mgrs.srch.verifySearchFilterText(pt);
             var pq = state.pqs[state.qstr];
-            if(pq.toks.some((tok) => pt.srchFiltTxt.indexOf(tok) >= 0) &&
-               pq.pfts.every((pft) => pt.srchFiltTxt.indexOf(pft) >= 0)) {
+            var txt = mgrs.srch.searchTextForScope(pq, pt);
+            if(pq.toks.some((tok) => txt.indexOf(tok) >= 0) &&
+               pq.pfts.every((pft) => txt.indexOf(pft) >= 0)) {
                 return true; }
             return false; },
         getSelectionKeywords: function () {
