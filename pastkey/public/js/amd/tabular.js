@@ -409,7 +409,8 @@ app.tabular = (function () {
             switch(tsel) {
             case "edit": tsel = state.edsel.getValue; break;
             case "mix": tsel = state.mixsel.getValue; break;
-            default: tsel = mgrs.agg.urlTimeline; }
+            default: tsel = function () {
+                return mgrs.agg.urlTimeline().dsId; }; }
             var tlid = tsel();
             if(Number(tlid)) {
                 return app.refmgr.cached("Timeline", tlid); }
