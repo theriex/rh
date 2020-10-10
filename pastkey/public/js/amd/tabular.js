@@ -404,6 +404,8 @@ app.tabular = (function () {
                         (a.start.month - b.start.month) ||
                         (a.start.day - b.start.day)); }); },
         currTL: function (tsel) {
+            if(tsel === "edit" && state.mode !== "tledit") {
+                tsel = ""; }  //treat as looking for currently selected
             switch(tsel) {
             case "edit": tsel = state.edsel.getValue; break;
             case "mix": tsel = state.mixsel.getValue; break;
@@ -1051,14 +1053,14 @@ app.tabular = (function () {
             var tl = mgrs.agg.currTL("edit");
             return tl.slug || "pastkey"; },
         getHTMLDataURI: function () {
-            var html = "<!doctype html><html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" /><title>" + mgrs.dl.dlfnb() + "</title></head><body>";
+            var html = "<!doctype html><html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" /><title>" + mgrs.dl.dlfnb() + "</title>\n<style type=\"text/css\">\n.dlptdiv { border:2px solid #666; margin:2px; }\n.dlptrefsdiv { font-size:small; font-style:italic; padding:5px; }\n</style>\n</head><body>";
             mgrs.filt.points().forEach(function (pt) {
                 html += "\n" + jt.tac2html(
                     ["div", {cla:"dlptdiv"},
                      [["div", {cla:"dlptdatediv"}, pt.date],
                       ["div", {cla:"dlpttextdiv"}, pt.text],
                       ["div", {cla:"dlptrefsdiv"},
-                       pt.refs.join("<br/>")]]]); });
+                       jt.linkify(pt.refs.join("<br/>"))]]]); });
             html += "</body></html>";
             return "data:text/html;charset=utf-8," + jt.enc(html); },
         getTSVDataURI: function () {
