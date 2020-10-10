@@ -276,19 +276,21 @@ app.lynching = (function () {
                 ["li", {style:"visibility:" + disp + ";"},
                  ["div", {cla:"lynchcrititemdiv"},
                   [["div", {cla:"lynchcritpdiv"}, crit.p],
-                   ["div", {cla:"lynchcritsdiv"}, crit.s]]]]); });
-        html = jt.tac2html([["div", {cla:"lynchcrittdiv"}, "Lynching Criteria"],
+                   //leaving crit.s out of this for now. Too much text.
+                   ["div", {cla:"lynchcritsdiv"}, ""]]]]); });
+        html = jt.tac2html([["div", {cla:"lynchcrittdiv"},
+                             "Monroe Nathan Work's Lynching Definition"],
                             ["ol", {id:"lynchritol"}, html]]);
         return html;
     }
 
 
     function initShowPoints () {
-        var cdel = 6000;
+        var cdel = 4000;
         ani.pts.push({date:0, text:lynchingDefHTML(0), delay:cdel});
         ani.pts.push({date:1, text:lynchingDefHTML(1), delay:cdel});
         ani.pts.push({date:2, text:lynchingDefHTML(2), delay:cdel});
-        ani.pts.push({date:3, text:lynchingDefHTML(3), delay:cdel});
+        ani.pts.push({date:3, text:lynchingDefHTML(3), delay:1.5*cdel});
         datapoints().forEach(function (pt) {
             ani.pts.push(
                 {date:pt.date, delay:Math.round(38 * pt.text.length),
@@ -301,13 +303,35 @@ app.lynching = (function () {
         ani.pts.push({date:"", delay:cdel, text:jt.tac2html(
             [["div", {cla:"lynchcrittdiv"}, ""],
              ["div", {cla:"lynchcrititemdiv"},
-              "Lynchings have occurred beyond the timeframe of this dataset."
-             ]])});
-        ani.pts.push({date:"", delay:4000, text:jt.tac2html(
+              "Lynchings have occurred beyond the timeframe of this dataset."]
+            ])});
+        var url = "http://www.chesnuttarchive.org/classroom/lynchingstat.html";
+        url = "http://www.chesnuttarchive.org";  //dead link as of oct 2020
+        var naacp = "http://www.naacp.org/history-of-lynchings/";
+        var tuin = "https://www.nps.gov/tuin/index.htm";
+        var mnw = "https://en.wikipedia.org/wiki/Monroe_Work";
+        ani.pts.push({date:"", delay:4*cdel, text:jt.tac2html(
             [["div", {cla:"lynchcrittdiv"}, ""],
              ["div", {cla:"lynchcrititemdiv"},
-              "Click any time period to show totals at that time."
-             ]])});
+              ["Visualization dataset sourced from the ",
+               ["a", {href:url,
+                      onclick:"window.open('" + url + "');return false;"},
+                "Chesnutt Digital Archive"],
+               " in October 2017 as referenced from the ",
+               ["a", {href:naacp,
+                      onclick:"window.open('" + naacp + "');return false;"},
+                "NAACP"],
+               " and reflecting data from the ",
+               ["a", {href:tuin,
+                      onclick:"window.open('" + tuin + "');return false;"},
+                "Tuskegee Institute"],
+               " as compiled by ",
+               ["a", {href:mnw,
+                      onclick:"window.open('" + mnw + "');return false;"},
+                "Monroe Nathan Work"]]],
+             ["div", {cla:"lynchcrititemdiv"}, "&nbsp;"],
+             ["div", {cla:"lynchcrititemdiv"},
+              "Click any time period to show totals at that time."]])});
     }
 
 
