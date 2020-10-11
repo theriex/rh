@@ -40,6 +40,8 @@ def verify_edit_authorization(appuser, obj):
         if updeds != dbo["editors"]:
             owner = util.csv_to_list(dbo["editors"])[0]
             if owner != appuser["dsId"]:
+                if updeds == "deleted":
+                    raise ValueError("Only the owner can delete")
                 raise ValueError("Only the owner may change editors")
     return dbo
 

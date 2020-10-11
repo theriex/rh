@@ -425,7 +425,8 @@ app.tabular = (function () {
             return pt; },
         addOrUpdatePoint: function (upd) {
             var pts = state.points.filter((pt) => pt.dsId !== upd.dsId);
-            pts.push(upd);
+            if(upd.editors !== "deleted") {
+                pts.push(upd); }
             state.points = pts;
             mgrs.agg.sortPoints(); }
         };
@@ -1691,7 +1692,8 @@ app.tabular = (function () {
         rebuildTimelinePoints: function (updpt) {
             var tl = mgrs.agg.currTL("edit");
             var pts = mgrs.agg.getPoints()
-                .filter((pt) => pt.srctl === tl.dsId || pt.mixin);
+                .filter((pt) => ((pt.editors !== "deleted") &&
+                                 (pt.srctl === tl.dsId || pt.mixin)));
             var cids = pts.map((pt) => pt.dsId).join(",");
             mgrs.ptd.updateTimelinePoints(updpt, cids); },
         updateTimelinePoints: function (updpt, updcids) {
@@ -1756,8 +1758,9 @@ app.tabular = (function () {
                  cond:!edst.editable && state.lkcs},
                 {id:"noinc", tx:"Include None", ti:"Uninclude all points",
                  cond:!edst.editable},
-                {id:"copy", tx:"Copy Point", ti:"Copy data to a new point",
-                 cond:!edst.editable},
+                // Do it by hand if you really need to
+                // {id:"copy", tx:"Copy Point", ti:"Copy data to a new point",
+                //  cond:!edst.editable},
                 {id:"edit", tx:"Edit", ti:"Edit this point",
                  cond:edst.editable && !edst.editing},
                 {id:"noadd", tx:"Cancel Add", ti:"Discard unsaved changes",
@@ -1793,9 +1796,6 @@ app.tabular = (function () {
                 pt.mixin = false;
                 tl.cids = tl.cids.csvremove(pt.dsId); });
             mgrs.ptd.updateTimelinePoints(ptid, tl.cids); },
-        copy: function (ptid) {
-            mgrs.kebab.toggleKebabMenu(ptid, "close");
-            jt.err("Copy point not implemented yet"); },
         edit: function (ptid) {
             mgrs.kebab.toggleKebabMenu(ptid, "close");
             mgrs.edit.togedit(ptid, "edit"); },
@@ -1807,7 +1807,13 @@ app.tabular = (function () {
             mgrs.edit.togedit(ptid, "read"); },
         delete: function (ptid) {
             mgrs.kebab.toggleKebabMenu(ptid, "close");
-            jt.err("Delete point not implemented yet"); },
+            if(!window.confirm("Are you sure you want to delete this point?")) {
+                return; }
+            mgrs.edit.pt4id(ptid, function (pt) {
+                pt.editors = "deleted";
+                mgrs.edit.saveFullPoint(pt, function (updpt) {
+                    mgrs.agg.addOrUpdatePoint(updpt);
+                    mgrs.ptd.rebuildTimelinePoints(updpt); }); }); },
         selmix: function (ptid) {
             mgrs.kebab.toggleKebabMenu(ptid, "close");
             mgrs.edit.pt4id(ptid, function (pt) {
