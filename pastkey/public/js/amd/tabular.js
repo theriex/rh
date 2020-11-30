@@ -1041,10 +1041,14 @@ app.tabular = (function () {
                              //close the dialog without trapping click event
                              onclick:mdfs("dl.togdlg", "event")};
             if(fmt === "pdf") {
+                //Need to make the points take up the whole page or they
+                //won't be included in the pdf.
+                jt.byId("pointsdispdiv").style.height = "100%";
                 linkattrs.href = "#printToPDF";
                 linkattrs.onclick += ";window.print();"; }
             else {
-                linkattrs.href = mgrs.dl["get" + fmt.toUpperCase() + "DataURI"]();
+                linkattrs.href = mgrs.dl["get" + fmt.toUpperCase() +
+                                         "DataURI"]();
                 linkattrs.download = mgrs.dl.dlfnb() + "." + fmt; }
             jt.out("dldlgactiondiv", jt.tac2html(
                 ["a", linkattrs,
