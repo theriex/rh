@@ -166,11 +166,31 @@ app.mode = (function () {
     }
 
 
+    //If the hash is stripped completely after being added, that triggers a
+    //reload of the page on FF 83.0.  It might look sloppy to have the hash
+    //still there after returning from reference mode, but it is better than
+    //losing your timeline progress.  The hash is desirable for reference
+    //mode so people can copy the URL to share directly.
+    function verifyURLHash (mode) {
+        var href = window.location.href;
+        var hidx = href.indexOf("#");
+        if(hidx < 0) {
+            href += "#"; }
+        else {
+            href = href.slice(0, hidx + 1); }
+        if(mode === "reference") {
+            href += "menu=refmode"; }
+        jt.log("verifyURLHash " + href);
+        window.location.href = href;
+    }
+
+
     function changeMode (chmode) {
         if(chmode === "same") {
             chmode = mode; }
         chmode = chmode || mode;
         showModeElements(chmode);
+        verifyURLHash(chmode);
         if(mode === "interactive") {
             if(ms.disp === "text") {
                 toggleDisplay(); }

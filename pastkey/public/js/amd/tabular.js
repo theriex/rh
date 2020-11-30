@@ -235,8 +235,8 @@ app.tabular = (function () {
                 jt.out("reftitlediv", jt.tac2html(
                     [["div", {cla:"tletldiv"}, "Edit Timeline"],
                      ["div", {cla:"tletrdiv"}, "Mix-In"]])); }
-            else { //"refdisp"
-                jt.out("reftitlediv", "Reference Mode"); }
+            else { //"refdisp". TL name looks better than "Reference Mode"
+                jt.out("reftitlediv", mgrs.agg.urlTimeline().name); }
             return state.mode; },
         urlTimeline: function () {
             return app.db.displayContext().lastTL; },
