@@ -318,6 +318,11 @@ app.svcommon = (function () {
                             "padding:12px 0px 0px 0px;" +
                             "text-align:center;font-weight:bold;"},
                     ""]]],  //"year"
+                 //color codes display container
+                 ["div", {id:"kytbgdiv", style:"position:absolute;" +
+                                             "left:30px;top:120px;" +
+                                             "margin-right:30px;" +
+                                             "opacity:0.0;"}],
                  //text display container:
                  ["div", {id:"kytdiv", style:"position:absolute;" + 
                                              "left:30px;top:120px;" +
@@ -492,6 +497,7 @@ app.svcommon = (function () {
                 ani.dispyear = te.start.year;
                 jt.out("kyrdiv", te.start.year);
                 if(ptxt) {
+                    jt.byId("kytbgdiv").style.opacity = 0.0;
                     d3.select("#kyrdiv")
                         .style("font-size", "10px")
                         .transition().duration(500)
@@ -508,6 +514,7 @@ app.svcommon = (function () {
                     ["a", {href:"#done", onclick:jt.fs("app.vizsts.finish()")},
                      "Done"]);
                 jt.out("kyrdiv", ani.styrtemp);
+                jt.out("kytbgdiv", "");  //clear to avoid blocking map clicks
                 setTimeout(function () {  //wait for "next" fade to be over
                     jt.out("kytdiv", "Click any state for details.");
                     d3.select("#kytdiv").style("opacity", 1.0)
@@ -523,6 +530,7 @@ app.svcommon = (function () {
                 if(!ptxt) {  //don't pause if nothing displayed
                     wait = 0; }
                 ani.timeout = setTimeout(function () {
+                    jt.byId("kytbgdiv").style.opacity = 1.0;
                     app.vizsts.transport("next"); }, wait); }
         }
 

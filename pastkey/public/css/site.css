@@ -371,6 +371,7 @@ button, .buttonspan { border: 2px solid #666666; border-radius:8px;
 
 .tranctrl { vertical-align:middle; cursor:pointer; opacity:0.5; }
 .tranctrl:hover { opacity:0.8; }
+#kytbgdiv { opacity:0.0; transition:all 0.5s ease; }
 
 /* support */
 
@@ -389,6 +390,10 @@ button, .buttonspan { border: 2px solid #666666; border-radius:8px;
   padding:5px 10px 15px 10px; }
 #sv0txtdiv { background:#d6edf2; padding:10px; border-radius:10px;
   border:2px solid #666666; box-shadow:3px 3px 1px #333; }
+
+/* sv slavery */
+#slvccdiv { background:white; padding:1px; }
+.colorcodediv { font-size:small; margin:4px; padding:4px; }
 
 /* sv lynching */
 #mapdiv { position:absolute; left:0px; top:0px; }

@@ -239,9 +239,22 @@ app.slavery = (function () {
     }
 
 
+    function writeColorCodesToTextPlaceholderDisplay() {
+        jt.out("kytbgdiv", jt.tac2html(
+            ["div", {id:"slvccdiv"},
+             [["div", {cla:"colorcodediv",
+                       style:"background:" + colors.free + ";"},
+               "Free - no slaves"],
+              ["div", {cla:"colorcodediv",
+                       style:"background:" + colors.slavery + ";"},
+               "Slaves present"]]]));
+    }
+
+
     function display () {
         verifyVisualizationInitialized();
         viz.visualization.display();
+        writeColorCodesToTextPlaceholderDisplay();
     }
 
 
