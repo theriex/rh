@@ -8,7 +8,7 @@
 import logging
 import py.util as util
 
-CACHE_BUST_PARAM = "v=201201"  # Updated via ../../build/cachev.js
+CACHE_BUST_PARAM = "v=201202"  # Updated via ../../build/cachev.js
 
 INDEXHTML = """
 <!doctype html>
@@ -45,7 +45,11 @@ archives. </p>
 
 <p>Supplemental visualizations based on specialized datasets can be added to
 any timeline to create multiple levels.  Longer timelines are automatically
-divided into chapters.</p>
+divided into chapters. See 
+<a href="timeline/default#sv=slavery">Slavery</a>,
+<a href="timeline/default#sv=lynching">Lynching</a>,
+<a href="timeline/default#sv=miscegenation">Miscegenation</a>.
+</p>
 
 <img src="$RDRimg/svsampsupp.png"/>
 

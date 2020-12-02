@@ -486,7 +486,7 @@ app.svcommon = (function () {
             if(ani.idx < ani.tes.length) {
                 var te = ani.tes[ani.idx];
                 if(!immediate && ani.dispyear && ani.dispyear < te.start.year) {
-                    if(te.start.year - ani.dispyear > 30) {
+                    if(te.start.year - ani.dispyear > 20) {
                         ani.dispyear += 10; }  //close long gaps faster
                     else {
                         ani.dispyear += 1; }
