@@ -429,6 +429,7 @@ button, .buttonspan { border: 2px solid #666666; border-radius:8px;
 #findontxt { font-weight:bold; cursor:pointer; }
 
 /* sv miscegenation */
+#amccdiv { background:white; padding:1px; text-align:right; opacity:0.6; }
 .sthdatespan { font-weight:bold; padding-right:5px; }
 
 /* -------------------- */
