@@ -285,12 +285,26 @@ app.lynching = (function () {
     }
 
 
+    function showColorKey() {
+        jt.out("lyckeydiv", jt.tac2html(
+            ["div", {id:"lycolorkeysdiv"},
+             [["div", {cla:"lycolorcodediv",
+                       style:"background:" + chart.colors.black + ";"},
+               "Black"],
+              "&nbsp;",
+              ["div", {cla:"lycolorcodediv",
+                       style:"background:" + chart.colors.other + ";"},
+               "Non-Black"]]]));
+    }
+
+
     function initShowPoints () {
         var cdel = 4000;
         ani.pts.push({date:0, text:lynchingDefHTML(0), delay:cdel});
         ani.pts.push({date:1, text:lynchingDefHTML(1), delay:cdel});
         ani.pts.push({date:2, text:lynchingDefHTML(2), delay:cdel});
         ani.pts.push({date:3, text:lynchingDefHTML(3), delay:1.5*cdel});
+        setTimeout(showColorKey, 5*cdel);
         datapoints().forEach(function (pt) {
             ani.pts.push(
                 {date:pt.date, delay:Math.round(38 * pt.text.length),
@@ -661,7 +675,9 @@ app.lynching = (function () {
         chart.bs.w = tl.width2;
         chart.bs.h = chart.ms.h + chart.ms.tm;
         jt.out("suppvisdiv", jt.tac2html(
-            [["div", {id:"mapdiv"}, usmapTAC()],
+            [["div", {id:"mapdiv"},
+              [["div", {id:"lyckeydiv"}],
+               usmapTAC()]],
              ["div", {id:"bardiv"}, barTAC()],
              ["div", {id:"lytdiv"}],
              ["div", {id:"lyxdiv"}],

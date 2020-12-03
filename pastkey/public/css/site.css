@@ -411,8 +411,14 @@ button, .buttonspan { border: 2px solid #666666; border-radius:8px;
 #lynchritol li { padding-bottom:5px; }
 .lynchcrititemdiv { background-image:url('../img/bleachscrub.png'); }
 #lysumtotaltext { font-size:28px; font-weight:bold; }
+#lyckeydiv { position:absolute; right:5%; bottom:-18px; padding:1px;
+  background:white; opacity:0.6; }
+.lycolorcodediv { display:inline-block; font-size:small; margin:4px;
+  padding:4px; min-width:64px; text-align:center; }
 #lyxdiv { position:absolute; right:0px; top:0px; padding:8px 10px; }
-#lyppdiv { position:absolute; right:-5px; top:40px; padding:8px 10px; }
+#lyppdiv { position:absolute; right:-5px; top:38px; padding:3px;
+  margin:0px 7px 0px 0px; background:#b2c1b2; border-radius:14px;
+  text-align:center; }
 #lyppimg { max-width:24px; }
 
 /* sv finale */
