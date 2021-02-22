@@ -9,6 +9,7 @@
 import datetime
 import json
 import sys
+import os.path
 import py.mconf as mconf
 import logging
 import logging.handlers
@@ -160,6 +161,26 @@ def tlids_for_user(uid, ctype):
     return tlids
 
 
+# This runs just after the midnight log rollover, so we need to load the
+# previous day's log file to look for errors.  The periodic processing log
+# entries typically show up around 5-12 seconds into the day.  Logs are
+# server time, not UTC.
+def extract_log_errors():
+    ts = datetime.datetime.now() + datetime.timedelta(hours=-24)
+    logpath = "logs/plg_application.log." + ts.strftime("%Y-%m-%d")
+    if not os.path.isfile(logpath):
+        return "  " + logpath + " not found.\n"
+    errors = ""
+    warnings = ""
+    with open(logpath) as f:
+        for line in f.readlines():
+            if "ERROR" in line:
+                errors += "  " + line
+            elif "WARNING" in line:
+                warnings += "  " + line
+    return "  " + logpath + "\n" + errors + warnings
+
+
 def send_activity_report():
     logging.info(json.dumps(rst["dets"]))
     txt = ""
@@ -201,6 +222,7 @@ def send_activity_report():
     txt += "Agents:\n"
     for agent, count in rst["dets"]["agents"].items():
         txt += "  " + str(count) + " " + agent + "\n"
+    txt += "Log Errors:\n" + extract_log_errors()
     # Send report
     logging.info(txt)
     if not rst["preview"]:
