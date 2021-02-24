@@ -164,21 +164,28 @@ def tlids_for_user(uid, ctype):
 # This runs just after the midnight log rollover, so we need to load the
 # previous day's log file to look for errors.  The periodic processing log
 # entries typically show up around 5-12 seconds into the day.  Logs are
-# server time, not UTC.
+# server time, not UTC.  If there is not much server activity, then the log
+# does not roll over, so the entries to be scanned are still in the main log
+# file, along with entries outside of the daily range.
 def extract_log_errors():
+    baselog = "logs/plg_application.log"
     ts = datetime.datetime.now() + datetime.timedelta(hours=-24)
-    logpath = "logs/plg_application.log." + ts.strftime("%Y-%m-%d")
+    ts = ts.strftime("%Y-%m-%d")
+    logpath = baselog + "." + ts
     if not os.path.isfile(logpath):
-        return "  " + logpath + " not found.\n"
+        logpath = baselog
     errors = ""
     warnings = ""
+    lc = 0
     with open(logpath) as f:
         for line in f.readlines():
-            if "ERROR" in line:
-                errors += "  " + line
-            elif "WARNING" in line:
-                warnings += "  " + line
-    return "  " + logpath + "\n" + errors + warnings
+            if ts in line:  # relevant log line for the day
+                lc += 1
+                if "ERROR" in line:
+                    errors += "  " + line
+                elif "WARNING" in line:
+                    warnings += "  " + line
+    return "  " + logpath + " (" + str(lc) + " lines)\n" + errors + warnings
 
 
 def send_activity_report():
