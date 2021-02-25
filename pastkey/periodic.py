@@ -185,7 +185,8 @@ def extract_log_errors():
                     errors += "  " + line
                 elif "WARNING" in line:
                     warnings += "  " + line
-    return "  " + logpath + " (" + str(lc) + " lines)\n" + errors + warnings
+    firstline = "  Checked " + str(lc) + " lines from " + logpath + "\n"
+    return firstline + errors + warnings
 
 
 def send_activity_report():
