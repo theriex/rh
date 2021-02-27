@@ -50,8 +50,7 @@ def search_log_file(lfp, srchts):
 
 def check_log_file():
     """ figure out which log file and what the search timestamp prefix is """
-    logbase = "/home/theriex/pastkey.org/logs/"
-    lfp = logbase + "plg_application.log"   # main log file path
+    lfp = mconf.logsdir + "plg_application.log"   # main log file path
     toth = datetime.datetime.now().replace(microsecond=0, second=0, minute=0)
     if not toth.hour:  # hour zero, switch to rollover log file if it exists
         rls = (toth + datetime.timedelta(hours=-24)).strftime("%Y-%m-%d")
