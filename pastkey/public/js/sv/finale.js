@@ -1,4 +1,4 @@
-/*jslint browser, white, fudge, for */
+/*jslint browser, white, for, unordered */
 /*global app, window, jt, d3 */
 
 app.finale = (function () {
@@ -329,7 +329,7 @@ app.finale = (function () {
         //chart.colors = {bg:"#eefeff"};  /light blue
         chart.colors = {bg:"#fffee0"};  //light yellow
         initDisplayElements();
-        if(record) {
+        if(record && app.user && app.user.email) {
             d3.select("#finctitle").text("Saving...");
             var ds = app.db.displayContext().ds;
             var tinst = ds[ds.length - 1];
@@ -338,7 +338,7 @@ app.finale = (function () {
                         tlsubtitle:tinst.subtitle || ""};
             data = jt.objdata(data);
             var auth = "";
-            if(app.auth) {  //undefined if testing standalone
+            if(app.auth) {  //undefined if testing standalone module
                 auth = app.auth(); }
             jt.call("POST", "/api/notecomp?" + auth, data,
                     function (result) {
