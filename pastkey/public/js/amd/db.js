@@ -632,6 +632,8 @@ app.db = (function () {
         var tlmarker = "/timeline/"; var idx = href.indexOf(tlmarker);
         if(idx >= 0) {
             slug = href.slice(idx + tlmarker.length);
+            if(slug.indexOf("#") > 0) {
+                slug = slug.slice(0, slug.indexOf("#")); }
             if(slug.indexOf("?") > 0) {
                 slug = slug.slice(0, slug.indexOf("?")); } }
         if(slug) { 
